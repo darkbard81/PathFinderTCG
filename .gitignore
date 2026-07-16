@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.vite/
+.DS_Store
+*.local
+*.log
+
+# Local browser QA artifacts
+artifacts/
+playwright-report/
+test-results/
