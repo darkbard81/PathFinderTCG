@@ -5,6 +5,7 @@ import type { GameSession } from '../../game/simulation/GameSession';
 import { registerGameSession } from '../adapters/sceneBridge';
 import { BootScene } from '../scenes/BootScene';
 import { StarterScene } from '../scenes/StarterScene';
+import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme';
 import { GAME_RUNTIME_SETTINGS } from './runtime-settings';
 
 export function createGameConfig(
@@ -14,7 +15,7 @@ export function createGameConfig(
   return {
     type: Phaser.AUTO,
     parent,
-    backgroundColor: '#07111f',
+    backgroundColor: PF2E_ELF_THEME.colors.backdrop,
     width: GAME_RUNTIME_SETTINGS.fallbackWidth,
     height: GAME_RUNTIME_SETTINGS.fallbackHeight,
     scale: {

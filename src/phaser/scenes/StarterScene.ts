@@ -1,6 +1,4 @@
 import * as Phaser from 'phaser';
-import type Label from 'phaser4-rex-plugins/templates/ui/label/Label.js';
-import type RoundRectangle from 'phaser4-rex-plugins/templates/ui/roundrectangle/RoundRectangle.js';
 import type Sizer from 'phaser4-rex-plugins/templates/ui/sizer/Sizer.js';
 
 import type { GameAction } from '../../game/input/actions';
@@ -8,20 +6,9 @@ import { resolveKeyboardAction } from '../../game/input/bindings';
 import type { GameState } from '../../game/simulation/GameSession';
 import { getGameSession } from '../adapters/sceneBridge';
 import { calculateViewportLayout, type ViewportLayout } from '../../ui/layout/viewportLayout';
-
-const COLORS = {
-  backdrop: 0x07111f,
-  panel: 0x12223a,
-  panelSecondary: 0x0d192b,
-  border: 0x35567a,
-  accent: 0x5fd3bc,
-  accentHover: 0x7de6d2,
-  danger: 0xd47878,
-  dangerHover: 0xe69696,
-  accentText: '#5fd3bc',
-  text: '#eff8ff',
-  mutedText: '#9bb1c8',
-} as const;
+import { PF2eNineLabel } from '../ui/components/PF2eNineLabel';
+import { PF2eNinePatch2 } from '../ui/components/PF2eNinePatch2';
+import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme';
 
 export class StarterScene extends Phaser.Scene {
   private rootSizer?: Sizer;
@@ -36,7 +23,7 @@ export class StarterScene extends Phaser.Scene {
   create(): void {
     const session = getGameSession(this);
 
-    this.cameras.main.setBackgroundColor(COLORS.backdrop);
+    this.cameras.main.setBackgroundColor(PF2E_ELF_THEME.colors.backdrop);
     this.unsubscribeSession = session.subscribe((state) => {
       this.renderState(state);
     });
@@ -108,7 +95,10 @@ export class StarterScene extends Phaser.Scene {
   }
 
   private createInformationPanel(layout: ViewportLayout): Sizer {
-    const innerPadding = Math.max(16, Math.round(layout.padding * 0.75));
+    const innerPadding = Math.max(
+      PF2E_ELF_THEME.spacing.panelInset,
+      Math.round(layout.padding * 0.75),
+    );
     const panel = this.rexUI.add.sizer({
       orientation: 'y',
       space: {
@@ -120,30 +110,36 @@ export class StarterScene extends Phaser.Scene {
       },
     });
 
-    panel.addBackground(this.createPanelBackground(COLORS.panel));
+    panel.addBackground(
+      new PF2eNinePatch2(this, {
+        variant: 'panel',
+        width: 2,
+        height: 2,
+      }),
+    );
 
     const eyebrow = this.add.text(0, 0, 'PHASER 4 · REXUI · TYPESCRIPT', {
-      color: COLORS.mutedText,
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      color: PF2E_ELF_THEME.colors.mutedText,
+      fontFamily: PF2E_ELF_THEME.typography.body,
       fontSize: `${layout.eyebrowFontSize}px`,
       fontStyle: 'bold',
       letterSpacing: 1.5,
     });
 
-    const title = this.add.text(0, 0, 'Pathfinder TCG', {
-      color: COLORS.text,
-      fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: `${layout.titleFontSize}px`,
-      fontStyle: 'bold',
+    const title = new PF2eNineLabel(this, {
+      text: 'Pathfinder TCG',
+      variant: 'heading',
+      fontSize: layout.titleFontSize,
+      height: Math.max(78, layout.titleFontSize + 36),
     });
 
     const description = this.add.text(
       0,
       0,
-      '화면 크기와 방향에 따라 rexUI Sizer 구성이 자동으로 전환됩니다. 게임 규칙 상태는 Phaser Scene 밖의 GameSession이 소유합니다.',
+      '에메랄드 숲 테마의 PF2eNinePatch2 패널과 PF2eNineLabel 컨트롤을 반응형 rexUI Sizer로 구성합니다. 게임 규칙 상태는 Phaser Scene 밖의 GameSession이 소유합니다.',
       {
-        color: COLORS.mutedText,
-        fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+        color: PF2E_ELF_THEME.colors.mutedText,
+        fontFamily: PF2E_ELF_THEME.typography.body,
         fontSize: `${layout.bodyFontSize}px`,
         lineSpacing: Math.round(layout.bodyFontSize * 0.35),
         wordWrap: {
@@ -156,10 +152,10 @@ export class StarterScene extends Phaser.Scene {
     const features = this.add.text(
       0,
       0,
-      ['✓ Phaser.Scale.RESIZE', '✓ 가로·세로 반응형 rexUI', '✓ 외부 simulation 상태 경계'],
+      ['✓ 엘프 테마 NinePatch2 자산', '✓ 표시·버튼 겸용 NineLabel', '✓ 가로·세로 반응형 rexUI'],
       {
-        color: COLORS.accentText,
-        fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+        color: PF2E_ELF_THEME.colors.accentText,
+        fontFamily: PF2E_ELF_THEME.typography.body,
         fontSize: `${layout.bodyFontSize}px`,
         lineSpacing: Math.round(layout.bodyFontSize * 0.45),
       },
@@ -167,13 +163,16 @@ export class StarterScene extends Phaser.Scene {
 
     return panel
       .add(eyebrow, { align: 'left' })
-      .add(title, { align: 'left' })
+      .add(title, { align: 'center', expand: true })
       .add(description, { align: 'left' })
       .add(features, { align: 'left' });
   }
 
   private createActionPanel(layout: ViewportLayout): Sizer {
-    const innerPadding = Math.max(16, Math.round(layout.padding * 0.75));
+    const innerPadding = Math.max(
+      PF2E_ELF_THEME.spacing.panelInset,
+      Math.round(layout.padding * 0.75),
+    );
     const panel = this.rexUI.add.sizer({
       orientation: 'y',
       space: {
@@ -185,18 +184,24 @@ export class StarterScene extends Phaser.Scene {
       },
     });
 
-    panel.addBackground(this.createPanelBackground(COLORS.panelSecondary));
+    panel.addBackground(
+      new PF2eNinePatch2(this, {
+        variant: 'panel',
+        width: 2,
+        height: 2,
+      }),
+    );
 
-    const sectionTitle = this.add.text(0, 0, 'Starter 상태', {
-      color: COLORS.text,
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
-      fontSize: `${layout.sectionFontSize}px`,
-      fontStyle: 'bold',
+    const sectionTitle = new PF2eNineLabel(this, {
+      text: '엘프 테마 상태',
+      variant: 'section',
+      fontSize: layout.sectionFontSize,
+      height: Math.max(62, layout.sectionFontSize + 30),
     });
 
     this.statusText = this.add.text(0, 0, '', {
-      color: COLORS.accentText,
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      color: PF2E_ELF_THEME.colors.accentText,
+      fontFamily: PF2E_ELF_THEME.typography.body,
       fontSize: `${layout.bodyFontSize}px`,
       lineSpacing: Math.round(layout.bodyFontSize * 0.35),
       wordWrap: {
@@ -206,81 +211,50 @@ export class StarterScene extends Phaser.Scene {
     });
 
     this.viewportText = this.add.text(0, 0, '', {
-      color: COLORS.mutedText,
-      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+      color: PF2E_ELF_THEME.colors.mutedText,
+      fontFamily: PF2E_ELF_THEME.typography.mono,
       fontSize: `${layout.eyebrowFontSize}px`,
     });
 
+    const stackButtons = layout.orientation === 'portrait' && layout.width < 560;
     const buttons = this.rexUI.add.sizer({
-      orientation: 'x',
+      orientation: stackButtons ? 'y' : 'x',
       space: {
-        item: Math.max(10, Math.round(layout.gap * 0.65)),
+        item: Math.max(PF2E_ELF_THEME.spacing.controlGap, Math.round(layout.gap * 0.65)),
       },
     });
 
     buttons
-      .add(this.createButton('확인 · Enter', 'confirm', COLORS.accent, COLORS.accentHover), {
-        proportion: 1,
-        expand: true,
-      })
-      .add(this.createButton('취소 · Esc', 'cancel', COLORS.danger, COLORS.dangerHover), {
-        proportion: 1,
-        expand: true,
-      });
+      .add(
+        new PF2eNineLabel(this, {
+          text: '확인 · Enter',
+          variant: 'primary',
+          fontSize: Math.max(16, layout.bodyFontSize - 1),
+          onActivate: () => this.dispatch('confirm'),
+        }),
+        {
+          proportion: 1,
+          expand: true,
+        },
+      )
+      .add(
+        new PF2eNineLabel(this, {
+          text: '취소 · Esc',
+          variant: 'danger',
+          fontSize: Math.max(16, layout.bodyFontSize - 1),
+          onActivate: () => this.dispatch('cancel'),
+        }),
+        {
+          proportion: 1,
+          expand: true,
+        },
+      );
 
     return panel
-      .add(sectionTitle, { align: 'left' })
+      .add(sectionTitle, { align: 'center', expand: true })
       .add(this.statusText, { align: 'left', proportion: 1 })
       .add(this.viewportText, { align: 'left' })
       .add(buttons, { expand: true });
-  }
-
-  private createButton(
-    labelText: string,
-    action: GameAction,
-    fillColor: number,
-    hoverColor: number,
-  ): Label {
-    const background = this.rexUI.add.roundRectangle(0, 0, 2, 2, 12, fillColor, 1);
-    const text = this.add.text(0, 0, labelText, {
-      color: '#07111f',
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
-      fontSize: '17px',
-      fontStyle: 'bold',
-    });
-
-    const button = this.rexUI.add.label({
-      height: 54,
-      background,
-      text,
-      align: 'center',
-      space: {
-        left: 18,
-        right: 18,
-        top: 14,
-        bottom: 14,
-      },
-    });
-
-    button
-      .setInteractive({ useHandCursor: true })
-      .on('pointerover', () => {
-        background.setFillStyle(hoverColor, 1);
-      })
-      .on('pointerout', () => {
-        background.setFillStyle(fillColor, 1);
-      })
-      .on('pointerup', () => {
-        this.dispatch(action);
-      });
-
-    return button;
-  }
-
-  private createPanelBackground(fillColor: number): RoundRectangle {
-    return this.rexUI.add
-      .roundRectangle(0, 0, 2, 2, 22, fillColor, 0.96)
-      .setStrokeStyle(2, COLORS.border, 0.85);
   }
 
   private renderState(state: GameState): void {

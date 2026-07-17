@@ -1,4 +1,8 @@
 :root {
+  --pf2e-backdrop: #06110d;
+  --pf2e-forest-glow: rgb(28 91 61 / 28%);
+  --pf2e-moonstone-glow: rgb(116 173 158 / 16%);
+
   color-scheme: dark;
   font-family:
     Inter,
@@ -8,7 +12,7 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  background: #07111f;
+  background: var(--pf2e-backdrop);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -34,8 +38,9 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   background:
-    radial-gradient(circle at 18% 18%, rgb(49 92 120 / 24%), transparent 32%),
-    radial-gradient(circle at 82% 78%, rgb(45 111 99 / 18%), transparent 28%), #07111f;
+    radial-gradient(circle at 18% 18%, var(--pf2e-forest-glow), transparent 32%),
+    radial-gradient(circle at 82% 78%, var(--pf2e-moonstone-glow), transparent 28%),
+    var(--pf2e-backdrop);
 }
 
 #app {
