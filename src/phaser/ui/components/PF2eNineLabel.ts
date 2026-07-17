@@ -27,7 +27,8 @@ export class PF2eNineLabel extends Label {
 
   constructor(scene: Phaser.Scene, config: PF2eNineLabelConfig) {
     const style = PF2E_ELF_THEME.label[config.variant];
-    const height = config.height ?? style.height;
+    const height = Math.max(config.height ?? style.minHeight, style.minHeight);
+    const fontSize = config.fontSize ?? style.fontSize;
     const background = new PF2eNinePatch2(scene, {
       variant: 'control',
       width: config.width ?? 2,
@@ -36,7 +37,7 @@ export class PF2eNineLabel extends Label {
     const text = scene.add.text(0, 0, config.text, {
       color: style.textColor,
       fontFamily: style.fontFamily,
-      fontSize: `${config.fontSize ?? style.fontSize}px`,
+      fontSize: `${fontSize}px`,
       fontStyle: style.fontStyle,
       stroke: style.strokeColor,
       strokeThickness: style.strokeThickness,
@@ -90,30 +91,31 @@ export class PF2eNineLabel extends Label {
         this.disableInteractive();
       }
     }
-    this.applyVisualState(enabled ? 'idle' : 'disabled');
+    this.setVisualState(enabled ? 'idle' : 'disabled');
     return this;
   }
 
-  private applyVisualState(state: PF2eNinePatchVisualState): void {
+  setVisualState(state: PF2eNinePatchVisualState): this {
     this.background.setVisualState(state);
     this.textObject.setAlpha(state === 'disabled' ? 0.62 : 1);
+    return this;
   }
 
   private readonly handlePointerOver = (): void => {
     if (this.enabled) {
-      this.applyVisualState('hover');
+      this.setVisualState('hover');
     }
   };
 
   private readonly handlePointerOut = (): void => {
     if (this.enabled) {
-      this.applyVisualState('idle');
+      this.setVisualState('idle');
     }
   };
 
   private readonly handlePointerDown = (): void => {
     if (this.enabled) {
-      this.applyVisualState('pressed');
+      this.setVisualState('pressed');
     }
   };
 
@@ -121,7 +123,7 @@ export class PF2eNineLabel extends Label {
     if (!this.enabled) {
       return;
     }
-    this.applyVisualState('hover');
+    this.setVisualState('hover');
     this.onActivate?.();
   };
 }

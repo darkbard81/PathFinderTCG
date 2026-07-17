@@ -24,6 +24,6 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('StarterScene');
+    this.scene.start('PF2eCustomClassShowcaseScene');
   }
 }

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { ASSET_KEYS, assetManifest } from '../../../game/assets/manifest';
-import { PF2E_ELF_THEME } from './pf2eElfTheme';
+import {
+  PF2E_ELF_THEME,
+  PF2E_NINE_LABEL_VARIANTS,
+  PF2E_NINE_PATCH_VISUAL_STATES,
+} from './pf2eElfTheme';
 
 describe('PF2E_ELF_THEME', () => {
   it('maps panel and control variants to stable manifest assets', () => {
@@ -24,18 +28,13 @@ describe('PF2E_ELF_THEME', () => {
   });
 
   it('defines every interactive visual state and label variant', () => {
-    expect(Object.keys(PF2E_ELF_THEME.visualStates)).toEqual([
-      'idle',
-      'hover',
-      'pressed',
-      'disabled',
-    ]);
-    expect(Object.keys(PF2E_ELF_THEME.label)).toEqual([
-      'heading',
-      'section',
-      'status',
-      'primary',
-      'danger',
-    ]);
+    expect(Object.keys(PF2E_ELF_THEME.visualStates)).toEqual([...PF2E_NINE_PATCH_VISUAL_STATES]);
+    expect(Object.keys(PF2E_ELF_THEME.label)).toEqual([...PF2E_NINE_LABEL_VARIANTS]);
+  });
+
+  it('defines a positive content area inside every minimum label height', () => {
+    for (const style of Object.values(PF2E_ELF_THEME.label)) {
+      expect(style.minHeight).toBeGreaterThan(style.paddingY * 2);
+    }
   });
 });
