@@ -1,6 +1,7 @@
 import { ASSET_KEYS } from '../../../game/assets/manifest';
 
-export type PF2eNinePatchVariant = 'panel' | 'control' | 'tab';
+export type PF2eNinePatchVariant =
+  'panel' | 'control' | 'tab' | 'scrollTrack' | 'scrollThumb' | 'gridCell' | 'dialog' | 'button';
 export const PF2E_NINE_PATCH_VISUAL_STATES = [
   'idle',
   'hover',
@@ -10,6 +11,11 @@ export const PF2E_NINE_PATCH_VISUAL_STATES = [
   'disabled',
 ] as const;
 export type PF2eNinePatchVisualState = (typeof PF2E_NINE_PATCH_VISUAL_STATES)[number];
+
+export interface PF2eNinePatchStretchMode {
+  readonly edge: 'scale' | 'repeat';
+  readonly internal: 'scale' | 'repeat';
+}
 
 export const PF2E_NINE_LABEL_VARIANTS = [
   'heading',
@@ -25,6 +31,7 @@ export interface PF2eNinePatchThemeStyle {
   readonly key: string;
   readonly columns: readonly [number, undefined, number];
   readonly rows: readonly [number, undefined, number];
+  readonly stretchMode?: PF2eNinePatchStretchMode;
 }
 
 export interface PF2eNineLabelThemeStyle {
@@ -46,6 +53,7 @@ export const PF2E_ELF_THEME = {
     surface: 0x0b2a1e,
     border: 0x9a7944,
     accent: 0x8cc9aa,
+    modalCover: 0x020805,
     text: '#f2ead4',
     mutedText: '#a8bcae',
     accentText: '#bce8d0',
@@ -71,7 +79,8 @@ export const PF2E_ELF_THEME = {
     minimumTouchTarget: 48,
     treeRow: 54,
     treeToggle: 18,
-    scrollbar: 10,
+    scrollbar: 24,
+    badge: 64,
   },
   components: {
     tree: {
@@ -100,7 +109,9 @@ export const PF2E_ELF_THEME = {
       controlSampleHeight: 58,
       panelDemoHeight: 260,
       tabPagesDemoHeight: 380,
-      maskPadding: 2,
+      scrollablePanelDemoHeight: 360,
+      gridTableDemoHeight: 360,
+      confirmDialogDemoHeight: 330,
       responsiveHeadingScale: 0.1,
       responsiveHeadingMinimum: 26,
     },
@@ -111,6 +122,40 @@ export const PF2E_ELF_THEME = {
       pageInset: 38,
       tabWidth: 156,
       tabHeight: 70,
+    },
+    scrollablePanel: {
+      maskPadding: 2,
+      sliderGap: 12,
+      wheelSpeed: 0.12,
+      dragThreshold: 8,
+      minThumbSize: 64,
+    },
+    gridTable: {
+      columns: 2,
+      cellHeight: 104,
+      cellGap: 10,
+      cellInsetX: 24,
+      cellInsetY: 18,
+      titleFontSize: 18,
+      detailFontSize: 14,
+    },
+    confirmDialog: {
+      inset: 42,
+      titleGap: 18,
+      contentGap: 24,
+      actionGap: 12,
+      actionWidth: 176,
+      coverAlpha: 0.78,
+      depth: 1000,
+    },
+    badgeLabel: {
+      badgePadding: 6,
+      badgeFontSize: 18,
+    },
+    buttons: {
+      gap: 12,
+      width: 176,
+      height: 58,
     },
   },
   ninePatch: {
@@ -128,6 +173,35 @@ export const PF2E_ELF_THEME = {
       key: ASSET_KEYS.pf2eElfTab,
       columns: [56, undefined, 56],
       rows: [32, undefined, 32],
+    },
+    scrollTrack: {
+      key: ASSET_KEYS.pf2eElfScrollTrack,
+      columns: [14, undefined, 14],
+      rows: [92, undefined, 92],
+    },
+    scrollThumb: {
+      key: ASSET_KEYS.pf2eElfScrollThumb,
+      columns: [20, undefined, 20],
+      rows: [56, undefined, 56],
+      stretchMode: {
+        edge: 'scale',
+        internal: 'scale',
+      },
+    },
+    gridCell: {
+      key: ASSET_KEYS.pf2eElfGridCell,
+      columns: [84, undefined, 84],
+      rows: [48, undefined, 48],
+    },
+    dialog: {
+      key: ASSET_KEYS.pf2eElfDialog,
+      columns: [96, undefined, 96],
+      rows: [96, undefined, 96],
+    },
+    button: {
+      key: ASSET_KEYS.pf2eElfButton,
+      columns: [84, undefined, 84],
+      rows: [44, undefined, 44],
     },
   } satisfies Record<PF2eNinePatchVariant, PF2eNinePatchThemeStyle>,
   ninePatchStretchMode: {
@@ -192,7 +266,7 @@ export const PF2E_ELF_THEME = {
       paddingY: 14,
     },
     primary: {
-      backgroundVariant: 'control',
+      backgroundVariant: 'button',
       fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
       fontSize: 17,
       fontStyle: 'bold',
@@ -204,7 +278,7 @@ export const PF2E_ELF_THEME = {
       paddingY: 14,
     },
     danger: {
-      backgroundVariant: 'control',
+      backgroundVariant: 'button',
       fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
       fontSize: 17,
       fontStyle: 'bold',

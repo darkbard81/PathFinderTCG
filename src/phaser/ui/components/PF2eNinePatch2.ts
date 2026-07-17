@@ -3,6 +3,7 @@ import { NinePatch2 } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
 import {
   PF2E_ELF_THEME,
+  type PF2eNinePatchThemeStyle,
   type PF2eNinePatchVariant,
   type PF2eNinePatchVisualState,
 } from '../theme/pf2eElfTheme';
@@ -17,7 +18,7 @@ export interface PF2eNinePatch2Config {
 
 export class PF2eNinePatch2 extends NinePatch2 {
   constructor(scene: Phaser.Scene, config: PF2eNinePatch2Config) {
-    const style = PF2E_ELF_THEME.ninePatch[config.variant];
+    const style: PF2eNinePatchThemeStyle = PF2E_ELF_THEME.ninePatch[config.variant];
 
     super(scene, {
       x: config.x ?? 0,
@@ -29,7 +30,7 @@ export class PF2eNinePatch2 extends NinePatch2 {
       rows: [...style.rows],
       preserveRatio: true,
       maxFixedPartScale: 1,
-      stretchMode: PF2E_ELF_THEME.ninePatchStretchMode,
+      stretchMode: style.stretchMode ?? PF2E_ELF_THEME.ninePatchStretchMode,
     });
 
     scene.add.existing(this);
@@ -41,5 +42,17 @@ export class PF2eNinePatch2 extends NinePatch2 {
     this.setTint(style.tint);
     this.setAlpha(style.alpha);
     return this;
+  }
+
+  setActiveState(enabled = true): this {
+    return this.setVisualState(enabled ? 'selected' : 'idle');
+  }
+
+  setHoverState(enabled = true): this {
+    return this.setVisualState(enabled ? 'hover' : 'idle');
+  }
+
+  setDisableState(enabled = true): this {
+    return this.setVisualState(enabled ? 'disabled' : 'idle');
   }
 }

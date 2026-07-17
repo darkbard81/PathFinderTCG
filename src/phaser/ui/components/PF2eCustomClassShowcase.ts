@@ -15,9 +15,14 @@ import {
   type PF2eNinePatchVariant,
   type PF2eNinePatchVisualState,
 } from '../theme/pf2eElfTheme';
+import { PF2eBadgeLabel } from './PF2eBadgeLabel';
+import { PF2eButtons } from './PF2eButtons';
+import { PF2eConfirmDialog } from './PF2eConfirmDialog';
+import { PF2eGridTable, type PF2eGridTableItem } from './PF2eGridTable';
 import { PF2eNineLabel } from './PF2eNineLabel';
 import { PF2eNinePatch2 } from './PF2eNinePatch2';
 import { PF2ePanel } from './PF2ePanel';
+import { PF2eScrollablePanel } from './PF2eScrollablePanel';
 import { PF2eTabPages } from './PF2eTabPages';
 
 export interface PF2eCustomClassShowcaseConfig {
@@ -72,6 +77,36 @@ export class PF2eCustomClassShowcase extends Pages {
     });
     this.addPage(this.createTabPagesPage(scene), {
       key: 'tabPages',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createScrollablePanelPage(scene), {
+      key: 'scrollablePanel',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createGridTablePage(scene), {
+      key: 'gridTable',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createConfirmDialogPage(scene), {
+      key: 'confirmDialog',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createBadgeLabelPage(scene), {
+      key: 'badgeLabel',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createButtonsPage(scene), {
+      key: 'buttons',
       align: 'center',
       padding: PF2E_ELF_THEME.components.showcase.inset,
       expand: true,
@@ -309,6 +344,224 @@ export class PF2eCustomClassShowcase extends Pages {
     return this.createPageShell(scene, definition.id, content);
   }
 
+  private createScrollablePanelPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('scrollablePanel');
+    const content = this.createContentSizer(scene);
+    const childWidth = Math.max(
+      160,
+      this.contentWidth -
+        PF2E_ELF_THEME.sizes.scrollbar -
+        PF2E_ELF_THEME.components.scrollablePanel.sliderGap,
+    );
+    const list = scene.rexUI.add.sizer({
+      width: childWidth,
+      orientation: 'y',
+      space: {
+        item: PF2E_ELF_THEME.components.showcase.sampleGap,
+      },
+    });
+    const status = this.createBodyText(scene, '스크롤 위치 · 0%', PF2E_ELF_THEME.colors.accentText);
+
+    for (let index = 1; index <= 10; index += 1) {
+      list.add(
+        new PF2eNineLabel(scene, {
+          text: `엘프 전술 기록 ${index}`,
+          variant: index === 1 ? 'section' : 'status',
+          width: childWidth,
+        }),
+        { expand: true },
+      );
+    }
+
+    const scrollablePanel = new PF2eScrollablePanel(scene, {
+      width: this.contentWidth,
+      height: PF2E_ELF_THEME.components.showcase.scrollablePanelDemoHeight,
+      child: list,
+      hideScrollbarWhenUnscrollable: false,
+      onScroll: (progress) => {
+        status.setText(`스크롤 위치 · ${Math.round(progress * 100)}%`);
+      },
+    });
+
+    content
+      .add(this.createSectionLabel(scene, 'Wheel, drag and themed scrollbar'), { expand: true })
+      .add(scrollablePanel, { expand: true })
+      .add(status, { align: 'left' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createGridTablePage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('gridTable');
+    const content = this.createContentSizer(scene);
+    const items: readonly PF2eGridTableItem[] = [
+      { id: 'ranger', title: '숲의 정찰자', detail: '이동 · 사거리 3' },
+      { id: 'druid', title: '달빛 드루이드', detail: '회복 · 자연 주문' },
+      { id: 'warden', title: '고목의 수호자', detail: '방어 · 도발' },
+      { id: 'archer', title: '은엽 궁수', detail: '원거리 · 관통' },
+      { id: 'seer', title: '별잎 예언자', detail: '탐색 · 카드 예견' },
+      { id: 'blade', title: '녹음의 검무사', detail: '연속 공격 · 회피' },
+      { id: 'healer', title: '샘물 치유사', detail: '정화 · 지속 회복' },
+      { id: 'scout', title: '이끼길 척후병', detail: '선제 · 은신' },
+      { id: 'keeper', title: '룬숲 기록관', detail: '지식 · 카드 회수' },
+      { id: 'falconer', title: '매 조련사', detail: '정찰 · 표식' },
+      { id: 'weaver', title: '가시덩굴 직조사', detail: '속박 · 반격' },
+      { id: 'captain', title: '금빛잎 대장', detail: '지휘 · 강화' },
+    ];
+    const status = this.createBodyText(
+      scene,
+      '선택 카드 · 숲의 정찰자',
+      PF2E_ELF_THEME.colors.accentText,
+    );
+    const gridTable = new PF2eGridTable(scene, {
+      width: this.contentWidth,
+      height: PF2E_ELF_THEME.components.showcase.gridTableDemoHeight,
+      items,
+      columns: this.contentWidth >= 480 ? 2 : 1,
+      initialSelectedId: 'ranger',
+      onSelectionChange: (item) => {
+        status.setText(`선택 카드 · ${item.title}`);
+      },
+    });
+
+    content
+      .add(this.createSectionLabel(scene, 'Reusable themed cells'), { expand: true })
+      .add(gridTable, { expand: true })
+      .add(status, { align: 'left' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createConfirmDialogPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('confirmDialog');
+    const content = this.createContentSizer(scene);
+    const status = this.createBodyText(
+      scene,
+      '대화상자 결과 · 대기 중',
+      PF2E_ELF_THEME.colors.accentText,
+    );
+    const openButton = new PF2eButtons(scene, {
+      width: this.contentWidth,
+      buttons: [{ id: 'openDialog', text: '확인 대화상자 열기', variant: 'danger' }],
+      onButtonClick: () => {
+        new PF2eConfirmDialog(scene, {
+          title: '카드를 추방하시겠습니까?',
+          message:
+            '선택한 카드는 이번 덱에서 제거됩니다. 이 예제는 게임 상태를 변경하지 않고 confirm/cancel callback만 시연합니다.',
+          confirmText: '추방',
+          cancelText: '돌아가기',
+          danger: true,
+          width: Math.min(620, Math.max(360, scene.scale.gameSize.width - 64)),
+          height: PF2E_ELF_THEME.components.showcase.confirmDialogDemoHeight,
+          onConfirm: () => {
+            status.setText('대화상자 결과 · confirm');
+          },
+          onCancel: () => {
+            status.setText('대화상자 결과 · cancel');
+          },
+        }).openModal();
+      },
+    });
+
+    content
+      .add(this.createSectionLabel(scene, 'Modal confirm and cancel'), { expand: true })
+      .add(
+        this.createBodyText(
+          scene,
+          '새 dialog 프레임과 button 프레임, modal cover를 실제 입력으로 확인합니다.',
+          PF2E_ELF_THEME.colors.mutedText,
+        ),
+        { align: 'left' },
+      )
+      .add(openButton, { align: 'center' })
+      .add(status, { align: 'left' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createBadgeLabelPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('badgeLabel');
+    const content = this.createContentSizer(scene);
+    const labelWidth = Math.max(180, this.contentWidth - PF2E_ELF_THEME.sizes.badge / 2);
+    const mutableBadge = new PF2eBadgeLabel(scene, {
+      text: '보유 카드',
+      badgeValue: 3,
+      badgePosition: 'rightTop',
+      width: labelWidth,
+    });
+    let badgeValue = 3;
+    const incrementButton = new PF2eButtons(scene, {
+      width: this.contentWidth,
+      buttons: [{ id: 'incrementBadge', text: '배지 +1' }],
+      onButtonClick: () => {
+        badgeValue += 1;
+        mutableBadge.setBadgeValue(badgeValue);
+      },
+    });
+
+    content
+      .add(this.createSectionLabel(scene, 'Badge positions and values'), { expand: true })
+      .add(mutableBadge, { align: 'center' })
+      .add(
+        new PF2eBadgeLabel(scene, {
+          text: '새로운 퀘스트',
+          badgeValue: '!',
+          badgePosition: 'leftTop',
+          width: labelWidth,
+        }),
+        { align: 'center' },
+      )
+      .add(incrementButton, { align: 'center' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createButtonsPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('buttons');
+    const content = this.createContentSizer(scene);
+    const status = this.createBodyText(
+      scene,
+      '버튼 입력 · 대기 중',
+      PF2E_ELF_THEME.colors.accentText,
+    );
+    const horizontalButtonWidth = Math.max(
+      100,
+      Math.floor((this.contentWidth - PF2E_ELF_THEME.components.buttons.gap) / 2),
+    );
+    const horizontal = new PF2eButtons(scene, {
+      width: this.contentWidth,
+      buttonWidth: horizontalButtonWidth,
+      buttons: [
+        { id: 'scout', text: '정찰' },
+        { id: 'endTurn', text: '턴 종료', variant: 'danger' },
+      ],
+      onButtonClick: (buttonId) => {
+        status.setText(`버튼 입력 · ${buttonId}`);
+      },
+    });
+    const vertical = new PF2eButtons(scene, {
+      width: this.contentWidth,
+      orientation: 'y',
+      buttonWidth: this.contentWidth,
+      buttons: [
+        { id: 'draw', text: '카드 뽑기' },
+        { id: 'locked', text: '잠긴 행동', enabled: false },
+      ],
+      onButtonClick: (buttonId) => {
+        status.setText(`버튼 입력 · ${buttonId}`);
+      },
+    });
+
+    content
+      .add(this.createSectionLabel(scene, 'Horizontal action group'), { expand: true })
+      .add(horizontal, { align: 'center' })
+      .add(this.createSectionLabel(scene, 'Vertical and disabled state'), { expand: true })
+      .add(vertical, { align: 'center' })
+      .add(status, { align: 'left' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
   private createTabPagePanel(scene: Phaser.Scene, title: string, description: string): PF2ePanel {
     const theme = PF2E_ELF_THEME.components.tabPages;
     const innerWidth = Math.max(140, this.contentWidth - theme.inset * 2 - theme.pageInset * 2);
@@ -364,47 +617,10 @@ export class PF2eCustomClassShowcase extends Pages {
       ].join('\n'),
       PF2E_ELF_THEME.colors.mutedText,
     );
-    const scrollablePanel = scene.rexUI.add.scrollablePanel({
+    const scrollablePanel = new PF2eScrollablePanel(scene, {
       width: 2,
       height: 2,
-      scrollMode: 0,
-      panel: {
-        child: scrollContent,
-        mask: {
-          padding: PF2E_ELF_THEME.components.showcase.maskPadding,
-          maskType: 'stencil',
-        },
-      },
-      slider: {
-        track: scene.rexUI.add.roundRectangle({
-          width: PF2E_ELF_THEME.sizes.scrollbar,
-          height: 2,
-          radius: PF2E_ELF_THEME.radii.control,
-          color: PF2E_ELF_THEME.colors.surface,
-          strokeColor: PF2E_ELF_THEME.colors.border,
-          strokeWidth: PF2E_ELF_THEME.strokes.hairline,
-        }),
-        thumb: scene.rexUI.add.roundRectangle({
-          width: PF2E_ELF_THEME.sizes.scrollbar,
-          height: PF2E_ELF_THEME.sizes.minimumTouchTarget,
-          radius: PF2E_ELF_THEME.radii.control,
-          color: PF2E_ELF_THEME.colors.accent,
-        }),
-        adaptThumbSize: true,
-        minThumbSize: PF2E_ELF_THEME.sizes.minimumTouchTarget,
-      },
-      scroller: {
-        threshold: 8,
-        pointerOutRelease: true,
-      },
-      mouseWheelScroller: {
-        focus: true,
-        speed: 0.12,
-      },
-      clampChildOY: true,
-      space: {
-        sliderY: PF2E_ELF_THEME.spacing.controlGap,
-      },
+      child: scrollContent,
     });
 
     return page

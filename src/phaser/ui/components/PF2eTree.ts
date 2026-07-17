@@ -17,6 +17,7 @@ import { PF2eNinePatch2 } from './PF2eNinePatch2';
 export interface PF2eTreeConfig {
   readonly initialClassId?: PF2eCustomClassId;
   readonly onSelectionChange?: (classId: PF2eCustomClassId) => void;
+  readonly showBackground?: boolean;
 }
 
 export class PF2eTree extends Trees {
@@ -77,13 +78,15 @@ export class PF2eTree extends Trees {
     });
 
     scene.add.existing(this);
-    this.addBackground(
-      new PF2eNinePatch2(scene, {
-        variant: 'panel',
-        width: 2,
-        height: 2,
-      }),
-    );
+    if (config.showBackground ?? true) {
+      this.addBackground(
+        new PF2eNinePatch2(scene, {
+          variant: 'panel',
+          width: 2,
+          height: 2,
+        }),
+      );
+    }
 
     this.selectedId = config.initialClassId ?? PF2E_DEFAULT_CUSTOM_CLASS_ID;
     this.focusedId = this.selectedId;

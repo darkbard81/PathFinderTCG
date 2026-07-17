@@ -8,8 +8,18 @@ import {
 } from './pf2eCustomClassCatalog';
 
 describe('PF2e custom class catalog', () => {
-  it('declares four unique class identifiers in display order', () => {
-    expect(PF2E_CUSTOM_CLASS_IDS).toEqual(['ninePatch2', 'nineLabel', 'panel', 'tabPages']);
+  it('declares nine unique class identifiers in display order', () => {
+    expect(PF2E_CUSTOM_CLASS_IDS).toEqual([
+      'ninePatch2',
+      'nineLabel',
+      'panel',
+      'tabPages',
+      'scrollablePanel',
+      'gridTable',
+      'confirmDialog',
+      'badgeLabel',
+      'buttons',
+    ]);
     expect(new Set(PF2E_CUSTOM_CLASS_CATALOG.map(({ id }) => id)).size).toBe(
       PF2E_CUSTOM_CLASS_CATALOG.length,
     );
@@ -17,13 +27,14 @@ describe('PF2e custom class catalog', () => {
   });
 
   it('wraps keyboard focus in both directions', () => {
-    expect(getAdjacentPF2eCustomClassId('ninePatch2', 'next')).toBe('nineLabel');
-    expect(getAdjacentPF2eCustomClassId('nineLabel', 'next')).toBe('panel');
-    expect(getAdjacentPF2eCustomClassId('panel', 'next')).toBe('tabPages');
-    expect(getAdjacentPF2eCustomClassId('tabPages', 'next')).toBe('ninePatch2');
-    expect(getAdjacentPF2eCustomClassId('ninePatch2', 'previous')).toBe('tabPages');
-    expect(getAdjacentPF2eCustomClassId('tabPages', 'previous')).toBe('panel');
-    expect(getAdjacentPF2eCustomClassId('panel', 'previous')).toBe('nineLabel');
-    expect(getAdjacentPF2eCustomClassId('nineLabel', 'previous')).toBe('ninePatch2');
+    for (const [index, classId] of PF2E_CUSTOM_CLASS_IDS.entries()) {
+      const nextId = PF2E_CUSTOM_CLASS_IDS[(index + 1) % PF2E_CUSTOM_CLASS_IDS.length];
+      const previousId =
+        PF2E_CUSTOM_CLASS_IDS[
+          (index - 1 + PF2E_CUSTOM_CLASS_IDS.length) % PF2E_CUSTOM_CLASS_IDS.length
+        ];
+      expect(getAdjacentPF2eCustomClassId(classId, 'next')).toBe(nextId);
+      expect(getAdjacentPF2eCustomClassId(classId, 'previous')).toBe(previousId);
+    }
   });
 });
