@@ -59,6 +59,10 @@ describe('PF2E_ELF_THEME', () => {
     });
   });
 
+  it('keeps the scrollbar at the compact themed width', () => {
+    expect(PF2E_ELF_THEME.sizes.scrollbar).toBe(24);
+  });
+
   it('defines every interactive visual state and label variant', () => {
     expect(Object.keys(PF2E_ELF_THEME.visualStates)).toEqual([...PF2E_NINE_PATCH_VISUAL_STATES]);
     expect(Object.keys(PF2E_ELF_THEME.label)).toEqual([...PF2E_NINE_LABEL_VARIANTS]);

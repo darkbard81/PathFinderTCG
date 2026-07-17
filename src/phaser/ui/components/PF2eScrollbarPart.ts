@@ -28,6 +28,13 @@ export class PF2eScrollbarPart extends Sizer {
       height: 2,
     });
     this.addBackground(this.background);
+    this.resize(config.width, config.height);
+  }
+
+  resize(width: number, height: number): this {
+    super.setSize(width, height);
+    this.background.resize(width, height);
+    return this;
   }
 
   setVisualState(state: PF2eNinePatchVisualState): this {
