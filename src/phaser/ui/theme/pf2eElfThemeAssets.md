@@ -12,8 +12,10 @@
 | `control` | `public/assets/ui/pf2e-elf-control-ninepatch.png` | 448×128 | `[56, undefined, 56]`   | `[32, undefined, 32]`   |
 | `tab`     | `public/assets/ui/pf2e-elf-tab-ninepatch.png`     | 448×128 | `[56, undefined, 56]`   | `[32, undefined, 32]`   |
 
-안정적인 자산 키와 런타임 경로는 `src/game/assets/manifest.ts`에서 관리한다. 교체 전 자산은
-`backup/ui/`에 보관하며 이 디렉터리는 런타임과 Git 추적에서 제외한다.
+안정적인 자산 키와 런타임 경로는 `src/game/assets/manifest.ts`에서 관리한다. 최초 교체 전
+자산은 `backup/ui/`에, 5번 영역 복구 직전 자산은
+`backup/ui/before-center-repair-20260717/`에 보관한다. `backup/`은 런타임과 Git 추적에서
+제외한다.
 
 ## NinePatch 사양
 
@@ -38,7 +40,10 @@ stretchMode: {
 - 배경 제거:
   `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`
 - 후처리: Pillow로 crop, 크기 정규화, 투명 픽셀 RGB 정리
-- 내부 셀: 경계가 수학적으로 일치하는 저대비 에메랄드 텍스처로 교체
+- 내부 셀: 정규화된 원본 imagegen 결과의 고해상도 질감을 유지한다.
+- 반복 경계: 내부 셀의 마주 보는 첫 행과 마지막 행, 첫 열과 마지막 열을 동일하게 만들고
+  내부 방향으로 smoothstep 혼합해 경계만 자연스럽게 연결한다.
+- 외곽 프레임: 내부 셀만 교체하며 1–4번과 6–9번 영역은 직전 런타임 자산의 픽셀을 유지한다.
 
 후처리 후 다음 항목을 검사한다.
 
