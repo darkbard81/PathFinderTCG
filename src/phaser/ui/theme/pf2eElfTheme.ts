@@ -1,6 +1,6 @@
 import { ASSET_KEYS } from '../../../game/assets/manifest';
 
-export type PF2eNinePatchVariant = 'panel' | 'control';
+export type PF2eNinePatchVariant = 'panel' | 'control' | 'tab';
 export const PF2E_NINE_PATCH_VISUAL_STATES = [
   'idle',
   'hover',
@@ -15,6 +15,7 @@ export const PF2E_NINE_LABEL_VARIANTS = [
   'heading',
   'section',
   'status',
+  'tab',
   'primary',
   'danger',
 ] as const;
@@ -27,6 +28,7 @@ export interface PF2eNinePatchThemeStyle {
 }
 
 export interface PF2eNineLabelThemeStyle {
+  readonly backgroundVariant: PF2eNinePatchVariant;
   readonly fontFamily: string;
   readonly fontSize: number;
   readonly fontStyle: 'normal' | 'bold';
@@ -74,6 +76,7 @@ export const PF2E_ELF_THEME = {
   components: {
     tree: {
       inset: 28,
+      topInset: 48,
       indent: 22,
       itemGap: 8,
       rowFontSize: 15,
@@ -95,23 +98,42 @@ export const PF2E_ELF_THEME = {
       samplePaddingY: 10,
       panelSampleHeight: 140,
       controlSampleHeight: 58,
+      panelDemoHeight: 260,
+      tabPagesDemoHeight: 380,
       maskPadding: 2,
       responsiveHeadingScale: 0.1,
       responsiveHeadingMinimum: 26,
+    },
+    tabPages: {
+      inset: 18,
+      tabGap: 8,
+      pageGap: 0,
+      pageInset: 28,
+      tabWidth: 172,
+      tabHeight: 70,
     },
   },
   ninePatch: {
     panel: {
       key: ASSET_KEYS.pf2eElfPanel,
-      columns: [72, undefined, 72],
-      rows: [72, undefined, 72],
+      columns: [104, undefined, 104],
+      rows: [104, undefined, 104],
     },
     control: {
       key: ASSET_KEYS.pf2eElfControl,
-      columns: [48, undefined, 48],
-      rows: [24, undefined, 24],
+      columns: [56, undefined, 56],
+      rows: [32, undefined, 32],
+    },
+    tab: {
+      key: ASSET_KEYS.pf2eElfTab,
+      columns: [56, undefined, 56],
+      rows: [32, undefined, 32],
     },
   } satisfies Record<PF2eNinePatchVariant, PF2eNinePatchThemeStyle>,
+  ninePatchStretchMode: {
+    edge: 'scale',
+    internal: 'repeat',
+  },
   visualStates: {
     idle: { tint: 0xffffff, alpha: 1 },
     hover: { tint: 0xdfffea, alpha: 1 },
@@ -122,6 +144,7 @@ export const PF2E_ELF_THEME = {
   } satisfies Record<PF2eNinePatchVisualState, { readonly tint: number; readonly alpha: number }>,
   label: {
     heading: {
+      backgroundVariant: 'control',
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: 44,
       fontStyle: 'bold',
@@ -133,6 +156,7 @@ export const PF2E_ELF_THEME = {
       paddingY: 18,
     },
     section: {
+      backgroundVariant: 'control',
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: 26,
       fontStyle: 'bold',
@@ -144,6 +168,7 @@ export const PF2E_ELF_THEME = {
       paddingY: 14,
     },
     status: {
+      backgroundVariant: 'control',
       fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
       fontSize: 17,
       fontStyle: 'bold',
@@ -154,7 +179,20 @@ export const PF2E_ELF_THEME = {
       paddingX: 26,
       paddingY: 12,
     },
+    tab: {
+      backgroundVariant: 'tab',
+      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      fontSize: 17,
+      fontStyle: 'bold',
+      textColor: '#d9f4e5',
+      strokeColor: '#14241c',
+      strokeThickness: 1,
+      minHeight: 70,
+      paddingX: 28,
+      paddingY: 14,
+    },
     primary: {
+      backgroundVariant: 'control',
       fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
       fontSize: 17,
       fontStyle: 'bold',
@@ -166,6 +204,7 @@ export const PF2E_ELF_THEME = {
       paddingY: 14,
     },
     danger: {
+      backgroundVariant: 'control',
       fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
       fontSize: 17,
       fontStyle: 'bold',

@@ -8,8 +8,8 @@ import {
 } from './pf2eCustomClassCatalog';
 
 describe('PF2e custom class catalog', () => {
-  it('declares two unique class identifiers in display order', () => {
-    expect(PF2E_CUSTOM_CLASS_IDS).toEqual(['ninePatch2', 'nineLabel']);
+  it('declares four unique class identifiers in display order', () => {
+    expect(PF2E_CUSTOM_CLASS_IDS).toEqual(['ninePatch2', 'nineLabel', 'panel', 'tabPages']);
     expect(new Set(PF2E_CUSTOM_CLASS_CATALOG.map(({ id }) => id)).size).toBe(
       PF2E_CUSTOM_CLASS_CATALOG.length,
     );
@@ -18,8 +18,12 @@ describe('PF2e custom class catalog', () => {
 
   it('wraps keyboard focus in both directions', () => {
     expect(getAdjacentPF2eCustomClassId('ninePatch2', 'next')).toBe('nineLabel');
-    expect(getAdjacentPF2eCustomClassId('nineLabel', 'next')).toBe('ninePatch2');
-    expect(getAdjacentPF2eCustomClassId('ninePatch2', 'previous')).toBe('nineLabel');
+    expect(getAdjacentPF2eCustomClassId('nineLabel', 'next')).toBe('panel');
+    expect(getAdjacentPF2eCustomClassId('panel', 'next')).toBe('tabPages');
+    expect(getAdjacentPF2eCustomClassId('tabPages', 'next')).toBe('ninePatch2');
+    expect(getAdjacentPF2eCustomClassId('ninePatch2', 'previous')).toBe('tabPages');
+    expect(getAdjacentPF2eCustomClassId('tabPages', 'previous')).toBe('panel');
+    expect(getAdjacentPF2eCustomClassId('panel', 'previous')).toBe('nineLabel');
     expect(getAdjacentPF2eCustomClassId('nineLabel', 'previous')).toBe('ninePatch2');
   });
 });

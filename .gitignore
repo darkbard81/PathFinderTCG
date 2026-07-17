@@ -8,5 +8,6 @@ coverage/
 
 # Local browser QA artifacts
 artifacts/
+backup/
 playwright-report/
 test-results/

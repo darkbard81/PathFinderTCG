@@ -39,7 +39,7 @@ export class PF2eTree extends Trees {
       space: {
         left: treeTheme.inset,
         right: treeTheme.inset,
-        top: treeTheme.inset,
+        top: treeTheme.topInset,
         bottom: treeTheme.inset,
         item: treeTheme.itemGap,
       },

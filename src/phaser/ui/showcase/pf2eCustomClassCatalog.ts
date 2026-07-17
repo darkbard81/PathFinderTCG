@@ -1,6 +1,6 @@
 import { PF2E_NINE_LABEL_VARIANTS, PF2E_NINE_PATCH_VISUAL_STATES } from '../theme/pf2eElfTheme';
 
-export const PF2E_CUSTOM_CLASS_IDS = ['ninePatch2', 'nineLabel'] as const;
+export const PF2E_CUSTOM_CLASS_IDS = ['ninePatch2', 'nineLabel', 'panel', 'tabPages'] as const;
 export type PF2eCustomClassId = (typeof PF2E_CUSTOM_CLASS_IDS)[number];
 
 export interface PF2eCustomClassDefinition {
@@ -20,9 +20,9 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'ninePatch2',
     name: 'PF2eNinePatch2',
     baseClass: 'NinePatch2',
-    summary: '엘프 테마 패널과 컨트롤 프레임을 크기에 맞게 확장합니다.',
+    summary: '고정 엣지와 반복 가능한 중앙을 가진 엘프 테마 프레임입니다.',
     configKeys: ['variant', 'width', 'height', 'x?', 'y?'],
-    variants: ['panel', 'control'],
+    variants: ['panel', 'control', 'tab'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
   {
@@ -41,6 +41,24 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
       'enabled?',
     ],
     variants: PF2E_NINE_LABEL_VARIANTS,
+    states: PF2E_NINE_PATCH_VISUAL_STATES,
+  },
+  {
+    id: 'panel',
+    name: 'PF2ePanel',
+    baseClass: 'Sizer',
+    summary: 'NinePatch 패널 배경과 테마 inset을 가진 재사용 레이아웃 표면입니다.',
+    configKeys: ['width?', 'height?', 'orientation?', 'inset?', 'itemGap?', 'visualState?'],
+    variants: ['vertical', 'horizontal'],
+    states: PF2E_NINE_PATCH_VISUAL_STATES,
+  },
+  {
+    id: 'tabPages',
+    name: 'PF2eTabPages',
+    baseClass: 'TabPages',
+    summary: '테마 탭과 typed page 정의를 묶고 현재 페이지만 표시합니다.',
+    configKeys: ['pages', 'initialPageId?', 'tabPosition?', 'wrapTabs?', 'onPageChange?'],
+    variants: ['top', 'bottom', 'left', 'right'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
 ] as const;

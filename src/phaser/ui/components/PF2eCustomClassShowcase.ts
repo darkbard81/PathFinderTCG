@@ -17,6 +17,8 @@ import {
 } from '../theme/pf2eElfTheme';
 import { PF2eNineLabel } from './PF2eNineLabel';
 import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2ePanel } from './PF2ePanel';
+import { PF2eTabPages } from './PF2eTabPages';
 
 export interface PF2eCustomClassShowcaseConfig {
   readonly contentWidth: number;
@@ -62,6 +64,18 @@ export class PF2eCustomClassShowcase extends Pages {
       padding: PF2E_ELF_THEME.components.showcase.inset,
       expand: true,
     });
+    this.addPage(this.createPanelPage(scene), {
+      key: 'panel',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createTabPagesPage(scene), {
+      key: 'tabPages',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
 
     this.showClass(this.currentClassId);
   }
@@ -97,6 +111,18 @@ export class PF2eCustomClassShowcase extends Pages {
           'control',
           'idle',
           PF2E_ELF_THEME.components.showcase.controlSampleHeight,
+        ),
+        {
+          expand: true,
+        },
+      )
+      .add(
+        this.createPatchSample(
+          scene,
+          'tab · 탭 전용 프레임',
+          'tab',
+          'idle',
+          PF2E_ELF_THEME.components.tabPages.tabHeight,
         ),
         {
           expand: true,
@@ -169,6 +195,141 @@ export class PF2eCustomClassShowcase extends Pages {
     }
 
     return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createPanelPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('panel');
+    const content = this.createContentSizer(scene);
+    const panelTheme = PF2E_ELF_THEME.components.tabPages;
+    const innerWidth = Math.max(160, this.contentWidth - panelTheme.pageInset * 2);
+    const verticalPanel = new PF2ePanel(scene, {
+      width: this.contentWidth,
+      height: PF2E_ELF_THEME.components.showcase.panelDemoHeight,
+      inset: panelTheme.pageInset,
+      itemGap: PF2E_ELF_THEME.components.showcase.sampleGap,
+    })
+      .add(
+        new PF2eNineLabel(scene, {
+          text: 'Vertical panel',
+          variant: 'section',
+          width: innerWidth,
+        }),
+        { expand: true },
+      )
+      .add(
+        this.createBodyText(
+          scene,
+          'NinePatch 패널 배경, inset, itemGap을 하나의 Sizer 상속 컴포넌트로 제공합니다.',
+          PF2E_ELF_THEME.colors.mutedText,
+          innerWidth,
+        ),
+        { align: 'left' },
+      );
+    const horizontalPanel = new PF2ePanel(scene, {
+      width: this.contentWidth,
+      height: PF2E_ELF_THEME.components.showcase.panelDemoHeight,
+      orientation: 'x',
+      inset: panelTheme.pageInset,
+      visualState: 'selected',
+    })
+      .add(
+        new PF2eNineLabel(scene, {
+          text: 'Left',
+          variant: 'status',
+        }),
+        { proportion: 1 },
+      )
+      .add(
+        new PF2eNineLabel(scene, {
+          text: 'Right',
+          variant: 'status',
+        }),
+        { proportion: 1 },
+      );
+
+    content
+      .add(this.createSectionLabel(scene, 'Layout surfaces'), { expand: true })
+      .add(verticalPanel, { expand: true })
+      .add(horizontalPanel, { expand: true });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createTabPagesPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('tabPages');
+    const content = this.createContentSizer(scene);
+    const status = this.createBodyText(
+      scene,
+      '선택 페이지 · summary',
+      PF2E_ELF_THEME.colors.accentText,
+    );
+    const tabPages = new PF2eTabPages(scene, {
+      width: this.contentWidth,
+      height: PF2E_ELF_THEME.components.showcase.tabPagesDemoHeight,
+      initialPageId: 'summary',
+      pages: [
+        {
+          id: 'summary',
+          title: '요약',
+          page: this.createTabPagePanel(
+            scene,
+            'Summary page',
+            '선택한 카드와 덱의 핵심 정보를 표시하는 페이지입니다.',
+          ),
+        },
+        {
+          id: 'deck',
+          title: '덱',
+          page: this.createTabPagePanel(
+            scene,
+            'Deck page',
+            '카드 구성과 남은 덱 제한을 표시하는 페이지입니다.',
+          ),
+        },
+        {
+          id: 'history',
+          title: '기록',
+          page: this.createTabPagePanel(
+            scene,
+            'History page',
+            '최근 전투와 카드 획득 기록을 표시하는 페이지입니다.',
+          ),
+        },
+      ],
+      onPageChange: (pageId) => {
+        status.setText(`선택 페이지 · ${pageId}`);
+      },
+    });
+
+    content
+      .add(this.createSectionLabel(scene, 'Interactive tab pages'), { expand: true })
+      .add(tabPages, { expand: true })
+      .add(status, { align: 'left' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createTabPagePanel(scene: Phaser.Scene, title: string, description: string): PF2ePanel {
+    const theme = PF2E_ELF_THEME.components.tabPages;
+    const innerWidth = Math.max(140, this.contentWidth - theme.inset * 2 - theme.pageInset * 2);
+
+    return new PF2ePanel(scene, {
+      width: 2,
+      height: 2,
+      inset: theme.pageInset,
+      itemGap: PF2E_ELF_THEME.components.showcase.sampleGap,
+    })
+      .add(
+        new PF2eNineLabel(scene, {
+          text: title,
+          variant: 'status',
+          width: innerWidth,
+        }),
+        { expand: true },
+      )
+      .add(this.createBodyText(scene, description, PF2E_ELF_THEME.colors.mutedText, innerWidth), {
+        align: 'left',
+      });
   }
 
   private createPageShell(
@@ -329,6 +490,7 @@ export class PF2eCustomClassShowcase extends Pages {
     scene: Phaser.Scene,
     text: string,
     color: string,
+    wrapWidth = this.contentWidth,
   ): Phaser.GameObjects.Text {
     return scene.add.text(0, 0, text, {
       color,
@@ -336,7 +498,7 @@ export class PF2eCustomClassShowcase extends Pages {
       fontSize: `${PF2E_ELF_THEME.components.showcase.bodyFontSize}px`,
       lineSpacing: PF2E_ELF_THEME.components.showcase.bodyLineSpacing,
       wordWrap: {
-        width: this.contentWidth,
+        width: wrapWidth,
         useAdvancedWrap: true,
       },
     });

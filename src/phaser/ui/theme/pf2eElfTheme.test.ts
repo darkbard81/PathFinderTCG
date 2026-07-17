@@ -8,23 +8,34 @@ import {
 } from './pf2eElfTheme';
 
 describe('PF2E_ELF_THEME', () => {
-  it('maps panel and control variants to stable manifest assets', () => {
+  it('maps every nine-patch variant to a stable manifest asset', () => {
     expect(PF2E_ELF_THEME.ninePatch.panel.key).toBe(ASSET_KEYS.pf2eElfPanel);
     expect(PF2E_ELF_THEME.ninePatch.control.key).toBe(ASSET_KEYS.pf2eElfControl);
+    expect(PF2E_ELF_THEME.ninePatch.tab.key).toBe(ASSET_KEYS.pf2eElfTab);
 
     expect(assetManifest).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: ASSET_KEYS.pf2eElfPanel, type: 'image' }),
         expect.objectContaining({ key: ASSET_KEYS.pf2eElfControl, type: 'image' }),
+        expect.objectContaining({ key: ASSET_KEYS.pf2eElfTab, type: 'image' }),
       ]),
     );
   });
 
   it('declares the normalized nine-patch slices', () => {
-    expect(PF2E_ELF_THEME.ninePatch.panel.columns).toEqual([72, undefined, 72]);
-    expect(PF2E_ELF_THEME.ninePatch.panel.rows).toEqual([72, undefined, 72]);
-    expect(PF2E_ELF_THEME.ninePatch.control.columns).toEqual([48, undefined, 48]);
-    expect(PF2E_ELF_THEME.ninePatch.control.rows).toEqual([24, undefined, 24]);
+    expect(PF2E_ELF_THEME.ninePatch.panel.columns).toEqual([104, undefined, 104]);
+    expect(PF2E_ELF_THEME.ninePatch.panel.rows).toEqual([104, undefined, 104]);
+    expect(PF2E_ELF_THEME.ninePatch.control.columns).toEqual([56, undefined, 56]);
+    expect(PF2E_ELF_THEME.ninePatch.control.rows).toEqual([32, undefined, 32]);
+    expect(PF2E_ELF_THEME.ninePatch.tab.columns).toEqual([56, undefined, 56]);
+    expect(PF2E_ELF_THEME.ninePatch.tab.rows).toEqual([32, undefined, 32]);
+  });
+
+  it('scales edge cells and repeats the seamless internal cell', () => {
+    expect(PF2E_ELF_THEME.ninePatchStretchMode).toEqual({
+      edge: 'scale',
+      internal: 'repeat',
+    });
   });
 
   it('defines every interactive visual state and label variant', () => {

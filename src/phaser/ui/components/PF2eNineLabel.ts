@@ -30,7 +30,7 @@ export class PF2eNineLabel extends Label {
     const height = Math.max(config.height ?? style.minHeight, style.minHeight);
     const fontSize = config.fontSize ?? style.fontSize;
     const background = new PF2eNinePatch2(scene, {
-      variant: 'control',
+      variant: style.backgroundVariant,
       width: config.width ?? 2,
       height,
     });

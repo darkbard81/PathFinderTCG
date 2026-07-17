@@ -9,6 +9,7 @@ export interface AssetEntry {
 export const ASSET_KEYS = {
   pf2eElfPanel: 'ui.pf2e.elf.panel',
   pf2eElfControl: 'ui.pf2e.elf.control',
+  pf2eElfTab: 'ui.pf2e.elf.tab',
 } as const;
 
 /**
@@ -25,5 +26,10 @@ export const assetManifest: readonly AssetEntry[] = [
     key: ASSET_KEYS.pf2eElfControl,
     type: 'image',
     path: '/assets/ui/pf2e-elf-control-ninepatch.png',
+  },
+  {
+    key: ASSET_KEYS.pf2eElfTab,
+    type: 'image',
+    path: '/assets/ui/pf2e-elf-tab-ninepatch.png',
   },
 ];

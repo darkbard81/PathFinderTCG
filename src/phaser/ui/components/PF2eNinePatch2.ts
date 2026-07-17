@@ -29,10 +29,7 @@ export class PF2eNinePatch2 extends NinePatch2 {
       rows: [...style.rows],
       preserveRatio: true,
       maxFixedPartScale: 1,
-      stretchMode: {
-        edge: 'scale',
-        internal: 'scale',
-      },
+      stretchMode: PF2E_ELF_THEME.ninePatchStretchMode,
     });
 
     scene.add.existing(this);
