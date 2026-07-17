@@ -14,15 +14,18 @@ export interface PF2eButtonDefinition {
 export interface PF2eButtonsConfig {
   readonly buttons: readonly [PF2eButtonDefinition, ...PF2eButtonDefinition[]];
   readonly orientation?: 'x' | 'y';
+  /**
+   * Minimum group bounds. A parent rexUI Sizer owns the final bounds and distributes them.
+   */
   readonly width?: number;
   readonly height?: number;
-  readonly buttonWidth?: number;
   readonly onButtonClick?: (buttonId: string) => void;
 }
 
 export class PF2eButtons extends Buttons {
   private readonly buttonById: Map<string, PF2eNineLabel>;
   private readonly onButtonClick?: (buttonId: string) => void;
+  private isResolvingFinalWidth = false;
 
   constructor(scene: Phaser.Scene, config: PF2eButtonsConfig) {
     const theme = PF2E_ELF_THEME.components.buttons;
@@ -35,7 +38,6 @@ export class PF2eButtons extends Buttons {
       const button = new PF2eNineLabel(scene, {
         text: definition.text,
         variant: definition.variant ?? 'primary',
-        width: config.buttonWidth ?? theme.width,
         height: theme.height,
         enabled: definition.enabled,
       }).setName(definition.id);
@@ -48,6 +50,7 @@ export class PF2eButtons extends Buttons {
       height: config.height,
       orientation: config.orientation ?? 'x',
       buttons: buttonObjects,
+      expand: true,
       space: {
         item: theme.gap,
       },
@@ -55,12 +58,13 @@ export class PF2eButtons extends Buttons {
         mode: 'release',
         threshold: 10,
       },
-      align: 'center',
     });
 
     scene.add.existing(this);
     this.buttonById = buttonById;
     this.onButtonClick = config.onButtonClick;
+    this.setSizerEventsEnable(true);
+    this.on('postlayout', this.handlePostLayout);
     this.on('button.over', this.handleButtonOver)
       .on('button.out', this.handleButtonOut)
       .on('button.down', this.handleButtonDown)
@@ -88,6 +92,22 @@ export class PF2eButtons extends Buttons {
     }
     return button;
   }
+
+  private readonly handlePostLayout = (): void => {
+    if (this.isResolvingFinalWidth || this.orientation !== 0) {
+      return;
+    }
+
+    const minimumWidth = this.minWidth;
+    this.isResolvingFinalWidth = true;
+    try {
+      // Buttons caches proportional widths before its parent Sizer supplies the final width.
+      this.setMinWidth(this.width).layout();
+    } finally {
+      this.setMinWidth(minimumWidth);
+      this.isResolvingFinalWidth = false;
+    }
+  };
 
   private readonly handleButtonOver = (button: Phaser.GameObjects.GameObject): void => {
     if (button instanceof PF2eNineLabel && this.getButtonEnable(button)) {

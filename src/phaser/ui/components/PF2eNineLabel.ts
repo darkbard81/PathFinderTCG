@@ -11,6 +11,9 @@ import { PF2eNinePatch2 } from './PF2eNinePatch2';
 export interface PF2eNineLabelConfig {
   readonly text: string;
   readonly variant: PF2eNineLabelVariant;
+  /**
+   * Minimum bounds. A parent rexUI Sizer owns the final bounds and may expand this label.
+   */
   readonly width?: number;
   readonly height?: number;
   readonly fontSize?: number;

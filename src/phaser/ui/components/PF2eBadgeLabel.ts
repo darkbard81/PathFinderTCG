@@ -25,6 +25,9 @@ export interface PF2eBadgeLabelConfig {
   readonly badgeValue: string | number;
   readonly variant?: PF2eNineLabelVariant;
   readonly badgePosition?: PF2eBadgePosition;
+  /**
+   * Minimum bounds. A parent rexUI Sizer owns the final bounds and expands the main label.
+   */
   readonly width?: number;
   readonly height?: number;
 }
@@ -39,7 +42,7 @@ export class PF2eBadgeLabel extends BadgeLabel {
     const mainLabel = new PF2eNineLabel(scene, {
       text: config.text,
       variant: config.variant ?? 'status',
-      width: config.width ?? 320,
+      width: config.width,
       height: config.height,
     });
     const badgeImage = scene.add
@@ -86,6 +89,9 @@ export class PF2eBadgeLabel extends BadgeLabel {
     });
 
     scene.add.existing(this);
+    const mainLabelSizerConfig = this.getSizerConfig(mainLabel);
+    mainLabelSizerConfig.expandWidth = 1;
+    mainLabelSizerConfig.expandHeight = 1;
     this.mainLabel = mainLabel;
     this.badgeText = badgeText;
   }

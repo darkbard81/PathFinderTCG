@@ -154,7 +154,6 @@ export const PF2E_ELF_THEME = {
     },
     buttons: {
       gap: 12,
-      width: 176,
       height: 58,
     },
   },

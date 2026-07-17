@@ -441,7 +441,6 @@ export class PF2eCustomClassShowcase extends Pages {
       PF2E_ELF_THEME.colors.accentText,
     );
     const openButton = new PF2eButtons(scene, {
-      width: this.contentWidth,
       buttons: [{ id: 'openDialog', text: '확인 대화상자 열기', variant: 'danger' }],
       onButtonClick: () => {
         new PF2eConfirmDialog(scene, {
@@ -473,7 +472,7 @@ export class PF2eCustomClassShowcase extends Pages {
         ),
         { align: 'left' },
       )
-      .add(openButton, { align: 'center' })
+      .add(openButton, { expand: true })
       .add(status, { align: 'left' });
 
     return this.createPageShell(scene, definition.id, content);
@@ -482,16 +481,13 @@ export class PF2eCustomClassShowcase extends Pages {
   private createBadgeLabelPage(scene: Phaser.Scene): Sizer {
     const definition = getPF2eCustomClassDefinition('badgeLabel');
     const content = this.createContentSizer(scene);
-    const labelWidth = Math.max(180, this.contentWidth - PF2E_ELF_THEME.sizes.badge / 2);
     const mutableBadge = new PF2eBadgeLabel(scene, {
       text: '보유 카드',
       badgeValue: 3,
       badgePosition: 'rightTop',
-      width: labelWidth,
     });
     let badgeValue = 3;
     const incrementButton = new PF2eButtons(scene, {
-      width: this.contentWidth,
       buttons: [{ id: 'incrementBadge', text: '배지 +1' }],
       onButtonClick: () => {
         badgeValue += 1;
@@ -501,17 +497,16 @@ export class PF2eCustomClassShowcase extends Pages {
 
     content
       .add(this.createSectionLabel(scene, 'Badge positions and values'), { expand: true })
-      .add(mutableBadge, { align: 'center' })
+      .add(mutableBadge, { expand: true })
       .add(
         new PF2eBadgeLabel(scene, {
           text: '새로운 퀘스트',
           badgeValue: '!',
           badgePosition: 'leftTop',
-          width: labelWidth,
         }),
-        { align: 'center' },
+        { expand: true },
       )
-      .add(incrementButton, { align: 'center' });
+      .add(incrementButton, { expand: true });
 
     return this.createPageShell(scene, definition.id, content);
   }
@@ -524,13 +519,7 @@ export class PF2eCustomClassShowcase extends Pages {
       '버튼 입력 · 대기 중',
       PF2E_ELF_THEME.colors.accentText,
     );
-    const horizontalButtonWidth = Math.max(
-      100,
-      Math.floor((this.contentWidth - PF2E_ELF_THEME.components.buttons.gap) / 2),
-    );
     const horizontal = new PF2eButtons(scene, {
-      width: this.contentWidth,
-      buttonWidth: horizontalButtonWidth,
       buttons: [
         { id: 'scout', text: '정찰' },
         { id: 'endTurn', text: '턴 종료', variant: 'danger' },
@@ -540,9 +529,7 @@ export class PF2eCustomClassShowcase extends Pages {
       },
     });
     const vertical = new PF2eButtons(scene, {
-      width: this.contentWidth,
       orientation: 'y',
-      buttonWidth: this.contentWidth,
       buttons: [
         { id: 'draw', text: '카드 뽑기' },
         { id: 'locked', text: '잠긴 행동', enabled: false },
@@ -554,9 +541,9 @@ export class PF2eCustomClassShowcase extends Pages {
 
     content
       .add(this.createSectionLabel(scene, 'Horizontal action group'), { expand: true })
-      .add(horizontal, { align: 'center' })
+      .add(horizontal, { expand: true })
       .add(this.createSectionLabel(scene, 'Vertical and disabled state'), { expand: true })
-      .add(vertical, { align: 'center' })
+      .add(vertical, { expand: true })
       .add(status, { align: 'left' });
 
     return this.createPageShell(scene, definition.id, content);

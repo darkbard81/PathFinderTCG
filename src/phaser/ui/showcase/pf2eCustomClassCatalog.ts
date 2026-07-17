@@ -159,7 +159,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     name: 'PF2eButtons',
     baseClass: 'Buttons',
     summary: 'typed button 정의와 그룹 입력 상태를 관리하는 엘프 테마 액션 그룹입니다.',
-    configKeys: ['buttons', 'orientation?', 'width?', 'height?', 'buttonWidth?', 'onButtonClick?'],
+    configKeys: ['buttons', 'orientation?', 'width?', 'height?', 'onButtonClick?'],
     variants: ['horizontal', 'vertical', 'primary', 'danger'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
