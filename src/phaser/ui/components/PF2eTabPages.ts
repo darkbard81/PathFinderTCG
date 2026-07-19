@@ -29,9 +29,6 @@ export class PF2eTabPages extends TabPages {
     const theme = PF2E_ELF_THEME.components.tabPages;
     const tabPosition = config.tabPosition ?? 'top';
     const wrapTabs = config.wrapTabs ?? (tabPosition === 'top' || tabPosition === 'bottom');
-    const tabBarBounds = scene.add
-      .rectangle(0, 0, 2, 2, PF2E_ELF_THEME.colors.backdrop, 0)
-      .setStrokeStyle(PF2E_ELF_THEME.strokes.control, PF2E_ELF_THEME.colors.accent);
 
     super(scene, {
       width: config.width,
@@ -45,8 +42,6 @@ export class PF2eTabPages extends TabPages {
         tabs: 'center',
       },
       tabs: {
-        // Temporary outline for verifying the rexUI tab-bar layout bounds.
-        background: tabBarBounds,
         space: {
           item: theme.tabGap,
         },
