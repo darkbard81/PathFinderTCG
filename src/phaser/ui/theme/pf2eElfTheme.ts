@@ -47,6 +47,9 @@ export interface PF2eNineLabelThemeStyle {
   readonly paddingY: number;
 }
 
+const PF2E_DEFAULT_FONT_FAMILY = 'Pretendard, system-ui, sans-serif';
+const PF2E_MONO_FONT_FAMILY = 'D2Coding, ui-monospace, SFMono-Regular, Menlo, monospace';
+
 export const PF2E_ELF_THEME = {
   colors: {
     backdrop: 0x06110d,
@@ -60,9 +63,9 @@ export const PF2E_ELF_THEME = {
     dangerText: '#f0aaa0',
   },
   typography: {
-    display: 'Georgia, "Times New Roman", serif',
-    body: 'Inter, Pretendard, system-ui, sans-serif',
-    mono: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    display: PF2E_DEFAULT_FONT_FAMILY,
+    body: PF2E_DEFAULT_FONT_FAMILY,
+    mono: PF2E_MONO_FONT_FAMILY,
   },
   spacing: {
     panelInset: 42,
@@ -225,7 +228,7 @@ export const PF2E_ELF_THEME = {
   label: {
     heading: {
       backgroundVariant: 'control',
-      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontFamily: PF2E_DEFAULT_FONT_FAMILY,
       fontSize: 44,
       fontStyle: 'bold',
       textColor: '#f7e9bd',
@@ -237,7 +240,7 @@ export const PF2E_ELF_THEME = {
     },
     section: {
       backgroundVariant: 'control',
-      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontFamily: PF2E_DEFAULT_FONT_FAMILY,
       fontSize: 26,
       fontStyle: 'bold',
       textColor: '#e9dfbd',
@@ -249,7 +252,7 @@ export const PF2E_ELF_THEME = {
     },
     status: {
       backgroundVariant: 'control',
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      fontFamily: PF2E_DEFAULT_FONT_FAMILY,
       fontSize: 17,
       fontStyle: 'bold',
       textColor: '#bce8d0',
@@ -261,7 +264,7 @@ export const PF2E_ELF_THEME = {
     },
     tab: {
       backgroundVariant: 'tab',
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      fontFamily: PF2E_DEFAULT_FONT_FAMILY,
       fontSize: 17,
       fontStyle: 'bold',
       textColor: '#d9f4e5',
@@ -273,7 +276,7 @@ export const PF2E_ELF_THEME = {
     },
     primary: {
       backgroundVariant: 'button',
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      fontFamily: PF2E_DEFAULT_FONT_FAMILY,
       fontSize: 17,
       fontStyle: 'bold',
       textColor: '#f7e9bd',
@@ -285,7 +288,7 @@ export const PF2E_ELF_THEME = {
     },
     danger: {
       backgroundVariant: 'button',
-      fontFamily: 'Inter, Pretendard, system-ui, sans-serif',
+      fontFamily: PF2E_DEFAULT_FONT_FAMILY,
       fontSize: 17,
       fontStyle: 'bold',
       textColor: '#f0aaa0',
