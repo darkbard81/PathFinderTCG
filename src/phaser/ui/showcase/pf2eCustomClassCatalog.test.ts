@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  getAdjacentPF2eCustomClassId,
   PF2E_CUSTOM_CLASS_CATALOG,
   PF2E_CUSTOM_CLASS_IDS,
   PF2E_DEFAULT_CUSTOM_CLASS_ID,
@@ -26,15 +25,18 @@ describe('PF2e custom class catalog', () => {
     expect(PF2E_DEFAULT_CUSTOM_CLASS_ID).toBe('ninePatch2');
   });
 
-  it('wraps keyboard focus in both directions', () => {
-    for (const [index, classId] of PF2E_CUSTOM_CLASS_IDS.entries()) {
-      const nextId = PF2E_CUSTOM_CLASS_IDS[(index + 1) % PF2E_CUSTOM_CLASS_IDS.length];
-      const previousId =
-        PF2E_CUSTOM_CLASS_IDS[
-          (index - 1 + PF2E_CUSTOM_CLASS_IDS.length) % PF2E_CUSTOM_CLASS_IDS.length
-        ];
-      expect(getAdjacentPF2eCustomClassId(classId, 'next')).toBe(nextId);
-      expect(getAdjacentPF2eCustomClassId(classId, 'previous')).toBe(previousId);
-    }
+  it('keeps behavior configuration out of themed component adapters', () => {
+    const behaviorKeys = [
+      'onActivate?',
+      'onButtonClick?',
+      'onPageChange?',
+      'onScroll?',
+      'onSelectionChange?',
+      'onConfirm?',
+      'onCancel?',
+      'initialSelectedId?',
+    ];
+    const configKeys = PF2E_CUSTOM_CLASS_CATALOG.flatMap(({ configKeys: keys }) => keys);
+    expect(configKeys).not.toEqual(expect.arrayContaining(behaviorKeys));
   });
 });

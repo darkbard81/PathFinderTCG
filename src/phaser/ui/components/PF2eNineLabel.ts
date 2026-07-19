@@ -1,4 +1,4 @@
-import * as Phaser from 'phaser';
+import type * as Phaser from 'phaser';
 import { Label } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
 import {
@@ -18,15 +18,11 @@ export interface PF2eNineLabelConfig {
   readonly height?: number;
   readonly fontSize?: number;
   readonly wrapWidth?: number;
-  readonly onActivate?: () => void;
-  readonly enabled?: boolean;
 }
 
 export class PF2eNineLabel extends Label {
   private readonly background: PF2eNinePatch2;
   private readonly textObject: Phaser.GameObjects.Text;
-  private readonly onActivate?: () => void;
-  private enabled: boolean;
 
   constructor(scene: Phaser.Scene, config: PF2eNineLabelConfig) {
     const style = PF2E_ELF_THEME.label[config.variant];
@@ -71,31 +67,6 @@ export class PF2eNineLabel extends Label {
     scene.add.existing(this);
     this.background = background;
     this.textObject = text;
-    this.onActivate = config.onActivate;
-    this.enabled = config.enabled ?? true;
-
-    if (this.onActivate) {
-      this.setInteractive({ useHandCursor: true })
-        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, this.handlePointerOver)
-        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, this.handlePointerOut)
-        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, this.handlePointerDown)
-        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, this.handlePointerUp);
-    }
-
-    this.setEnabled(this.enabled);
-  }
-
-  setEnabled(enabled: boolean): this {
-    this.enabled = enabled;
-    if (this.onActivate) {
-      if (enabled) {
-        this.setInteractive({ useHandCursor: true });
-      } else {
-        this.disableInteractive();
-      }
-    }
-    this.setVisualState(enabled ? 'idle' : 'disabled');
-    return this;
   }
 
   setVisualState(state: PF2eNinePatchVisualState): this {
@@ -103,30 +74,4 @@ export class PF2eNineLabel extends Label {
     this.textObject.setAlpha(state === 'disabled' ? 0.62 : 1);
     return this;
   }
-
-  private readonly handlePointerOver = (): void => {
-    if (this.enabled) {
-      this.setVisualState('hover');
-    }
-  };
-
-  private readonly handlePointerOut = (): void => {
-    if (this.enabled) {
-      this.setVisualState('idle');
-    }
-  };
-
-  private readonly handlePointerDown = (): void => {
-    if (this.enabled) {
-      this.setVisualState('pressed');
-    }
-  };
-
-  private readonly handlePointerUp = (): void => {
-    if (!this.enabled) {
-      return;
-    }
-    this.setVisualState('hover');
-    this.onActivate?.();
-  };
 }

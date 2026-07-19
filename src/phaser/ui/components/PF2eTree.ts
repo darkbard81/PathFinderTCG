@@ -1,37 +1,33 @@
-import * as Phaser from 'phaser';
+import type * as Phaser from 'phaser';
 import Folder from 'phaser4-rex-plugins/templates/ui/folder/Folder.js';
 import Sizer from 'phaser4-rex-plugins/templates/ui/sizer/Sizer.js';
 import { Trees } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 import type Tree from 'phaser4-rex-plugins/templates/ui/trees/tree/Tree.js';
 
-import {
-  getAdjacentPF2eCustomClassId,
-  PF2E_CUSTOM_CLASS_CATALOG,
-  PF2E_DEFAULT_CUSTOM_CLASS_ID,
-  type PF2eCustomClassId,
-} from '../showcase/pf2eCustomClassCatalog';
 import { PF2E_ELF_THEME, type PF2eNinePatchVisualState } from '../theme/pf2eElfTheme';
 import { PF2eNineLabel } from './PF2eNineLabel';
 import { PF2eNinePatch2 } from './PF2eNinePatch2';
 
+export interface PF2eTreeNodeDefinition {
+  readonly id: string;
+  readonly text: string;
+}
+
 export interface PF2eTreeConfig {
-  readonly initialClassId?: PF2eCustomClassId;
-  readonly onSelectionChange?: (classId: PF2eCustomClassId) => void;
+  readonly nodes: readonly PF2eTreeNodeDefinition[];
   readonly showBackground?: boolean;
 }
 
 export class PF2eTree extends Trees {
   private readonly rootTree: Tree;
-  private readonly nodeById = new Map<PF2eCustomClassId, PF2eNineLabel>();
-  private readonly idByNode = new Map<Phaser.GameObjects.GameObject, PF2eCustomClassId>();
-  private readonly onSelectionChange?: (classId: PF2eCustomClassId) => void;
-  private selectedId: PF2eCustomClassId;
-  private focusedId: PF2eCustomClassId;
-  private hoveredId?: PF2eCustomClassId;
-  private pressedId?: PF2eCustomClassId;
+  private readonly nodeById = new Map<string, PF2eNineLabel>();
+  private readonly idByNode = new Map<Phaser.GameObjects.GameObject, string>();
 
-  constructor(scene: Phaser.Scene, config: PF2eTreeConfig = {}) {
+  constructor(scene: Phaser.Scene, config: PF2eTreeConfig) {
     const treeTheme = PF2E_ELF_THEME.components.tree;
+    if (config.nodes.length === 0) {
+      throw new Error('PF2eTree requires at least one node');
+    }
 
     super(scene, {
       width: 2,
@@ -88,10 +84,6 @@ export class PF2eTree extends Trees {
       );
     }
 
-    this.selectedId = config.initialClassId ?? PF2E_DEFAULT_CUSTOM_CLASS_ID;
-    this.focusedId = this.selectedId;
-    this.onSelectionChange = config.onSelectionChange;
-
     this.rootTree = this.addTree({
       nodeKey: 'pf2eCustomClasses',
       nodeBody: {
@@ -121,15 +113,13 @@ export class PF2eTree extends Trees {
       },
     });
     this.rootTree.setText('PF2e Custom Classes');
-    const toggleButton = this.rootTree.getElement('toggleButton');
-    if (toggleButton instanceof Phaser.GameObjects.GameObject) {
-      this.rootTree.disableClick(toggleButton);
-      toggleButton.on('pointerup', this.handleToggleClick);
-    }
 
-    for (const definition of PF2E_CUSTOM_CLASS_CATALOG) {
+    for (const definition of config.nodes) {
+      if (this.nodeById.has(definition.id)) {
+        throw new Error(`Duplicate PF2e tree node id: ${definition.id}`);
+      }
       const node = new PF2eNineLabel(scene, {
-        text: definition.name,
+        text: definition.text,
         variant: 'status',
         fontSize: treeTheme.rowFontSize,
         height: PF2E_ELF_THEME.sizes.treeRow,
@@ -138,55 +128,32 @@ export class PF2eTree extends Trees {
       this.nodeById.set(definition.id, node);
       this.idByNode.set(node, definition.id);
     }
-
-    this.setChildrenInteractive({
-      click: {
-        mode: 'release',
-        threshold: 10,
-      },
-      over: true,
-    })
-      .on('child.down', this.handleChildDown)
-      .on('child.up', this.handleChildUp)
-      .on('child.over', this.handleChildOver)
-      .on('child.out', this.handleChildOut)
-      .on('child.click', this.handleChildClick);
-
-    this.updateNodeStates();
   }
 
-  get selectedClassId(): PF2eCustomClassId {
-    return this.selectedId;
+  get nodeIds(): readonly string[] {
+    return [...this.nodeById.keys()];
   }
 
-  get focusedClassId(): PF2eCustomClassId {
-    return this.focusedId;
+  get expanded(): boolean {
+    return this.rootTree.expanded;
   }
 
-  setSelectedClass(classId: PF2eCustomClassId): this {
-    this.focusedId = classId;
-    if (this.selectedId === classId) {
-      this.updateNodeStates();
-      return this;
+  getNodeId(node: Phaser.GameObjects.GameObject): string | undefined {
+    return this.idByNode.get(node);
+  }
+
+  setNodeVisualState(nodeId: string, state: PF2eNinePatchVisualState): this {
+    const node = this.nodeById.get(nodeId);
+    if (!node) {
+      throw new Error(`Unknown PF2e tree node: ${nodeId}`);
     }
-
-    this.selectedId = classId;
-    this.updateNodeStates();
-    this.onSelectionChange?.(classId);
+    node.setVisualState(state);
     return this;
   }
 
-  focusPrevious(): this {
-    return this.moveFocus('previous');
-  }
-
-  focusNext(): this {
-    return this.moveFocus('next');
-  }
-
-  activateFocused(): this {
-    this.ensureExpanded();
-    return this.setSelectedClass(this.focusedId);
+  setExpanded(expanded: boolean): this {
+    this.rootTree.setExpandedState(expanded);
+    return this;
   }
 
   override destroy(fromScene?: boolean): void {
@@ -195,93 +162,10 @@ export class PF2eTree extends Trees {
     }
 
     // phaser4-rex-plugins 4.2.0 references an unimported `Clear` helper in
-    // Trees.destroy() and Tree.destroy(). Bypass only those two broken
-    // overrides while preserving the normal Sizer/Folder child cleanup.
+    // Trees.destroy() and Tree.destroy(). Bypass only those broken overrides.
     this.rootTree.ignoreDestroy = true;
     Sizer.prototype.destroy.call(this, fromScene);
     this.rootTree.ignoreDestroy = false;
     Folder.prototype.destroy.call(this.rootTree, fromScene);
-  }
-
-  private moveFocus(direction: 'previous' | 'next'): this {
-    this.ensureExpanded();
-    this.focusedId = getAdjacentPF2eCustomClassId(this.focusedId, direction);
-    this.updateNodeStates();
-    return this;
-  }
-
-  private ensureExpanded(): void {
-    if (!this.rootTree.expanded) {
-      this.rootTree.setExpandedState(true);
-    }
-  }
-
-  private readonly handleChildDown = (child: Phaser.GameObjects.GameObject): void => {
-    const classId = this.idByNode.get(child);
-    if (!classId) {
-      return;
-    }
-    this.pressedId = classId;
-    this.updateNodeStates();
-  };
-
-  private readonly handleChildUp = (child: Phaser.GameObjects.GameObject): void => {
-    const classId = this.idByNode.get(child);
-    if (this.pressedId === classId) {
-      this.pressedId = undefined;
-      this.updateNodeStates();
-    }
-  };
-
-  private readonly handleChildOver = (child: Phaser.GameObjects.GameObject): void => {
-    const classId = this.idByNode.get(child);
-    if (!classId) {
-      return;
-    }
-    this.hoveredId = classId;
-    this.updateNodeStates();
-  };
-
-  private readonly handleChildOut = (child: Phaser.GameObjects.GameObject): void => {
-    const classId = this.idByNode.get(child);
-    if (this.hoveredId === classId) {
-      this.hoveredId = undefined;
-    }
-    if (this.pressedId === classId) {
-      this.pressedId = undefined;
-    }
-    this.updateNodeStates();
-  };
-
-  private readonly handleChildClick = (child: Phaser.GameObjects.GameObject): void => {
-    if (child === this.rootTree) {
-      this.handleToggleClick();
-      return;
-    }
-
-    const classId = this.idByNode.get(child);
-    if (classId) {
-      this.setSelectedClass(classId);
-    }
-  };
-
-  private readonly handleToggleClick = (): void => {
-    this.rootTree.setExpandedState(!this.rootTree.expanded);
-  };
-
-  private updateNodeStates(): void {
-    for (const [classId, node] of this.nodeById) {
-      let state: PF2eNinePatchVisualState = 'idle';
-      if (classId === this.selectedId) {
-        state = 'selected';
-      } else if (classId === this.pressedId) {
-        state = 'pressed';
-      } else if (classId === this.focusedId) {
-        state = 'focused';
-      } else if (classId === this.hoveredId) {
-        state = 'hover';
-      }
-      node.setVisualState(state);
-    }
   }
 }

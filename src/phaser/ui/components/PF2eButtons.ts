@@ -8,7 +8,7 @@ export interface PF2eButtonDefinition {
   readonly id: string;
   readonly text: string;
   readonly variant?: Extract<PF2eNineLabelVariant, 'primary' | 'danger'>;
-  readonly enabled?: boolean;
+  readonly fontSize?: number;
 }
 
 export interface PF2eButtonsConfig {
@@ -19,13 +19,10 @@ export interface PF2eButtonsConfig {
    */
   readonly width?: number;
   readonly height?: number;
-  readonly onButtonClick?: (buttonId: string) => void;
 }
 
 export class PF2eButtons extends Buttons {
   private readonly buttonById: Map<string, PF2eNineLabel>;
-  private readonly onButtonClick?: (buttonId: string) => void;
-  private isResolvingFinalWidth = false;
 
   constructor(scene: Phaser.Scene, config: PF2eButtonsConfig) {
     const theme = PF2E_ELF_THEME.components.buttons;
@@ -39,7 +36,7 @@ export class PF2eButtons extends Buttons {
         text: definition.text,
         variant: definition.variant ?? 'primary',
         height: theme.height,
-        enabled: definition.enabled,
+        fontSize: definition.fontSize,
       }).setName(definition.id);
       buttonById.set(definition.id, button);
       return button;
@@ -62,52 +59,21 @@ export class PF2eButtons extends Buttons {
 
     scene.add.existing(this);
     this.buttonById = buttonById;
-    this.onButtonClick = config.onButtonClick;
-    this.setSizerEventsEnable(true);
-    this.on('postlayout', this.handlePostLayout);
     this.on('button.over', this.handleButtonOver)
       .on('button.out', this.handleButtonOut)
       .on('button.down', this.handleButtonDown)
       .on('button.up', this.handleButtonUp)
       .on('button.enable', this.handleButtonEnable)
-      .on('button.disable', this.handleButtonDisable)
-      .on('button.click', this.handleButtonClick);
-
-    for (const definition of config.buttons) {
-      this.setButtonEnabled(definition.id, definition.enabled ?? true);
-    }
+      .on('button.disable', this.handleButtonDisable);
   }
 
-  setButtonEnabled(buttonId: string, enabled: boolean): this {
-    const button = this.getPF2eButton(buttonId);
-    this.setButtonEnable(button, enabled);
-    button.setEnabled(enabled);
-    return this;
-  }
-
-  private getPF2eButton(buttonId: string): PF2eNineLabel {
+  getButtonById(buttonId: string): PF2eNineLabel {
     const button = this.buttonById.get(buttonId);
     if (!button) {
       throw new Error(`Unknown PF2e button: ${buttonId}`);
     }
     return button;
   }
-
-  private readonly handlePostLayout = (): void => {
-    if (this.isResolvingFinalWidth || this.orientation !== 0) {
-      return;
-    }
-
-    const minimumWidth = this.minWidth;
-    this.isResolvingFinalWidth = true;
-    try {
-      // Buttons caches proportional widths before its parent Sizer supplies the final width.
-      this.setMinWidth(this.width).layout();
-    } finally {
-      this.setMinWidth(minimumWidth);
-      this.isResolvingFinalWidth = false;
-    }
-  };
 
   private readonly handleButtonOver = (button: Phaser.GameObjects.GameObject): void => {
     if (button instanceof PF2eNineLabel && this.getButtonEnable(button)) {
@@ -135,20 +101,13 @@ export class PF2eButtons extends Buttons {
 
   private readonly handleButtonEnable = (button: Phaser.GameObjects.GameObject): void => {
     if (button instanceof PF2eNineLabel) {
-      button.setEnabled(true);
+      button.setVisualState('idle');
     }
   };
 
   private readonly handleButtonDisable = (button: Phaser.GameObjects.GameObject): void => {
     if (button instanceof PF2eNineLabel) {
-      button.setEnabled(false);
-    }
-  };
-
-  private readonly handleButtonClick = (button: Phaser.GameObjects.GameObject): void => {
-    if (button instanceof PF2eNineLabel) {
-      button.setVisualState('hover');
-      this.onButtonClick?.(button.name);
+      button.setVisualState('disabled');
     }
   };
 }

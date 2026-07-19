@@ -17,12 +17,9 @@ export interface PF2eScrollablePanelConfig {
   readonly hideScrollbarWhenUnscrollable?: boolean;
   readonly wheelSpeed?: number;
   readonly dragThreshold?: number;
-  readonly onScroll?: (progress: number) => void;
 }
 
 export class PF2eScrollablePanel extends ScrollablePanel {
-  private readonly onScroll?: (progress: number) => void;
-
   constructor(scene: Phaser.Scene, config: PF2eScrollablePanelConfig) {
     const theme = PF2E_ELF_THEME.components.scrollablePanel;
     const scrollbar = createPF2eScrollbarConfig(
@@ -67,45 +64,6 @@ export class PF2eScrollablePanel extends ScrollablePanel {
     });
 
     scene.add.existing(this);
-    this.onScroll = config.onScroll;
     bindPF2eScrollbarThumbStates(scrollbar.thumb);
-    this.on('scroll', this.handleScroll);
   }
-
-  get scrollProgress(): number {
-    return this.t;
-  }
-
-  setScrollProgress(progress: number): this {
-    this.setT(progress, true);
-    return this;
-  }
-
-  override setChildOY(value: number, clamp?: boolean): this {
-    super.setChildOY(value, clamp);
-    this.onScroll?.(this.t);
-    return this;
-  }
-
-  override setT(value: number, clamp?: boolean): this {
-    super.setT(value, clamp);
-    this.onScroll?.(this.t);
-    return this;
-  }
-
-  scrollToStart(): this {
-    this.scrollToTop();
-    this.onScroll?.(this.t);
-    return this;
-  }
-
-  scrollToEnd(): this {
-    this.scrollToBottom();
-    this.onScroll?.(this.t);
-    return this;
-  }
-
-  private readonly handleScroll = (): void => {
-    this.onScroll?.(this.t);
-  };
 }

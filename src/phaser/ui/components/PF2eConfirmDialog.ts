@@ -12,14 +12,9 @@ export interface PF2eConfirmDialogConfig {
   readonly danger?: boolean;
   readonly width?: number;
   readonly height?: number;
-  readonly onConfirm?: () => void;
-  readonly onCancel?: () => void;
 }
 
 export class PF2eConfirmDialog extends ConfirmDialog {
-  private readonly onConfirm?: () => void;
-  private readonly onCancel?: () => void;
-
   constructor(scene: Phaser.Scene, config: PF2eConfirmDialogConfig) {
     const theme = PF2E_ELF_THEME.components.confirmDialog;
     const width = config.width ?? 620;
@@ -40,7 +35,7 @@ export class PF2eConfirmDialog extends ConfirmDialog {
           text: {
             color: PF2E_ELF_THEME.colors.text,
             fontFamily: PF2E_ELF_THEME.typography.display,
-            fontSize: '28px',
+            fontSize: `${theme.titleFontSize}px`,
             fontStyle: 'bold',
             align: 'center',
           },
@@ -52,7 +47,7 @@ export class PF2eConfirmDialog extends ConfirmDialog {
           text: {
             color: PF2E_ELF_THEME.colors.mutedText,
             fontFamily: PF2E_ELF_THEME.typography.body,
-            fontSize: '17px',
+            fontSize: `${theme.contentFontSize}px`,
             lineSpacing: 7,
             align: 'center',
             wordWrap: {
@@ -71,15 +66,15 @@ export class PF2eConfirmDialog extends ConfirmDialog {
           text: {
             color: buttonTextColor,
             fontFamily: PF2E_ELF_THEME.typography.body,
-            fontSize: '17px',
+            fontSize: `${theme.buttonFontSize}px`,
             fontStyle: 'bold',
           },
           align: 'center',
           space: {
-            left: 24,
-            right: 24,
-            top: 12,
-            bottom: 12,
+            left: theme.buttonPaddingX,
+            right: theme.buttonPaddingX,
+            top: theme.buttonPaddingY,
+            bottom: theme.buttonPaddingY,
           },
         },
         buttonB: {
@@ -89,15 +84,15 @@ export class PF2eConfirmDialog extends ConfirmDialog {
           text: {
             color: PF2E_ELF_THEME.colors.text,
             fontFamily: PF2E_ELF_THEME.typography.body,
-            fontSize: '17px',
+            fontSize: `${theme.buttonFontSize}px`,
             fontStyle: 'bold',
           },
           align: 'center',
           space: {
-            left: 24,
-            right: 24,
-            top: 12,
-            bottom: 12,
+            left: theme.buttonPaddingX,
+            right: theme.buttonPaddingX,
+            top: theme.buttonPaddingY,
+            bottom: theme.buttonPaddingY,
           },
         },
         expand: {
@@ -120,18 +115,6 @@ export class PF2eConfirmDialog extends ConfirmDialog {
         },
         click: {
           mode: 'release',
-        },
-        modal: {
-          cover: {
-            color: PF2E_ELF_THEME.colors.modalCover,
-            alpha: theme.coverAlpha,
-          },
-          destroy: true,
-          manualClose: true,
-          duration: {
-            in: 140,
-            out: 110,
-          },
         },
       },
       {
@@ -161,34 +144,11 @@ export class PF2eConfirmDialog extends ConfirmDialog {
     );
 
     scene.add.existing(this);
-    this.onConfirm = config.onConfirm;
-    this.onCancel = config.onCancel;
-    this.on('confirm', this.handleConfirm).on('cancel', this.handleCancel);
     this.resetDisplayContent({
       title: config.title,
       content: config.message,
       buttonA: config.confirmText ?? '확인',
       buttonB: config.cancelText ?? '취소',
     });
-    this.layout().setVisible(false);
   }
-
-  openModal(): this {
-    this.setDepth(PF2E_ELF_THEME.components.confirmDialog.depth)
-      .bringToTop()
-      .setPosition(this.scene.scale.gameSize.width / 2, this.scene.scale.gameSize.height / 2)
-      .setVisible(true)
-      .setScale(1)
-      .layout()
-      .modal();
-    return this;
-  }
-
-  private readonly handleConfirm = (): void => {
-    this.onConfirm?.();
-  };
-
-  private readonly handleCancel = (): void => {
-    this.onCancel?.();
-  };
 }

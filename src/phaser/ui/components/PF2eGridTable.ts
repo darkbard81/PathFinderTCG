@@ -19,16 +19,10 @@ export interface PF2eGridTableConfig {
   readonly height: number;
   readonly items: readonly PF2eGridTableItem[];
   readonly columns?: number;
-  readonly initialSelectedId?: string;
   readonly scrollbarPosition?: 'left' | 'right';
-  readonly onSelectionChange?: (item: PF2eGridTableItem, index: number) => void;
 }
 
-interface SelectionState {
-  id?: string;
-}
-
-class PF2eGridCell extends Sizer {
+export class PF2eGridCell extends Sizer {
   private readonly background: PF2eNinePatch2;
   private readonly titleText: Phaser.GameObjects.Text;
   private readonly detailText: Phaser.GameObjects.Text;
@@ -95,9 +89,7 @@ class PF2eGridCell extends Sizer {
 }
 
 export class PF2eGridTable extends GridTable {
-  private readonly itemById = new Map<string, PF2eGridTableItem>();
-  private readonly selection: SelectionState;
-  private readonly onSelectionChange?: (item: PF2eGridTableItem, index: number) => void;
+  private readonly visualStateByItemId: Map<string, PF2eNinePatchVisualState>;
 
   constructor(scene: Phaser.Scene, config: PF2eGridTableConfig) {
     const theme = PF2E_ELF_THEME.components.gridTable;
@@ -108,9 +100,7 @@ export class PF2eGridTable extends GridTable {
       PF2E_ELF_THEME.sizes.scrollbar -
       PF2E_ELF_THEME.components.scrollablePanel.sliderGap;
     const cellWidth = Math.max(120, Math.floor(tableWidth / columns));
-    const selection: SelectionState = {
-      id: config.initialSelectedId,
-    };
+    const visualStateByItemId = new Map<string, PF2eNinePatchVisualState>();
 
     super(scene, {
       width: config.width,
@@ -148,7 +138,7 @@ export class PF2eGridTable extends GridTable {
               );
         return container
           .setItem(cell.item)
-          .setVisualState(cell.item.id === selection.id ? 'selected' : 'idle')
+          .setVisualState(visualStateByItemId.get(cell.item.id) ?? 'idle')
           .layout();
       },
       slider: scrollbar.config,
@@ -168,63 +158,18 @@ export class PF2eGridTable extends GridTable {
 
     scene.add.existing(this);
     bindPF2eScrollbarThumbStates(scrollbar.thumb);
-    this.selection = selection;
-    for (const item of config.items) {
-      if (this.itemById.has(item.id)) {
-        throw new Error(`Duplicate PF2e grid-table item id: ${item.id}`);
-      }
-      this.itemById.set(item.id, item);
-    }
-    if (this.selection.id !== undefined && !this.itemById.has(this.selection.id)) {
-      throw new Error(`Unknown initial PF2e grid-table item: ${this.selection.id}`);
-    }
-    this.onSelectionChange = config.onSelectionChange;
-
-    this.on('cell.over', this.handleCellOver)
-      .on('cell.out', this.handleCellOut)
-      .on('cell.down', this.handleCellDown)
-      .on('cell.up', this.handleCellUp)
-      .on('cell.click', this.handleCellClick);
+    this.visualStateByItemId = visualStateByItemId;
   }
 
-  get selectedItemId(): string | undefined {
-    return this.selection.id;
-  }
-
-  setSelectedItem(itemId: string | undefined): this {
-    if (itemId !== undefined && !this.itemById.has(itemId)) {
-      throw new Error(`Unknown PF2e grid-table item: ${itemId}`);
-    }
-    this.selection.id = itemId;
-    this.refresh();
+  setItemVisualState(itemId: string, state: PF2eNinePatchVisualState): this {
+    this.visualStateByItemId.set(itemId, state);
     return this;
   }
 
-  private readonly handleCellOver = (cell: PF2eGridCell): void => {
-    cell.setVisualState(cell.id === this.selection.id ? 'selected' : 'hover');
-  };
-
-  private readonly handleCellOut = (cell: PF2eGridCell): void => {
-    cell.setVisualState(cell.id === this.selection.id ? 'selected' : 'idle');
-  };
-
-  private readonly handleCellDown = (cell: PF2eGridCell): void => {
-    cell.setVisualState('pressed');
-  };
-
-  private readonly handleCellUp = (cell: PF2eGridCell): void => {
-    cell.setVisualState(cell.id === this.selection.id ? 'selected' : 'hover');
-  };
-
-  private readonly handleCellClick = (cell: PF2eGridCell, index: number): void => {
-    const item = this.itemById.get(cell.id);
-    if (!item) {
-      return;
-    }
-    this.selection.id = item.id;
+  refreshItemVisualStates(): this {
     this.refresh();
-    this.onSelectionChange?.(item, index);
-  };
+    return this;
+  }
 }
 
 function isPF2eGridTableItem(value: unknown): value is PF2eGridTableItem {

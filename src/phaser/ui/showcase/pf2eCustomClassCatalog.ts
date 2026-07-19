@@ -48,17 +48,8 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'nineLabel',
     name: 'PF2eNineLabel',
     baseClass: 'Label',
-    summary: '텍스트 표시와 버튼 입력을 하나의 테마형 Label API로 제공합니다.',
-    configKeys: [
-      'text',
-      'variant',
-      'width?',
-      'height?',
-      'fontSize?',
-      'wrapWidth?',
-      'onActivate?',
-      'enabled?',
-    ],
+    summary: '텍스트와 NinePatch 배경에 PF2e 테마만 적용하는 표시용 Label입니다.',
+    configKeys: ['text', 'variant', 'width?', 'height?', 'fontSize?', 'wrapWidth?'],
     variants: PF2E_NINE_LABEL_VARIANTS,
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
@@ -75,8 +66,8 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'tabPages',
     name: 'PF2eTabPages',
     baseClass: 'TabPages',
-    summary: '테마 탭과 typed page 정의를 묶고 현재 페이지만 표시합니다.',
-    configKeys: ['pages', 'initialPageId?', 'tabPosition?', 'wrapTabs?', 'onPageChange?'],
+    summary: '테마 탭과 typed page 정의를 조립하며 선택 callback은 controller가 담당합니다.',
+    configKeys: ['pages', 'tabPosition?', 'wrapTabs?', 'width?', 'height?'],
     variants: ['top', 'bottom', 'left', 'right'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
@@ -84,7 +75,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'scrollablePanel',
     name: 'PF2eScrollablePanel',
     baseClass: 'ScrollablePanel',
-    summary: '테마 스크롤 트랙과 thumb, 휠·드래그 동작을 묶은 세로 스크롤 패널입니다.',
+    summary: 'rexUI 스크롤 패널에 테마 트랙, thumb, 배경을 조립하는 어댑터입니다.',
     configKeys: [
       'child',
       'width?',
@@ -94,7 +85,6 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
       'hideScrollbarWhenUnscrollable?',
       'wheelSpeed?',
       'dragThreshold?',
-      'onScroll?',
     ],
     variants: ['left scrollbar', 'right scrollbar'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
@@ -103,16 +93,8 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'gridTable',
     name: 'PF2eGridTable',
     baseClass: 'GridTable',
-    summary: '셀 재사용, 선택 상태, 테마 스크롤바를 제공하는 카드 목록용 가상 그리드입니다.',
-    configKeys: [
-      'width',
-      'height',
-      'items',
-      'columns?',
-      'initialSelectedId?',
-      'scrollbarPosition?',
-      'onSelectionChange?',
-    ],
+    summary: '재사용 셀과 스크롤바에 테마를 적용하며 선택 상태는 controller가 소유합니다.',
+    configKeys: ['width', 'height', 'items', 'columns?', 'scrollbarPosition?'],
     variants: ['one column', 'two columns'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
@@ -120,20 +102,10 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'confirmDialog',
     name: 'PF2eConfirmDialog',
     baseClass: 'ConfirmDialog',
-    summary: '엘프 테마 modal cover와 확인·취소 callback을 제공하는 확인 대화상자입니다.',
-    configKeys: [
-      'title',
-      'message',
-      'confirmText?',
-      'cancelText?',
-      'danger?',
-      'width?',
-      'height?',
-      'onConfirm?',
-      'onCancel?',
-    ],
+    summary: '확인 대화상자의 프레임과 텍스트 스타일만 구성하는 테마 어댑터입니다.',
+    configKeys: ['title', 'message', 'confirmText?', 'cancelText?', 'danger?', 'width?', 'height?'],
     variants: ['normal', 'danger'],
-    states: ['closed', 'open', 'confirm', 'cancel'],
+    states: ['controller-owned'],
   },
   {
     id: 'badgeLabel',
@@ -158,8 +130,8 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     id: 'buttons',
     name: 'PF2eButtons',
     baseClass: 'Buttons',
-    summary: 'typed button 정의와 그룹 입력 상태를 관리하는 엘프 테마 액션 그룹입니다.',
-    configKeys: ['buttons', 'orientation?', 'width?', 'height?', 'onButtonClick?'],
+    summary: 'typed button 정의를 테마 Label로 조립하며 callback은 controller가 연결합니다.',
+    configKeys: ['buttons', 'orientation?', 'width?', 'height?'],
     variants: ['horizontal', 'vertical', 'primary', 'danger'],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
   },
@@ -171,19 +143,4 @@ export function getPF2eCustomClassDefinition(id: PF2eCustomClassId): PF2eCustomC
     throw new Error(`Unknown PF2e custom class: ${id}`);
   }
   return definition;
-}
-
-export function getAdjacentPF2eCustomClassId(
-  currentId: PF2eCustomClassId,
-  direction: 'previous' | 'next',
-): PF2eCustomClassId {
-  const currentIndex = PF2E_CUSTOM_CLASS_IDS.indexOf(currentId);
-  const offset = direction === 'next' ? 1 : -1;
-  const nextIndex =
-    (currentIndex + offset + PF2E_CUSTOM_CLASS_IDS.length) % PF2E_CUSTOM_CLASS_IDS.length;
-  const adjacentId = PF2E_CUSTOM_CLASS_IDS[nextIndex];
-  if (!adjacentId) {
-    throw new Error('PF2e custom class catalog is empty');
-  }
-  return adjacentId;
 }

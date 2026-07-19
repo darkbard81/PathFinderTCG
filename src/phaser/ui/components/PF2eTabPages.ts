@@ -1,5 +1,9 @@
-import * as Phaser from 'phaser';
-import { TabPages } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
+import type * as Phaser from 'phaser';
+import {
+  Buttons,
+  FixWidthButtons,
+  TabPages,
+} from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme';
 import { PF2eNineLabel } from './PF2eNineLabel';
@@ -18,15 +22,9 @@ export interface PF2eTabPagesConfig {
   readonly tabPosition?: PF2eTabPosition;
   readonly wrapTabs?: boolean;
   readonly pages: readonly [PF2eTabPageDefinition, ...PF2eTabPageDefinition[]];
-  readonly initialPageId?: string;
-  readonly onPageChange?: (pageId: string) => void;
 }
 
 export class PF2eTabPages extends TabPages {
-  private readonly tabById = new Map<string, PF2eNineLabel>();
-  private readonly onPageChange?: (pageId: string) => void;
-  private selectedId = '';
-
   constructor(scene: Phaser.Scene, config: PF2eTabPagesConfig) {
     const theme = PF2E_ELF_THEME.components.tabPages;
     const tabPosition = config.tabPosition ?? 'top';
@@ -67,10 +65,10 @@ export class PF2eTabPages extends TabPages {
     });
 
     scene.add.existing(this);
-    this.onPageChange = config.onPageChange;
+    const pageIds = new Set<string>();
 
     for (const definition of config.pages) {
-      if (this.tabById.has(definition.id)) {
+      if (pageIds.has(definition.id)) {
         throw new Error(`Duplicate PF2e tab page id: ${definition.id}`);
       }
 
@@ -80,61 +78,57 @@ export class PF2eTabPages extends TabPages {
         width: theme.tabWidth,
         height: theme.tabHeight,
       });
-      this.bindTabPointerStates(tab, definition.id);
-      this.tabById.set(definition.id, tab);
+      pageIds.add(definition.id);
       this.addPage(definition.id, tab, definition.page);
     }
 
     this.on('tab.focus', this.handleTabFocus);
     this.on('tab.blur', this.handleTabBlur);
+    const tabs = this.getElement('tabs');
+    if (!(tabs instanceof Buttons) && !(tabs instanceof FixWidthButtons)) {
+      throw new Error('PF2eTabPages could not resolve its rexUI tabs container');
+    }
+    tabs
+      .on('button.over', this.handleTabOver)
+      .on('button.out', this.handleTabOut)
+      .on('button.down', this.handleTabDown)
+      .on('button.up', this.handleTabUp);
     this.layout();
-    this.setSelectedPage(config.initialPageId ?? config.pages[0].id);
   }
 
-  get selectedPageId(): string {
-    return this.selectedId;
-  }
-
-  setSelectedPage(pageId: string): this {
-    if (!this.tabById.has(pageId)) {
-      throw new Error(`Unknown PF2e tab page: ${pageId}`);
-    }
-    if (this.selectedId === pageId && this.currentKey === pageId) {
-      return this;
-    }
-
-    this.swapPage(pageId, 0);
-    return this;
-  }
-
-  private bindTabPointerStates(tab: PF2eNineLabel, pageId: string): void {
-    tab
-      .setInteractive({ useHandCursor: true })
-      .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-        tab.setVisualState(this.selectedId === pageId ? 'selected' : 'hover');
-      })
-      .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
-        tab.setVisualState(this.selectedId === pageId ? 'selected' : 'idle');
-      })
-      .on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
-        tab.setVisualState('pressed');
-      })
-      .on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
-        tab.setVisualState(this.selectedId === pageId ? 'selected' : 'hover');
-      });
-  }
-
-  private readonly handleTabFocus = (tab: Phaser.GameObjects.GameObject, pageId: string): void => {
-    this.selectedId = pageId;
+  private readonly handleTabFocus = (tab: Phaser.GameObjects.GameObject): void => {
     if (tab instanceof PF2eNineLabel) {
       tab.setVisualState('selected');
     }
-    this.onPageChange?.(pageId);
   };
 
   private readonly handleTabBlur = (tab: Phaser.GameObjects.GameObject, pageId: string): void => {
-    if (tab instanceof PF2eNineLabel && this.selectedId !== pageId) {
+    if (tab instanceof PF2eNineLabel && this.currentKey !== pageId) {
       tab.setVisualState('idle');
+    }
+  };
+
+  private readonly handleTabOver = (tab: Phaser.GameObjects.GameObject): void => {
+    if (tab instanceof PF2eNineLabel) {
+      tab.setVisualState(this.currentKey === tab.name ? 'selected' : 'hover');
+    }
+  };
+
+  private readonly handleTabOut = (tab: Phaser.GameObjects.GameObject): void => {
+    if (tab instanceof PF2eNineLabel) {
+      tab.setVisualState(this.currentKey === tab.name ? 'selected' : 'idle');
+    }
+  };
+
+  private readonly handleTabDown = (tab: Phaser.GameObjects.GameObject): void => {
+    if (tab instanceof PF2eNineLabel) {
+      tab.setVisualState('pressed');
+    }
+  };
+
+  private readonly handleTabUp = (tab: Phaser.GameObjects.GameObject): void => {
+    if (tab instanceof PF2eNineLabel) {
+      tab.setVisualState(this.currentKey === tab.name ? 'selected' : 'hover');
     }
   };
 }

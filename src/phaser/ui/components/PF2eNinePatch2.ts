@@ -43,16 +43,4 @@ export class PF2eNinePatch2 extends NinePatch2 {
     this.setAlpha(style.alpha);
     return this;
   }
-
-  setActiveState(enabled = true): this {
-    return this.setVisualState(enabled ? 'selected' : 'idle');
-  }
-
-  setHoverState(enabled = true): this {
-    return this.setVisualState(enabled ? 'hover' : 'idle');
-  }
-
-  setDisableState(enabled = true): this {
-    return this.setVisualState(enabled ? 'disabled' : 'idle');
-  }
 }

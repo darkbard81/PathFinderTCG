@@ -34,6 +34,7 @@ export interface PF2eBadgeLabelConfig {
 
 export class PF2eBadgeLabel extends BadgeLabel {
   private readonly mainLabel: PF2eNineLabel;
+  private readonly badge: Label;
   private readonly badgeText: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, config: PF2eBadgeLabelConfig) {
@@ -93,18 +94,13 @@ export class PF2eBadgeLabel extends BadgeLabel {
     mainLabelSizerConfig.expandWidth = 1;
     mainLabelSizerConfig.expandHeight = 1;
     this.mainLabel = mainLabel;
+    this.badge = badge;
     this.badgeText = badgeText;
   }
 
   setBadgeValue(value: string | number): this {
     this.badgeText.setText(String(value));
-    this.layout();
-    return this;
-  }
-
-  setMainText(text: string): this {
-    this.mainLabel.setText(text);
-    this.layout();
+    this.badge.layout();
     return this;
   }
 

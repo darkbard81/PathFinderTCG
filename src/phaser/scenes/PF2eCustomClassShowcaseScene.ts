@@ -5,7 +5,11 @@ import { calculateCustomClassShowcaseLayout } from '../../ui/layout/customClassS
 import { PF2eCustomClassShowcase } from '../ui/components/PF2eCustomClassShowcase';
 import { PF2eScrollablePanel } from '../ui/components/PF2eScrollablePanel';
 import { PF2eTree } from '../ui/components/PF2eTree';
+import { PF2eScrollablePanelController } from '../ui/controllers/PF2eScrollablePanelController';
+import { PF2eTreeKeyboardController } from '../ui/controllers/PF2eTreeKeyboardController';
+import { PF2eTreeNavigationController } from '../ui/controllers/PF2eTreeNavigationController';
 import {
+  PF2E_CUSTOM_CLASS_CATALOG,
   PF2E_CUSTOM_CLASS_IDS,
   PF2E_DEFAULT_CUSTOM_CLASS_ID,
   type PF2eCustomClassId,
@@ -14,9 +18,11 @@ import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme';
 
 export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
   private rootSizer?: Sizer;
-  private classTree?: PF2eTree;
   private navigationViewport?: PF2eScrollablePanel;
   private showcase?: PF2eCustomClassShowcase;
+  private treeNavigation?: PF2eTreeNavigationController<PF2eCustomClassId>;
+  private treeKeyboard?: PF2eTreeKeyboardController<PF2eCustomClassId>;
+  private navigationScroll?: PF2eScrollablePanelController;
   private selectedClassId: PF2eCustomClassId = PF2E_DEFAULT_CUSTOM_CLASS_ID;
 
   constructor() {
@@ -26,7 +32,6 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.setBackgroundColor(PF2E_ELF_THEME.colors.backdrop);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize);
-    this.input.keyboard?.on('keydown', this.handleKeyDown);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown);
 
     this.rebuildLayout(this.scale.gameSize.width, this.scale.gameSize.height);
@@ -36,38 +41,14 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
     this.rebuildLayout(gameSize.width, gameSize.height);
   };
 
-  private readonly handleKeyDown = (event: KeyboardEvent): void => {
-    if (!this.classTree) {
-      return;
-    }
-
-    switch (event.code) {
-      case 'ArrowUp':
-        this.classTree.focusPrevious();
-        break;
-      case 'ArrowDown':
-        this.classTree.focusNext();
-        break;
-      case 'Enter':
-        this.classTree.activateFocused();
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
-    this.syncNavigationScroll();
-    this.syncCanvasDataset();
-  };
-
   private rebuildLayout(width: number, height: number): void {
-    if (this.classTree) {
-      this.selectedClassId = this.classTree.selectedClassId;
+    if (this.treeNavigation) {
+      this.selectedClassId = this.treeNavigation.selectedNodeId;
     }
 
+    this.destroyControllers();
     this.rootSizer?.destroy();
     this.rootSizer = undefined;
-    this.classTree = undefined;
     this.navigationViewport = undefined;
     this.showcase = undefined;
 
@@ -96,8 +77,16 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
     this.showcase = showcase;
 
     const classTree = new PF2eTree(this, {
-      initialClassId: this.selectedClassId,
+      nodes: PF2E_CUSTOM_CLASS_CATALOG.map(({ id, name }) => ({ id, text: name })),
       showBackground: layout.orientation === 'landscape',
+    });
+    const treeNavigation = new PF2eTreeNavigationController(classTree, {
+      nodeIds: PF2E_CUSTOM_CLASS_IDS,
+      initialSelectedId: this.selectedClassId,
+      onFocusChange: () => {
+        this.syncNavigationScroll();
+        this.syncCanvasDataset();
+      },
       onSelectionChange: (classId) => {
         this.selectedClassId = classId;
         this.showcase?.showClass(classId);
@@ -105,6 +94,8 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
         this.syncCanvasDataset();
       },
     });
+    this.treeNavigation = treeNavigation;
+    this.treeKeyboard = new PF2eTreeKeyboardController(this, treeNavigation);
     let navigation: PF2eTree | PF2eScrollablePanel = classTree;
     if (layout.orientation === 'portrait') {
       classTree
@@ -123,6 +114,7 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
         hideScrollbarWhenUnscrollable: true,
       });
       this.navigationViewport = navigation;
+      this.navigationScroll = new PF2eScrollablePanelController(navigation);
     }
 
     root
@@ -137,7 +129,6 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
       .layout();
 
     this.rootSizer = root;
-    this.classTree = classTree;
     this.syncNavigationScroll();
     this.game.canvas.dataset.scene = this.scene.key;
     this.game.canvas.dataset.orientation = layout.orientation;
@@ -147,20 +138,30 @@ export class PF2eCustomClassShowcaseScene extends Phaser.Scene {
 
   private syncCanvasDataset(): void {
     this.game.canvas.dataset.selectedClass = this.selectedClassId;
-    this.game.canvas.dataset.focusedClass = this.classTree?.focusedClassId ?? this.selectedClassId;
+    this.game.canvas.dataset.focusedClass =
+      this.treeNavigation?.focusedNodeId ?? this.selectedClassId;
   }
 
   private syncNavigationScroll(): void {
-    if (!this.navigationViewport || !this.classTree) {
+    if (!this.navigationViewport || !this.navigationScroll || !this.treeNavigation) {
       return;
     }
-    const focusedIndex = PF2E_CUSTOM_CLASS_IDS.indexOf(this.classTree.focusedClassId);
+    const focusedIndex = PF2E_CUSTOM_CLASS_IDS.indexOf(this.treeNavigation.focusedNodeId);
     const maximumIndex = PF2E_CUSTOM_CLASS_IDS.length - 1;
-    this.navigationViewport.setScrollProgress(maximumIndex <= 0 ? 0 : focusedIndex / maximumIndex);
+    this.navigationScroll.setProgress(maximumIndex <= 0 ? 0 : focusedIndex / maximumIndex);
+  }
+
+  private destroyControllers(): void {
+    this.treeKeyboard?.destroy();
+    this.treeNavigation?.destroy();
+    this.navigationScroll?.destroy();
+    this.treeKeyboard = undefined;
+    this.treeNavigation = undefined;
+    this.navigationScroll = undefined;
   }
 
   private readonly handleShutdown = (): void => {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize);
-    this.input.keyboard?.off('keydown', this.handleKeyDown);
+    this.destroyControllers();
   };
 }

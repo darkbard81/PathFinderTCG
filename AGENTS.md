@@ -33,6 +33,7 @@ rexUI 구현의 첫 번째 기준은 공식 [UI Overview](https://rexrainbow.git
 - `src/phaser/config/`: Phaser 설정과 rexUI Scene 플러그인 등록
 - `src/phaser/scenes/`: 화면 수명주기와 상위 레이아웃을 조정하는 얇은 Scene
 - `src/phaser/ui/components/`: 프로젝트용 rexUI 상속 컴포넌트. 새 UI부터 이 경로를 사용한다.
+- `src/phaser/ui/controllers/`: 선택, callback, 키보드, 스크롤 보고, modal 실행 같은 UI 기능 계층
 - `src/phaser/ui/theme/`: 테마 타입, 디자인 토큰, 기본 테마. 새 UI부터 이 경로를 사용한다.
 - `src/types/rex-ui.d.ts`: `scene.rexUI` TypeScript 선언
 - `src/ui/layout/`: viewport에서 반응형 레이아웃 값을 계산하는 순수 함수
@@ -66,7 +67,7 @@ rexUI 구현의 첫 번째 기준은 공식 [UI Overview](https://rexrainbow.git
 2. `phaser4-rex-plugins/templates/ui/ui-components.js`에서 클래스를 import한다.
 3. `src/phaser/ui/components/`에 목적이 드러나는 이름의 클래스를 만들고 해당 클래스를 상속한다.
 4. 생성자에서 `super(scene, config)`를 호출한 뒤 `scene.add.existing(this)`로 정확히 한 번 등록한다.
-5. 외부에는 typed config, 의미 있는 상태 변경 메서드, typed event 또는 callback만 노출한다.
+5. 테마 컴포넌트는 typed visual config와 표시 상태 API만 노출하고 기능 동작은 controller에 둔다.
 6. 부모가 자식 구성을 마친 뒤 `.layout()`을 호출한다. Sizer 자식의 좌표를 수동 배치하지 않는다.
 
 공식 custom class 패턴은 [Label](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/ui-label/),
@@ -125,9 +126,9 @@ src/phaser/ui/theme/
 ## Scene, UI, 게임 상태 경계
 
 - Scene은 화면 수명주기, 상위 컴포넌트 조합, resize 대응, 게임 액션 전달만 담당한다.
-- UI 컴포넌트는 표시와 사용자 의도를 담당하며 `GameSession`을 직접 읽거나 수정하지 않는다.
-- 컴포넌트는 `confirm`, `cancel`, `cardSelected` 같은 의미 있는 event/callback을 내보내고,
-  Scene 또는 adapter가 이를 `GameAction`으로 변환한다.
+- 테마 UI 컴포넌트는 rexUI 구성과 표시만 담당하고 선택, callback, 키보드, modal 실행을 소유하지 않는다.
+- `src/phaser/ui/controllers/`가 rexUI event를 사용자 의도로 변환하고 Scene 또는 adapter가 이를
+  `GameAction`으로 전달한다.
 - `src/game/simulation/`에는 Phaser Scene, Sprite, rexUI 객체, DOM 객체를 저장하지 않는다.
 - 직렬화 가능한 상태와 렌더링 전용 상태를 분리한다.
 - Scene shutdown 시 Scene이 등록한 scale, keyboard, session listener를 정리한다.
@@ -186,14 +187,12 @@ npm run build
 
 ## 금지 사항
 
-- rexUI에 해당 목적의 기반 클래스가 있는데 plain Phaser Container로 재구현하지 않는다.
-- Scene마다 버튼, 패널, 모달 스타일과 pointer 상태 처리를 복사하지 않는다.
-- theme token을 우회해 raw color, font, padding, radius 값을 반복하지 않는다.
-- UI 컴포넌트에 게임 규칙이나 save/load 책임을 넣지 않는다.
-- layout 문제를 임시 좌표 보정만으로 덮지 않는다. 먼저 sizer 구성, proportion, expand, align,
-  padding과 `.layout()` 호출 경계를 확인한다.
-- `dist/`, `artifacts/`, `node_modules/`를 커밋하지 않는다.
-- 실패한 테스트나 build warning을 숨기지 않는다.
+- rexUI 기반 클래스를 plain Container로 재구현하거나 `node_modules`를 직접 수정하지 않는다.
+- 테마 컴포넌트에 선택, callback, 키보드, modal, 게임 규칙, save/load 책임을 넣지 않는다.
+- 자식 Sizer가 부모 크기를 자기 `.layout()`으로 덮거나 좌표 보정으로 layout 문제를 숨기지 않는다.
+- theme token을 우회한 raw style과 Scene별 pointer/style 복제를 만들지 않는다.
+- 범위 밖 일괄 변경, dead/진단 코드, `dist/`, `artifacts/`, `node_modules/`를 남기지 않는다.
+- 실패한 테스트, build warning, 미실시 시각 검증을 숨기지 않는다.
 
 ## 완료 기준
 

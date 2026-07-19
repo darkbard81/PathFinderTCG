@@ -6,8 +6,10 @@ import { resolveKeyboardAction } from '../../game/input/bindings';
 import type { GameState } from '../../game/simulation/GameSession';
 import { getGameSession } from '../adapters/sceneBridge';
 import { calculateViewportLayout, type ViewportLayout } from '../../ui/layout/viewportLayout';
+import { PF2eButtons } from '../ui/components/PF2eButtons';
 import { PF2eNineLabel } from '../ui/components/PF2eNineLabel';
 import { PF2eNinePatch2 } from '../ui/components/PF2eNinePatch2';
+import { PF2eButtonsController } from '../ui/controllers/PF2eButtonsController';
 import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme';
 
 export class StarterScene extends Phaser.Scene {
@@ -15,6 +17,7 @@ export class StarterScene extends Phaser.Scene {
   private statusText?: Phaser.GameObjects.Text;
   private viewportText?: Phaser.GameObjects.Text;
   private unsubscribeSession?: () => void;
+  private actionButtonsController?: PF2eButtonsController;
 
   constructor() {
     super('StarterScene');
@@ -54,6 +57,8 @@ export class StarterScene extends Phaser.Scene {
     const layout = calculateViewportLayout(width, height);
     const session = getGameSession(this);
 
+    this.actionButtonsController?.destroy();
+    this.actionButtonsController = undefined;
     this.rootSizer?.destroy();
     this.rootSizer = undefined;
     this.statusText = undefined;
@@ -152,7 +157,7 @@ export class StarterScene extends Phaser.Scene {
     const features = this.add.text(
       0,
       0,
-      ['✓ 엘프 테마 NinePatch2 자산', '✓ 표시·버튼 겸용 NineLabel', '✓ 가로·세로 반응형 rexUI'],
+      ['✓ 엘프 테마 NinePatch2 자산', '✓ 표시·입력 계층 분리', '✓ 가로·세로 반응형 rexUI'],
       {
         color: PF2E_ELF_THEME.colors.accentText,
         fontFamily: PF2E_ELF_THEME.typography.body,
@@ -217,38 +222,30 @@ export class StarterScene extends Phaser.Scene {
     });
 
     const stackButtons = layout.orientation === 'portrait' && layout.width < 560;
-    const buttons = this.rexUI.add.sizer({
+    const buttons = new PF2eButtons(this, {
       orientation: stackButtons ? 'y' : 'x',
-      space: {
-        item: Math.max(PF2E_ELF_THEME.spacing.controlGap, Math.round(layout.gap * 0.65)),
-      },
-    });
-
-    buttons
-      .add(
-        new PF2eNineLabel(this, {
+      buttons: [
+        {
+          id: 'confirm',
           text: '확인 · Enter',
           variant: 'primary',
           fontSize: Math.max(16, layout.bodyFontSize - 1),
-          onActivate: () => this.dispatch('confirm'),
-        }),
-        {
-          proportion: 1,
-          expand: true,
         },
-      )
-      .add(
-        new PF2eNineLabel(this, {
+        {
+          id: 'cancel',
           text: '취소 · Esc',
           variant: 'danger',
           fontSize: Math.max(16, layout.bodyFontSize - 1),
-          onActivate: () => this.dispatch('cancel'),
-        }),
-        {
-          proportion: 1,
-          expand: true,
         },
-      );
+      ],
+    });
+    this.actionButtonsController = new PF2eButtonsController(buttons, {
+      onButtonClick: (buttonId) => {
+        if (buttonId === 'confirm' || buttonId === 'cancel') {
+          this.dispatch(buttonId);
+        }
+      },
+    });
 
     return panel
       .add(sectionTitle, { align: 'center', expand: true })
@@ -281,6 +278,8 @@ export class StarterScene extends Phaser.Scene {
   private readonly handleShutdown = (): void => {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize);
     this.input.keyboard?.off('keydown', this.handleKeyDown);
+    this.actionButtonsController?.destroy();
+    this.actionButtonsController = undefined;
     this.unsubscribeSession?.();
     this.unsubscribeSession = undefined;
   };

@@ -24,6 +24,11 @@ import { PF2eNinePatch2 } from './PF2eNinePatch2';
 import { PF2ePanel } from './PF2ePanel';
 import { PF2eScrollablePanel } from './PF2eScrollablePanel';
 import { PF2eTabPages } from './PF2eTabPages';
+import { PF2eButtonsController } from '../controllers/PF2eButtonsController';
+import { PF2eConfirmDialogController } from '../controllers/PF2eConfirmDialogController';
+import { PF2eGridTableSelectionController } from '../controllers/PF2eGridTableSelectionController';
+import { PF2eScrollablePanelController } from '../controllers/PF2eScrollablePanelController';
+import { PF2eTabPagesController } from '../controllers/PF2eTabPagesController';
 
 export interface PF2eCustomClassShowcaseConfig {
   readonly contentWidth: number;
@@ -32,6 +37,7 @@ export interface PF2eCustomClassShowcaseConfig {
 
 export class PF2eCustomClassShowcase extends Pages {
   private readonly contentWidth: number;
+  private readonly controllers: Array<{ destroy(): void }> = [];
   private currentClassId: PF2eCustomClassId;
 
   constructor(scene: Phaser.Scene, config: PF2eCustomClassShowcaseConfig) {
@@ -121,6 +127,14 @@ export class PF2eCustomClassShowcase extends Pages {
     return this;
   }
 
+  override destroy(fromScene?: boolean): void {
+    for (const controller of this.controllers) {
+      controller.destroy();
+    }
+    this.controllers.length = 0;
+    super.destroy(fromScene);
+  }
+
   private createNinePatchPage(scene: Phaser.Scene): Sizer {
     const definition = getPF2eCustomClassDefinition('ninePatch2');
     const content = this.createContentSizer(scene);
@@ -178,53 +192,19 @@ export class PF2eCustomClassShowcase extends Pages {
   private createNineLabelPage(scene: Phaser.Scene): Sizer {
     const definition = getPF2eCustomClassDefinition('nineLabel');
     const content = this.createContentSizer(scene);
-    let activationCount = 0;
-    const activationStatus = this.createBodyText(
-      scene,
-      '버튼을 눌러 onActivate callback을 확인하세요.',
-      PF2E_ELF_THEME.colors.accentText,
-    );
 
     content.add(this.createSectionLabel(scene, 'Variants'), { expand: true });
     for (const variant of PF2E_NINE_LABEL_VARIANTS) {
       content.add(this.createLabelVariantSample(scene, variant), { expand: true });
     }
 
-    content
-      .add(this.createSectionLabel(scene, 'Interactive callbacks'), { expand: true })
-      .add(
-        new PF2eNineLabel(scene, {
-          text: 'Primary callback',
-          variant: 'primary',
-          width: this.contentWidth,
-          onActivate: () => {
-            activationCount += 1;
-            activationStatus.setText(`primary callback · ${activationCount}회`);
-          },
-        }),
-        { expand: true },
-      )
-      .add(
-        new PF2eNineLabel(scene, {
-          text: 'Danger callback',
-          variant: 'danger',
-          width: this.contentWidth,
-          onActivate: () => {
-            activationCount += 1;
-            activationStatus.setText(`danger callback · ${activationCount}회`);
-          },
-        }),
-        { expand: true },
-      )
-      .add(activationStatus, { align: 'left' })
-      .add(this.createSectionLabel(scene, 'Visual states'), { expand: true });
+    content.add(this.createSectionLabel(scene, 'Visual states'), { expand: true });
 
     for (const state of PF2E_NINE_PATCH_VISUAL_STATES) {
       const stateLabel = new PF2eNineLabel(scene, {
         text: state,
         variant: 'primary',
         width: this.contentWidth,
-        enabled: state !== 'disabled',
       }).setVisualState(state);
       content.add(stateLabel, { expand: true });
     }
@@ -301,7 +281,6 @@ export class PF2eCustomClassShowcase extends Pages {
     const tabPages = new PF2eTabPages(scene, {
       width: this.contentWidth,
       height: PF2E_ELF_THEME.components.showcase.tabPagesDemoHeight,
-      initialPageId: 'summary',
       pages: [
         {
           id: 'summary',
@@ -331,10 +310,15 @@ export class PF2eCustomClassShowcase extends Pages {
           ),
         },
       ],
-      onPageChange: (pageId) => {
-        status.setText(`선택 페이지 · ${pageId}`);
-      },
     });
+    this.registerController(
+      new PF2eTabPagesController(tabPages, {
+        initialPageId: 'summary',
+        onPageChange: (pageId) => {
+          status.setText(`선택 페이지 · ${pageId}`);
+        },
+      }),
+    );
 
     content
       .add(this.createSectionLabel(scene, 'Interactive tab pages'), { expand: true })
@@ -378,10 +362,14 @@ export class PF2eCustomClassShowcase extends Pages {
       height: PF2E_ELF_THEME.components.showcase.scrollablePanelDemoHeight,
       child: list,
       hideScrollbarWhenUnscrollable: false,
-      onScroll: (progress) => {
-        status.setText(`스크롤 위치 · ${Math.round(progress * 100)}%`);
-      },
     });
+    this.registerController(
+      new PF2eScrollablePanelController(scrollablePanel, {
+        onScroll: (progress) => {
+          status.setText(`스크롤 위치 · ${Math.round(progress * 100)}%`);
+        },
+      }),
+    );
 
     content
       .add(this.createSectionLabel(scene, 'Wheel, drag and themed scrollbar'), { expand: true })
@@ -418,11 +406,16 @@ export class PF2eCustomClassShowcase extends Pages {
       height: PF2E_ELF_THEME.components.showcase.gridTableDemoHeight,
       items,
       columns: this.contentWidth >= 480 ? 2 : 1,
-      initialSelectedId: 'ranger',
-      onSelectionChange: (item) => {
-        status.setText(`선택 카드 · ${item.title}`);
-      },
     });
+    this.registerController(
+      new PF2eGridTableSelectionController(gridTable, {
+        items,
+        initialSelectedId: 'ranger',
+        onSelectionChange: (item) => {
+          status.setText(`선택 카드 · ${item.title}`);
+        },
+      }),
+    );
 
     content
       .add(this.createSectionLabel(scene, 'Reusable themed cells'), { expand: true })
@@ -442,25 +435,31 @@ export class PF2eCustomClassShowcase extends Pages {
     );
     const openButton = new PF2eButtons(scene, {
       buttons: [{ id: 'openDialog', text: '확인 대화상자 열기', variant: 'danger' }],
-      onButtonClick: () => {
-        new PF2eConfirmDialog(scene, {
-          title: '카드를 추방하시겠습니까?',
-          message:
-            '선택한 카드는 이번 덱에서 제거됩니다. 이 예제는 게임 상태를 변경하지 않고 confirm/cancel callback만 시연합니다.',
-          confirmText: '추방',
-          cancelText: '돌아가기',
-          danger: true,
-          width: Math.min(620, Math.max(360, scene.scale.gameSize.width - 64)),
-          height: PF2E_ELF_THEME.components.showcase.confirmDialogDemoHeight,
-          onConfirm: () => {
-            status.setText('대화상자 결과 · confirm');
-          },
-          onCancel: () => {
-            status.setText('대화상자 결과 · cancel');
-          },
-        }).openModal();
-      },
     });
+    this.registerController(
+      new PF2eButtonsController(openButton, {
+        onButtonClick: () => {
+          const dialog = new PF2eConfirmDialog(scene, {
+            title: '카드를 추방하시겠습니까?',
+            message:
+              '선택한 카드는 이번 덱에서 제거됩니다. 이 예제는 게임 상태를 변경하지 않고 confirm/cancel callback만 시연합니다.',
+            confirmText: '추방',
+            cancelText: '돌아가기',
+            danger: true,
+            width: Math.min(620, Math.max(360, scene.scale.gameSize.width - 64)),
+            height: PF2E_ELF_THEME.components.showcase.confirmDialogDemoHeight,
+          });
+          new PF2eConfirmDialogController(dialog, {
+            onConfirm: () => {
+              status.setText('대화상자 결과 · confirm');
+            },
+            onCancel: () => {
+              status.setText('대화상자 결과 · cancel');
+            },
+          }).open();
+        },
+      }),
+    );
 
     content
       .add(this.createSectionLabel(scene, 'Modal confirm and cancel'), { expand: true })
@@ -489,11 +488,15 @@ export class PF2eCustomClassShowcase extends Pages {
     let badgeValue = 3;
     const incrementButton = new PF2eButtons(scene, {
       buttons: [{ id: 'incrementBadge', text: '배지 +1' }],
-      onButtonClick: () => {
-        badgeValue += 1;
-        mutableBadge.setBadgeValue(badgeValue);
-      },
     });
+    this.registerController(
+      new PF2eButtonsController(incrementButton, {
+        onButtonClick: () => {
+          badgeValue += 1;
+          mutableBadge.setBadgeValue(badgeValue);
+        },
+      }),
+    );
 
     content
       .add(this.createSectionLabel(scene, 'Badge positions and values'), { expand: true })
@@ -524,20 +527,29 @@ export class PF2eCustomClassShowcase extends Pages {
         { id: 'scout', text: '정찰' },
         { id: 'endTurn', text: '턴 종료', variant: 'danger' },
       ],
-      onButtonClick: (buttonId) => {
-        status.setText(`버튼 입력 · ${buttonId}`);
-      },
     });
+    this.registerController(
+      new PF2eButtonsController(horizontal, {
+        onButtonClick: (buttonId) => {
+          status.setText(`버튼 입력 · ${buttonId}`);
+        },
+      }),
+    );
     const vertical = new PF2eButtons(scene, {
       orientation: 'y',
       buttons: [
         { id: 'draw', text: '카드 뽑기' },
-        { id: 'locked', text: '잠긴 행동', enabled: false },
+        { id: 'locked', text: '잠긴 행동' },
       ],
-      onButtonClick: (buttonId) => {
-        status.setText(`버튼 입력 · ${buttonId}`);
-      },
     });
+    this.registerController(
+      new PF2eButtonsController(vertical, {
+        disabledButtonIds: ['locked'],
+        onButtonClick: (buttonId) => {
+          status.setText(`버튼 입력 · ${buttonId}`);
+        },
+      }),
+    );
 
     content
       .add(this.createSectionLabel(scene, 'Horizontal action group'), { expand: true })
@@ -624,6 +636,13 @@ export class PF2eCustomClassShowcase extends Pages {
         item: PF2E_ELF_THEME.components.showcase.sampleGap,
       },
     });
+  }
+
+  private registerController<Controller extends { destroy(): void }>(
+    controller: Controller,
+  ): Controller {
+    this.controllers.push(controller);
+    return controller;
   }
 
   private createSectionLabel(scene: Phaser.Scene, text: string): PF2eNineLabel {
