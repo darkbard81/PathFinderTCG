@@ -15,6 +15,10 @@ export const ASSET_KEYS = {
   pf2eElfGridCell: 'ui.pf2e.elf.gridCell',
   pf2eElfDialog: 'ui.pf2e.elf.dialog',
   pf2eElfBadge: 'ui.pf2e.elf.badge',
+  pf2eElfBadgeCost: 'ui.pf2e.elf.badge.cost',
+  pf2eElfBadgeAttack: 'ui.pf2e.elf.badge.attack',
+  pf2eElfBadgeHealth: 'ui.pf2e.elf.badge.health',
+  pf2eElfBadgeDefense: 'ui.pf2e.elf.badge.defense',
   pf2eElfButton: 'ui.pf2e.elf.button',
 } as const;
 
@@ -62,6 +66,26 @@ export const assetManifest: readonly AssetEntry[] = [
     key: ASSET_KEYS.pf2eElfBadge,
     type: 'image',
     path: '/assets/ui/pf2e-elf-badge.png',
+  },
+  {
+    key: ASSET_KEYS.pf2eElfBadgeCost,
+    type: 'image',
+    path: '/assets/ui/pf2e-elf-badge-cost.png',
+  },
+  {
+    key: ASSET_KEYS.pf2eElfBadgeAttack,
+    type: 'image',
+    path: '/assets/ui/pf2e-elf-badge-attack.png',
+  },
+  {
+    key: ASSET_KEYS.pf2eElfBadgeHealth,
+    type: 'image',
+    path: '/assets/ui/pf2e-elf-badge-health.png',
+  },
+  {
+    key: ASSET_KEYS.pf2eElfBadgeDefense,
+    type: 'image',
+    path: '/assets/ui/pf2e-elf-badge-defense.png',
   },
   {
     key: ASSET_KEYS.pf2eElfButton,

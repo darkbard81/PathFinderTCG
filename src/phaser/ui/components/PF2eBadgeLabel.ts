@@ -1,9 +1,9 @@
 import type * as Phaser from 'phaser';
 import { BadgeLabel, Label } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
-import { ASSET_KEYS } from '../../../game/assets/manifest';
 import {
   PF2E_ELF_THEME,
+  type PF2eBadgeType,
   type PF2eNineLabelVariant,
   type PF2eNinePatchVisualState,
 } from '../theme/pf2eElfTheme';
@@ -23,6 +23,7 @@ export type PF2eBadgePosition =
 export interface PF2eBadgeLabelConfig {
   readonly text: string;
   readonly badgeValue: string | number;
+  readonly badgeType?: PF2eBadgeType;
   readonly variant?: PF2eNineLabelVariant;
   readonly badgePosition?: PF2eBadgePosition;
   /**
@@ -40,21 +41,20 @@ export class PF2eBadgeLabel extends BadgeLabel {
   constructor(scene: Phaser.Scene, config: PF2eBadgeLabelConfig) {
     const badgeSize = PF2E_ELF_THEME.sizes.badge;
     const badgePosition = config.badgePosition ?? 'rightTop';
+    const badgeStyle = PF2E_ELF_THEME.components.badgeLabel.variants[config.badgeType ?? 'default'];
     const mainLabel = new PF2eNineLabel(scene, {
       text: config.text,
       variant: config.variant ?? 'status',
       width: config.width,
       height: config.height,
     });
-    const badgeImage = scene.add
-      .image(0, 0, ASSET_KEYS.pf2eElfBadge)
-      .setDisplaySize(badgeSize, badgeSize);
+    const badgeImage = scene.add.image(0, 0, badgeStyle.key).setDisplaySize(badgeSize, badgeSize);
     const badgeText = scene.add.text(0, 0, String(config.badgeValue), {
-      color: PF2E_ELF_THEME.colors.text,
+      color: badgeStyle.textColor,
       fontFamily: PF2E_ELF_THEME.typography.display,
       fontSize: `${PF2E_ELF_THEME.components.badgeLabel.badgeFontSize}px`,
       fontStyle: 'bold',
-      stroke: '#14241c',
+      stroke: badgeStyle.strokeColor,
       strokeThickness: 2,
       align: 'center',
     });

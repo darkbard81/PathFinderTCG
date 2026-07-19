@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ASSET_KEYS, assetManifest } from '../../../game/assets/manifest';
 import {
+  PF2E_BADGE_TYPES,
   PF2E_ELF_THEME,
   PF2E_NINE_LABEL_VARIANTS,
   PF2E_NINE_PATCH_VISUAL_STATES,
@@ -30,6 +31,10 @@ describe('PF2E_ELF_THEME', () => {
         expect.objectContaining({ key: ASSET_KEYS.pf2eElfGridCell, type: 'image' }),
         expect.objectContaining({ key: ASSET_KEYS.pf2eElfDialog, type: 'image' }),
         expect.objectContaining({ key: ASSET_KEYS.pf2eElfBadge, type: 'image' }),
+        expect.objectContaining({ key: ASSET_KEYS.pf2eElfBadgeCost, type: 'image' }),
+        expect.objectContaining({ key: ASSET_KEYS.pf2eElfBadgeAttack, type: 'image' }),
+        expect.objectContaining({ key: ASSET_KEYS.pf2eElfBadgeHealth, type: 'image' }),
+        expect.objectContaining({ key: ASSET_KEYS.pf2eElfBadgeDefense, type: 'image' }),
         expect.objectContaining({ key: ASSET_KEYS.pf2eElfButton, type: 'image' }),
       ]),
     );
@@ -66,6 +71,19 @@ describe('PF2E_ELF_THEME', () => {
   it('defines every interactive visual state and label variant', () => {
     expect(Object.keys(PF2E_ELF_THEME.visualStates)).toEqual([...PF2E_NINE_PATCH_VISUAL_STATES]);
     expect(Object.keys(PF2E_ELF_THEME.label)).toEqual([...PF2E_NINE_LABEL_VARIANTS]);
+  });
+
+  it('maps every badge type to a stable manifest asset', () => {
+    expect(Object.keys(PF2E_ELF_THEME.components.badgeLabel.variants)).toEqual([
+      ...PF2E_BADGE_TYPES,
+    ]);
+    expect(PF2E_ELF_THEME.components.badgeLabel.variants).toMatchObject({
+      default: { key: ASSET_KEYS.pf2eElfBadge },
+      cost: { key: ASSET_KEYS.pf2eElfBadgeCost },
+      attack: { key: ASSET_KEYS.pf2eElfBadgeAttack },
+      health: { key: ASSET_KEYS.pf2eElfBadgeHealth },
+      defense: { key: ASSET_KEYS.pf2eElfBadgeDefense },
+    });
   });
 
   it('defines a positive content area inside every minimum label height', () => {

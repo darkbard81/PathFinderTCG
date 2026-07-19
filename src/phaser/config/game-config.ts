@@ -28,7 +28,7 @@ export function createGameConfig(
     render: {
       antialias: true,
       pixelArt: false,
-      roundPixels: false,
+      roundPixels: true,
     },
     input: {
       activePointers: 3,

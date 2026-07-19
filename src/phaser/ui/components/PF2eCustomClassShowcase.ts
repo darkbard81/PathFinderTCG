@@ -481,8 +481,9 @@ export class PF2eCustomClassShowcase extends Pages {
     const definition = getPF2eCustomClassDefinition('badgeLabel');
     const content = this.createContentSizer(scene);
     const mutableBadge = new PF2eBadgeLabel(scene, {
-      text: '보유 카드',
+      text: '카드 코스트',
       badgeValue: 3,
+      badgeType: 'cost',
       badgePosition: 'rightTop',
     });
     let badgeValue = 3;
@@ -499,12 +500,40 @@ export class PF2eCustomClassShowcase extends Pages {
     );
 
     content
-      .add(this.createSectionLabel(scene, 'Badge positions and values'), { expand: true })
+      .add(this.createSectionLabel(scene, 'TCG card stat badges'), { expand: true })
       .add(mutableBadge, { expand: true })
       .add(
         new PF2eBadgeLabel(scene, {
-          text: '새로운 퀘스트',
+          text: '공격력',
+          badgeValue: 7,
+          badgeType: 'attack',
+          badgePosition: 'rightTop',
+        }),
+        { expand: true },
+      )
+      .add(
+        new PF2eBadgeLabel(scene, {
+          text: '체력',
+          badgeValue: 12,
+          badgeType: 'health',
+          badgePosition: 'rightTop',
+        }),
+        { expand: true },
+      )
+      .add(
+        new PF2eBadgeLabel(scene, {
+          text: '방어력',
+          badgeValue: 4,
+          badgeType: 'defense',
+          badgePosition: 'rightTop',
+        }),
+        { expand: true },
+      )
+      .add(
+        new PF2eBadgeLabel(scene, {
+          text: '기본 배지',
           badgeValue: '!',
+          badgeType: 'default',
           badgePosition: 'leftTop',
         }),
         { expand: true },

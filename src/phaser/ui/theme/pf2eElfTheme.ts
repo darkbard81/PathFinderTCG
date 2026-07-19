@@ -27,6 +27,9 @@ export const PF2E_NINE_LABEL_VARIANTS = [
 ] as const;
 export type PF2eNineLabelVariant = (typeof PF2E_NINE_LABEL_VARIANTS)[number];
 
+export const PF2E_BADGE_TYPES = ['default', 'cost', 'attack', 'health', 'defense'] as const;
+export type PF2eBadgeType = (typeof PF2E_BADGE_TYPES)[number];
+
 export interface PF2eNinePatchThemeStyle {
   readonly key: string;
   readonly columns: readonly [number, undefined, number];
@@ -161,6 +164,36 @@ export const PF2E_ELF_THEME = {
     badgeLabel: {
       badgePadding: 6,
       badgeFontSize: 18,
+      variants: {
+        default: {
+          key: ASSET_KEYS.pf2eElfBadge,
+          textColor: '#f2ead4',
+          strokeColor: '#14241c',
+        },
+        cost: {
+          key: ASSET_KEYS.pf2eElfBadgeCost,
+          textColor: '#effbff',
+          strokeColor: '#061b38',
+        },
+        attack: {
+          key: ASSET_KEYS.pf2eElfBadgeAttack,
+          textColor: '#f7e9bd',
+          strokeColor: '#101820',
+        },
+        health: {
+          key: ASSET_KEYS.pf2eElfBadgeHealth,
+          textColor: '#fff5e8',
+          strokeColor: '#4b080d',
+        },
+        defense: {
+          key: ASSET_KEYS.pf2eElfBadgeDefense,
+          textColor: '#f4ecd7',
+          strokeColor: '#091727',
+        },
+      } satisfies Record<
+        PF2eBadgeType,
+        { readonly key: string; readonly textColor: string; readonly strokeColor: string }
+      >,
     },
     buttons: {
       gap: 12,
