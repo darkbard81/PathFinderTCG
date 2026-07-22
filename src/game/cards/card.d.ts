@@ -7,18 +7,43 @@
 
 export type ActionType = 'DRAW' | 'PLACE' | 'MOVE' | 'ATTACK' | 'DISCARD' | 'END_TURN';
 
+export const TriggerType = {
+  /** 카드를 덱에서 뽑았을 때 */
+  CARD_DRAWN: 'CARD_DRAWN',
+
+  /** 카드를 필드에 배치했을 때 */
+  CARD_PLACED: 'CARD_PLACED',
+
+  /** 카드의 위치가 변경되었을 때 */
+  CARD_MOVED: 'CARD_MOVED',
+
+  /** 공격을 선언했을 때 */
+  ATTACK_DECLARED: 'ATTACK_DECLARED',
+
+  /** 피해를 받았을 때 */
+  DAMAGE_RECEIVED: 'DAMAGE_RECEIVED',
+
+  /** 카드가 파괴되었을 때 */
+  CARD_DESTROYED: 'CARD_DESTROYED',
+
+  /** 카드를 버렸을 때 */
+  CARD_DISCARDED: 'CARD_DISCARDED',
+
+  /** 상태가 추가되었을 때 */
+  STATUS_ADDED: 'STATUS_ADDED',
+
+  /** 상태가 제거되었을 때 */
+  STATUS_REMOVED: 'STATUS_REMOVED',
+
+  /** 턴이 시작되었을 때 */
+  TURN_STARTED: 'TURN_STARTED',
+
+  /** 턴이 종료되었을 때 */
+  TURN_ENDED: 'TURN_ENDED',
+} as const;
+
 export type TriggerType =
-  | 'CARD_DRAWN'
-  | 'CARD_PLACED'
-  | 'CARD_MOVED'
-  | 'ATTACK_DECLARED'
-  | 'DAMAGE_RECEIVED'
-  | 'CARD_DESTROYED'
-  | 'CARD_DISCARDED'
-  | 'STATUS_ADDED'
-  | 'STATUS_REMOVED'
-  | 'TURN_STARTED'
-  | 'TURN_ENDED';
+  (typeof TriggerType)[keyof typeof TriggerType];
 
 export type TriggerSubject = 'SELF' | 'OWNER' | 'OPPONENT' | 'ANY';
 
@@ -30,7 +55,7 @@ export interface Trigger {
 
 export type EffectTarget = 'SELF' | 'OWNER' | 'OPPONENT' | 'ACTION_TARGET' | 'TRIGGER_SOURCE';
 
-export type StatType = 'ATTACK' | 'HEALTH' | 'DEFENSE';
+export type StatType = 'ATTACK' | 'HEALTH' | 'COST' | 'DOMINANCE';
 
 /**
  * 상태를 변경하는 실행 결과다.
