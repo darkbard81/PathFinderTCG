@@ -42,8 +42,7 @@ export const TriggerType = {
   TURN_ENDED: 'TURN_ENDED',
 } as const;
 
-export type TriggerType =
-  (typeof TriggerType)[keyof typeof TriggerType];
+export type TriggerType = (typeof TriggerType)[keyof typeof TriggerType];
 
 export type TriggerSubject = 'SELF' | 'OWNER' | 'OPPONENT' | 'ANY';
 
@@ -53,7 +52,8 @@ export interface Trigger {
   readonly subject?: TriggerSubject;
 }
 
-export type EffectTarget = 'SELF' | 'OWNER' | 'OPPONENT' | 'ACTION_TARGET' | 'TRIGGER_SOURCE';
+export type EffectTarget =
+  'SELF' | 'OWNER' | 'OPPONENT' | 'ACTION_TARGET' | 'TRIGGER_SOURCE' | 'TRIGGER_SUBJECT';
 
 export type StatType = 'ATTACK' | 'HEALTH' | 'COST' | 'DOMINANCE';
 

@@ -26,6 +26,15 @@
 `ActiveSkill`은 `action`으로 플레이어 선택과 연결된다. `ReactiveSkill`은 `trigger`를
 가진다. `PassiveSkill`은 사건을 기다리지 않고 카드가 유효한 동안 계속 적용된다.
 
+## Effect 대상
+
+- `SELF`, `OWNER`, `OPPONENT`, `ACTION_TARGET`은 Skill 출처와 연결 Action을 기준으로 해석한다.
+- `TRIGGER_SOURCE`는 사건을 일으킨 원인, `TRIGGER_SUBJECT`는 사건이 발생한 주체를 가리킨다.
+- `TRIGGER_SUBJECT`는 서로 다른 사건 주체가 하나일 때만 해석한다. 복합 사건에 서로 다른 주체가
+  둘 이상이면 그 Effect는 실패하며, 임의 대상 선택이나 일괄 적용으로 확장하지 않는다.
+- `PLACE` Effect는 대상 참조가 이미 식별한 Drop의 유닛만 사용한다. Hand/Drop 검색이나 선택은
+  simulation에 암묵적으로 추가하지 않는다.
+
 ## 예시
 
 ```ts
