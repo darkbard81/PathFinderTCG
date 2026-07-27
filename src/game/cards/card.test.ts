@@ -1,6 +1,13 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { Effect, EffectTarget } from './card.js';
+import type {
+  ActiveSkill,
+  CardDefinition,
+  Effect,
+  EffectTarget,
+  PassiveSkill,
+  ReactiveSkill,
+} from './card.js';
 
 describe('card declaration types', () => {
   it('exposes the event subject without adding a generic zone selector', () => {
@@ -10,5 +17,16 @@ describe('card declaration types', () => {
       readonly type: 'PLACE';
       readonly target: 'TRIGGER_SUBJECT';
     }>().toExtend<Effect>();
+  });
+
+  it('requires descriptions on cards and every skill kind', () => {
+    expectTypeOf<CardDefinition>().toHaveProperty('description').toEqualTypeOf<string>();
+    expectTypeOf<ActiveSkill>().toHaveProperty('description').toEqualTypeOf<string>();
+    expectTypeOf<ReactiveSkill>().toHaveProperty('description').toEqualTypeOf<string>();
+    expectTypeOf<PassiveSkill>().toHaveProperty('description').toEqualTypeOf<string>();
+  });
+
+  it('distinguishes leader and unit card definitions', () => {
+    expectTypeOf<CardDefinition>().toHaveProperty('type').toEqualTypeOf<'LEADER' | 'UNIT'>();
   });
 });

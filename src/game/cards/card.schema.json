@@ -1,0 +1,478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pathfinder-tcg:schema:card-definition",
+  "title": "Pathfinder TCG Card Definition",
+  "description": "Pathfinder TCG 카드 한 장의 선언 데이터 구조다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "description", "type", "cost", "dominance", "hp", "attack"],
+  "properties": {
+    "id": {
+      "description": "카드 정의를 고유하게 식별하는 ID다.",
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "description": "사용자에게 표시할 카드 이름이다.",
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "description": "사용자에게 표시할 카드 자체의 설명이다.",
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "$ref": "#/$defs/cardType"
+    },
+    "cost": {
+      "description": "카드를 배치할 때 필요한 지배력 비용이다.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "dominance": {
+      "description": "인접한 필드에 제공하는 기본 지배력이다.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "hp": {
+      "description": "카드의 기본 체력이다.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "attack": {
+      "description": "카드의 기본 공격력이다.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "activeSkill": {
+      "$ref": "#/$defs/activeSkill"
+    },
+    "reactiveSkill": {
+      "$ref": "#/$defs/reactiveSkill"
+    },
+    "passiveSkill": {
+      "$ref": "#/$defs/passiveSkill"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "const": "LEADER"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "cost": {
+            "const": 0
+          },
+          "dominance": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "hp": {
+            "const": 20
+          },
+          "attack": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "const": "UNIT"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "cost": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "dominance": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "hp": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "attack": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 7
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "cardType": {
+      "description": "코어 카드의 종류다.",
+      "type": "string",
+      "enum": ["LEADER", "UNIT"]
+    },
+    "actionType": {
+      "description": "플레이어가 선택할 수 있는 행동이다.",
+      "type": "string",
+      "enum": ["DRAW", "PLACE", "MOVE", "ATTACK", "DISCARD", "END_TURN"]
+    },
+    "triggerType": {
+      "description": "Reactive Skill이 반응할 수 있는 게임 사건이다.",
+      "type": "string",
+      "enum": [
+        "CARD_DRAWN",
+        "CARD_PLACED",
+        "CARD_MOVED",
+        "ATTACK_DECLARED",
+        "DAMAGE_RECEIVED",
+        "CARD_DESTROYED",
+        "CARD_DISCARDED",
+        "STATUS_ADDED",
+        "STATUS_REMOVED",
+        "TURN_STARTED",
+        "TURN_ENDED"
+      ]
+    },
+    "triggerSubject": {
+      "description": "Reactive Skill 출처를 기준으로 사건 주체를 한정한다.",
+      "type": "string",
+      "enum": ["SELF", "OWNER", "OPPONENT", "ANY"]
+    },
+    "trigger": {
+      "description": "Reactive Skill이 반응할 사건의 선언적 조건이다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/triggerType"
+        },
+        "subject": {
+          "$ref": "#/$defs/triggerSubject",
+          "default": "SELF"
+        }
+      }
+    },
+    "effectTarget": {
+      "description": "Skill 출처, 연결 Action 또는 Trigger를 기준으로 해석할 Effect 대상이다.",
+      "type": "string",
+      "enum": ["SELF", "OWNER", "OPPONENT", "ACTION_TARGET", "TRIGGER_SOURCE", "TRIGGER_SUBJECT"]
+    },
+    "statType": {
+      "description": "MODIFY_STAT Effect가 변경할 카드 수치다.",
+      "type": "string",
+      "enum": ["ATTACK", "HEALTH", "COST", "DOMINANCE"]
+    },
+    "damageEffect": {
+      "description": "대상에게 지정한 양의 피해를 준다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "amount"],
+      "properties": {
+        "type": {
+          "const": "DAMAGE"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "healEffect": {
+      "description": "대상의 피해를 지정한 양만큼 회복한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "amount"],
+      "properties": {
+        "type": {
+          "const": "HEAL"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "drawEffect": {
+      "description": "대상 플레이어가 카드를 지정한 장수만큼 뽑게 한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "count"],
+      "properties": {
+        "type": {
+          "const": "DRAW"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "moveEffect": {
+      "description": "대상 카드를 합법적인 인접 필드로 이동시킨다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target"],
+      "properties": {
+        "type": {
+          "const": "MOVE"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        }
+      }
+    },
+    "placeEffect": {
+      "description": "이미 식별된 대상 카드를 합법적인 필드에 배치한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target"],
+      "properties": {
+        "type": {
+          "const": "PLACE"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        }
+      }
+    },
+    "destroyEffect": {
+      "description": "대상 카드를 파괴한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target"],
+      "properties": {
+        "type": {
+          "const": "DESTROY"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        }
+      }
+    },
+    "discardEffect": {
+      "description": "대상 플레이어가 손패를 지정한 장수만큼 버리게 한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "count"],
+      "properties": {
+        "type": {
+          "const": "DISCARD"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "modifyStatEffect": {
+      "description": "대상의 지정 수치를 amount만큼 변경한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "stat", "amount"],
+      "properties": {
+        "type": {
+          "const": "MODIFY_STAT"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "stat": {
+          "$ref": "#/$defs/statType"
+        },
+        "amount": {
+          "type": "number"
+        }
+      }
+    },
+    "addStatusEffect": {
+      "description": "대상에게 식별된 상태를 추가한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "statusId"],
+      "properties": {
+        "type": {
+          "const": "ADD_STATUS"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "statusId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "removeStatusEffect": {
+      "description": "대상에게서 식별된 상태를 제거한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "statusId"],
+      "properties": {
+        "type": {
+          "const": "REMOVE_STATUS"
+        },
+        "target": {
+          "$ref": "#/$defs/effectTarget"
+        },
+        "statusId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "effect": {
+      "description": "카드 Skill이 만드는 상태 변경 결과다.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/damageEffect"
+        },
+        {
+          "$ref": "#/$defs/healEffect"
+        },
+        {
+          "$ref": "#/$defs/drawEffect"
+        },
+        {
+          "$ref": "#/$defs/moveEffect"
+        },
+        {
+          "$ref": "#/$defs/placeEffect"
+        },
+        {
+          "$ref": "#/$defs/destroyEffect"
+        },
+        {
+          "$ref": "#/$defs/discardEffect"
+        },
+        {
+          "$ref": "#/$defs/modifyStatEffect"
+        },
+        {
+          "$ref": "#/$defs/addStatusEffect"
+        },
+        {
+          "$ref": "#/$defs/removeStatusEffect"
+        }
+      ]
+    },
+    "effectList": {
+      "description": "Skill이 선언된 순서대로 적용할 Effect 목록이다.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/effect"
+      }
+    },
+    "activeSkill": {
+      "description": "플레이어가 연결된 Action을 선택했을 때 실행하는 카드 규칙이다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "type", "action", "effects"],
+      "properties": {
+        "id": {
+          "description": "Skill을 고유하게 식별하는 ID다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "description": "사용자에게 표시할 Active Skill 설명이다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "ACTIVE"
+        },
+        "action": {
+          "$ref": "#/$defs/actionType"
+        },
+        "effects": {
+          "$ref": "#/$defs/effectList"
+        }
+      }
+    },
+    "reactiveSkill": {
+      "description": "Trigger와 일치하는 사건이 발생했을 때 실행하는 카드 규칙이다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "type", "trigger", "effects"],
+      "properties": {
+        "id": {
+          "description": "Skill을 고유하게 식별하는 ID다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "description": "사용자에게 표시할 Reactive Skill 설명이다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "REACTIVE"
+        },
+        "trigger": {
+          "$ref": "#/$defs/trigger"
+        },
+        "effects": {
+          "$ref": "#/$defs/effectList"
+        }
+      }
+    },
+    "passiveSkill": {
+      "description": "카드가 유효한 동안 계속 적용하는 카드 규칙이다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "type", "effects"],
+      "properties": {
+        "id": {
+          "description": "Skill을 고유하게 식별하는 ID다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "description": "사용자에게 표시할 Passive Skill 설명이다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "PASSIVE"
+        },
+        "effects": {
+          "$ref": "#/$defs/effectList"
+        }
+      }
+    }
+  }
+}

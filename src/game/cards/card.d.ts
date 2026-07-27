@@ -117,8 +117,11 @@ export type EffectType = Effect['type'];
 
 export type SkillType = 'ACTIVE' | 'REACTIVE' | 'PASSIVE';
 
+export type CardType = 'LEADER' | 'UNIT';
+
 interface SkillBase {
   readonly id: string;
+  readonly description: string;
   readonly effects: readonly Effect[];
 }
 
@@ -143,6 +146,8 @@ export interface PassiveSkill extends SkillBase {
 export interface CardDefinition {
   readonly id: string;
   readonly name: string;
+  readonly description: string;
+  readonly type: CardType;
   readonly cost: number;
   readonly dominance: number;
   readonly hp: number;
