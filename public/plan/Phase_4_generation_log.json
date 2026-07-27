@@ -1,0 +1,588 @@
+{
+  "schemaVersion": 1,
+  "status": "COMPLETE",
+  "blockedAssetIds": [],
+  "cardPromptContract": {
+    "promptVersion": "phase-4-card-art-v2",
+    "manifestSha256": "4fd65567930c1d531080d7f25a16ef4c3c14da38aedfd30afce6c622d4108e1c",
+    "characterContract": "One clearly adult elf woman with an H-Cup body, wearing Cut-Open Style fantasy clothing",
+    "frozenByUserAt": "2026-07-27",
+    "mutationPolicy": "Do not change or augment the character and clothing wording without a new user instruction."
+  },
+  "cardArtAcceptance": {
+    "decidedByUserAt": "2026-07-27",
+    "automaticRegistration": "The first successfully generated 1024x1536 opaque PNG is registered.",
+    "contentReviewOwner": "user",
+    "contentReviewBlocksRegistration": false
+  },
+  "attemptOverrides": [
+    {
+      "assetId": "allied-grove-renewer",
+      "maximumAttempts": 4,
+      "approvedBy": "user",
+      "approvedAt": "2026-07-27",
+      "approvalText": "allied-grove-renewer 동일 고정 프롬프트 4차 1회 승인",
+      "promptVersion": "phase-4-card-art-v2",
+      "promptMutationAllowed": false
+    }
+  ],
+  "entries": [
+    {
+      "assetId": "frame-common",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:01:51+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-frame-v1",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/frames/raw/frame-common-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "frame-rare",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:06:05+09:00",
+      "tool": "built-in $imagegen edit",
+      "promptVersion": "phase-4-card-frame-v1",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/frames/raw/frame-rare-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "frame-epic",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:06:05+09:00",
+      "tool": "built-in $imagegen edit",
+      "promptVersion": "phase-4-card-frame-v1",
+      "toolErrorOrFailedCriterion": "Visual QA failed: #FF00FF despill removed most of the required #8A6BC1 purple accent.",
+      "resultPath": "assets-source/cards/frames/raw/frame-epic-attempt-1.png",
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "frame-epic",
+      "attempt": 2,
+      "executedAt": "2026-07-27T16:08:21+09:00",
+      "tool": "built-in $imagegen edit",
+      "promptVersion": "phase-4-card-frame-v1",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/frames/raw/frame-epic-attempt-2.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "frame-legendary",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:06:05+09:00",
+      "tool": "built-in $imagegen edit",
+      "promptVersion": "phase-4-card-frame-v1",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/frames/raw/frame-legendary-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-leader-aelira",
+      "attempt": 1,
+      "executedAt": "2026-07-27T07:28:42.606Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-leader-aelira-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-sunroot-pathfinder",
+      "attempt": 1,
+      "executedAt": "2026-07-27T07:32:42.612Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "8 percent safe margin failed: the compass and spear tip were inside the edge margin.",
+      "resultPath": "assets-source/cards/art/attempts/allied-sunroot-pathfinder-attempt-1.png",
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-sunroot-pathfinder",
+      "attempt": 2,
+      "executedAt": "2026-07-27T07:34:30.977Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "8 percent safe margin failed: the compass and spear tip were inside the edge margin.",
+      "resultPath": "assets-source/cards/art/attempts/allied-sunroot-pathfinder-attempt-2.png",
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-sunroot-pathfinder",
+      "attempt": 3,
+      "executedAt": "2026-07-27T07:38:17.341Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-sunroot-pathfinder-attempt-3.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-dawn-scribe",
+      "attempt": 1,
+      "executedAt": "2026-07-27T07:43:40.044Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-dawn-scribe-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-mossguard",
+      "attempt": 1,
+      "executedAt": "2026-07-27T07:45:33.931Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID a61aceed-c80e-468f-8e73-6e6377ce25e6. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-mossguard",
+      "attempt": 2,
+      "executedAt": "2026-07-27T07:47:03.548Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-mossguard-attempt-2.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-amber-duelist",
+      "attempt": 1,
+      "executedAt": "2026-07-27T07:49:03.568Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-amber-duelist-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-pollen-saboteur",
+      "attempt": 1,
+      "executedAt": "2026-07-27T07:52:55.424Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 3dad7617-67a0-4d7f-8bf3-6b816e182bfe. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-pollen-saboteur",
+      "attempt": 2,
+      "executedAt": "2026-07-27T07:56:46.111Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID c18a92f5-1052-449e-b276-b421ef194890. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-pollen-saboteur",
+      "attempt": 3,
+      "executedAt": "2026-07-27T08:00:39.404Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-pollen-saboteur-attempt-3.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-vine-cartographer",
+      "attempt": 1,
+      "executedAt": "2026-07-27T08:02:28.505Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-vine-cartographer-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-seed-oracle",
+      "attempt": 1,
+      "executedAt": "2026-07-27T08:04:23.476Z",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-seed-oracle-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-gleam-lancer",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:31:05.451+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "8 percent safe margin failed: the crystal lance tip extended beyond the right image edge.",
+      "resultPath": "assets-source/cards/art/attempts/allied-gleam-lancer-attempt-1.png",
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-gleam-lancer",
+      "attempt": 2,
+      "executedAt": "2026-07-27T16:35:08.520+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "8 percent safe margin failed: the lance shaft and crystal tip extended beyond the side image edges.",
+      "resultPath": "assets-source/cards/art/attempts/allied-gleam-lancer-attempt-2.png",
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-gleam-lancer",
+      "attempt": 3,
+      "executedAt": "2026-07-27T16:38:52.723+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-gleam-lancer-attempt-3.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-bark-shield",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:40:36.159+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-bark-shield-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-grove-renewer",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:44:39.523+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 28819c62-de49-48bb-818d-735a033f5b60. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-grove-renewer",
+      "attempt": 2,
+      "executedAt": "2026-07-27T16:48:13.852+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 82b2fdf3-619d-49b1-9412-8b59bde4d8de. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-grove-renewer",
+      "attempt": 3,
+      "executedAt": "2026-07-27T16:51:38.901+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 2c03eb88-54bf-4332-b777-26c397a0b9ec. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "BLOCKED"
+    },
+    {
+      "assetId": "allied-grove-renewer",
+      "attempt": 4,
+      "executedAt": "2026-07-27T17:51:48.021+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/allied-grove-renewer.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-solar-blade",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:53:00.105+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 8efd1f39-94f3-4437-b8b5-2ec4af650b2f. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-solar-blade",
+      "attempt": 2,
+      "executedAt": "2026-07-27T16:54:20.408+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID e4f898bb-9846-4589-83f6-4987dc645f62. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "allied-solar-blade",
+      "attempt": 3,
+      "executedAt": "2026-07-27T16:55:44.981+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-solar-blade-attempt-3.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-canopy-warden",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:59:26.438+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-canopy-warden-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-worldtree-anchor",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:03:29.475+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-worldtree-anchor-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-twilight-exiler",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:08:34.062+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-twilight-exiler-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "allied-golden-champion",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:12:34.327+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/allied-golden-champion-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-leader-velsara",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:29:06.895+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-leader-velsara-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-nightroot-scout",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:32:46.663+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 39bc23a2-a195-4707-9f14-6c6c1159baa0. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "enemy-nightroot-scout",
+      "attempt": 2,
+      "executedAt": "2026-07-27T16:34:07.238+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID fdfe45e4-b2e0-4dfe-bf12-f9f9b24c57ae. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "enemy-nightroot-scout",
+      "attempt": 3,
+      "executedAt": "2026-07-27T16:37:40.127+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-nightroot-scout-attempt-3.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-gloam-whisperer",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:41:10.009+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 1d77f940-fd80-4b7a-99b8-a0c1f0b5d61c. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "enemy-gloam-whisperer",
+      "attempt": 2,
+      "executedAt": "2026-07-27T16:44:26.627+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 4cee0cfe-0649-4ed2-9686-65fd809924c7. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "enemy-gloam-whisperer",
+      "attempt": 3,
+      "executedAt": "2026-07-27T16:47:49.199+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-gloam-whisperer-attempt-3.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-obsidian-guard",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:49:16.949+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-obsidian-guard-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-crimson-duelist",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:50:46.693+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-crimson-duelist-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-hex-weaver",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:54:35.136+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-hex-weaver-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-shadow-cartographer",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:56:10.721+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-shadow-cartographer-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-raven-oracle",
+      "attempt": 1,
+      "executedAt": "2026-07-27T16:59:35.368+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-raven-oracle-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-moonfang-raider",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:05:28+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": "image generation failed: http 400 Bad Request: Some(\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 0c2a7c9c-6afa-41b6-a751-166778f97c3b. safety_violations=[sexual].\\\",\\n    \\\"type\\\": \\\"image_generation_user_error\\\",\\n    \\\"param\\\": null,\\n    \\\"code\\\": \\\"moderation_blocked\\\",\\n    \\\"moderation_details\\\": {\\n      \\\"moderation_stage\\\": \\\"output\\\",\\n      \\\"categories\\\": [\\n        \\\"sexual\\\"\\n      ]\\n    }\\n  }\\n}\")",
+      "resultPath": null,
+      "finalStatus": "RETRY"
+    },
+    {
+      "assetId": "enemy-moonfang-raider",
+      "attempt": 2,
+      "executedAt": "2026-07-27T17:07:42+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-moonfang-raider-attempt-2.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-frostveil-sentinel",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:11:29+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-frostveil-sentinel-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-gravebloom-revenant",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:13:03+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-gravebloom-revenant-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-bloodmoon-blade",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:14:29+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-bloodmoon-blade-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-nightwall-warden",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:18:07+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-nightwall-warden-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-blackthorn-anchor",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:21:58+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-blackthorn-anchor-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-void-exiler",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:23:30+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-void-exiler-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    },
+    {
+      "assetId": "enemy-obsidian-champion",
+      "attempt": 1,
+      "executedAt": "2026-07-27T17:24:54+09:00",
+      "tool": "built-in $imagegen",
+      "promptVersion": "phase-4-card-art-v2",
+      "toolErrorOrFailedCriterion": null,
+      "resultPath": "assets-source/cards/art/attempts/enemy-obsidian-champion-attempt-1.png",
+      "finalStatus": "SUCCESS"
+    }
+  ],
+  "postProcessing": [
+    {
+      "assetIds": ["frame-common", "frame-rare", "frame-epic", "frame-legendary"],
+      "tool": "imagegen remove_chroma_key.py with system Pillow",
+      "result": "The default soft matte left visible color fringe. Reprocessing the selected generation with --edge-contract 1 removed the fringe without another image generation attempt."
+    },
+    {
+      "assetIds": ["frame-common", "frame-rare", "frame-epic", "frame-legendary"],
+      "tool": "sharp@0.35.3",
+      "result": "Converted selected 1024x1536 RGBA PNG sources to 768x1152 transparent lossless WebP."
+    },
+    {
+      "assetIds": ["frame-common", "frame-rare", "frame-epic", "frame-legendary"],
+      "tool": "Pillow 11.3.0",
+      "result": "PASS: decode, size, RGBA, fully transparent corners, 100% transparent center region, no visible chroma pixels, and file-size limits."
+    }
+  ]
+}

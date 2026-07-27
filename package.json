@@ -17,7 +17,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "assets:cards:prompts": "tsx scripts/card-assets/print-generation-prompts.js",
+    "assets:cards:prompts:validate": "tsx scripts/card-assets/validate-card-prompt-contract.js",
+    "assets:cards:build": "tsx scripts/card-assets/build-runtime-assets.js",
+    "assets:cards:validate": "/usr/bin/python scripts/card-assets/validate_card_assets.py",
+    "assets:cards:test": "/usr/bin/python -m unittest scripts/card-assets/validate_card_assets_test.py && npm run assets:cards:prompts:validate",
+    "assets:cards:log:validate": "tsx scripts/card-assets/validate-generation-log.js"
   },
   "dependencies": {
     "@fastify/cookie": "10.0.1",

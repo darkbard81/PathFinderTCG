@@ -1,3 +1,10 @@
+import {
+  CARD_ART_ASSET_DEFINITIONS,
+  CARD_FRAME_ASSET_KEYS,
+  CARD_FRAME_ASSET_PATHS,
+  CARD_FRAME_VARIANTS,
+} from './cardAssets.js';
+
 export type AssetType = 'image' | 'audio' | 'json';
 
 export interface AssetEntry {
@@ -92,4 +99,14 @@ export const assetManifest: readonly AssetEntry[] = [
     type: 'image',
     path: '/assets/ui/pf2e-elf-button-ninepatch.png',
   },
+  ...CARD_FRAME_VARIANTS.map((variant) => ({
+    key: CARD_FRAME_ASSET_KEYS[variant],
+    type: 'image' as const,
+    path: CARD_FRAME_ASSET_PATHS[variant],
+  })),
+  ...CARD_ART_ASSET_DEFINITIONS.map(({ key, path }) => ({
+    key,
+    type: 'image' as const,
+    path,
+  })),
 ];

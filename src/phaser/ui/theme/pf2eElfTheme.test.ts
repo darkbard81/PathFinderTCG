@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { CARD_FRAME_ASSET_KEYS } from '../../../game/assets/cardAssets';
 import { ASSET_KEYS, assetManifest } from '../../../game/assets/manifest';
 import {
   PF2E_BADGE_TYPES,
@@ -80,9 +81,19 @@ describe('PF2E_ELF_THEME', () => {
     expect(PF2E_ELF_THEME.components.badgeLabel.variants).toMatchObject({
       default: { key: ASSET_KEYS.pf2eElfBadge },
       cost: { key: ASSET_KEYS.pf2eElfBadgeCost },
+      dominance: { key: ASSET_KEYS.pf2eElfBadge },
       attack: { key: ASSET_KEYS.pf2eElfBadgeAttack },
       health: { key: ASSET_KEYS.pf2eElfBadgeHealth },
       defense: { key: ASSET_KEYS.pf2eElfBadgeDefense },
+    });
+  });
+
+  it('maps every card rarity to its transparent frame overlay asset', () => {
+    expect(PF2E_ELF_THEME.components.card.frameVariants).toEqual({
+      COMMON: { key: CARD_FRAME_ASSET_KEYS.COMMON },
+      RARE: { key: CARD_FRAME_ASSET_KEYS.RARE },
+      EPIC: { key: CARD_FRAME_ASSET_KEYS.EPIC },
+      LEGENDARY: { key: CARD_FRAME_ASSET_KEYS.LEGENDARY },
     });
   });
 

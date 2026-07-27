@@ -7,7 +7,7 @@ import {
 } from './pf2eCustomClassCatalog';
 
 describe('PF2e custom class catalog', () => {
-  it('declares nine unique class identifiers in display order', () => {
+  it('declares ten unique class identifiers in display order', () => {
     expect(PF2E_CUSTOM_CLASS_IDS).toEqual([
       'ninePatch2',
       'nineLabel',
@@ -17,6 +17,7 @@ describe('PF2e custom class catalog', () => {
       'gridTable',
       'confirmDialog',
       'badgeLabel',
+      'card',
       'buttons',
     ]);
     expect(new Set(PF2E_CUSTOM_CLASS_CATALOG.map(({ id }) => id)).size).toBe(

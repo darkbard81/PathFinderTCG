@@ -2,6 +2,13 @@ import type * as Phaser from 'phaser';
 import { Pages } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 import type Sizer from 'phaser4-rex-plugins/templates/ui/sizer/Sizer.js';
 
+import { CARD_FRAME_VARIANTS } from '../../../game/assets/cardAssets';
+import {
+  createCardDisplayModel,
+  type CardDisplayModel,
+  type CardStatDisplay,
+} from '../../../game/cards/cardDisplay';
+import { ALLIED_CARD_DESIGNS } from '../../../game/content/alliedCardDesigns';
 import {
   getPF2eCustomClassDefinition,
   PF2E_DEFAULT_CUSTOM_CLASS_ID,
@@ -17,6 +24,7 @@ import {
 } from '../theme/pf2eElfTheme';
 import { PF2eBadgeLabel } from './PF2eBadgeLabel';
 import { PF2eButtons } from './PF2eButtons';
+import { PF2eCard } from './PF2eCard';
 import { PF2eConfirmDialog } from './PF2eConfirmDialog';
 import { PF2eGridTable, type PF2eGridTableItem } from './PF2eGridTable';
 import { PF2eNineLabel } from './PF2eNineLabel';
@@ -107,6 +115,12 @@ export class PF2eCustomClassShowcase extends Pages {
     });
     this.addPage(this.createBadgeLabelPage(scene), {
       key: 'badgeLabel',
+      align: 'center',
+      padding: PF2E_ELF_THEME.components.showcase.inset,
+      expand: true,
+    });
+    this.addPage(this.createCardPage(scene), {
+      key: 'card',
       align: 'center',
       padding: PF2E_ELF_THEME.components.showcase.inset,
       expand: true,
@@ -585,6 +599,98 @@ export class PF2eCustomClassShowcase extends Pages {
       .add(horizontal, { expand: true })
       .add(this.createSectionLabel(scene, 'Vertical and disabled state'), { expand: true })
       .add(vertical, { expand: true })
+      .add(status, { align: 'left' });
+
+    return this.createPageShell(scene, definition.id, content);
+  }
+
+  private createCardPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('card');
+    const content = this.createContentSizer(scene);
+    const cardModels = CARD_FRAME_VARIANTS.map((variant) => {
+      const design = ALLIED_CARD_DESIGNS.find(
+        ({ presentation }) => presentation.frameVariant === variant,
+      );
+      if (!design) {
+        throw new Error(`The Phase 4 card showcase requires an allied ${variant} card.`);
+      }
+      return createCardDisplayModel(design.definition, design.presentation);
+    });
+    let cardModelIndex = 0;
+    const initialCardModel = cardModels[cardModelIndex];
+    if (!initialCardModel) {
+      throw new Error('The Phase 4 card showcase requires at least one card model.');
+    }
+    let cardModel: CardDisplayModel = initialCardModel;
+
+    const card = new PF2eCard(scene, {
+      card: cardModel,
+      width: Math.min(this.contentWidth, PF2E_ELF_THEME.components.card.maximumWidth),
+    });
+    const status = this.createBodyText(
+      scene,
+      `${cardModel.frameVariant} · 네 수치 배지 원본 값`,
+      PF2E_ELF_THEME.colors.accentText,
+    );
+    const actions = new PF2eButtons(scene, {
+      buttons: [
+        { id: 'cycleCardRarity', text: '다음 레어리티' },
+        { id: 'toggleCardStats', text: '네 수치 갱신' },
+      ],
+    });
+    let showingUpdatedStats = false;
+
+    const syncCardDataset = (stats: CardStatDisplay): void => {
+      scene.game.canvas.dataset.cardDefinition = cardModel.cardDefinitionId;
+      scene.game.canvas.dataset.cardRarity = cardModel.frameVariant;
+      scene.game.canvas.dataset.cardStats = [
+        stats.cost,
+        stats.dominance,
+        stats.attack,
+        stats.hp,
+      ].join(',');
+    };
+    syncCardDataset(cardModel.stats);
+
+    this.registerController(
+      new PF2eButtonsController(actions, {
+        onButtonClick: (buttonId) => {
+          if (buttonId === 'cycleCardRarity') {
+            cardModelIndex = (cardModelIndex + 1) % cardModels.length;
+            const nextCardModel = cardModels[cardModelIndex];
+            if (!nextCardModel) {
+              throw new Error(`Missing card model at showcase index ${cardModelIndex}.`);
+            }
+            cardModel = nextCardModel;
+            showingUpdatedStats = false;
+            card.setCard(cardModel);
+            status.setText(`${cardModel.frameVariant} · 네 수치 배지 원본 값`);
+            syncCardDataset(cardModel.stats);
+            return;
+          }
+
+          showingUpdatedStats = !showingUpdatedStats;
+          const stats: CardStatDisplay = showingUpdatedStats
+            ? {
+                cost: cardModel.stats.cost + 1,
+                dominance: cardModel.stats.dominance + 1,
+                attack: cardModel.stats.attack + 1,
+                hp: cardModel.stats.hp + 1,
+              }
+            : cardModel.stats;
+          card.setStats(stats).layout();
+          status.setText(
+            `${cardModel.frameVariant} · Cost ${stats.cost} · 지배력 ${stats.dominance} · 공격력 ${stats.attack} · HP ${stats.hp}`,
+          );
+          syncCardDataset(stats);
+        },
+      }),
+    );
+
+    content
+      .add(this.createSectionLabel(scene, 'Layered card display'), { expand: true })
+      .add(card, { align: 'center' })
+      .add(actions, { expand: true })
       .add(status, { align: 'left' });
 
     return this.createPageShell(scene, definition.id, content);

@@ -15,3 +15,6 @@ tmp/
 
 # Local API persistence
 /data/
+
+# Generated card-art sources stay local unless explicitly approved for version control
+/assets-source/cards/

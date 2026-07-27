@@ -9,6 +9,7 @@ export const PF2E_CUSTOM_CLASS_IDS = [
   'gridTable',
   'confirmDialog',
   'badgeLabel',
+  'card',
   'buttons',
 ] as const;
 export type PF2eCustomClassId = (typeof PF2E_CUSTOM_CLASS_IDS)[number];
@@ -138,6 +139,15 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
       'rightBottom',
     ],
     states: PF2E_NINE_PATCH_VISUAL_STATES,
+  },
+  {
+    id: 'card',
+    name: 'PF2eCard',
+    baseClass: 'OverlapSizer',
+    summary: '카드 아트, 레어리티 프레임, 이름, Skill 설명과 네 수치 배지를 겹쳐 조립합니다.',
+    configKeys: ['card', 'width?'],
+    variants: ['COMMON', 'RARE', 'EPIC', 'LEGENDARY'],
+    states: ['display-only', 'setCard', 'setStats'],
   },
   {
     id: 'buttons',

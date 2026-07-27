@@ -1,4 +1,6 @@
 import { ASSET_KEYS } from '../../../game/assets/manifest';
+import { CARD_FRAME_ASSET_KEYS, type CardFrameAssetKey } from '../../../game/assets/cardAssets';
+import type { CardFrameVariant } from '../../../game/data/contracts';
 
 export type PF2eNinePatchVariant =
   'panel' | 'control' | 'tab' | 'scrollTrack' | 'scrollThumb' | 'gridCell' | 'dialog' | 'button';
@@ -27,7 +29,14 @@ export const PF2E_NINE_LABEL_VARIANTS = [
 ] as const;
 export type PF2eNineLabelVariant = (typeof PF2E_NINE_LABEL_VARIANTS)[number];
 
-export const PF2E_BADGE_TYPES = ['default', 'cost', 'attack', 'health', 'defense'] as const;
+export const PF2E_BADGE_TYPES = [
+  'default',
+  'cost',
+  'dominance',
+  'attack',
+  'health',
+  'defense',
+] as const;
 export type PF2eBadgeType = (typeof PF2E_BADGE_TYPES)[number];
 
 export interface PF2eNinePatchThemeStyle {
@@ -175,6 +184,11 @@ export const PF2E_ELF_THEME = {
           textColor: '#effbff',
           strokeColor: '#061b38',
         },
+        dominance: {
+          key: ASSET_KEYS.pf2eElfBadge,
+          textColor: '#bce8d0',
+          strokeColor: '#08251b',
+        },
         attack: {
           key: ASSET_KEYS.pf2eElfBadgeAttack,
           textColor: '#f7e9bd',
@@ -198,6 +212,35 @@ export const PF2E_ELF_THEME = {
     buttons: {
       gap: 12,
       height: 58,
+    },
+    card: {
+      minimumWidth: 200,
+      maximumWidth: 360,
+      defaultWidth: 320,
+      aspectRatio: 2 / 3,
+      statBadgeSize: 56,
+      statBadgeInset: 20,
+      statBadgeFontSize: 18,
+      contentInsetX: 38,
+      contentBottomInset: 74,
+      contentHeight: 124,
+      contentPaddingX: 14,
+      contentPaddingY: 11,
+      contentGap: 5,
+      contentBackgroundColor: 0x06110d,
+      contentBackgroundAlpha: 0.86,
+      nameFontSize: 21,
+      rulesFontSize: 13,
+      rulesLineSpacing: 3,
+      nameTextColor: '#f7e9bd',
+      rulesTextColor: '#f2ead4',
+      textStrokeColor: '#06110d',
+      frameVariants: {
+        COMMON: { key: CARD_FRAME_ASSET_KEYS.COMMON },
+        RARE: { key: CARD_FRAME_ASSET_KEYS.RARE },
+        EPIC: { key: CARD_FRAME_ASSET_KEYS.EPIC },
+        LEGENDARY: { key: CARD_FRAME_ASSET_KEYS.LEGENDARY },
+      } satisfies Record<CardFrameVariant, { readonly key: CardFrameAssetKey }>,
     },
   },
   ninePatch: {
