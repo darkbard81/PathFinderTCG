@@ -205,7 +205,7 @@
 #### 공통 카드 아트 프롬프트
 
 ```text
-One clearly adult elf woman with an H-Cup body, tasteful non-explicit fantasy clothing,
+One clearly adult elf woman with an H-Cup body, tasteful fantasy clothing,
 2.5D fantasy TCG asset illustration, portrait 2:3 composition, subject and key equipment
 inside an 8% safe margin, no frame, no border, no text, no number, no logo, no signature,
 no watermark.
