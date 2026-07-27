@@ -12,3 +12,6 @@ backup/
 playwright-report/
 test-results/
 tmp/
+
+# Local API persistence
+/data/

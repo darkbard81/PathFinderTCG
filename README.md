@@ -1,6 +1,6 @@
 # Pathfinder TCG
 
-Phaser 4, rexUI, TypeScript, Vite로 구성한 반응형 브라우저 게임 스타터입니다.
+Phaser 4, rexUI, TypeScript, Vite와 Fastify·SQLite로 구성한 반응형 브라우저 TCG입니다.
 
 ## 환경
 
@@ -9,15 +9,26 @@ Phaser 4, rexUI, TypeScript, Vite로 구성한 반응형 브라우저 게임 스
 - phaser4-rex-plugins `4.2.0`
 - Vite `8.1.5`
 - TypeScript `6.0.3`
+- Fastify `5.10.0`
+- better-sqlite3 `12.9.0`
 
 ## 시작하기
 
+의존성을 설치한 뒤 Vite와 API를 각각 실행합니다.
+
 ```bash
 npm install
+
+# 터미널 1
+npm run dev:api
+
+# 터미널 2
 npm run dev
 ```
 
-개발 서버는 기본적으로 `http://127.0.0.1:5173`에서 실행됩니다.
+Vite는 기본적으로 `http://127.0.0.1:3010`, API는 `http://127.0.0.1:3011`에서 실행됩니다.
+Vite가 `/api` 요청을 API로 proxy합니다. 서버 환경 변수와 API 계약은
+[`src/server/README.md`](src/server/README.md)를 참고합니다.
 
 ## 품질 명령
 
@@ -42,6 +53,7 @@ src/
     boot/         # Phaser 게임 시작점
     config/       # Phaser 및 rexUI 플러그인 설정
     scenes/       # 얇은 Scene 오케스트레이션
+  server/         # Fastify 인증·세이브 API와 SQLite 저장소
   ui/
     layout/       # 화면 크기에서 레이아웃 값을 계산하는 순수 함수
 ```
