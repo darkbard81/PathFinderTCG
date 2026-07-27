@@ -57,7 +57,9 @@ production에서는 `HOST`, `PORT`, `ALLOWED_ORIGINS`를 모두 명시해야 한
 - 슬롯 쿼리는 URL에 계정 ID를 받지 않고 인증된 계정 ID와 슬롯 1~3을 항상 함께 사용한다.
 - SQLite는 `foreign_keys=ON`, `journal_mode=WAL`, `busy_timeout=5000`으로 연다.
 
-Phase 2 런타임 초기 상태는 Phase 1 테스트 fixture를 사용하지 않는 빈 Schema-valid 상태다.
-Phase 3이 승인된 32종 카드 풀과 starter 덱을 같은 `ServerGameContent` 주입 경계에 연결한다.
+Phase 3 런타임 초기 상태는 승인된 32종 카드 풀을 사용한다. 새 슬롯에는 호출마다 새 ID를 가진
+아군 카드 인스턴스 30장과 합법적인 starter 덱 하나를 같은 `ServerGameContent` 주입 경계에서
+생성한다. Phase 1 테스트 fixture는 런타임 데이터로 사용하지 않는다.
+
 실제 슬롯 삭제 확인 Dialog와 로그인·슬롯 화면은 Phase 7에서 구현하고, 확인 완료 후에만
-`DELETE`를 호출해야 한다.
+`DELETE`를 호출해야 한다. Stage 01 실행과 적 카드 보상 지급은 Phase 8 범위다.

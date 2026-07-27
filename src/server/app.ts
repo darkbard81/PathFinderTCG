@@ -20,7 +20,7 @@ import {
   type PublicUser,
 } from './database.js';
 import {
-  createPhaseTwoGameContent,
+  createPhaseThreeGameContent,
   type SaveSlotId,
   type ServerGameContent,
 } from './gameContent.js';
@@ -184,7 +184,7 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
 
   const secureCookies = options.secureCookies ?? false;
   const now = options.now ?? (() => new Date());
-  const gameContent = options.gameContent ?? createPhaseTwoGameContent();
+  const gameContent = options.gameContent ?? createPhaseThreeGameContent();
   const allowedOrigins = new Set(options.allowedOrigins);
   const database = new GameDatabase(options.databasePath);
   const authService = new AuthService(database, now);

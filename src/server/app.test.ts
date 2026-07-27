@@ -7,15 +7,15 @@ import Database from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it, type TestContext } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 
-import {
-  GAME_DATA_SCHEMA_VERSION,
-  parseSaveSlotState,
-  type SaveSlotState,
-} from '../game/data/index.js';
-import { createPhaseOneFixtures } from '../game/data/testFixtures.js';
+import { parseSaveSlotState, type SaveSlotState } from '../game/data/index.js';
+import type { StarterContentIdFactory } from '../game/content/index.js';
 import { buildServer } from './app.js';
 import { SESSION_COOKIE_NAME, SESSION_LIFETIME_SECONDS } from './auth.js';
-import type { SaveSlotId, ServerGameContent } from './gameContent.js';
+import {
+  createPhaseThreeGameContent,
+  type SaveSlotId,
+  type ServerGameContent,
+} from './gameContent.js';
 
 const TEST_ORIGIN = 'http://127.0.0.1:3010';
 const VALID_PASSWORD = 'correct horse battery staple';
@@ -106,36 +106,15 @@ function extractRawToken(cookie: string): string {
 }
 
 function createTestGameContent(): ServerGameContent {
-  const fixtures = createPhaseOneFixtures();
-  const deckInstanceIds = new Set([
-    fixtures.deck.leaderInstanceId,
-    ...fixtures.deck.unitInstanceIds,
-  ]);
-  const starterInstances = fixtures.collection.cardInstances.filter((instance) =>
-    deckInstanceIds.has(instance.id),
-  );
-
-  return {
-    cardDefinitions: fixtures.cardCatalog.cardDefinitions,
-    stages: [fixtures.stage],
-    createInitialSaveSlotState(slotId: SaveSlotId, now: Date): SaveSlotState {
-      return {
-        schemaVersion: GAME_DATA_SCHEMA_VERSION,
-        slotId,
-        collection: {
-          cardInstances: starterInstances,
-        },
-        decks: [fixtures.deck],
-        selectedDeckId: fixtures.deck.id,
-        progress: {
-          unlockedStageIds: [fixtures.stage.id],
-          clearedStageIds: [],
-        },
-        completedStageRuns: [],
-        lastModifiedAt: now.toISOString(),
-      };
-    },
+  let sequence = 0;
+  const createId: StarterContentIdFactory = (request) => {
+    const copyIndex = request.kind === 'CARD_INSTANCE' ? request.copyIndex : 0;
+    const id = `api-${request.kind.toLowerCase()}-${request.sourceId}-${copyIndex}-${sequence}`;
+    sequence += 1;
+    return id;
   };
+
+  return createPhaseThreeGameContent(createId);
 }
 
 async function register(

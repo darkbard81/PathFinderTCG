@@ -1,4 +1,11 @@
+import { randomUUID } from 'node:crypto';
+
 import type { CardDefinition } from '../game/cards/card.js';
+import {
+  TEST_CARD_CATALOG,
+  createAlliedStarterDeckContent,
+  type StarterContentIdFactory,
+} from '../game/content/index.js';
 import {
   GAME_DATA_SCHEMA_VERSION,
   type SaveSlotState,
@@ -13,26 +20,24 @@ export interface ServerGameContent {
   createInitialSaveSlotState(slotId: SaveSlotId, now: Date): SaveSlotState;
 }
 
-/**
- * Phase 3 카드 풀이 연결되기 전의 직렬화 가능한 빈 초기 상태다.
- * Phase 1 검증 fixture를 런타임 콘텐츠로 승격하지 않는다.
- */
-export function createPhaseTwoGameContent(): ServerGameContent {
-  const cardDefinitions: readonly CardDefinition[] = Object.freeze([]);
+export function createPhaseThreeGameContent(
+  createId: StarterContentIdFactory = () => randomUUID(),
+): ServerGameContent {
+  const cardDefinitions = TEST_CARD_CATALOG.cardDefinitions;
   const stages: readonly StageDefinition[] = Object.freeze([]);
 
   return Object.freeze({
     cardDefinitions,
     stages,
     createInitialSaveSlotState(slotId: SaveSlotId, now: Date): SaveSlotState {
+      const starterContent = createAlliedStarterDeckContent(createId);
+
       return {
         schemaVersion: GAME_DATA_SCHEMA_VERSION,
         slotId,
-        collection: {
-          cardInstances: [],
-        },
-        decks: [],
-        selectedDeckId: null,
+        collection: starterContent.collection,
+        decks: [starterContent.deck],
+        selectedDeckId: starterContent.deck.id,
         progress: {
           unlockedStageIds: [],
           clearedStageIds: [],
