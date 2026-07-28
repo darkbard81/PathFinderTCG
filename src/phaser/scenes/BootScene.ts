@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 
-import { assetManifest } from '../../game/assets/manifest';
+import { assetManifest } from '../../game/assets/manifest.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -14,7 +14,7 @@ export class BootScene extends Phaser.Scene {
           this.load.image(asset.key, asset.path);
           break;
         case 'audio':
-          this.load.audio(asset.key, asset.path);
+          this.load.audio(asset.key, [...asset.paths]);
           break;
         case 'json':
           this.load.json(asset.key, asset.path);

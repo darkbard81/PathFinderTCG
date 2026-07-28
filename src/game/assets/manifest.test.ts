@@ -48,7 +48,11 @@ describe('Phase 4 card assets', () => {
   });
 
   it('keeps every manifest key and path unique', () => {
+    const paths = assetManifest.flatMap((asset) =>
+      asset.type === 'audio' ? asset.paths : [asset.path],
+    );
+
     expect(new Set(assetManifest.map(({ key }) => key)).size).toBe(assetManifest.length);
-    expect(new Set(assetManifest.map(({ path }) => path)).size).toBe(assetManifest.length);
+    expect(new Set(paths).size).toBe(paths.length);
   });
 });

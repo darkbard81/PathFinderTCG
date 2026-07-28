@@ -4,14 +4,31 @@ import {
   CARD_FRAME_ASSET_PATHS,
   CARD_FRAME_VARIANTS,
 } from './cardAssets.js';
+import { BATTLE_SFX_ASSET_DEFINITIONS } from './battleSfxAssets.js';
 
 export type AssetType = 'image' | 'audio' | 'json';
 
-export interface AssetEntry {
+interface AssetEntryBase {
   readonly key: string;
   readonly type: AssetType;
+}
+
+export interface ImageAssetEntry extends AssetEntryBase {
+  readonly type: 'image';
   readonly path: string;
 }
+
+export interface AudioAssetEntry extends AssetEntryBase {
+  readonly type: 'audio';
+  readonly paths: readonly string[];
+}
+
+export interface JsonAssetEntry extends AssetEntryBase {
+  readonly type: 'json';
+  readonly path: string;
+}
+
+export type AssetEntry = ImageAssetEntry | AudioAssetEntry | JsonAssetEntry;
 
 export const ASSET_KEYS = {
   pf2eElfPanel: 'ui.pf2e.elf.panel',
@@ -108,5 +125,10 @@ export const assetManifest: readonly AssetEntry[] = [
     key,
     type: 'image' as const,
     path,
+  })),
+  ...BATTLE_SFX_ASSET_DEFINITIONS.map(({ key, paths }) => ({
+    key,
+    type: 'audio' as const,
+    paths,
   })),
 ];

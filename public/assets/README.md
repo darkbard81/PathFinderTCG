@@ -12,3 +12,6 @@
 
 게임 코드는 파일 경로를 직접 공유하지 않고 `src/game/assets/manifest.ts`의 안정적인 키를
 통해 자산을 참조합니다.
+
+전투 SFX의 제작 방식과 라이선스 기록은
+[`audio/battle/LICENSE.md`](./audio/battle/LICENSE.md)에 있습니다.
