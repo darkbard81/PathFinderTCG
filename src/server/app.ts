@@ -2,7 +2,11 @@ import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 
-import { parseSavedDeck, type SchemaValidationIssue } from '../game/data/index.js';
+import {
+  parseSavedDeck,
+  type SchemaValidationIssue,
+  type StageRunResult,
+} from '../game/data/index.js';
 import {
   AuthInputError,
   AuthService,
@@ -20,7 +24,7 @@ import {
   type PublicUser,
 } from './database.js';
 import {
-  createPhaseThreeGameContent,
+  createPhaseEightGameContent,
   type SaveSlotId,
   type ServerGameContent,
 } from './gameContent.js';
@@ -31,6 +35,15 @@ import {
   SaveSlotNotFoundError,
   SaveSlotService,
 } from './saveSlots.js';
+import {
+  InvalidStageDeckError,
+  StageLockedError,
+  StageNotFoundError,
+  StageRunCompletionConflictError,
+  StageRunNotFoundError,
+  StageRunService,
+  type StageRunFactories,
+} from './stageRuns.js';
 
 const AUTH_RATE_LIMIT_MAX = 10;
 const AUTH_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -41,6 +54,7 @@ export interface BuildServerOptions {
   readonly allowedOrigins: readonly string[];
   readonly secureCookies?: boolean;
   readonly gameContent?: ServerGameContent;
+  readonly stageRunFactories?: StageRunFactories;
   readonly now?: Clock;
   readonly logger?: boolean;
 }
@@ -56,6 +70,10 @@ interface SlotParams {
 
 interface DeckParams extends SlotParams {
   readonly deckId: string;
+}
+
+interface StageRunParams extends SlotParams {
+  readonly runId: string;
 }
 
 interface ApiErrorBody {
@@ -93,6 +111,25 @@ function parseCredentials(value: unknown): Credentials {
     username: value.username,
     password: value.password,
   };
+}
+
+function parseStageId(value: unknown): string {
+  if (!isRecord(value) || typeof value.stageId !== 'string' || value.stageId.length === 0) {
+    throw new RequestInputError('stageId 문자열이 필요합니다.');
+  }
+
+  return value.stageId;
+}
+
+function parseStageRunResult(value: unknown): StageRunResult {
+  if (
+    !isRecord(value) ||
+    (value.result !== 'WIN' && value.result !== 'LOSS' && value.result !== 'DRAW')
+  ) {
+    throw new RequestInputError('result는 WIN, LOSS, DRAW 중 하나여야 합니다.');
+  }
+
+  return value.result;
 }
 
 function parseSlotId(value: string): SaveSlotId {
@@ -184,11 +221,18 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
 
   const secureCookies = options.secureCookies ?? false;
   const now = options.now ?? (() => new Date());
-  const gameContent = options.gameContent ?? createPhaseThreeGameContent();
+  const gameContent = options.gameContent ?? createPhaseEightGameContent();
   const allowedOrigins = new Set(options.allowedOrigins);
   const database = new GameDatabase(options.databasePath);
   const authService = new AuthService(database, now);
   const saveSlotService = new SaveSlotService(database, gameContent, now);
+  const stageRunService = new StageRunService(
+    database,
+    saveSlotService,
+    gameContent,
+    now,
+    options.stageRunFactories,
+  );
   const app = Fastify({
     logger:
       options.logger === true
@@ -258,6 +302,31 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
 
     if (error instanceof InvalidDeckError) {
       sendError(reply, 422, 'INVALID_DECK', error.message, error.issues);
+      return;
+    }
+
+    if (error instanceof StageNotFoundError) {
+      sendError(reply, 404, 'STAGE_NOT_FOUND', error.message);
+      return;
+    }
+
+    if (error instanceof StageLockedError) {
+      sendError(reply, 409, 'STAGE_LOCKED', error.message);
+      return;
+    }
+
+    if (error instanceof InvalidStageDeckError) {
+      sendError(reply, 422, 'INVALID_STAGE_DECK', error.message, error.issues);
+      return;
+    }
+
+    if (error instanceof StageRunNotFoundError) {
+      sendError(reply, 404, 'STAGE_RUN_NOT_FOUND', error.message);
+      return;
+    }
+
+    if (error instanceof StageRunCompletionConflictError) {
+      sendError(reply, 409, 'STAGE_RUN_CONFLICT', error.message);
       return;
     }
 
@@ -394,6 +463,40 @@ export async function buildServer(options: BuildServerOptions): Promise<FastifyI
         parsedDeck.value,
       );
       await reply.send({ saveSlot });
+    },
+  );
+
+  app.post<{ Params: SlotParams; Body: unknown }>(
+    '/api/save-slots/:slotId/stage-runs',
+    async (request, reply) => {
+      const user = requireUser(request, reply, authService, secureCookies);
+
+      if (user === null) {
+        return;
+      }
+
+      const slotId = parseSlotId(request.params.slotId);
+      const stageId = parseStageId(request.body);
+      const receipt = stageRunService.start(user.id, slotId, stageId);
+      await reply.code(receipt.created ? 201 : 200).send({
+        stageRun: receipt.stageRun,
+      });
+    },
+  );
+
+  app.post<{ Params: StageRunParams; Body: unknown }>(
+    '/api/save-slots/:slotId/stage-runs/:runId/complete',
+    async (request, reply) => {
+      const user = requireUser(request, reply, authService, secureCookies);
+
+      if (user === null) {
+        return;
+      }
+
+      const slotId = parseSlotId(request.params.slotId);
+      const result = parseStageRunResult(request.body);
+      const receipt = stageRunService.complete(user.id, slotId, request.params.runId, result);
+      await reply.send(receipt);
     },
   );
 

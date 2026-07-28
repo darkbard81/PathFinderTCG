@@ -42,6 +42,7 @@ export class PF2ePanel extends Sizer {
       width: 2,
       height: 2,
     });
+    scene.children.sendToBack(this.background);
     this.addBackground(this.background);
     this.setVisualState(config.visualState ?? 'idle');
   }

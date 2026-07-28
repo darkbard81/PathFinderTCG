@@ -1,4 +1,4 @@
-# Phase 2 local account and save API
+# Local account, save, and Stage run API
 
 `src/server/`는 Phaser 객체와 분리된 Fastify·SQLite 경계다. 브라우저는 Vite의 `/api` proxy를
 통해 접근하고, 세이브 본문은 `src/game/data/`의 JSON Schema와 의미 validator를 모두
@@ -33,17 +33,19 @@ production에서는 `HOST`, `PORT`, `ALLOWED_ORIGINS`를 모두 명시해야 한
 
 ## API 응답 경계
 
-| Method   | Route                                   | 성공 응답                                |
-| -------- | --------------------------------------- | ---------------------------------------- |
-| `POST`   | `/api/auth/register`                    | `201 { user }`                           |
-| `POST`   | `/api/auth/login`                       | `200 { user }`와 `ptcg_session` 쿠키     |
-| `POST`   | `/api/auth/logout`                      | `204`                                    |
-| `GET`    | `/api/auth/session`                     | `200 { user }`                           |
-| `GET`    | `/api/save-slots`                       | `200 { saveSlots }` — 항상 1~3번 세 항목 |
-| `POST`   | `/api/save-slots/:slotId`               | `201 { saveSlot }`                       |
-| `GET`    | `/api/save-slots/:slotId`               | `200 { saveSlot }`                       |
-| `PUT`    | `/api/save-slots/:slotId/decks/:deckId` | `200 { saveSlot }`                       |
-| `DELETE` | `/api/save-slots/:slotId`               | `204`                                    |
+| Method   | Route                                                | 성공 응답                                |
+| -------- | ---------------------------------------------------- | ---------------------------------------- |
+| `POST`   | `/api/auth/register`                                 | `201 { user }`                           |
+| `POST`   | `/api/auth/login`                                    | `200 { user }`와 `ptcg_session` 쿠키     |
+| `POST`   | `/api/auth/logout`                                   | `204`                                    |
+| `GET`    | `/api/auth/session`                                  | `200 { user }`                           |
+| `GET`    | `/api/save-slots`                                    | `200 { saveSlots }` — 항상 1~3번 세 항목 |
+| `POST`   | `/api/save-slots/:slotId`                            | `201 { saveSlot }`                       |
+| `GET`    | `/api/save-slots/:slotId`                            | `200 { saveSlot }`                       |
+| `PUT`    | `/api/save-slots/:slotId/decks/:deckId`              | `200 { saveSlot }`                       |
+| `POST`   | `/api/save-slots/:slotId/stage-runs`                 | `201/200 { stageRun }`                   |
+| `POST`   | `/api/save-slots/:slotId/stage-runs/:runId/complete` | `200 { stageRun, saveSlot }`             |
+| `DELETE` | `/api/save-slots/:slotId`                            | `204`                                    |
 
 오류는 `{ error: { code, message, details? } }` 형식을 사용한다. 모든
 `POST`·`PUT`·`PATCH`·`DELETE` 요청은 정확히 허용된 `Origin`이 필요하다.
@@ -61,5 +63,10 @@ Phase 3 런타임 초기 상태는 승인된 32종 카드 풀을 사용한다. �
 아군 카드 인스턴스 30장과 합법적인 starter 덱 하나를 같은 `ServerGameContent` 주입 경계에서
 생성한다. Phase 1 테스트 fixture는 런타임 데이터로 사용하지 않는다.
 
-실제 슬롯 삭제 확인 Dialog와 로그인·슬롯 화면은 Phase 7에서 구현하고, 확인 완료 후에만
-`DELETE`를 호출해야 한다. Stage 01 실행과 적 카드 보상 지급은 Phase 8 범위다.
+Phase 8의 새 슬롯은 `stage-01`이 해금된 상태로 생성되며 기존 Phase 3 슬롯도 처음 읽을 때
+같은 상태로 마이그레이션된다. Stage 시작은 합법적인 선택 덱을 다시 검증한 뒤 실행 ID와 uint32
+시드를 저장한다. 같은 슬롯·Stage의 `PENDING` 실행은 재시작 뒤에도 재사용한다.
+
+완료 요청은 실행 ID 단위로 멱등하다. `WIN`은 Stage 보상표에서 정확히 한 카드 인스턴스를
+추첨하고, `LOSS`와 `DRAW`는 보상을 만들지 않는다. 실행 완료, 완료 영수증, 컬렉션과 진행도
+갱신은 하나의 SQLite 트랜잭션으로 저장한다.

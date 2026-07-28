@@ -128,6 +128,13 @@ export interface SaveProgress {
 
 export type StageRunResult = 'WIN' | 'LOSS' | 'DRAW';
 
+export interface StartedStageRun {
+  readonly runId: StableId;
+  readonly stageId: StableId;
+  readonly seed: number;
+  readonly startedAt: string;
+}
+
 export interface CompletedStageRun {
   readonly runId: StableId;
   readonly stageId: StableId;

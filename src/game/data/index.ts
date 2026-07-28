@@ -22,6 +22,7 @@ export {
   type SaveProgress,
   type SaveSlotState,
   type StableId,
+  type StartedStageRun,
   type StageDefinition,
   type StageRewardEntry,
   type StageRunResult,

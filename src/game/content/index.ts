@@ -21,6 +21,16 @@ export {
   type StarterContentIdRequest,
 } from './testCardPool.js';
 export {
+  STAGE_CATALOG,
+  STAGE_DEFINITIONS,
+  STAGE_ONE_AI_PROFILE_ID,
+  STAGE_ONE_DEFINITION,
+  STAGE_ONE_ID,
+  STAGE_ONE_PRESENTATION,
+  type StageCatalogEntry,
+  type StagePresentation,
+} from './stageOne.js';
+export {
   validateTestCardPool,
   type TestCardPoolValidationCode,
   type TestCardPoolValidationIssue,

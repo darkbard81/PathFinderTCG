@@ -5,8 +5,8 @@ import {
   validatePlayableSavedDeck,
   validateSaveSlotState,
 } from '../game/data/index.js';
-import type { StarterContentIdFactory } from '../game/content/index.js';
-import { createPhaseThreeGameContent } from './gameContent.js';
+import { STAGE_ONE_ID, type StarterContentIdFactory } from '../game/content/index.js';
+import { createPhaseEightGameContent, createPhaseThreeGameContent } from './gameContent.js';
 
 function createSequentialContentIdFactory(namespace: string): StarterContentIdFactory {
   let sequence = 0;
@@ -71,5 +71,42 @@ describe('Phase 3 game content boundary', () => {
     ];
 
     expect(secondIds.every((id) => !firstIds.has(id))).toBe(true);
+  });
+});
+
+describe('Phase 8 game content boundary', () => {
+  it('unlocks the data-defined Stage 01 for new slots', () => {
+    const content = createPhaseEightGameContent(createSequentialContentIdFactory('phase-eight'));
+    const state = content.createInitialSaveSlotState(1, new Date('2026-07-28T06:00:00.000Z'));
+
+    expect(content.stages.map((stage) => stage.id)).toEqual([STAGE_ONE_ID]);
+    expect(state.progress).toEqual({
+      unlockedStageIds: [STAGE_ONE_ID],
+      clearedStageIds: [],
+    });
+    expect(validateSaveSlotState(state, content.cardDefinitions, content.stages)).toEqual({
+      valid: true,
+      issues: [],
+    });
+  });
+
+  it('migrates an existing Phase 3 slot without replacing its collection or deck', () => {
+    const createId = createSequentialContentIdFactory('legacy');
+    const phaseThree = createPhaseThreeGameContent(createId);
+    const phaseEight = createPhaseEightGameContent(createId);
+    const legacy = phaseThree.createInitialSaveSlotState(2, new Date('2026-07-27T06:00:00.000Z'));
+    const migrated = phaseEight.migrateSaveSlotState(legacy, new Date('2026-07-28T06:00:00.000Z'));
+
+    expect(migrated).not.toBe(legacy);
+    expect(migrated.collection).toBe(legacy.collection);
+    expect(migrated.decks).toBe(legacy.decks);
+    expect(migrated.progress).toEqual({
+      unlockedStageIds: [STAGE_ONE_ID],
+      clearedStageIds: [],
+    });
+    expect(migrated.lastModifiedAt).toBe('2026-07-28T06:00:00.000Z');
+    expect(phaseEight.migrateSaveSlotState(migrated, new Date('2026-07-28T07:00:00.000Z'))).toBe(
+      migrated,
+    );
   });
 });

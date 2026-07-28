@@ -18,6 +18,8 @@ export interface PF2eNineLabelConfig {
   readonly height?: number;
   readonly fontSize?: number;
   readonly wrapWidth?: number;
+  readonly paddingX?: number;
+  readonly paddingY?: number;
 }
 
 export class PF2eNineLabel extends Label {
@@ -57,10 +59,10 @@ export class PF2eNineLabel extends Label {
       text,
       align: 'center',
       space: {
-        left: style.paddingX,
-        right: style.paddingX,
-        top: style.paddingY,
-        bottom: style.paddingY,
+        left: config.paddingX ?? style.paddingX,
+        right: config.paddingX ?? style.paddingX,
+        top: config.paddingY ?? style.paddingY,
+        bottom: config.paddingY ?? style.paddingY,
       },
     });
 

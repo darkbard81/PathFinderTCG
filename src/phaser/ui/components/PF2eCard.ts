@@ -8,6 +8,7 @@ import { PF2eCardStatBadge } from './PF2eCardStatBadge';
 export interface PF2eCardConfig {
   readonly card: CardDisplayModel;
   readonly width?: number;
+  readonly compact?: boolean;
 }
 
 function scaleMetric(metric: number, scale: number, minimum = 1): number {
@@ -27,9 +28,10 @@ export class PF2eCard extends OverlapSizer {
 
   constructor(scene: Phaser.Scene, config: PF2eCardConfig) {
     const theme = PF2E_ELF_THEME.components.card;
+    const minimumWidth = config.compact ? theme.compactWidth : theme.minimumWidth;
     const width = Math.min(
       theme.maximumWidth,
-      Math.max(theme.minimumWidth, Math.round(config.width ?? theme.defaultWidth)),
+      Math.max(minimumWidth, Math.round(config.width ?? theme.defaultWidth)),
     );
     const height = Math.round(width / theme.aspectRatio);
     const scale = width / theme.defaultWidth;

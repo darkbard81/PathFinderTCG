@@ -17,8 +17,22 @@ import type {
 import { BattleSfxSettingsStore } from '../../ui/controllers/BattleSfxSettingsStore.js';
 import { PF2E_ELF_THEME } from '../../ui/theme/pf2eElfTheme.js';
 
-export type PhaserBattleCardView =
-  Phaser.GameObjects.Container | Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+export type PhaserBattleCardView = Phaser.GameObjects.GameObject & {
+  readonly parentContainer: Phaser.GameObjects.Container | null;
+  x: number;
+  y: number;
+  alpha: number;
+  scaleX: number;
+  scaleY: number;
+  setPosition(x: number, y?: number, z?: number, w?: number): PhaserBattleCardView;
+  setAlpha(
+    topLeft?: number,
+    topRight?: number,
+    bottomLeft?: number,
+    bottomRight?: number,
+  ): PhaserBattleCardView;
+  setScale(x: number, y?: number): PhaserBattleCardView;
+};
 
 type PhaserBattleVisualView =
   PhaserBattleCardView | Phaser.GameObjects.Arc | Phaser.GameObjects.Text;
@@ -34,6 +48,25 @@ interface BattleTweenConfig {
   readonly ease: string;
   readonly yoyo?: boolean;
   readonly repeat?: number;
+}
+
+interface LayerAwareView {
+  addToLayer(layer: Phaser.GameObjects.Layer): unknown;
+}
+
+function isLayerAwareView(
+  view: PhaserBattleVisualView,
+): view is PhaserBattleVisualView & LayerAwareView {
+  return 'addToLayer' in view && typeof view.addToLayer === 'function';
+}
+
+function addViewToLayer(layer: Phaser.GameObjects.Layer, view: PhaserBattleVisualView): void {
+  if (isLayerAwareView(view)) {
+    view.addToLayer(layer);
+    return;
+  }
+
+  layer.add(view);
 }
 
 export interface PhaserBattlePoint {
@@ -167,7 +200,7 @@ export class PhaserBattlePresentationDriver implements BattlePresentationDriver 
     }
 
     this.callbacks.detachCardView(cardId, view);
-    this.effectsLayer.add(view);
+    addViewToLayer(this.effectsLayer, view);
     this.pinnedAttackViews.delete(cardId);
     this.completedAttackReturns.delete(cardId);
     const stepViews = existingStepViews ?? new Map<StableId, PhaserBattleCardView>();
@@ -275,7 +308,7 @@ export class PhaserBattlePresentationDriver implements BattlePresentationDriver 
   ): BattleCuePlayback {
     const view = this.resolveCueView(cue.targetCardId, cue, context);
 
-    if (view === undefined || !('anims' in view) || !('play' in view)) {
+    if (!(view instanceof Phaser.GameObjects.Sprite)) {
       this.report({
         code: 'MISSING_ASSET',
         message: `Animation 대상 Sprite를 찾지 못해 Tween fallback만 사용합니다: ${cue.targetCardId}`,
@@ -722,7 +755,7 @@ export class PhaserBattlePresentationDriver implements BattlePresentationDriver 
       return undefined;
     }
 
-    this.effectsLayer.add(transient);
+    addViewToLayer(this.effectsLayer, transient);
     this.trackTransientView(cue.stepId, transient);
     return transient;
   }
@@ -755,7 +788,7 @@ export class PhaserBattlePresentationDriver implements BattlePresentationDriver 
     }
 
     this.callbacks.detachCardView(cardId, view);
-    this.effectsLayer.add(view);
+    addViewToLayer(this.effectsLayer, view);
     this.pinnedAttackViews.set(cardId, view);
   }
 

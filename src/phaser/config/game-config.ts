@@ -3,9 +3,14 @@ import RexUIPlugin from 'phaser4-rex-plugins/templates/ui/ui-plugin.js';
 
 import type { GameSession } from '../../game/simulation/GameSession';
 import { registerGameSession } from '../adapters/sceneBridge';
+import { BattleResultScene } from '../scenes/BattleResultScene';
+import { BattleScene } from '../scenes/BattleScene';
 import { BootScene } from '../scenes/BootScene';
+import { DeckBuilderScene } from '../scenes/DeckBuilderScene';
+import { LoginScene } from '../scenes/LoginScene';
 import { PF2eCustomClassShowcaseScene } from '../scenes/PF2eCustomClassShowcaseScene';
-import { StarterScene } from '../scenes/StarterScene';
+import { SaveSlotScene } from '../scenes/SaveSlotScene';
+import { StageScene } from '../scenes/StageScene';
 import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme';
 import { GAME_RUNTIME_SETTINGS } from './runtime-settings';
 
@@ -42,7 +47,16 @@ export function createGameConfig(
         },
       ],
     },
-    scene: [BootScene, StarterScene, PF2eCustomClassShowcaseScene],
+    scene: [
+      BootScene,
+      LoginScene,
+      SaveSlotScene,
+      StageScene,
+      DeckBuilderScene,
+      BattleScene,
+      BattleResultScene,
+      PF2eCustomClassShowcaseScene,
+    ],
     callbacks: {
       preBoot: (game) => {
         registerGameSession(game.registry, session);

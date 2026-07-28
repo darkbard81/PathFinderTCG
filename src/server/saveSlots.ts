@@ -155,7 +155,7 @@ export class SaveSlotService {
     const occupiedSlots = new Map(
       this.database
         .listSaveSlots(userId)
-        .map((persisted) => [persisted.slotId, parsePersistedSlot(persisted, this.content)]),
+        .map((persisted) => [persisted.slotId, this.parseAndMigrate(userId, persisted)]),
     );
 
     return ([1, 2, 3] as const).map((slotId): SaveSlotSummary => {
@@ -201,7 +201,7 @@ export class SaveSlotService {
       throw new SaveSlotNotFoundError(slotId);
     }
 
-    return parsePersistedSlot(persisted, this.content);
+    return this.parseAndMigrate(userId, persisted);
   }
 
   updateDeck(userId: string, slotId: SaveSlotId, deckId: string, deck: SavedDeck): SaveSlotState {
@@ -248,5 +248,32 @@ export class SaveSlotService {
     if (!this.database.deleteSaveSlot(userId, slotId)) {
       throw new SaveSlotNotFoundError(slotId);
     }
+  }
+
+  replaceState(userId: string, state: SaveSlotState): SaveSlotState {
+    const validatedState = validateState(state, this.content, state.slotId);
+
+    if (!this.database.updateSaveSlot(userId, toPersistedSlot(validatedState))) {
+      throw new SaveSlotNotFoundError(state.slotId);
+    }
+
+    return validatedState;
+  }
+
+  private parseAndMigrate(userId: string, persisted: PersistedSaveSlot): SaveSlotState {
+    const state = parsePersistedSlot(persisted, this.content);
+    const migrated = this.content.migrateSaveSlotState(state, this.now());
+
+    if (migrated === state) {
+      return state;
+    }
+
+    const validated = validateState(migrated, this.content, persisted.slotId);
+
+    if (!this.database.updateSaveSlot(userId, toPersistedSlot(validated))) {
+      throw new SaveSlotNotFoundError(persisted.slotId);
+    }
+
+    return validated;
   }
 }

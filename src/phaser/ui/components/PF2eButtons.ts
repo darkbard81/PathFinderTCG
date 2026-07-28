@@ -9,6 +9,7 @@ export interface PF2eButtonDefinition {
   readonly text: string;
   readonly variant?: Extract<PF2eNineLabelVariant, 'primary' | 'danger'>;
   readonly fontSize?: number;
+  readonly paddingX?: number;
 }
 
 export interface PF2eButtonsConfig {
@@ -37,6 +38,7 @@ export class PF2eButtons extends Buttons {
         variant: definition.variant ?? 'primary',
         height: theme.height,
         fontSize: definition.fontSize,
+        paddingX: definition.paddingX,
       }).setName(definition.id);
       buttonById.set(definition.id, button);
       return button;

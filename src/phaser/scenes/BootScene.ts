@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 
 import { assetManifest } from '../../game/assets/manifest.js';
+import { getGameSession } from '../adapters/sceneBridge.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -24,6 +25,25 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('PF2eCustomClassShowcaseScene');
+    void this.routeInitialScene();
+  }
+
+  private async routeInitialScene(): Promise<void> {
+    try {
+      const authenticated = await getGameSession(this).restoreAuthentication();
+
+      if (this.scene.isActive()) {
+        this.scene.start(authenticated ? 'SaveSlotScene' : 'LoginScene');
+      }
+    } catch (error: unknown) {
+      if (this.scene.isActive()) {
+        this.scene.start('LoginScene', {
+          status:
+            error instanceof Error
+              ? `API 연결을 확인하세요. ${error.message}`
+              : 'API 연결을 확인하세요.',
+        });
+      }
+    }
   }
 }

@@ -3,9 +3,10 @@ import { dirname, resolve } from 'node:path';
 
 import Database from 'better-sqlite3';
 
+import type { StageRunResult } from '../game/data/index.js';
 import type { SaveSlotId } from './gameContent.js';
 
-const DATABASE_SCHEMA_VERSION = 1;
+const DATABASE_SCHEMA_VERSION = 2;
 
 export interface StoredUser {
   readonly id: string;
@@ -32,6 +33,32 @@ export interface PersistedSaveSlot {
   readonly updatedAt: string;
 }
 
+export type PersistedStageRun =
+  | {
+      readonly userId: string;
+      readonly slotId: SaveSlotId;
+      readonly runId: string;
+      readonly stageId: string;
+      readonly seed: number;
+      readonly status: 'PENDING';
+      readonly result: null;
+      readonly rewardCardInstanceId: null;
+      readonly startedAt: string;
+      readonly completedAt: null;
+    }
+  | {
+      readonly userId: string;
+      readonly slotId: SaveSlotId;
+      readonly runId: string;
+      readonly stageId: string;
+      readonly seed: number;
+      readonly status: 'COMPLETED';
+      readonly result: StageRunResult;
+      readonly rewardCardInstanceId: string | null;
+      readonly startedAt: string;
+      readonly completedAt: string;
+    };
+
 interface UserRow {
   readonly id: string;
   readonly username: string;
@@ -51,6 +78,19 @@ interface SaveSlotRow {
   readonly schema_version: number;
   readonly state_json: string;
   readonly updated_at: string;
+}
+
+interface StageRunRow {
+  readonly user_id: string;
+  readonly slot_id: number;
+  readonly run_id: string;
+  readonly stage_id: string;
+  readonly seed: number;
+  readonly status: string;
+  readonly result: string | null;
+  readonly reward_card_instance_id: string | null;
+  readonly started_at: string;
+  readonly completed_at: string | null;
 }
 
 export class DuplicateUsernameError extends Error {
@@ -87,6 +127,59 @@ function toSaveSlotId(value: number): SaveSlotId {
   }
 
   return value;
+}
+
+function toStageRunResult(value: string | null): StageRunResult {
+  if (value !== 'WIN' && value !== 'LOSS' && value !== 'DRAW') {
+    throw new Error(`DB에 유효하지 않은 Stage 실행 결과가 저장되어 있습니다: ${value}`);
+  }
+
+  return value;
+}
+
+function toPersistedStageRun(row: StageRunRow): PersistedStageRun {
+  const base = {
+    userId: row.user_id,
+    slotId: toSaveSlotId(row.slot_id),
+    runId: row.run_id,
+    stageId: row.stage_id,
+    seed: row.seed,
+    startedAt: row.started_at,
+  };
+
+  if (row.status === 'PENDING') {
+    if (row.result !== null || row.reward_card_instance_id !== null || row.completed_at !== null) {
+      throw new Error(`PENDING Stage 실행에 완료 데이터가 저장되어 있습니다: ${row.run_id}`);
+    }
+
+    return {
+      ...base,
+      status: 'PENDING',
+      result: null,
+      rewardCardInstanceId: null,
+      completedAt: null,
+    };
+  }
+
+  if (row.status !== 'COMPLETED' || row.completed_at === null) {
+    throw new Error(`DB에 유효하지 않은 Stage 실행 상태가 저장되어 있습니다: ${row.status}`);
+  }
+
+  const result = toStageRunResult(row.result);
+  if (
+    (result === 'WIN' && row.reward_card_instance_id === null) ||
+    (result !== 'WIN' && row.reward_card_instance_id !== null)
+  ) {
+    throw new Error(`Stage 실행 결과와 보상 데이터가 일치하지 않습니다: ${row.run_id}`);
+  }
+
+  return {
+    ...base,
+    status: 'COMPLETED',
+    result,
+    rewardCardInstanceId: row.reward_card_instance_id,
+    completedAt: row.completed_at,
+  };
 }
 
 export class GameDatabase {
@@ -294,6 +387,119 @@ export class GameDatabase {
     return result.changes === 1;
   }
 
+  findStageRun(userId: string, slotId: SaveSlotId, runId: string): PersistedStageRun | null {
+    const row = this.database
+      .prepare<[string, number, string], StageRunRow>(
+        `
+          SELECT
+            user_id,
+            slot_id,
+            run_id,
+            stage_id,
+            seed,
+            status,
+            result,
+            reward_card_instance_id,
+            started_at,
+            completed_at
+          FROM stage_runs
+          WHERE user_id = ? AND slot_id = ? AND run_id = ?
+        `,
+      )
+      .get(userId, slotId, runId);
+
+    return row === undefined ? null : toPersistedStageRun(row);
+  }
+
+  findPendingStageRun(
+    userId: string,
+    slotId: SaveSlotId,
+    stageId: string,
+  ): PersistedStageRun | null {
+    const row = this.database
+      .prepare<[string, number, string], StageRunRow>(
+        `
+          SELECT
+            user_id,
+            slot_id,
+            run_id,
+            stage_id,
+            seed,
+            status,
+            result,
+            reward_card_instance_id,
+            started_at,
+            completed_at
+          FROM stage_runs
+          WHERE user_id = ? AND slot_id = ? AND stage_id = ? AND status = 'PENDING'
+        `,
+      )
+      .get(userId, slotId, stageId);
+
+    return row === undefined ? null : toPersistedStageRun(row);
+  }
+
+  createStageRun(stageRun: Extract<PersistedStageRun, { readonly status: 'PENDING' }>): void {
+    this.database
+      .prepare(
+        `
+          INSERT INTO stage_runs (
+            user_id,
+            slot_id,
+            run_id,
+            stage_id,
+            seed,
+            status,
+            result,
+            reward_card_instance_id,
+            started_at,
+            completed_at
+          ) VALUES (?, ?, ?, ?, ?, 'PENDING', NULL, NULL, ?, NULL)
+        `,
+      )
+      .run(
+        stageRun.userId,
+        stageRun.slotId,
+        stageRun.runId,
+        stageRun.stageId,
+        stageRun.seed,
+        stageRun.startedAt,
+      );
+  }
+
+  completeStageRun(
+    userId: string,
+    slotId: SaveSlotId,
+    runId: string,
+    result: StageRunResult,
+    rewardCardInstanceId: string | null,
+    completedAt: string,
+  ): boolean {
+    const update = this.database
+      .prepare(
+        `
+          UPDATE stage_runs
+          SET
+            status = 'COMPLETED',
+            result = ?,
+            reward_card_instance_id = ?,
+            completed_at = ?
+          WHERE
+            user_id = ?
+            AND slot_id = ?
+            AND run_id = ?
+            AND status = 'PENDING'
+        `,
+      )
+      .run(result, rewardCardInstanceId, completedAt, userId, slotId, runId);
+
+    return update.changes === 1;
+  }
+
+  runInTransaction<T>(operation: () => T): T {
+    return this.database.transaction(operation)();
+  }
+
   getPragma(name: 'busy_timeout' | 'foreign_keys' | 'journal_mode' | 'user_version'): unknown {
     return this.database.pragma(name, { simple: true });
   }
@@ -305,55 +511,102 @@ export class GameDatabase {
   }
 
   private migrate(): void {
-    const currentVersion = this.database.pragma('user_version', { simple: true });
+    const storedVersion = this.database.pragma('user_version', { simple: true });
 
-    if (typeof currentVersion !== 'number') {
+    if (typeof storedVersion !== 'number') {
       throw new Error('SQLite user_version을 읽을 수 없습니다.');
     }
 
+    let currentVersion = storedVersion;
     if (currentVersion > DATABASE_SCHEMA_VERSION) {
       throw new Error(
         `지원하지 않는 미래 DB Schema입니다: ${currentVersion} > ${DATABASE_SCHEMA_VERSION}`,
       );
     }
 
-    if (currentVersion === DATABASE_SCHEMA_VERSION) {
-      return;
+    if (currentVersion < 1) {
+      this.database.transaction(() => {
+        this.database.exec(`
+          CREATE TABLE users (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password_salt BLOB NOT NULL CHECK (length(password_salt) = 16),
+            password_hash BLOB NOT NULL CHECK (length(password_hash) = 64),
+            created_at TEXT NOT NULL
+          ) STRICT;
+
+          CREATE TABLE sessions (
+            token_digest BLOB PRIMARY KEY CHECK (length(token_digest) = 32),
+            user_id TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          ) STRICT;
+
+          CREATE INDEX sessions_user_id_index ON sessions(user_id);
+          CREATE INDEX sessions_expires_at_index ON sessions(expires_at);
+
+          CREATE TABLE save_slots (
+            user_id TEXT NOT NULL,
+            slot_id INTEGER NOT NULL CHECK (slot_id BETWEEN 1 AND 3),
+            schema_version INTEGER NOT NULL CHECK (schema_version > 0),
+            state_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY (user_id, slot_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          ) STRICT;
+        `);
+        this.database.pragma('user_version = 1');
+      })();
+      currentVersion = 1;
     }
 
-    this.database.transaction(() => {
-      this.database.exec(`
-        CREATE TABLE users (
-          id TEXT PRIMARY KEY,
-          username TEXT NOT NULL UNIQUE,
-          password_salt BLOB NOT NULL CHECK (length(password_salt) = 16),
-          password_hash BLOB NOT NULL CHECK (length(password_hash) = 64),
-          created_at TEXT NOT NULL
-        ) STRICT;
+    if (currentVersion < 2) {
+      this.database.transaction(() => {
+        this.database.exec(`
+          CREATE TABLE stage_runs (
+            user_id TEXT NOT NULL,
+            slot_id INTEGER NOT NULL CHECK (slot_id BETWEEN 1 AND 3),
+            run_id TEXT NOT NULL,
+            stage_id TEXT NOT NULL,
+            seed INTEGER NOT NULL CHECK (seed BETWEEN 0 AND 4294967295),
+            status TEXT NOT NULL CHECK (status IN ('PENDING', 'COMPLETED')),
+            result TEXT CHECK (result IN ('WIN', 'LOSS', 'DRAW')),
+            reward_card_instance_id TEXT,
+            started_at TEXT NOT NULL,
+            completed_at TEXT,
+            PRIMARY KEY (user_id, slot_id, run_id),
+            FOREIGN KEY (user_id, slot_id)
+              REFERENCES save_slots(user_id, slot_id)
+              ON DELETE CASCADE,
+            CHECK (
+              (
+                status = 'PENDING'
+                AND result IS NULL
+                AND reward_card_instance_id IS NULL
+                AND completed_at IS NULL
+              )
+              OR
+              (
+                status = 'COMPLETED'
+                AND result IS NOT NULL
+                AND completed_at IS NOT NULL
+                AND (
+                  (result = 'WIN' AND reward_card_instance_id IS NOT NULL)
+                  OR
+                  (result IN ('LOSS', 'DRAW') AND reward_card_instance_id IS NULL)
+                )
+              )
+            )
+          ) STRICT;
 
-        CREATE TABLE sessions (
-          token_digest BLOB PRIMARY KEY CHECK (length(token_digest) = 32),
-          user_id TEXT NOT NULL,
-          created_at TEXT NOT NULL,
-          expires_at TEXT NOT NULL,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        ) STRICT;
-
-        CREATE INDEX sessions_user_id_index ON sessions(user_id);
-        CREATE INDEX sessions_expires_at_index ON sessions(expires_at);
-
-        CREATE TABLE save_slots (
-          user_id TEXT NOT NULL,
-          slot_id INTEGER NOT NULL CHECK (slot_id BETWEEN 1 AND 3),
-          schema_version INTEGER NOT NULL CHECK (schema_version > 0),
-          state_json TEXT NOT NULL,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          PRIMARY KEY (user_id, slot_id),
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        ) STRICT;
-      `);
-      this.database.pragma(`user_version = ${DATABASE_SCHEMA_VERSION}`);
-    })();
+          CREATE UNIQUE INDEX stage_runs_pending_stage_index
+          ON stage_runs(user_id, slot_id, stage_id)
+          WHERE status = 'PENDING';
+        `);
+        this.database.pragma('user_version = 2');
+      })();
+    }
   }
 }

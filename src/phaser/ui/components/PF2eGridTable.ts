@@ -166,6 +166,18 @@ export class PF2eGridTable extends GridTable {
     return this;
   }
 
+  setTableItems(items: readonly PF2eGridTableItem[]): this {
+    for (const item of items) {
+      if (!isPF2eGridTableItem(item)) {
+        throw new Error('PF2eGridTable received an invalid item');
+      }
+    }
+
+    this.visualStateByItemId.clear();
+    this.setItems([...items]);
+    return this;
+  }
+
   refreshItemVisualStates(): this {
     this.refresh();
     return this;

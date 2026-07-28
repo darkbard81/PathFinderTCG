@@ -30,6 +30,12 @@ Vite는 기본적으로 `http://127.0.0.1:3010`, API는 `http://127.0.0.1:3011`�
 Vite가 `/api` 요청을 API로 proxy합니다. 서버 환경 변수와 API 계약은
 [`src/server/README.md`](src/server/README.md)를 참고합니다.
 
+Phase 7부터 `npm run dev`의 기본 화면은 UI 예제가 아니라
+`Login → Save Slot → Stage → Deck Builder → Battle → Result` 실제 게임 흐름입니다. 로그인과
+저장, Stage 실행과 승리 보상을 확인하려면 `dev:api`도 함께 실행해야 합니다. Phase 8부터
+Stage 01은 서버가 실행 ID와 시드를 발급하며, 마지막 전투 연출 뒤 승리 시 적 카드 1장을 슬롯
+컬렉션에 영구 저장합니다.
+
 ## 품질 명령
 
 ```bash
