@@ -1,0 +1,252 @@
+:root {
+  --pf2e-backdrop: #06110d;
+  --pf2e-forest-glow: rgb(28 91 61 / 28%);
+  --pf2e-moonstone-glow: rgb(116 173 158 / 16%);
+  --pf2e-surface: #0b2a1e;
+  --pf2e-surface-deep: #071d16;
+  --pf2e-border: #9a7944;
+  --pf2e-text: #f2ead4;
+  --pf2e-muted-text: #a8bcae;
+  --pf2e-accent-text: #bce8d0;
+  --pf2e-danger-text: #f0aaa0;
+  --pf2e-control-height: 54px;
+  --pf2e-minimum-touch-target: 48px;
+  --pf2e-control-radius: 10px;
+}
+
+.pf2e-auth {
+  --pf2e-auth-frame-inset: 26px;
+  --pf2e-auth-content-padding: clamp(8px, 2.4vmin, 24px);
+
+  width: var(--pf2e-auth-layout-width, 360px);
+  height: var(--pf2e-auth-layout-height, 640px);
+  overflow: hidden;
+  color: var(--pf2e-text);
+  background: var(--pf2e-surface-deep);
+  touch-action: pan-y;
+}
+
+.pf2e-auth::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border: var(--pf2e-auth-frame-inset) solid transparent;
+  border-image: url('/assets/ui/pf2e-elf-panel-ninepatch.png') 104 fill /
+    var(--pf2e-auth-frame-inset) / 0 stretch;
+  content: '';
+  pointer-events: none;
+}
+
+.pf2e-auth__layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: calc(var(--pf2e-auth-frame-inset) + var(--pf2e-auth-content-padding));
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(10px, 2vmin, 18px);
+  scrollbar-color: var(--pf2e-border) var(--pf2e-surface-deep);
+  scrollbar-width: thin;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pf2e-auth__header {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+
+.pf2e-auth__title {
+  margin: 0;
+  color: var(--pf2e-text);
+  font-family: Pretendard, system-ui, sans-serif;
+  font-size: clamp(28px, 5.2vmin, 42px);
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 45%);
+}
+
+.pf2e-auth__subtitle,
+.pf2e-auth__status {
+  margin: 0;
+  font-family: Pretendard, system-ui, sans-serif;
+  font-size: clamp(15px, 2.4vmin, 20px);
+  line-height: 1.45;
+  text-align: center;
+}
+
+.pf2e-auth__subtitle {
+  color: var(--pf2e-muted-text);
+}
+
+.pf2e-auth__status {
+  min-height: 3em;
+  color: var(--pf2e-accent-text);
+  white-space: pre-line;
+}
+
+.pf2e-auth__status[data-tone='danger'] {
+  color: var(--pf2e-danger-text);
+}
+
+.pf2e-auth__form-panel {
+  width: min(100%, 560px);
+  padding: clamp(14px, 3vmin, 22px);
+  align-self: center;
+  border: 1px solid rgb(154 121 68 / 70%);
+  border-radius: 14px;
+  background:
+    linear-gradient(rgb(7 29 22 / 88%), rgb(11 42 30 / 92%)),
+    radial-gradient(circle at 50% 0%, rgb(140 201 170 / 14%), transparent 58%);
+  box-shadow:
+    0 18px 38px rgb(0 0 0 / 30%),
+    inset 0 0 0 1px rgb(188 232 208 / 7%);
+}
+
+.pf2e-auth__form {
+  display: grid;
+  gap: 16px;
+}
+
+.pf2e-auth__field {
+  display: grid;
+  gap: 7px;
+}
+
+.pf2e-auth__label {
+  color: var(--pf2e-accent-text);
+  font-family: Pretendard, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pf2e-auth__control {
+  display: flex;
+  height: var(--pf2e-control-height);
+  min-width: 0;
+  align-items: center;
+  border: 10px solid transparent;
+  border-image: url('/assets/ui/pf2e-elf-control-ninepatch.png') 32 56 fill / 10px 17px / 0 stretch;
+  filter: brightness(0.96);
+  transition:
+    filter 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.pf2e-auth__control:focus-within {
+  filter: brightness(1.16);
+  box-shadow: 0 0 0 2px rgb(188 232 208 / 72%);
+}
+
+.pf2e-auth__input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 4px;
+  color: var(--pf2e-text);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  caret-color: var(--pf2e-accent-text);
+  font-family: Pretendard, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.pf2e-auth__input::selection {
+  background: #315c49;
+}
+
+.pf2e-auth__input:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.pf2e-auth__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pf2e-auth__button {
+  min-height: max(var(--pf2e-minimum-touch-target), 58px);
+  padding: 0 16px;
+  color: var(--pf2e-text);
+  border: 11px solid transparent;
+  border-image: url('/assets/ui/pf2e-elf-button-ninepatch.png') 44 84 fill / 11px 21px / 0 stretch;
+  outline: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: Pretendard, system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 70%);
+  transition:
+    filter 120ms ease,
+    transform 120ms ease;
+}
+
+.pf2e-auth__button:hover {
+  filter: brightness(1.12);
+}
+
+.pf2e-auth__button:active {
+  filter: brightness(0.9);
+  transform: translateY(1px);
+}
+
+.pf2e-auth__button:focus-visible {
+  filter: brightness(1.16);
+  box-shadow: 0 0 0 2px rgb(188 232 208 / 78%);
+}
+
+.pf2e-auth__button:disabled {
+  cursor: wait;
+  filter: grayscale(0.25);
+  opacity: 0.58;
+}
+
+.pf2e-auth[data-compact='true'] {
+  --pf2e-auth-frame-inset: 18px;
+  --pf2e-auth-content-padding: 6px;
+}
+
+.pf2e-auth[data-compact='true'] .pf2e-auth__layout {
+  justify-content: flex-start;
+  gap: 9px;
+}
+
+.pf2e-auth[data-compact='true'] .pf2e-auth__title {
+  font-size: clamp(25px, 7vw, 32px);
+}
+
+.pf2e-auth[data-compact='true'] .pf2e-auth__subtitle,
+.pf2e-auth[data-compact='true'] .pf2e-auth__status {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.pf2e-auth[data-compact='true'] .pf2e-auth__form-panel {
+  padding: 12px;
+}
+
+.pf2e-auth[data-compact='true'] .pf2e-auth__form {
+  gap: 11px;
+}
+
+.pf2e-auth[data-compact='true'] .pf2e-auth__actions {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf2e-auth__control,
+  .pf2e-auth__button {
+    transition: none;
+  }
+}

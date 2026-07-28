@@ -35,6 +35,10 @@ export function createGameConfig(
       pixelArt: false,
       roundPixels: true,
     },
+    dom: {
+      createContainer: true,
+      pointerEvents: 'none',
+    },
     input: {
       activePointers: 3,
     },

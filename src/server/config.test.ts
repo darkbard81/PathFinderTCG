@@ -15,6 +15,7 @@ describe('server config', () => {
       'http://127.0.0.1:3010',
       'http://localhost:3010',
       'http://mcp.krdp.ddns.net:3010',
+      'https://mcp.krdp.ddns.net',
     ]);
     expect(config.secureCookies).toBe(false);
   });

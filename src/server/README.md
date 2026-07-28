@@ -21,13 +21,13 @@ npm run dev
 
 ## 환경 변수
 
-| 변수              | 개발 기본값                                                                 | 설명                              |
-| ----------------- | --------------------------------------------------------------------------- | --------------------------------- |
-| `HOST`            | `127.0.0.1`                                                                 | API bind 주소                     |
-| `PORT`            | `3011`                                                                      | API 포트                          |
-| `DATABASE_PATH`   | `data/pathfinder-tcg.sqlite`                                                | SQLite 파일                       |
-| `ALLOWED_ORIGINS` | `http://127.0.0.1:3010,http://localhost:3010,http://mcp.krdp.ddns.net:3010` | 쓰기 요청에 허용할 정확한 Origins |
-| `NODE_ENV`        | development                                                                 | production이면 Secure 쿠키 활성화 |
+| 변수              | 개발 기본값                                                                                           | 설명                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `HOST`            | `127.0.0.1`                                                                                           | API bind 주소                     |
+| `PORT`            | `3011`                                                                                                | API 포트                          |
+| `DATABASE_PATH`   | `data/pathfinder-tcg.sqlite`                                                                          | SQLite 파일                       |
+| `ALLOWED_ORIGINS` | `http://127.0.0.1:3010,http://localhost:3010,http://mcp.krdp.ddns.net:3010,https://mcp.krdp.ddns.net` | 쓰기 요청에 허용할 정확한 Origins |
+| `NODE_ENV`        | development                                                                                           | production이면 Secure 쿠키 활성화 |
 
 production에서는 `HOST`, `PORT`, `ALLOWED_ORIGINS`를 모두 명시해야 한다.
 
