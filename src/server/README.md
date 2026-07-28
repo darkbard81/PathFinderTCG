@@ -1,21 +1,22 @@
 # Local account, save, and Stage run API
 
-`src/server/`는 Phaser 객체와 분리된 Fastify·SQLite 경계다. 브라우저는 Vite의 `/api` proxy를
-통해 접근하고, 세이브 본문은 `src/game/data/`의 JSON Schema와 의미 validator를 모두
-통과해야 DB에 저장되거나 DB에서 복원된다.
+`src/server/`는 Phaser 객체와 분리된 Fastify·SQLite 경계다. 개발 시 Vite가 Fastify 라우터를
+같은 HTTP 서버에 마운트하며, 세이브 본문은 `src/game/data/`의 JSON Schema와 의미 validator를
+모두 통과해야 DB에 저장되거나 DB에서 복원된다.
 
 ## 개발 실행
 
-두 터미널에서 각각 실행한다.
+통합 개발 서버 하나를 실행한다.
 
 ```bash
-npm run dev:api
 npm run dev
 ```
 
-- Vite: `http://127.0.0.1:3010`
-- API: `http://127.0.0.1:3011`
+- 화면과 API: `http://127.0.0.1:3010`
 - 개발 DB: `data/pathfinder-tcg.sqlite`
+
+`npm run dev:api`와 `npm run start:api`는 Fastify만 격리해서 진단할 때 사용하는 선택적
+스크립트다. 정상 게임 실행에는 사용하지 않는다.
 
 `data/`는 로컬 상태이므로 Git에서 제외한다.
 
@@ -23,8 +24,8 @@ npm run dev
 
 | 변수              | 개발 기본값                                                                                           | 설명                              |
 | ----------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `HOST`            | `127.0.0.1`                                                                                           | API bind 주소                     |
-| `PORT`            | `3011`                                                                                                | API 포트                          |
+| `HOST`            | `127.0.0.1`                                                                                           | 독립 API 실행 시 bind 주소        |
+| `PORT`            | `3011`                                                                                                | 독립 API 실행 시 진단 포트        |
 | `DATABASE_PATH`   | `data/pathfinder-tcg.sqlite`                                                                          | SQLite 파일                       |
 | `ALLOWED_ORIGINS` | `http://127.0.0.1:3010,http://localhost:3010,http://mcp.krdp.ddns.net:3010,https://mcp.krdp.ddns.net` | 쓰기 요청에 허용할 정확한 Origins |
 | `NODE_ENV`        | development                                                                                           | production이면 Secure 쿠키 활성화 |

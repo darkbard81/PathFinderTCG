@@ -1,8 +1,8 @@
-import { PF2E_NINE_LABEL_VARIANTS, PF2E_NINE_PATCH_VISUAL_STATES } from '../theme/pf2eElfTheme';
+import { PF2E_LABEL_VARIANTS, PF2E_VISUAL_STATES } from '../theme/pf2eElfTheme';
 
 export const PF2E_CUSTOM_CLASS_IDS = [
-  'ninePatch2',
-  'nineLabel',
+  'surface',
+  'label',
   'panel',
   'tabPages',
   'scrollablePanel',
@@ -24,14 +24,14 @@ export interface PF2eCustomClassDefinition {
   readonly states: readonly string[];
 }
 
-export const PF2E_DEFAULT_CUSTOM_CLASS_ID: PF2eCustomClassId = 'ninePatch2';
+export const PF2E_DEFAULT_CUSTOM_CLASS_ID: PF2eCustomClassId = 'surface';
 
 export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
   {
-    id: 'ninePatch2',
-    name: 'PF2eNinePatch2',
-    baseClass: 'NinePatch2',
-    summary: '고정 엣지와 반복 가능한 중앙을 가진 엘프 테마 프레임입니다.',
+    id: 'surface',
+    name: 'PF2eSurface',
+    baseClass: 'RoundRectangle',
+    summary: '이미지 슬라이스 없이 semantic 색상과 선으로 그리는 엘프 테마 표면입니다.',
     configKeys: ['variant', 'width', 'height', 'x?', 'y?'],
     variants: [
       'panel',
@@ -43,25 +43,25 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
       'dialog',
       'button',
     ],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
   {
-    id: 'nineLabel',
-    name: 'PF2eNineLabel',
+    id: 'label',
+    name: 'PF2eLabel',
     baseClass: 'Label',
-    summary: '텍스트와 NinePatch 배경에 PF2e 테마만 적용하는 표시용 Label입니다.',
+    summary: '텍스트와 semantic surface에 PF2e 테마만 적용하는 표시용 Label입니다.',
     configKeys: ['text', 'variant', 'width?', 'height?', 'fontSize?', 'wrapWidth?'],
-    variants: PF2E_NINE_LABEL_VARIANTS,
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    variants: PF2E_LABEL_VARIANTS,
+    states: PF2E_VISUAL_STATES,
   },
   {
     id: 'panel',
     name: 'PF2ePanel',
     baseClass: 'Sizer',
-    summary: 'NinePatch 패널 배경과 테마 inset을 가진 재사용 레이아웃 표면입니다.',
+    summary: 'semantic 패널 배경과 테마 inset을 가진 재사용 레이아웃 표면입니다.',
     configKeys: ['width?', 'height?', 'orientation?', 'inset?', 'itemGap?', 'visualState?'],
     variants: ['vertical', 'horizontal'],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
   {
     id: 'tabPages',
@@ -70,7 +70,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     summary: '테마 탭과 typed page 정의를 조립하며 선택 callback은 controller가 담당합니다.',
     configKeys: ['pages', 'tabPosition?', 'wrapTabs?', 'width?', 'height?'],
     variants: ['top', 'bottom', 'left', 'right'],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
   {
     id: 'scrollablePanel',
@@ -88,7 +88,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
       'dragThreshold?',
     ],
     variants: ['left scrollbar', 'right scrollbar'],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
   {
     id: 'gridTable',
@@ -97,7 +97,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     summary: '재사용 셀과 스크롤바에 테마를 적용하며 선택 상태는 controller가 소유합니다.',
     configKeys: ['width', 'height', 'items', 'columns?', 'scrollbarPosition?'],
     variants: ['one column', 'two columns'],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
   {
     id: 'confirmDialog',
@@ -138,7 +138,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
       'centerBottom',
       'rightBottom',
     ],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
   {
     id: 'card',
@@ -156,7 +156,7 @@ export const PF2E_CUSTOM_CLASS_CATALOG: readonly PF2eCustomClassDefinition[] = [
     summary: 'typed button 정의를 테마 Label로 조립하며 callback은 controller가 연결합니다.',
     configKeys: ['buttons', 'orientation?', 'width?', 'height?'],
     variants: ['horizontal', 'vertical', 'primary', 'danger'],
-    states: PF2E_NINE_PATCH_VISUAL_STATES,
+    states: PF2E_VISUAL_STATES,
   },
 ] as const;
 

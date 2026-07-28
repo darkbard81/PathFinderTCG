@@ -9,6 +9,7 @@ export interface PF2eCardConfig {
   readonly card: CardDisplayModel;
   readonly width?: number;
   readonly compact?: boolean;
+  readonly mode?: 'full' | 'compact' | 'board';
 }
 
 function scaleMetric(metric: number, scale: number, minimum = 1): number {
@@ -24,23 +25,37 @@ export class PF2eCard extends OverlapSizer {
   private readonly dominanceBadge: PF2eCardStatBadge;
   private readonly attackBadge: PF2eCardStatBadge;
   private readonly healthBadge: PF2eCardStatBadge;
+  private displayedCard: CardDisplayModel;
   private displayedStats: CardStatDisplay;
 
   constructor(scene: Phaser.Scene, config: PF2eCardConfig) {
     const theme = PF2E_ELF_THEME.components.card;
-    const minimumWidth = config.compact ? theme.compactWidth : theme.minimumWidth;
+    const mode = config.mode ?? (config.compact ? 'compact' : 'full');
+    const minimumWidth =
+      mode === 'board'
+        ? theme.boardMinimumWidth
+        : mode === 'compact'
+          ? theme.compactWidth
+          : theme.minimumWidth;
+    const maximumWidth = mode === 'board' ? theme.boardMaximumWidth : theme.maximumWidth;
     const width = Math.min(
-      theme.maximumWidth,
+      maximumWidth,
       Math.max(minimumWidth, Math.round(config.width ?? theme.defaultWidth)),
     );
     const height = Math.round(width / theme.aspectRatio);
     const scale = width / theme.defaultWidth;
-    const badgeSize = scaleMetric(theme.statBadgeSize, scale, 42);
-    const badgeFontSize = scaleMetric(theme.statBadgeFontSize, scale, 14);
+    const badgeSize = scaleMetric(theme.statBadgeSize, scale, mode === 'board' ? 18 : 42);
+    const badgeFontSize = scaleMetric(theme.statBadgeFontSize, scale, mode === 'board' ? 8 : 14);
     const badgeInset = scaleMetric(theme.statBadgeInset, scale);
     const contentInsetX = scaleMetric(theme.contentInsetX, scale);
-    const contentBottomInset = scaleMetric(theme.contentBottomInset, scale);
-    const contentHeight = scaleMetric(theme.contentHeight, scale, 82);
+    const contentBottomInset =
+      mode === 'board'
+        ? scaleMetric(theme.boardContentBottomInset, scale)
+        : scaleMetric(theme.contentBottomInset, scale);
+    const contentHeight =
+      mode === 'board'
+        ? scaleMetric(theme.boardNameHeight, scale, 20)
+        : scaleMetric(theme.contentHeight, scale, 82);
     const contentWidth = Math.max(1, width - contentInsetX * 2);
     const contentPaddingX = scaleMetric(theme.contentPaddingX, scale);
     const contentPaddingY = scaleMetric(theme.contentPaddingY, scale);
@@ -60,7 +75,7 @@ export class PF2eCard extends OverlapSizer {
     const nameText = scene.add.text(0, 0, config.card.name, {
       color: theme.nameTextColor,
       fontFamily: PF2E_ELF_THEME.typography.display,
-      fontSize: `${scaleMetric(theme.nameFontSize, scale, 15)}px`,
+      fontSize: `${scaleMetric(theme.nameFontSize, scale, mode === 'board' ? 8 : 15)}px`,
       fontStyle: 'bold',
       stroke: theme.textStrokeColor,
       strokeThickness: 2,
@@ -96,10 +111,12 @@ export class PF2eCard extends OverlapSizer {
       },
     });
     scene.add.existing(content);
-    content
-      .addBackground(contentBackground)
-      .add(nameText, { align: 'center' })
-      .add(rulesText, { proportion: 1, align: 'left', expand: true });
+    content.addBackground(contentBackground).add(nameText, { align: 'center' });
+    if (mode !== 'board') {
+      content.add(rulesText, { proportion: 1, align: 'left', expand: true });
+    } else {
+      rulesText.setVisible(false);
+    }
 
     const costBadge = new PF2eCardStatBadge(scene, {
       value: config.card.stats.cost,
@@ -140,6 +157,7 @@ export class PF2eCard extends OverlapSizer {
     this.dominanceBadge = dominanceBadge;
     this.attackBadge = attackBadge;
     this.healthBadge = healthBadge;
+    this.displayedCard = config.card;
     this.displayedStats = Object.freeze({ ...config.card.stats });
 
     this.add(art, { key: 'art', align: 'center', expand: true })
@@ -190,12 +208,19 @@ export class PF2eCard extends OverlapSizer {
       });
   }
 
+  protected postLayout(): this {
+    const frameScale = PF2E_ELF_THEME.components.card.frameDisplayScale;
+    this.setChildDisplaySize(this.frame, this.width * frameScale, this.height * frameScale);
+    return this;
+  }
+
   setCard(card: CardDisplayModel): this {
     this.art.setTexture(card.artAssetKey);
     this.frame.setTexture(PF2E_ELF_THEME.components.card.frameVariants[card.frameVariant].key);
     this.nameText.setText(card.name);
     this.rulesText.setText(card.rulesText);
     this.setStats(card.stats);
+    this.displayedCard = card;
     this.layout();
     return this;
   }
@@ -211,5 +236,27 @@ export class PF2eCard extends OverlapSizer {
 
   getDisplayedStats(): CardStatDisplay {
     return this.displayedStats;
+  }
+
+  getDisplayedCard(): CardDisplayModel {
+    return this.displayedCard;
+  }
+
+  setSelectionState(state: 'idle' | 'selected' | 'legal-target' | 'disabled'): this {
+    switch (state) {
+      case 'idle':
+        this.frame.clearTint().setAlpha(1);
+        break;
+      case 'selected':
+        this.frame.setTint(PF2E_ELF_THEME.components.card.selectedTint).setAlpha(1);
+        break;
+      case 'legal-target':
+        this.frame.setTint(PF2E_ELF_THEME.components.card.legalTargetTint).setAlpha(1);
+        break;
+      case 'disabled':
+        this.frame.clearTint().setAlpha(PF2E_ELF_THEME.components.card.disabledAlpha);
+        break;
+    }
+    return this;
   }
 }

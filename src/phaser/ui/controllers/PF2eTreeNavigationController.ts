@@ -1,7 +1,7 @@
 import type * as Phaser from 'phaser';
 
 import type { PF2eTree } from '../components/PF2eTree';
-import type { PF2eNinePatchVisualState } from '../theme/pf2eElfTheme';
+import type { PF2eVisualState } from '../theme/pf2eElfTheme';
 import { getAdjacentNodeId } from './linearNavigation';
 
 export interface PF2eTreeNavigationControllerConfig<NodeId extends string> {
@@ -179,7 +179,7 @@ export class PF2eTreeNavigationController<NodeId extends string> {
 
   private updateNodeStates(): void {
     for (const nodeId of this.nodeIds) {
-      let state: PF2eNinePatchVisualState = 'idle';
+      let state: PF2eVisualState = 'idle';
       if (nodeId === this.selectedId) {
         state = 'selected';
       } else if (nodeId === this.pressedId) {

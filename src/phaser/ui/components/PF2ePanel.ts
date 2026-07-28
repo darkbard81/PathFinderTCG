@@ -1,8 +1,8 @@
 import type * as Phaser from 'phaser';
 import { Sizer } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
-import { PF2E_ELF_THEME, type PF2eNinePatchVisualState } from '../theme/pf2eElfTheme';
-import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2E_ELF_THEME, type PF2eVisualState } from '../theme/pf2eElfTheme';
+import { PF2eSurface } from './PF2eSurface';
 
 export interface PF2ePanelConfig {
   readonly x?: number;
@@ -12,11 +12,11 @@ export interface PF2ePanelConfig {
   readonly orientation?: 'x' | 'y';
   readonly inset?: number;
   readonly itemGap?: number;
-  readonly visualState?: PF2eNinePatchVisualState;
+  readonly visualState?: PF2eVisualState;
 }
 
 export class PF2ePanel extends Sizer {
-  private readonly background: PF2eNinePatch2;
+  private readonly background: PF2eSurface;
 
   constructor(scene: Phaser.Scene, config: PF2ePanelConfig = {}) {
     const inset = config.inset ?? PF2E_ELF_THEME.spacing.panelInset;
@@ -37,7 +37,7 @@ export class PF2ePanel extends Sizer {
     });
 
     scene.add.existing(this);
-    this.background = new PF2eNinePatch2(scene, {
+    this.background = new PF2eSurface(scene, {
       variant: 'panel',
       width: 2,
       height: 2,
@@ -47,7 +47,7 @@ export class PF2ePanel extends Sizer {
     this.setVisualState(config.visualState ?? 'idle');
   }
 
-  setVisualState(state: PF2eNinePatchVisualState): this {
+  setVisualState(state: PF2eVisualState): this {
     this.background.setVisualState(state);
     return this;
   }

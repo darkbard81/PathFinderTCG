@@ -8,22 +8,19 @@ import {
   type BattleAction,
   type BattleState,
 } from '../../game/simulation/battle/index.js';
-import { calculatePhaseSevenLayout } from '../../ui/layout/phaseSevenLayout.js';
+import { calculateThemeModLayout, type ThemeModLayout } from '../../ui/layout/themeModLayout.js';
 import { createBattlePresentationRuntime } from '../adapters/createBattlePresentationRuntime.js';
 import { getGameSession } from '../adapters/sceneBridge.js';
 import type { BattlePlaybackSpeed } from '../adapters/battlePresentationCueAdapter.js';
 import { PF2eBattleBoard } from '../ui/components/PF2eBattleBoard.js';
-import { PF2eBattleHud } from '../ui/components/PF2eBattleHud.js';
+import { PF2eBattleCommandBar } from '../ui/components/PF2eBattleCommandBar.js';
 import { PF2eConfirmDialog } from '../ui/components/PF2eConfirmDialog.js';
+import { PF2eHandDeck, type PF2eHandDeckItem } from '../ui/components/PF2eHandDeck.js';
 import { BattleDecisionCoordinator } from '../ui/controllers/BattleDecisionCoordinator.js';
 import { BattleDecisionPromptController } from '../ui/controllers/BattleDecisionPromptController.js';
+import { BattlePointerController } from '../ui/controllers/BattlePointerController.js';
 import { PF2eButtonsController } from '../ui/controllers/PF2eButtonsController.js';
 import { PF2eConfirmDialogController } from '../ui/controllers/PF2eConfirmDialogController.js';
-import { PF2eGridTableSelectionController } from '../ui/controllers/PF2eGridTableSelectionController.js';
-import {
-  createBattleActionListItems,
-  type BattleActionListItem,
-} from '../ui/controllers/battleUiModels.js';
 import type { PhaserBattlePresentationRuntime } from '../adapters/createBattlePresentationRuntime.js';
 import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme.js';
 
@@ -34,15 +31,15 @@ function battleErrorMessage(error: unknown): string {
 export class BattleScene extends Phaser.Scene {
   private root?: Sizer;
   private board?: PF2eBattleBoard;
-  private hud?: PF2eBattleHud;
+  private commandBar?: PF2eBattleCommandBar;
+  private handDeck?: PF2eHandDeck;
   private presentation?: PhaserBattlePresentationRuntime;
   private promptController?: BattleDecisionPromptController;
-  private actionSelection?: PF2eGridTableSelectionController;
-  private navigationController?: PF2eButtonsController;
-  private settingsControllers: PF2eButtonsController[] = [];
+  private pointerController?: BattlePointerController;
+  private commandController?: PF2eButtonsController;
   private unsubscribeSettings?: () => void;
-  private actionItems: readonly BattleActionListItem[] = Object.freeze([]);
-  private selectedAction?: BattleAction;
+  private legalActions: readonly BattleAction[] = Object.freeze([]);
+  private currentLayout?: ThemeModLayout;
   private busy = false;
   private presentationUserLocked = false;
   private presentationAiLocked = false;
@@ -99,60 +96,53 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.destroyBattleView();
-    const layout = calculatePhaseSevenLayout(width, height);
-    const boardWidth =
-      layout.orientation === 'landscape'
-        ? layout.rootWidth - layout.battleSidebarWidth - layout.gap
-        : layout.rootWidth;
-    const boardHeight =
-      layout.orientation === 'landscape'
-        ? layout.rootHeight
-        : layout.rootHeight - layout.battleHudHeight - layout.gap;
-    const hudWidth =
-      layout.orientation === 'landscape' ? layout.battleSidebarWidth : layout.rootWidth;
-    const hudHeight =
-      layout.orientation === 'landscape' ? layout.rootHeight : layout.battleHudHeight;
-    const actionItems = this.createActionItems(state);
+    const layout = calculateThemeModLayout(width, height);
+    const legalActions = this.createLegalActions(state);
     const board = new PF2eBattleBoard(this, {
-      width: boardWidth,
-      height: boardHeight,
-      cardWidth: layout.battleCardWidth,
+      width: layout.battle.boardWidth,
+      height: layout.battle.boardHeight,
+      cardWidth: layout.battle.boardCardWidth,
       initialState: state,
       cardDefinitions: session.getCardDefinitions(),
       cardPresentations: session.getCardPresentations(),
     });
-    const hud = new PF2eBattleHud(this, {
-      width: hudWidth,
-      height: hudHeight,
-      orientation: layout.orientation,
-      actionItems,
+    const commandBar = new PF2eBattleCommandBar(this, {
+      width: layout.rootWidth,
+      height: layout.battle.commandBarHeight,
       state,
       speed: this.playbackSpeed,
       volume: 0.8,
       muted: false,
     });
+    const handDeck = new PF2eHandDeck(this, {
+      width: layout.battle.handWidth,
+      height: layout.battle.handHeight,
+      cardWidth: layout.battle.handCardWidth,
+      items: this.createHandItems(state, board),
+    });
     const root = new Sizer(this, {
       width: layout.rootWidth,
       height: layout.rootHeight,
-      orientation: layout.orientation === 'landscape' ? 'x' : 'y',
+      orientation: 'y',
       space: {
         item: layout.gap,
       },
     });
     this.add.existing(root);
     root
+      .add(commandBar, { expand: true })
       .add(board, { proportion: 1, expand: true })
-      .add(hud, {
-        expand: true,
-      })
       .setPosition(width / 2, height / 2)
       .layout();
     board.layout();
+    handDeck.setPosition(width / 2, layout.battle.handCollapsedY).layout();
 
     this.root = root;
     this.board = board;
-    this.hud = hud;
-    this.actionItems = actionItems;
+    this.commandBar = commandBar;
+    this.handDeck = handDeck;
+    this.legalActions = legalActions;
+    this.currentLayout = layout;
     this.presentation = createBattlePresentationRuntime(this, {
       view: board.viewCallbacks,
       interactionGate: {
@@ -167,13 +157,13 @@ export class BattleScene extends Phaser.Scene {
       },
       onDiagnostic: (diagnostic) => {
         if (diagnostic.code !== 'AUDIO_BLOCKED') {
-          this.hud?.setStatus(diagnostic.message, true);
+          this.commandBar?.setStatus(diagnostic.message, true);
         }
       },
     });
     this.presentation.controller.setPlaybackSpeed(this.playbackSpeed);
     this.unsubscribeSettings = this.presentation.settings.subscribe((settings) => {
-      this.hud?.setSettings(this.playbackSpeed, settings.volume, settings.muted);
+      this.commandBar?.setSettings(this.playbackSpeed, settings.volume, settings.muted);
       this.game.canvas.dataset.playbackSpeed = String(this.playbackSpeed);
       this.game.canvas.dataset.sfxVolume = settings.volume.toFixed(1);
       this.game.canvas.dataset.sfxMuted = String(settings.muted);
@@ -181,7 +171,8 @@ export class BattleScene extends Phaser.Scene {
     this.promptController = new BattleDecisionPromptController(this, {
       getCardName: (cardId) => this.getCardName(cardId),
     });
-    this.bindHudControllers(actionItems);
+    this.bindCommandController();
+    this.bindPointerController(state, layout);
     this.updateControlStates();
     this.game.canvas.dataset.scene = 'battle';
     this.game.canvas.dataset.orientation = layout.orientation;
@@ -192,36 +183,35 @@ export class BattleScene extends Phaser.Scene {
     this.game.canvas.dataset.stageRunId = stageRun.runId;
     this.game.canvas.dataset.stageId = stageRun.stageId;
     this.game.canvas.dataset.stageSeed = String(stageRun.seed);
+    this.game.canvas.dataset.battleInput = 'card-pointer';
     this.updateBattleDataset(state);
   }
 
-  private bindHudControllers(items: readonly BattleActionListItem[]): void {
-    const hud = this.hud;
+  override update(): void {
+    this.pointerController?.update(this.input.activePointer);
+  }
 
-    if (hud === undefined) {
+  private createHandItems(state: BattleState, board: PF2eBattleBoard): readonly PF2eHandDeckItem[] {
+    return Object.freeze(
+      state.players.PLAYER.handIds.map((cardId) =>
+        Object.freeze({
+          id: cardId,
+          model: board.createCardModel(state, cardId),
+        }),
+      ),
+    );
+  }
+
+  private bindCommandController(): void {
+    const commandBar = this.commandBar;
+    if (commandBar === undefined) {
       return;
     }
-
-    this.actionSelection?.destroy();
-    const initial = items[0];
-    this.selectedAction = initial?.action;
-    this.actionSelection = new PF2eGridTableSelectionController(hud.actionTable, {
-      items,
-      initialSelectedId: initial?.id,
-      isEnabled: () => !this.isActionInputLocked(),
-      onSelectionChange: (_item, index) => {
-        if (this.isActionInputLocked()) {
-          return;
-        }
-        this.selectedAction = this.actionItems[index]?.action;
-        this.updateControlStates();
-      },
-    });
-    this.navigationController = new PF2eButtonsController(hud.navigationButtons, {
+    this.commandController = new PF2eButtonsController(commandBar.buttons, {
       onButtonClick: (buttonId) => {
         switch (buttonId) {
-          case 'execute':
-            void this.executeSelectedAction();
+          case 'end-turn':
+            this.pointerController?.requestEndTurn();
             break;
           case 'skip':
             this.game.canvas.dataset.skipRequested = String(
@@ -232,80 +222,100 @@ export class BattleScene extends Phaser.Scene {
           case 'leave':
             this.confirmLeaveBattle();
             break;
+          default:
+            this.updatePresentationSetting(buttonId);
+            break;
         }
       },
     });
-    this.settingsControllers = hud.settingsButtonGroups.map(
-      (buttons) =>
-        new PF2eButtonsController(buttons, {
-          onButtonClick: (buttonId) => {
-            this.updatePresentationSetting(buttonId);
-          },
-        }),
-    );
   }
 
-  private createActionItems(state: BattleState): readonly BattleActionListItem[] {
+  private createLegalActions(state: BattleState): readonly BattleAction[] {
     if (state.result.type !== 'ONGOING' || state.activePlayerId !== 'PLAYER' || this.busy) {
       return Object.freeze([]);
     }
-
-    const session = getGameSession(this);
-    return createBattleActionListItems(
-      state,
-      session.getLegalBattleActions(),
-      session.getCardDefinitions(),
-    );
+    return getGameSession(this).getLegalBattleActions();
   }
 
-  private refreshAfterPresentation(status = '실행할 Action을 선택하세요.'): void {
-    const state = getGameSession(this).getState().battleState;
-    const hud = this.hud;
+  private bindPointerController(state: BattleState, layout: ThemeModLayout): void {
+    const board = this.board;
+    const handDeck = this.handDeck;
+    if (board === undefined || handDeck === undefined) {
+      return;
+    }
+    this.pointerController?.destroy();
+    this.pointerController = new BattlePointerController(this, {
+      board,
+      handDeck,
+      state,
+      actions: this.legalActions,
+      viewportWidth: layout.width,
+      viewportHeight: layout.height,
+      viewportPadding: layout.padding,
+      handExpandedY: layout.battle.handExpandedY,
+      handCollapsedY: layout.battle.handCollapsedY,
+      handHoverTop: layout.battle.handHoverTop,
+      handPeekTop: layout.battle.handPeekTop,
+      previewCardWidth: layout.battle.previewCardWidth,
+      isEnabled: () => !this.isActionInputLocked(),
+      onAction: (action) => {
+        void this.executeAction(action);
+      },
+      onStatus: (message, danger = false) => {
+        this.commandBar?.setStatus(message, danger);
+      },
+      onSelectionChange: (selectedCardId, activeSkillSourceCardId) => {
+        this.game.canvas.dataset.selectedCardId = selectedCardId ?? '';
+        this.game.canvas.dataset.activeSkillSourceCardId = activeSkillSourceCardId ?? '';
+      },
+      onHandExpandedChange: (expanded) => {
+        this.game.canvas.dataset.handExpanded = String(expanded);
+      },
+    });
+  }
 
-    if (state === null || hud === undefined) {
+  private refreshAfterPresentation(status = '카드를 누르거나 드래그해 Action을 실행하세요.'): void {
+    const state = getGameSession(this).getState().battleState;
+    const commandBar = this.commandBar;
+    const board = this.board;
+    const handDeck = this.handDeck;
+    const layout = this.currentLayout;
+
+    if (
+      state === null ||
+      commandBar === undefined ||
+      board === undefined ||
+      handDeck === undefined ||
+      layout === undefined
+    ) {
       return;
     }
 
-    this.board?.renderState(state);
-    hud.setBattleState(state).setStatus(status);
-    this.actionItems = this.createActionItems(state);
-    hud.setActionItems(this.actionItems);
-    this.actionSelection?.destroy();
-    const initial = this.actionItems[0];
-    this.selectedAction = initial?.action;
-    this.actionSelection = new PF2eGridTableSelectionController(hud.actionTable, {
-      items: this.actionItems,
-      initialSelectedId: initial?.id,
-      isEnabled: () => !this.isActionInputLocked(),
-      onSelectionChange: (_item, index) => {
-        if (!this.isActionInputLocked()) {
-          this.selectedAction = this.actionItems[index]?.action;
-          this.updateControlStates();
-        }
-      },
-    });
+    this.pointerController?.destroy();
+    this.pointerController = undefined;
+    board.renderState(state);
+    handDeck.renderItems(this.createHandItems(state, board));
+    commandBar.setBattleState(state).setStatus(status);
+    this.legalActions = this.createLegalActions(state);
+    this.bindPointerController(state, layout);
     this.game.canvas.dataset.activePlayer = state.activePlayerId.toLowerCase();
     this.updateBattleDataset(state);
     this.updateControlStates();
   }
 
-  private async executeSelectedAction(): Promise<void> {
-    const action = this.selectedAction;
+  private async executeAction(action: BattleAction): Promise<void> {
     const presentation = this.presentation;
     const prompt = this.promptController;
 
-    if (
-      action === undefined ||
-      presentation === undefined ||
-      prompt === undefined ||
-      this.isActionInputLocked()
-    ) {
+    if (presentation === undefined || prompt === undefined || this.isActionInputLocked()) {
       return;
     }
 
     this.busy = true;
+    this.pointerController?.destroy();
+    this.pointerController = undefined;
     this.game.canvas.dataset.skipRequested = 'false';
-    this.hud?.setStatus('Action을 해결하는 중입니다…');
+    this.commandBar?.setStatus('Action을 해결하는 중입니다…');
     this.updateControlStates();
 
     try {
@@ -341,7 +351,7 @@ export class BattleScene extends Phaser.Scene {
 
       this.busy = false;
       this.refreshAfterPresentation(battleErrorMessage(error));
-      this.hud?.setStatus(battleErrorMessage(error), true);
+      this.commandBar?.setStatus(battleErrorMessage(error), true);
     } finally {
       this.applyPendingResize();
     }
@@ -365,7 +375,7 @@ export class BattleScene extends Phaser.Scene {
         throw new Error('전투 연출 중에는 AI Action을 시작할 수 없습니다.');
       }
 
-      this.hud?.setStatus('적이 Action을 선택했습니다…');
+      this.commandBar?.setStatus('적이 Action을 선택했습니다…');
       const action = session.chooseEnemyBattleAction();
       const resolution = session.resolveBattleAction(action, DETERMINISTIC_BATTLE_DECISIONS);
       const presentation = this.presentation;
@@ -386,14 +396,9 @@ export class BattleScene extends Phaser.Scene {
     }
 
     switch (buttonId) {
-      case 'speed-1':
-      case 'speed-2':
-      case 'speed-4': {
-        const speed = Number(buttonId.at(-1));
-        if (speed === 1 || speed === 2 || speed === 4) {
-          this.playbackSpeed = speed;
-          presentation.controller.setPlaybackSpeed(speed);
-        }
+      case 'speed': {
+        this.playbackSpeed = this.playbackSpeed === 1 ? 2 : this.playbackSpeed === 2 ? 4 : 1;
+        presentation.controller.setPlaybackSpeed(this.playbackSpeed);
         break;
       }
       case 'volume-down':
@@ -408,7 +413,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     const settings = presentation.settings.value;
-    this.hud?.setSettings(this.playbackSpeed, settings.volume, settings.muted);
+    this.commandBar?.setSettings(this.playbackSpeed, settings.volume, settings.muted);
     this.game.canvas.dataset.playbackSpeed = String(this.playbackSpeed);
   }
 
@@ -436,7 +441,7 @@ export class BattleScene extends Phaser.Scene {
 
   private async abandonStageBattle(): Promise<void> {
     this.busy = true;
-    this.hud?.setStatus('Stage 실행을 패배로 저장하는 중입니다…');
+    this.commandBar?.setStatus('Stage 실행을 패배로 저장하는 중입니다…');
     this.updateControlStates();
 
     try {
@@ -446,7 +451,7 @@ export class BattleScene extends Phaser.Scene {
       }
     } catch (error: unknown) {
       this.busy = false;
-      this.hud?.setStatus(
+      this.commandBar?.setStatus(
         error instanceof Error ? error.message : 'Stage 포기 결과를 저장하지 못했습니다.',
         true,
       );
@@ -461,7 +466,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.completingBattle = true;
     this.busy = true;
-    this.hud?.setStatus('최종 연출 완료 · 서버에서 Stage 결과와 보상을 저장하는 중입니다…');
+    this.commandBar?.setStatus('최종 연출 완료 · 서버에서 Stage 결과와 보상을 저장하는 중입니다…');
     this.updateControlStates();
 
     try {
@@ -477,7 +482,7 @@ export class BattleScene extends Phaser.Scene {
 
       this.completingBattle = false;
       this.busy = false;
-      this.hud?.setStatus(
+      this.commandBar?.setStatus(
         `${
           error instanceof Error ? error.message : 'Stage 결과를 저장하지 못했습니다.'
         } · 화면을 눌러 다시 시도하세요.`,
@@ -517,7 +522,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private updateControlStates(): void {
-    const controller = this.navigationController;
+    const controller = this.commandController;
 
     if (controller === undefined) {
       return;
@@ -526,9 +531,16 @@ export class BattleScene extends Phaser.Scene {
     const locked = this.isActionInputLocked();
     const presenting = this.presentation?.controller.isPresenting === true;
     controller
-      .setButtonEnabled('execute', !locked && this.selectedAction !== undefined)
+      .setButtonEnabled(
+        'end-turn',
+        !locked && this.legalActions.some((action) => action.type === 'END_TURN'),
+      )
       .setButtonEnabled('skip', presenting)
-      .setButtonEnabled('leave', !locked && !presenting);
+      .setButtonEnabled('leave', !locked && !presenting)
+      .setButtonEnabled('speed', true)
+      .setButtonEnabled('volume-down', true)
+      .setButtonEnabled('mute', true)
+      .setButtonEnabled('volume-up', true);
     this.game.canvas.dataset.presentationLocked = String(
       this.presentationUserLocked || this.presentationAiLocked,
     );
@@ -556,24 +568,24 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private destroyBattleView(): void {
-    this.actionSelection?.destroy();
-    this.navigationController?.destroy();
-    for (const controller of this.settingsControllers) {
-      controller.destroy();
-    }
-    this.settingsControllers = [];
+    this.pointerController?.destroy();
+    this.pointerController = undefined;
+    this.commandController?.destroy();
+    this.commandController = undefined;
     this.unsubscribeSettings?.();
     this.unsubscribeSettings = undefined;
     this.promptController?.destroy();
     this.promptController = undefined;
     this.presentation?.destroy();
     this.presentation = undefined;
+    this.handDeck?.destroy();
+    this.handDeck = undefined;
     this.root?.destroy();
     this.root = undefined;
     this.board = undefined;
-    this.hud = undefined;
-    this.actionSelection = undefined;
-    this.navigationController = undefined;
+    this.commandBar = undefined;
+    this.legalActions = Object.freeze([]);
+    this.currentLayout = undefined;
   }
 
   private readonly handleShutdown = (): void => {

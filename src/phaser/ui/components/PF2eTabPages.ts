@@ -6,7 +6,7 @@ import {
 } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme';
-import { PF2eNineLabel } from './PF2eNineLabel';
+import { PF2eLabel } from './PF2eLabel';
 
 export type PF2eTabPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -67,7 +67,7 @@ export class PF2eTabPages extends TabPages {
         throw new Error(`Duplicate PF2e tab page id: ${definition.id}`);
       }
 
-      const tab = new PF2eNineLabel(scene, {
+      const tab = new PF2eLabel(scene, {
         text: definition.title,
         variant: 'tab',
         width: theme.tabWidth,
@@ -92,37 +92,37 @@ export class PF2eTabPages extends TabPages {
   }
 
   private readonly handleTabFocus = (tab: Phaser.GameObjects.GameObject): void => {
-    if (tab instanceof PF2eNineLabel) {
+    if (tab instanceof PF2eLabel) {
       tab.setVisualState('selected');
     }
   };
 
   private readonly handleTabBlur = (tab: Phaser.GameObjects.GameObject, pageId: string): void => {
-    if (tab instanceof PF2eNineLabel && this.currentKey !== pageId) {
+    if (tab instanceof PF2eLabel && this.currentKey !== pageId) {
       tab.setVisualState('idle');
     }
   };
 
   private readonly handleTabOver = (tab: Phaser.GameObjects.GameObject): void => {
-    if (tab instanceof PF2eNineLabel) {
+    if (tab instanceof PF2eLabel) {
       tab.setVisualState(this.currentKey === tab.name ? 'selected' : 'hover');
     }
   };
 
   private readonly handleTabOut = (tab: Phaser.GameObjects.GameObject): void => {
-    if (tab instanceof PF2eNineLabel) {
+    if (tab instanceof PF2eLabel) {
       tab.setVisualState(this.currentKey === tab.name ? 'selected' : 'idle');
     }
   };
 
   private readonly handleTabDown = (tab: Phaser.GameObjects.GameObject): void => {
-    if (tab instanceof PF2eNineLabel) {
+    if (tab instanceof PF2eLabel) {
       tab.setVisualState('pressed');
     }
   };
 
   private readonly handleTabUp = (tab: Phaser.GameObjects.GameObject): void => {
-    if (tab instanceof PF2eNineLabel) {
+    if (tab instanceof PF2eLabel) {
       tab.setVisualState(this.currentKey === tab.name ? 'selected' : 'hover');
     }
   };

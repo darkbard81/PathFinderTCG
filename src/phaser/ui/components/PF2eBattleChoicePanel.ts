@@ -4,7 +4,7 @@ import { Sizer } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme.js';
 import { PF2eButtons } from './PF2eButtons.js';
 import { PF2eGridTable, type PF2eGridTableItem } from './PF2eGridTable.js';
-import { PF2eNinePatch2 } from './PF2eNinePatch2.js';
+import { PF2eSurface } from './PF2eSurface.js';
 
 export interface PF2eBattleChoicePanelConfig {
   readonly width: number;
@@ -23,7 +23,7 @@ export class PF2eBattleChoicePanel extends Sizer {
     const inset = PF2E_ELF_THEME.spacing.compactInset;
     const gap = PF2E_ELF_THEME.spacing.compactGap;
     const contentWidth = Math.max(180, config.width - inset * 2);
-    const background = new PF2eNinePatch2(scene, {
+    const background = new PF2eSurface(scene, {
       variant: 'dialog',
       width: 2,
       height: 2,

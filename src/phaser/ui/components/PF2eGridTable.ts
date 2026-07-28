@@ -1,12 +1,12 @@
 import type * as Phaser from 'phaser';
 import { GridTable, Sizer } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
-import { PF2E_ELF_THEME, type PF2eNinePatchVisualState } from '../theme/pf2eElfTheme';
+import { PF2E_ELF_THEME, type PF2eVisualState } from '../theme/pf2eElfTheme';
 import {
   bindPF2eScrollbarThumbStates,
   createPF2eScrollbarConfig,
 } from './createPF2eScrollbarConfig';
-import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2eSurface } from './PF2eSurface';
 
 export interface PF2eGridTableItem {
   readonly id: string;
@@ -23,14 +23,14 @@ export interface PF2eGridTableConfig {
 }
 
 export class PF2eGridCell extends Sizer {
-  private readonly background: PF2eNinePatch2;
+  private readonly background: PF2eSurface;
   private readonly titleText: Phaser.GameObjects.Text;
   private readonly detailText: Phaser.GameObjects.Text;
   private itemId = '';
 
   constructor(scene: Phaser.Scene, width: number, height: number) {
     const theme = PF2E_ELF_THEME.components.gridTable;
-    const background = new PF2eNinePatch2(scene, {
+    const background = new PF2eSurface(scene, {
       variant: 'gridCell',
       width: 2,
       height: 2,
@@ -82,14 +82,14 @@ export class PF2eGridCell extends Sizer {
     return this;
   }
 
-  setVisualState(state: PF2eNinePatchVisualState): this {
+  setVisualState(state: PF2eVisualState): this {
     this.background.setVisualState(state);
     return this;
   }
 }
 
 export class PF2eGridTable extends GridTable {
-  private readonly visualStateByItemId: Map<string, PF2eNinePatchVisualState>;
+  private readonly visualStateByItemId: Map<string, PF2eVisualState>;
 
   constructor(scene: Phaser.Scene, config: PF2eGridTableConfig) {
     const theme = PF2E_ELF_THEME.components.gridTable;
@@ -100,7 +100,7 @@ export class PF2eGridTable extends GridTable {
       PF2E_ELF_THEME.sizes.scrollbar -
       PF2E_ELF_THEME.components.scrollablePanel.sliderGap;
     const cellWidth = Math.max(120, Math.floor(tableWidth / columns));
-    const visualStateByItemId = new Map<string, PF2eNinePatchVisualState>();
+    const visualStateByItemId = new Map<string, PF2eVisualState>();
 
     super(scene, {
       width: config.width,
@@ -161,7 +161,7 @@ export class PF2eGridTable extends GridTable {
     this.visualStateByItemId = visualStateByItemId;
   }
 
-  setItemVisualState(itemId: string, state: PF2eNinePatchVisualState): this {
+  setItemVisualState(itemId: string, state: PF2eVisualState): this {
     this.visualStateByItemId.set(itemId, state);
     return this;
   }

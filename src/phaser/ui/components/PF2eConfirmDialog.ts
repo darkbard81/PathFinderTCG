@@ -2,7 +2,7 @@ import type * as Phaser from 'phaser';
 import { ConfirmDialog } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme';
-import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2eSurface } from './PF2eSurface';
 
 export interface PF2eConfirmDialogConfig {
   readonly title: string;
@@ -119,14 +119,14 @@ export class PF2eConfirmDialog extends ConfirmDialog {
       },
       {
         background: (ownerScene) =>
-          new PF2eNinePatch2(ownerScene, {
+          new PF2eSurface(ownerScene, {
             variant: 'dialog',
             width: 2,
             height: 2,
           }),
         buttonA: {
           background: (ownerScene) =>
-            new PF2eNinePatch2(ownerScene, {
+            new PF2eSurface(ownerScene, {
               variant: 'button',
               width: 2,
               height: 2,
@@ -134,7 +134,7 @@ export class PF2eConfirmDialog extends ConfirmDialog {
         },
         buttonB: {
           background: (ownerScene) =>
-            new PF2eNinePatch2(ownerScene, {
+            new PF2eSurface(ownerScene, {
               variant: 'button',
               width: 2,
               height: 2,

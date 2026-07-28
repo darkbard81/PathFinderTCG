@@ -1,7 +1,7 @@
 import type * as Phaser from 'phaser';
 
 import type { PF2eButtons } from '../components/PF2eButtons';
-import { PF2eNineLabel } from '../components/PF2eNineLabel';
+import { PF2eLabel } from '../components/PF2eLabel';
 
 export interface PF2eButtonsControllerConfig {
   readonly disabledButtonIds?: readonly string[];
@@ -33,7 +33,7 @@ export class PF2eButtonsController {
   }
 
   private readonly handleButtonClick = (button: Phaser.GameObjects.GameObject): void => {
-    if (button instanceof PF2eNineLabel) {
+    if (button instanceof PF2eLabel) {
       this.onButtonClick?.(button.name);
     }
   };

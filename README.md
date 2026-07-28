@@ -14,27 +14,23 @@ Phaser 4, rexUI, TypeScript, Vite와 Fastify·SQLite로 구성한 반응형 브�
 
 ## 시작하기
 
-의존성을 설치한 뒤 Vite와 API를 각각 실행합니다.
+의존성을 설치한 뒤 통합 개발 서버를 실행합니다.
 
 ```bash
 npm install
-
-# 터미널 1
-npm run dev:api
-
-# 터미널 2
 npm run dev
 ```
 
-Vite는 기본적으로 `http://127.0.0.1:3010`, API는 `http://127.0.0.1:3011`에서 실행됩니다.
-Vite가 `/api` 요청을 API로 proxy합니다. 서버 환경 변수와 API 계약은
+Vite와 Fastify API는 같은 HTTP 서버의 `http://127.0.0.1:3010`에서 실행됩니다. Vite가
+Fastify 라우터를 직접 마운트하므로 별도 API 포트나 두 번째 프로세스가 필요하지 않습니다.
+서버 환경 변수와 API 계약은
 [`src/server/README.md`](src/server/README.md)를 참고합니다.
 
 Phase 7부터 `npm run dev`의 기본 화면은 UI 예제가 아니라
 `Login → Save Slot → Stage → Deck Builder → Battle → Result` 실제 게임 흐름입니다. 로그인과
-저장, Stage 실행과 승리 보상을 확인하려면 `dev:api`도 함께 실행해야 합니다. Phase 8부터
-Stage 01은 서버가 실행 ID와 시드를 발급하며, 마지막 전투 연출 뒤 승리 시 적 카드 1장을 슬롯
-컬렉션에 영구 저장합니다.
+저장, Stage 실행과 승리 보상도 같은 3010 서버에서 처리합니다. Phase 8부터 Stage 01은 서버가
+실행 ID와 시드를 발급하며, 마지막 전투 연출 뒤 승리 시 적 카드 1장을 슬롯 컬렉션에 영구
+저장합니다.
 
 ## 품질 명령
 

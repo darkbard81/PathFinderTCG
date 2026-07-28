@@ -9,8 +9,8 @@ import {
 describe('PF2e custom class catalog', () => {
   it('declares ten unique class identifiers in display order', () => {
     expect(PF2E_CUSTOM_CLASS_IDS).toEqual([
-      'ninePatch2',
-      'nineLabel',
+      'surface',
+      'label',
       'panel',
       'tabPages',
       'scrollablePanel',
@@ -23,7 +23,7 @@ describe('PF2e custom class catalog', () => {
     expect(new Set(PF2E_CUSTOM_CLASS_CATALOG.map(({ id }) => id)).size).toBe(
       PF2E_CUSTOM_CLASS_CATALOG.length,
     );
-    expect(PF2E_DEFAULT_CUSTOM_CLASS_ID).toBe('ninePatch2');
+    expect(PF2E_DEFAULT_CUSTOM_CLASS_ID).toBe('surface');
   });
 
   it('keeps behavior configuration out of themed component adapters', () => {

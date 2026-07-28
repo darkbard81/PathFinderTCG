@@ -5,7 +5,7 @@ import type { StageCatalogEntry } from '../../../game/content/index.js';
 import type { SavedDeck } from '../../../game/data/index.js';
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme.js';
 import { PF2eButtons } from './PF2eButtons.js';
-import { PF2eNineLabel } from './PF2eNineLabel.js';
+import { PF2eLabel } from './PF2eLabel.js';
 import { PF2ePanel } from './PF2ePanel.js';
 
 export interface PF2eStagePanelConfig {
@@ -30,7 +30,7 @@ export class PF2eStagePanel extends Sizer {
       inset: PF2E_ELF_THEME.spacing.compactInset,
       itemGap: PF2E_ELF_THEME.spacing.compactGap,
     });
-    const deckTitle = new PF2eNineLabel(scene, {
+    const deckTitle = new PF2eLabel(scene, {
       text: `선택 덱 · ${config.deck.name}`,
       variant: 'section',
       fontSize: phaseTheme.summaryTitleFontSize,
@@ -59,7 +59,7 @@ export class PF2eStagePanel extends Sizer {
       inset: PF2E_ELF_THEME.spacing.compactInset,
       itemGap: PF2E_ELF_THEME.spacing.compactGap,
     });
-    const stageTitle = new PF2eNineLabel(scene, {
+    const stageTitle = new PF2eLabel(scene, {
       text: config.stage.presentation.name,
       variant: 'section',
       fontSize: phaseTheme.summaryTitleFontSize,
@@ -88,24 +88,32 @@ export class PF2eStagePanel extends Sizer {
     });
 
     const buttons = new PF2eButtons(scene, {
-      orientation: config.compactActions ? 'y' : 'x',
+      orientation: 'x',
       buttons: [
         {
           id: 'deck',
           text: '덱 구성',
+          fontSize: config.compactActions ? 13 : undefined,
+          paddingX: config.compactActions ? 8 : undefined,
         },
         {
           id: 'battle',
           text: '전투 시작',
+          fontSize: config.compactActions ? 13 : undefined,
+          paddingX: config.compactActions ? 8 : undefined,
         },
         {
           id: 'slots',
           text: '슬롯 변경',
+          fontSize: config.compactActions ? 13 : undefined,
+          paddingX: config.compactActions ? 8 : undefined,
         },
         {
           id: 'logout',
           text: '로그아웃',
           variant: 'danger',
+          fontSize: config.compactActions ? 13 : undefined,
+          paddingX: config.compactActions ? 8 : undefined,
         },
       ],
     });

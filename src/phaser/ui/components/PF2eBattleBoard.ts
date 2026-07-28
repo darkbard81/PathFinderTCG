@@ -19,9 +19,10 @@ import type {
 } from '../../view/battle/PhaserBattlePresentationDriver.js';
 import { createBattleCardViewModel } from '../controllers/battleUiModels.js';
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme.js';
-import { PF2eBattleCard } from './PF2eBattleCard.js';
+import { PF2eBattlePile } from './PF2eBattlePile.js';
 import { PF2eBattleSlot } from './PF2eBattleSlot.js';
-import { PF2eNinePatch2 } from './PF2eNinePatch2.js';
+import { PF2eCard } from './PF2eCard.js';
+import { PF2eSurface } from './PF2eSurface.js';
 
 export interface PF2eBattleBoardConfig {
   readonly width: number;
@@ -72,15 +73,16 @@ function createSummaryText(scene: Phaser.Scene, text: string): Phaser.GameObject
   });
 }
 
-function createFieldGrid(
+function createFieldArea(
   scene: Phaser.Scene,
   playerId: BattlePlayerId,
   order: readonly BattleFieldPosition[],
   cardWidth: number,
   slotByKey: Map<string, PF2eBattleSlot>,
-): GridSizer {
+  pileByKey: Map<string, PF2eBattlePile>,
+): Sizer {
   const theme = PF2E_ELF_THEME.components.battleBoard;
-  const cardHeight = Math.round(cardWidth / PF2E_ELF_THEME.components.battleCard.aspectRatio);
+  const cardHeight = Math.round(cardWidth / PF2E_ELF_THEME.components.card.aspectRatio);
   const width = cardWidth * 3 + theme.slotGap * 2;
   const height = cardHeight * 2 + theme.rowGap;
   const grid = new GridSizer(scene, {
@@ -102,6 +104,8 @@ function createFieldGrid(
       width: cardWidth,
       height: cardHeight,
       label: fieldAbbreviation(position),
+      playerId,
+      fieldPosition: position,
     });
     slotByKey.set(`${playerId}:${position}`, slot);
     grid.add(slot, {
@@ -111,7 +115,35 @@ function createFieldGrid(
     });
   });
 
-  return grid;
+  const pileWidth = Math.max(
+    PF2E_ELF_THEME.components.battleDirect.pileMinimumWidth,
+    Math.round(cardWidth * PF2E_ELF_THEME.components.battleDirect.pileWidthRatio),
+  );
+  const drop = new PF2eBattlePile(scene, {
+    playerId,
+    zone: 'DROP',
+    width: pileWidth,
+    height,
+  });
+  const deck = new PF2eBattlePile(scene, {
+    playerId,
+    zone: 'DECK',
+    width: pileWidth,
+    height,
+  });
+  pileByKey.set(`${playerId}:DROP`, drop);
+  pileByKey.set(`${playerId}:DECK`, deck);
+  const area = new Sizer(scene, {
+    width: width + pileWidth * 2 + theme.zoneGap * 2,
+    height,
+    orientation: 'x',
+    space: {
+      item: theme.zoneGap,
+    },
+  });
+  scene.add.existing(area);
+  area.add(drop, { expand: true }).add(grid, { align: 'center' }).add(deck, { expand: true });
+  return area;
 }
 
 function hasCard(state: BattleState, cardId: StableId): boolean {
@@ -123,7 +155,8 @@ export class PF2eBattleBoard extends Sizer {
   private readonly cardDefinitions: readonly CardDefinition[];
   private readonly cardPresentations: readonly CardPresentation[];
   private readonly slotByKey: Map<string, PF2eBattleSlot>;
-  private readonly cardById = new Map<StableId, PF2eBattleCard>();
+  private readonly pileByKey: Map<string, PF2eBattlePile>;
+  private readonly cardById = new Map<StableId, PF2eCard>();
   private readonly enemySummaryText: Phaser.GameObjects.Text;
   private readonly playerSummaryText: Phaser.GameObjects.Text;
   private readonly turnText: Phaser.GameObjects.Text;
@@ -131,7 +164,8 @@ export class PF2eBattleBoard extends Sizer {
   constructor(scene: Phaser.Scene, config: PF2eBattleBoardConfig) {
     const theme = PF2E_ELF_THEME.components.battleBoard;
     const slotByKey = new Map<string, PF2eBattleSlot>();
-    const background = new PF2eNinePatch2(scene, {
+    const pileByKey = new Map<string, PF2eBattlePile>();
+    const background = new PF2eSurface(scene, {
       variant: 'panel',
       width: 2,
       height: 2,
@@ -145,19 +179,21 @@ export class PF2eBattleBoard extends Sizer {
       fontStyle: 'bold',
       align: 'center',
     });
-    const enemyField = createFieldGrid(
+    const enemyField = createFieldArea(
       scene,
       'ENEMY',
       ENEMY_FIELD_ORDER,
       config.cardWidth,
       slotByKey,
+      pileByKey,
     );
-    const playerField = createFieldGrid(
+    const playerField = createFieldArea(
       scene,
       'PLAYER',
       PLAYER_FIELD_ORDER,
       config.cardWidth,
       slotByKey,
+      pileByKey,
     );
 
     super(scene, {
@@ -178,6 +214,7 @@ export class PF2eBattleBoard extends Sizer {
     this.cardDefinitions = config.cardDefinitions;
     this.cardPresentations = config.cardPresentations ?? TEST_CARD_CATALOG.cardPresentations;
     this.slotByKey = slotByKey;
+    this.pileByKey = pileByKey;
     this.enemySummaryText = enemySummaryText;
     this.playerSummaryText = playerSummaryText;
     this.turnText = turnText;
@@ -194,7 +231,7 @@ export class PF2eBattleBoard extends Sizer {
     return {
       getCardView: (cardId) => this.cardById.get(cardId),
       detachCardView: (cardId, view) => {
-        if (view instanceof PF2eBattleCard) {
+        if (view instanceof PF2eCard) {
           this.detachCard(cardId, view);
         }
       },
@@ -213,44 +250,65 @@ export class PF2eBattleBoard extends Sizer {
     this.turnText.setText(
       `${state.activePlayerId === 'PLAYER' ? '내 턴' : '적 턴'} · Turn ${state.turnNumber} · Action ${state.actionCount}`,
     );
+    for (const playerId of ['ENEMY', 'PLAYER'] as const) {
+      const player = state.players[playerId];
+      this.requirePile(playerId, 'DECK').setCounts(player.drawPileIds.length);
+      this.requirePile(playerId, 'DROP').setCounts(player.dropIds.length, player.exileIds.length);
+    }
 
+    const detachedCards = new Map<StableId, PF2eCard>();
     for (const playerId of ['ENEMY', 'PLAYER'] as const) {
       for (const position of BATTLE_FIELD_POSITIONS) {
         const slot = this.requireSlot(playerId, position);
         const desiredCardId = state.players[playerId].field[position];
         const current = slot.currentCard;
 
-        if (current !== undefined && current.cardId !== desiredCardId) {
-          slot.detachCard(current);
-          this.cardById.delete(current.cardId);
-          current.destroy();
+        if (current !== undefined && slot.currentCardId !== desiredCardId) {
+          const currentCardId = slot.currentCardId;
+          slot.detachCard(current).layout();
+          if (currentCardId !== undefined) {
+            this.cardById.delete(currentCardId);
+            detachedCards.set(currentCardId, current);
+          }
         }
+      }
+    }
 
+    for (const playerId of ['ENEMY', 'PLAYER'] as const) {
+      for (const position of BATTLE_FIELD_POSITIONS) {
+        const slot = this.requireSlot(playerId, position);
+        const desiredCardId = state.players[playerId].field[position];
         if (desiredCardId === null) {
           continue;
         }
 
-        const existing = slot.currentCard;
         const model = createBattleCardViewModel(
           state,
           desiredCardId,
           this.cardDefinitions,
           this.cardPresentations,
         );
-
-        if (existing !== undefined) {
-          existing.setModel(model);
-          this.cardById.set(desiredCardId, existing);
-          continue;
+        let card = slot.currentCard;
+        if (card === undefined) {
+          card =
+            detachedCards.get(desiredCardId) ??
+            new PF2eCard(this.scene, {
+              card: model.card,
+              width: this.cardWidth,
+              mode: 'board',
+            })
+              .setName(desiredCardId)
+              .layout();
+          detachedCards.delete(desiredCardId);
+          slot.setCard(desiredCardId, card).layout();
         }
-
-        const card = new PF2eBattleCard(this.scene, {
-          model,
-          width: this.cardWidth,
-        }).layout();
-        slot.setCard(card).layout();
+        card.setCard(model.card);
         this.cardById.set(desiredCardId, card);
       }
+    }
+
+    for (const card of detachedCards.values()) {
+      card.destroy();
     }
   }
 
@@ -282,7 +340,27 @@ export class PF2eBattleBoard extends Sizer {
     });
   }
 
-  private detachCard(cardId: StableId, view: PF2eBattleCard): void {
+  getCardView(cardId: StableId): PF2eCard | undefined {
+    return this.cardById.get(cardId);
+  }
+
+  getCardEntries(): readonly (readonly [StableId, PF2eCard])[] {
+    return Object.freeze([...this.cardById.entries()]);
+  }
+
+  getSlots(): readonly PF2eBattleSlot[] {
+    return Object.freeze([...this.slotByKey.values()]);
+  }
+
+  getPile(playerId: BattlePlayerId, zone: 'DECK' | 'DROP'): PF2eBattlePile {
+    return this.requirePile(playerId, zone);
+  }
+
+  createCardModel(state: BattleState, cardId: StableId) {
+    return createBattleCardViewModel(state, cardId, this.cardDefinitions, this.cardPresentations);
+  }
+
+  private detachCard(cardId: StableId, view: PF2eCard): void {
     for (const slot of this.slotByKey.values()) {
       if (slot.currentCard === view) {
         slot.detachCard(view).layout();
@@ -308,9 +386,11 @@ export class PF2eBattleBoard extends Sizer {
       return undefined;
     }
 
-    const card = new PF2eBattleCard(this.scene, {
-      model: createBattleCardViewModel(state, cardId, this.cardDefinitions, this.cardPresentations),
+    const card = new PF2eCard(this.scene, {
+      card: createBattleCardViewModel(state, cardId, this.cardDefinitions, this.cardPresentations)
+        .card,
       width: this.cardWidth,
+      mode: 'board',
     }).layout();
     const position =
       this.getCardPosition(cardId, context.step.beforeState) ??
@@ -331,5 +411,13 @@ export class PF2eBattleBoard extends Sizer {
     }
 
     return slot;
+  }
+
+  private requirePile(playerId: BattlePlayerId, zone: 'DECK' | 'DROP'): PF2eBattlePile {
+    const pile = this.pileByKey.get(`${playerId}:${zone}`);
+    if (pile === undefined) {
+      throw new Error(`전투 pile을 찾을 수 없습니다: ${playerId}:${zone}`);
+    }
+    return pile;
   }
 }

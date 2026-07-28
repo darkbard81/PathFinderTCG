@@ -5,20 +5,21 @@ import {
   validatePlayableSavedDeck,
   type DataValidationIssue,
   type SavedDeck,
-  type StableId,
 } from '../../game/data/index.js';
-import { calculatePhaseSevenLayout } from '../../ui/layout/phaseSevenLayout.js';
+import { calculateThemeModLayout } from '../../ui/layout/themeModLayout.js';
 import { getGameSession } from '../adapters/sceneBridge.js';
 import {
-  createDeckBuilderListModels,
+  createDeckBuilderCardModels,
   PF2eDeckBuilderPanel,
 } from '../ui/components/PF2eDeckBuilderPanel.js';
 import { PF2eConfirmDialog } from '../ui/components/PF2eConfirmDialog.js';
-import { PF2eScreenPanel } from '../ui/components/PF2eScreenPanel.js';
 import { PF2eButtonsController } from '../ui/controllers/PF2eButtonsController.js';
+import {
+  PF2eCardGridPointerController,
+  type PF2eCardGridTransfer,
+} from '../ui/controllers/PF2eCardGridPointerController.js';
 import { PF2eConfirmDialogController } from '../ui/controllers/PF2eConfirmDialogController.js';
 import { DeckDraftController } from '../ui/controllers/DeckDraftController.js';
-import { PF2eGridTableSelectionController } from '../ui/controllers/PF2eGridTableSelectionController.js';
 import { PF2E_ELF_THEME } from '../ui/theme/pf2eElfTheme.js';
 
 function playableMessage(issues: readonly DataValidationIssue[], dirty: boolean): string {
@@ -32,15 +33,11 @@ function playableMessage(issues: readonly DataValidationIssue[], dirty: boolean)
 }
 
 export class DeckBuilderScene extends Phaser.Scene {
-  private screen?: PF2eScreenPanel;
+  private panel?: PF2eDeckBuilderPanel;
   private draft?: DeckDraftController;
   private savedDeck?: SavedDeck;
-  private collectionSelection?: PF2eGridTableSelectionController;
-  private deckSelection?: PF2eGridTableSelectionController;
-  private editButtonsController?: PF2eButtonsController;
+  private cardPointerController?: PF2eCardGridPointerController;
   private navigationButtonsController?: PF2eButtonsController;
-  private selectedCollectionId?: StableId;
-  private selectedDeckId?: StableId;
   private status = '';
   private statusDanger = false;
   private busy = false;
@@ -102,9 +99,9 @@ export class DeckBuilderScene extends Phaser.Scene {
       return;
     }
 
-    const layout = calculatePhaseSevenLayout(width, height);
+    const layout = calculateThemeModLayout(width, height);
     const deck = this.draft.value;
-    const models = createDeckBuilderListModels(
+    const models = createDeckBuilderCardModels(
       saveSlot.collection,
       deck,
       session.getCardDefinitions(),
@@ -112,56 +109,39 @@ export class DeckBuilderScene extends Phaser.Scene {
     );
 
     this.destroyControllers();
-    this.screen?.destroy();
-    this.screen = undefined;
+    this.panel?.destroy();
+    this.panel = undefined;
 
     const panel = new PF2eDeckBuilderPanel(this, {
-      width: Math.max(260, layout.rootWidth - layout.panelInset * 2),
-      tableHeight: layout.deckTableHeight,
-      orientation: layout.orientation,
-      collectionCount: saveSlot.collection.cardInstances.length,
-      deckCount: deck.unitInstanceIds.length + (deck.leaderInstanceId === null ? 0 : 1),
-      ...models,
-    });
-    const screen = new PF2eScreenPanel(this, {
       width: layout.rootWidth,
       height: layout.rootHeight,
-      inset: layout.panelInset,
+      orientation: layout.orientation,
       gap: layout.gap,
-      title: '덱 구성',
-      subtitle:
-        '컬렉션 카드를 선택해 유닛을 추가하거나 리더를 교체하세요. 미완성 덱도 저장할 수 있습니다.',
-      titleFontSize: layout.titleFontSize,
-      bodyFontSize: layout.detailFontSize,
-      content: panel,
+      headerHeight: layout.deck.headerHeight,
+      footerHeight: layout.deck.footerHeight,
+      collectionWidth: layout.deck.collectionWidth,
+      collectionHeight: layout.deck.collectionHeight,
+      collectionColumns: layout.deck.collectionColumns,
+      collectionCardWidth: layout.deck.collectionCardWidth,
+      deckWidth: layout.deck.deckWidth,
+      deckHeight: layout.deck.deckHeight,
+      deckColumns: layout.deck.deckColumns,
+      deckCardWidth: layout.deck.deckCardWidth,
+      collectionCount: saveSlot.collection.cardInstances.length,
+      deckCount: deck.unitInstanceIds.length + (deck.leaderInstanceId === null ? 0 : 1),
+      status: this.status,
+      statusDanger: this.statusDanger,
+      ...models,
     })
       .setPosition(width / 2, height / 2)
       .layout();
-    screen.setStatus(this.status, this.statusDanger ? 'danger' : 'normal');
 
-    this.collectionSelection = new PF2eGridTableSelectionController(panel.collectionTable, {
-      items: models.collectionItems,
-      initialSelectedId: models.collectionItems.some(
-        (item) => item.id === this.selectedCollectionId,
-      )
-        ? this.selectedCollectionId
-        : undefined,
-      onSelectionChange: (item) => {
-        this.selectedCollectionId = item.id;
-      },
-    });
-    this.deckSelection = new PF2eGridTableSelectionController(panel.deckTable, {
-      items: models.deckItems,
-      initialSelectedId: models.deckItems.some((item) => item.id === this.selectedDeckId)
-        ? this.selectedDeckId
-        : undefined,
-      onSelectionChange: (item) => {
-        this.selectedDeckId = item.id;
-      },
-    });
-    this.editButtonsController = new PF2eButtonsController(panel.editButtons, {
-      onButtonClick: (buttonId) => {
-        this.editDeck(buttonId);
+    this.cardPointerController = new PF2eCardGridPointerController(this, {
+      collection: panel.collectionGrid,
+      deck: panel.deckGrid,
+      isEnabled: () => !this.busy,
+      onTransfer: (transfer) => {
+        this.editDeck(transfer);
       },
     });
     this.navigationButtonsController = new PF2eButtonsController(panel.navigationButtons, {
@@ -179,7 +159,7 @@ export class DeckBuilderScene extends Phaser.Scene {
         }
       },
     });
-    this.screen = screen;
+    this.panel = panel;
     this.updateButtonStates();
     this.game.canvas.dataset.scene = 'deck-builder';
     this.game.canvas.dataset.orientation = layout.orientation;
@@ -188,46 +168,20 @@ export class DeckBuilderScene extends Phaser.Scene {
     );
     this.game.canvas.dataset.deckDirty = String(this.dirty);
     this.game.canvas.dataset.deckPlayable = String(this.draft.getPlayableIssues().length === 0);
+    this.game.canvas.dataset.deckInput = 'card-pointer';
   }
 
-  private editDeck(buttonId: string): void {
+  private editDeck(transfer: PF2eCardGridTransfer): void {
     if (this.busy || this.draft === undefined) {
       return;
     }
 
-    let result;
-
-    switch (buttonId) {
-      case 'add':
-        if (this.selectedCollectionId === undefined) {
-          this.setStatus('컬렉션에서 추가할 유닛을 먼저 선택하세요.', true);
-          return;
-        }
-        result = this.draft.addUnit(this.selectedCollectionId);
-        break;
-      case 'leader':
-        if (this.selectedCollectionId === undefined) {
-          this.setStatus('컬렉션에서 리더로 사용할 카드를 먼저 선택하세요.', true);
-          return;
-        }
-        result = this.draft.setLeader(this.selectedCollectionId);
-        break;
-      case 'remove':
-        if (this.selectedDeckId === undefined) {
-          this.setStatus('현재 덱에서 제거할 카드를 먼저 선택하세요.', true);
-          return;
-        }
-        result =
-          this.draft.value.leaderInstanceId === this.selectedDeckId
-            ? this.draft.clearLeader()
-            : this.draft.removeUnit(this.selectedDeckId);
-        if (result.changed) {
-          this.selectedDeckId = undefined;
-        }
-        break;
-      default:
-        return;
-    }
+    const result =
+      transfer.input === 'click' && transfer.from === 'collection'
+        ? this.draft.toggleCard(transfer.cardId)
+        : transfer.to === 'deck'
+          ? this.draft.addCard(transfer.cardId)
+          : this.draft.removeCard(transfer.cardId);
 
     this.status = result.message;
     this.statusDanger = !result.changed;
@@ -239,7 +193,7 @@ export class DeckBuilderScene extends Phaser.Scene {
     this.refreshValidationStatus();
     this.busy = true;
     this.updateButtonStates();
-    this.time.delayedCall(250, () => {
+    this.time.delayedCall(120, () => {
       if (!this.scene.isActive()) {
         return;
       }
@@ -380,21 +334,14 @@ export class DeckBuilderScene extends Phaser.Scene {
   private setStatus(message: string, danger: boolean): void {
     this.status = message;
     this.statusDanger = danger;
-    this.screen?.setStatus(message, danger ? 'danger' : 'normal');
+    this.panel?.setStatus(message, danger);
   }
 
   private updateButtonStates(): void {
-    if (
-      this.editButtonsController === undefined ||
-      this.navigationButtonsController === undefined
-    ) {
+    if (this.navigationButtonsController === undefined) {
       return;
     }
 
-    this.editButtonsController
-      .setButtonEnabled('add', !this.busy)
-      .setButtonEnabled('leader', !this.busy)
-      .setButtonEnabled('remove', !this.busy);
     this.navigationButtonsController
       .setButtonEnabled('save', !this.busy && this.dirty)
       .setButtonEnabled('battle', !this.busy)
@@ -402,13 +349,9 @@ export class DeckBuilderScene extends Phaser.Scene {
   }
 
   private destroyControllers(): void {
-    this.collectionSelection?.destroy();
-    this.deckSelection?.destroy();
-    this.editButtonsController?.destroy();
+    this.cardPointerController?.destroy();
     this.navigationButtonsController?.destroy();
-    this.collectionSelection = undefined;
-    this.deckSelection = undefined;
-    this.editButtonsController = undefined;
+    this.cardPointerController = undefined;
     this.navigationButtonsController = undefined;
   }
 

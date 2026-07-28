@@ -1,32 +1,34 @@
 import type * as Phaser from 'phaser';
 import { OverlapSizer } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
+import type { BattleFieldPosition } from '../../../game/data/index.js';
+import type { BattlePlayerId } from '../../../game/simulation/battle/index.js';
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme.js';
-import type { PF2eBattleCard } from './PF2eBattleCard.js';
+import type { PF2eCard } from './PF2eCard.js';
+import { PF2eSurface } from './PF2eSurface.js';
 
 export interface PF2eBattleSlotConfig {
   readonly width: number;
   readonly height: number;
   readonly label: string;
+  readonly playerId: BattlePlayerId;
+  readonly fieldPosition: BattleFieldPosition;
 }
 
 export class PF2eBattleSlot extends OverlapSizer {
-  private readonly background: Phaser.GameObjects.Rectangle;
+  readonly playerId: BattlePlayerId;
+  readonly fieldPosition: BattleFieldPosition;
+  private readonly background: PF2eSurface;
   private readonly emptyLabel: Phaser.GameObjects.Text;
-  private card?: PF2eBattleCard;
+  private card?: PF2eCard;
+  private cardInstanceId?: string;
 
   constructor(scene: Phaser.Scene, config: PF2eBattleSlotConfig) {
-    const theme = PF2E_ELF_THEME.components.battleBoard;
-    const background = scene.add
-      .rectangle(
-        0,
-        0,
-        config.width,
-        config.height,
-        theme.slotBackgroundColor,
-        theme.slotBackgroundAlpha,
-      )
-      .setStrokeStyle(theme.slotBorderWidth, theme.slotBorderColor, theme.slotBorderAlpha);
+    const background = new PF2eSurface(scene, {
+      variant: 'gridCell',
+      width: config.width,
+      height: config.height,
+    });
     const emptyLabel = scene.add.text(0, 0, config.label, {
       color: PF2E_ELF_THEME.colors.mutedText,
       fontFamily: PF2E_ELF_THEME.typography.body,
@@ -40,6 +42,8 @@ export class PF2eBattleSlot extends OverlapSizer {
     });
 
     scene.add.existing(this);
+    this.playerId = config.playerId;
+    this.fieldPosition = config.fieldPosition;
     this.background = background;
     this.emptyLabel = emptyLabel;
     this.add(background, {
@@ -53,12 +57,17 @@ export class PF2eBattleSlot extends OverlapSizer {
     });
   }
 
-  get currentCard(): PF2eBattleCard | undefined {
+  get currentCard(): PF2eCard | undefined {
     return this.card;
   }
 
-  setCard(card: PF2eBattleCard): this {
+  get currentCardId(): string | undefined {
+    return this.cardInstanceId;
+  }
+
+  setCard(cardId: string, card: PF2eCard): this {
     if (this.card === card) {
+      this.cardInstanceId = cardId;
       return this;
     }
     if (this.card !== undefined) {
@@ -66,6 +75,7 @@ export class PF2eBattleSlot extends OverlapSizer {
     }
 
     this.card = card;
+    this.cardInstanceId = cardId;
     card.setDepth(this.depth + 1);
     this.background.setVisible(false);
     this.emptyLabel.setVisible(false);
@@ -73,15 +83,30 @@ export class PF2eBattleSlot extends OverlapSizer {
     return this;
   }
 
-  detachCard(card: PF2eBattleCard): this {
+  detachCard(card: PF2eCard): this {
     if (this.card !== card) {
       return this;
     }
 
     this.remove(card, false);
     this.card = undefined;
+    this.cardInstanceId = undefined;
     this.background.setVisible(true);
     this.emptyLabel.setVisible(true);
+    return this;
+  }
+
+  setTargetState(state: 'idle' | 'selected' | 'legal-target' | 'disabled'): this {
+    const surfaceState =
+      state === 'legal-target'
+        ? 'focused'
+        : state === 'selected'
+          ? 'selected'
+          : state === 'disabled'
+            ? 'disabled'
+            : 'idle';
+    this.background.setVisible(this.card === undefined).setVisualState(surfaceState);
+    this.card?.setSelectionState(state);
     return this;
   }
 }

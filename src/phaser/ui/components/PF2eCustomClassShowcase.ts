@@ -16,19 +16,19 @@ import {
 } from '../showcase/pf2eCustomClassCatalog';
 import {
   PF2E_ELF_THEME,
-  PF2E_NINE_LABEL_VARIANTS,
-  PF2E_NINE_PATCH_VISUAL_STATES,
-  type PF2eNineLabelVariant,
-  type PF2eNinePatchVariant,
-  type PF2eNinePatchVisualState,
+  PF2E_LABEL_VARIANTS,
+  PF2E_VISUAL_STATES,
+  type PF2eLabelVariant,
+  type PF2eSurfaceVariant,
+  type PF2eVisualState,
 } from '../theme/pf2eElfTheme';
 import { PF2eBadgeLabel } from './PF2eBadgeLabel';
 import { PF2eButtons } from './PF2eButtons';
 import { PF2eCard } from './PF2eCard';
 import { PF2eConfirmDialog } from './PF2eConfirmDialog';
 import { PF2eGridTable, type PF2eGridTableItem } from './PF2eGridTable';
-import { PF2eNineLabel } from './PF2eNineLabel';
-import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2eLabel } from './PF2eLabel';
+import { PF2eSurface } from './PF2eSurface';
 import { PF2ePanel } from './PF2ePanel';
 import { PF2eScrollablePanel } from './PF2eScrollablePanel';
 import { PF2eTabPages } from './PF2eTabPages';
@@ -64,21 +64,21 @@ export class PF2eCustomClassShowcase extends Pages {
     this.currentClassId = config.initialClassId ?? PF2E_DEFAULT_CUSTOM_CLASS_ID;
 
     this.addBackground(
-      new PF2eNinePatch2(scene, {
+      new PF2eSurface(scene, {
         variant: 'panel',
         width: 2,
         height: 2,
       }),
     );
 
-    this.addPage(this.createNinePatchPage(scene), {
-      key: 'ninePatch2',
+    this.addPage(this.createSurfacePage(scene), {
+      key: 'surface',
       align: 'center',
       padding: PF2E_ELF_THEME.components.showcase.inset,
       expand: true,
     });
-    this.addPage(this.createNineLabelPage(scene), {
-      key: 'nineLabel',
+    this.addPage(this.createLabelPage(scene), {
+      key: 'label',
       align: 'center',
       padding: PF2E_ELF_THEME.components.showcase.inset,
       expand: true,
@@ -149,8 +149,8 @@ export class PF2eCustomClassShowcase extends Pages {
     super.destroy(fromScene);
   }
 
-  private createNinePatchPage(scene: Phaser.Scene): Sizer {
-    const definition = getPF2eCustomClassDefinition('ninePatch2');
+  private createSurfacePage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('surface');
     const content = this.createContentSizer(scene);
 
     content
@@ -193,7 +193,7 @@ export class PF2eCustomClassShowcase extends Pages {
       )
       .add(this.createSectionLabel(scene, 'Visual states'), { expand: true });
 
-    for (const state of PF2E_NINE_PATCH_VISUAL_STATES) {
+    for (const state of PF2E_VISUAL_STATES) {
       content.add(
         this.createPatchSample(scene, state, 'control', state, PF2E_ELF_THEME.sizes.treeRow),
         { expand: true },
@@ -203,19 +203,19 @@ export class PF2eCustomClassShowcase extends Pages {
     return this.createPageShell(scene, definition.id, content);
   }
 
-  private createNineLabelPage(scene: Phaser.Scene): Sizer {
-    const definition = getPF2eCustomClassDefinition('nineLabel');
+  private createLabelPage(scene: Phaser.Scene): Sizer {
+    const definition = getPF2eCustomClassDefinition('label');
     const content = this.createContentSizer(scene);
 
     content.add(this.createSectionLabel(scene, 'Variants'), { expand: true });
-    for (const variant of PF2E_NINE_LABEL_VARIANTS) {
+    for (const variant of PF2E_LABEL_VARIANTS) {
       content.add(this.createLabelVariantSample(scene, variant), { expand: true });
     }
 
     content.add(this.createSectionLabel(scene, 'Visual states'), { expand: true });
 
-    for (const state of PF2E_NINE_PATCH_VISUAL_STATES) {
-      const stateLabel = new PF2eNineLabel(scene, {
+    for (const state of PF2E_VISUAL_STATES) {
+      const stateLabel = new PF2eLabel(scene, {
         text: state,
         variant: 'primary',
         width: this.contentWidth,
@@ -238,7 +238,7 @@ export class PF2eCustomClassShowcase extends Pages {
       itemGap: PF2E_ELF_THEME.components.showcase.sampleGap,
     })
       .add(
-        new PF2eNineLabel(scene, {
+        new PF2eLabel(scene, {
           text: 'Vertical panel',
           variant: 'section',
           width: innerWidth,
@@ -248,7 +248,7 @@ export class PF2eCustomClassShowcase extends Pages {
       .add(
         this.createBodyText(
           scene,
-          'NinePatch 패널 배경, inset, itemGap을 하나의 Sizer 상속 컴포넌트로 제공합니다.',
+          'Semantic surface 배경, inset, itemGap을 하나의 Sizer 상속 컴포넌트로 제공합니다.',
           PF2E_ELF_THEME.colors.mutedText,
           innerWidth,
         ),
@@ -262,14 +262,14 @@ export class PF2eCustomClassShowcase extends Pages {
       visualState: 'selected',
     })
       .add(
-        new PF2eNineLabel(scene, {
+        new PF2eLabel(scene, {
           text: 'Left',
           variant: 'status',
         }),
         { proportion: 1 },
       )
       .add(
-        new PF2eNineLabel(scene, {
+        new PF2eLabel(scene, {
           text: 'Right',
           variant: 'status',
         }),
@@ -362,7 +362,7 @@ export class PF2eCustomClassShowcase extends Pages {
 
     for (let index = 1; index <= 10; index += 1) {
       list.add(
-        new PF2eNineLabel(scene, {
+        new PF2eLabel(scene, {
           text: `엘프 전술 기록 ${index}`,
           variant: index === 1 ? 'section' : 'status',
           width: childWidth,
@@ -707,7 +707,7 @@ export class PF2eCustomClassShowcase extends Pages {
       itemGap: PF2E_ELF_THEME.components.showcase.sampleGap,
     })
       .add(
-        new PF2eNineLabel(scene, {
+        new PF2eLabel(scene, {
           text: title,
           variant: 'status',
           width: innerWidth,
@@ -734,7 +734,7 @@ export class PF2eCustomClassShowcase extends Pages {
         item: gap,
       },
     });
-    const title = new PF2eNineLabel(scene, {
+    const title = new PF2eLabel(scene, {
       text: definition.name,
       variant: 'heading',
       fontSize: PF2E_ELF_THEME.components.showcase.titleFontSize,
@@ -780,8 +780,8 @@ export class PF2eCustomClassShowcase extends Pages {
     return controller;
   }
 
-  private createSectionLabel(scene: Phaser.Scene, text: string): PF2eNineLabel {
-    return new PF2eNineLabel(scene, {
+  private createSectionLabel(scene: Phaser.Scene, text: string): PF2eLabel {
+    return new PF2eLabel(scene, {
       text,
       variant: 'status',
       width: this.contentWidth,
@@ -792,8 +792,8 @@ export class PF2eCustomClassShowcase extends Pages {
   private createPatchSample(
     scene: Phaser.Scene,
     text: string,
-    variant: PF2eNinePatchVariant,
-    state: PF2eNinePatchVisualState,
+    variant: PF2eSurfaceVariant,
+    state: PF2eVisualState,
     height: number,
   ): Sizer {
     const sample = scene.rexUI.add.sizer({
@@ -807,7 +807,7 @@ export class PF2eCustomClassShowcase extends Pages {
         bottom: PF2E_ELF_THEME.components.showcase.samplePaddingY,
       },
     });
-    const background = new PF2eNinePatch2(scene, {
+    const background = new PF2eSurface(scene, {
       variant,
       width: 2,
       height: 2,
@@ -817,10 +817,7 @@ export class PF2eCustomClassShowcase extends Pages {
     return sample.addBackground(background).add(label, { align: 'center' });
   }
 
-  private createLabelVariantSample(
-    scene: Phaser.Scene,
-    variant: PF2eNineLabelVariant,
-  ): PF2eNineLabel {
+  private createLabelVariantSample(scene: Phaser.Scene, variant: PF2eLabelVariant): PF2eLabel {
     const defaultFontSize = PF2E_ELF_THEME.label[variant].fontSize;
     const fontSize =
       variant === 'heading'
@@ -835,7 +832,7 @@ export class PF2eCustomClassShowcase extends Pages {
           )
         : defaultFontSize;
 
-    return new PF2eNineLabel(scene, {
+    return new PF2eLabel(scene, {
       text: `${variant} · 표시 샘플`,
       variant,
       width: this.contentWidth,

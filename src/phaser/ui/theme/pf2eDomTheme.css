@@ -15,7 +15,7 @@
 }
 
 .pf2e-auth {
-  --pf2e-auth-frame-inset: 26px;
+  --pf2e-auth-frame-inset: 14px;
   --pf2e-auth-content-padding: clamp(8px, 2.4vmin, 24px);
 
   width: var(--pf2e-auth-layout-width, 360px);
@@ -30,9 +30,14 @@
   position: absolute;
   z-index: 0;
   inset: 0;
-  border: var(--pf2e-auth-frame-inset) solid transparent;
-  border-image: url('/assets/ui/pf2e-elf-panel-ninepatch.png') 104 fill /
-    var(--pf2e-auth-frame-inset) / 0 stretch;
+  border: 2px solid rgb(111 149 123 / 72%);
+  border-radius: 18px;
+  background:
+    linear-gradient(rgb(11 42 30 / 94%), rgb(7 29 22 / 96%)),
+    radial-gradient(circle at 50% 0%, rgb(140 201 170 / 12%), transparent 60%);
+  box-shadow:
+    inset 0 0 0 1px rgb(188 232 208 / 7%),
+    0 18px 42px rgb(0 0 0 / 24%);
   content: '';
   pointer-events: none;
 }
@@ -130,16 +135,18 @@
   height: var(--pf2e-control-height);
   min-width: 0;
   align-items: center;
-  border: 10px solid transparent;
-  border-image: url('/assets/ui/pf2e-elf-control-ninepatch.png') 32 56 fill / 10px 17px / 0 stretch;
-  filter: brightness(0.96);
+  padding: 0 14px;
+  border: 1px solid rgb(112 153 129 / 78%);
+  border-radius: 12px;
+  background: rgb(21 58 44 / 96%);
   transition:
     filter 120ms ease,
     box-shadow 120ms ease;
 }
 
 .pf2e-auth__control:focus-within {
-  filter: brightness(1.16);
+  border-color: var(--pf2e-accent-text);
+  background: rgb(27 73 55 / 98%);
   box-shadow: 0 0 0 2px rgb(188 232 208 / 72%);
 }
 
@@ -177,10 +184,10 @@
   min-height: max(var(--pf2e-minimum-touch-target), 58px);
   padding: 0 16px;
   color: var(--pf2e-text);
-  border: 11px solid transparent;
-  border-image: url('/assets/ui/pf2e-elf-button-ninepatch.png') 44 84 fill / 11px 21px / 0 stretch;
+  border: 2px solid rgb(159 201 173 / 86%);
+  border-radius: 12px;
   outline: 0;
-  background: transparent;
+  background: rgb(27 73 55 / 98%);
   cursor: pointer;
   font-family: Pretendard, system-ui, sans-serif;
   font-size: 17px;

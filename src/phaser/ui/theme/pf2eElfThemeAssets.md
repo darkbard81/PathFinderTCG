@@ -1,10 +1,14 @@
 # PF2e 엘프 UI 테마 자산
 
-이 문서는 `PF2E_ELF_THEME`에서 사용하는 NinePatch 이미지의 생성 조건과 원본 프롬프트를
-보존한다. 자산을 다시 생성할 때 기존 이미지를 참조 이미지로 사용하지 않고 아래 테마 설명과
-프롬프트를 기준으로 새로 생성한다.
+현재 `PF2E_ELF_THEME`의 일반 패널, 컨트롤, 탭, 스크롤바, 그리드 셀, 다이얼로그와 버튼은
+이미지 프레임을 로드하지 않는다. 런타임은 `PF2eSurface`와 의미 기반 `surfaces` 토큰으로
+fill, stroke, radius와 상태를 구성한다. 고정 크기 badge와 카드 전용 frame만 이미지 자산으로
+유지한다.
 
-## 런타임 자산
+아래 내용은 이전 NinePatch 생성 조건과 원본 프롬프트를 보존하기 위한 레거시 기록이다.
+표의 파일은 원본 보존을 위해 남겨 두지만 `src/game/assets/manifest.ts`에서 로드하지 않는다.
+
+## 레거시 보존 자산
 
 | Variant       | 파일                                                   | 크기    | Columns                 | Rows                    | Internal |
 | ------------- | ------------------------------------------------------ | ------- | ----------------------- | ----------------------- | -------- |
@@ -18,14 +22,14 @@
 | `button`      | `public/assets/ui/pf2e-elf-button-ninepatch.png`       | 512×144 | `[84, undefined, 84]`   | `[44, undefined, 44]`   | repeat   |
 
 `badge`는 NinePatch가 아닌 128×128 고정 크기 자산
-`public/assets/ui/pf2e-elf-badge.png`를 사용한다.
+`public/assets/ui/pf2e-elf-badge.png`를 사용하며 현재 런타임에도 로드한다.
 
-안정적인 자산 키와 런타임 경로는 `src/game/assets/manifest.ts`에서 관리한다. 최초 교체 전
-자산은 `backup/ui/`에, 5번 영역 복구 직전 자산은
+현재 사용하는 안정적인 자산 키와 런타임 경로는 `src/game/assets/manifest.ts`에서 관리한다.
+최초 교체 전 자산은 `backup/ui/`에, 5번 영역 복구 직전 자산은
 `backup/ui/before-center-repair-20260717/`에 보관한다. `backup/`은 런타임과 Git 추적에서
 제외한다.
 
-## NinePatch 사양
+## 레거시 NinePatch 사양
 
 ```ts
 stretchMode: {

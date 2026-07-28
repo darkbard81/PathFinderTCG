@@ -1,18 +1,18 @@
 import type * as Phaser from 'phaser';
 import { ScrollablePanel } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
-import { PF2E_ELF_THEME, type PF2eNinePatchVariant } from '../theme/pf2eElfTheme';
+import { PF2E_ELF_THEME, type PF2eSurfaceVariant } from '../theme/pf2eElfTheme';
 import {
   bindPF2eScrollbarThumbStates,
   createPF2eScrollbarConfig,
 } from './createPF2eScrollbarConfig';
-import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2eSurface } from './PF2eSurface';
 
 export interface PF2eScrollablePanelConfig {
   readonly child: Phaser.GameObjects.GameObject;
   readonly width?: number;
   readonly height?: number;
-  readonly backgroundVariant?: PF2eNinePatchVariant;
+  readonly backgroundVariant?: PF2eSurfaceVariant;
   readonly scrollbarPosition?: 'left' | 'right';
   readonly hideScrollbarWhenUnscrollable?: boolean;
   readonly wheelSpeed?: number;
@@ -30,7 +30,7 @@ export class PF2eScrollablePanel extends ScrollablePanel {
     const background =
       config.backgroundVariant === undefined
         ? undefined
-        : new PF2eNinePatch2(scene, {
+        : new PF2eSurface(scene, {
             variant: config.backgroundVariant,
             width: 2,
             height: 2,

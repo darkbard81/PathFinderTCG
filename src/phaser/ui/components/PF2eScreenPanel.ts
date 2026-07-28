@@ -2,8 +2,8 @@ import type * as Phaser from 'phaser';
 import { Sizer } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme.js';
-import { PF2eNineLabel } from './PF2eNineLabel.js';
-import { PF2eNinePatch2 } from './PF2eNinePatch2.js';
+import { PF2eLabel } from './PF2eLabel.js';
+import { PF2eSurface } from './PF2eSurface.js';
 
 export interface PF2eScreenPanelConfig {
   readonly width: number;
@@ -23,7 +23,7 @@ export class PF2eScreenPanel extends Sizer {
 
   constructor(scene: Phaser.Scene, config: PF2eScreenPanelConfig) {
     const theme = PF2E_ELF_THEME.components.phaseSeven;
-    const heading = new PF2eNineLabel(scene, {
+    const heading = new PF2eLabel(scene, {
       text: config.title,
       variant: 'heading',
       height: theme.screenTitleHeight,
@@ -67,7 +67,7 @@ export class PF2eScreenPanel extends Sizer {
 
     scene.add.existing(this);
     this.statusText = statusText;
-    const background = new PF2eNinePatch2(scene, {
+    const background = new PF2eSurface(scene, {
       variant: 'panel',
       width: 2,
       height: 2,

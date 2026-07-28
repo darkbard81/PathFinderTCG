@@ -2,9 +2,9 @@ import { ASSET_KEYS } from '../../../game/assets/manifest';
 import { CARD_FRAME_ASSET_KEYS, type CardFrameAssetKey } from '../../../game/assets/cardAssets';
 import type { CardFrameVariant } from '../../../game/data/contracts';
 
-export type PF2eNinePatchVariant =
+export type PF2eSurfaceVariant =
   'panel' | 'control' | 'tab' | 'scrollTrack' | 'scrollThumb' | 'gridCell' | 'dialog' | 'button';
-export const PF2E_NINE_PATCH_VISUAL_STATES = [
+export const PF2E_VISUAL_STATES = [
   'idle',
   'hover',
   'pressed',
@@ -12,14 +12,9 @@ export const PF2E_NINE_PATCH_VISUAL_STATES = [
   'selected',
   'disabled',
 ] as const;
-export type PF2eNinePatchVisualState = (typeof PF2E_NINE_PATCH_VISUAL_STATES)[number];
+export type PF2eVisualState = (typeof PF2E_VISUAL_STATES)[number];
 
-export interface PF2eNinePatchStretchMode {
-  readonly edge: 'scale' | 'repeat';
-  readonly internal: 'scale' | 'repeat';
-}
-
-export const PF2E_NINE_LABEL_VARIANTS = [
+export const PF2E_LABEL_VARIANTS = [
   'heading',
   'section',
   'status',
@@ -27,7 +22,7 @@ export const PF2E_NINE_LABEL_VARIANTS = [
   'primary',
   'danger',
 ] as const;
-export type PF2eNineLabelVariant = (typeof PF2E_NINE_LABEL_VARIANTS)[number];
+export type PF2eLabelVariant = (typeof PF2E_LABEL_VARIANTS)[number];
 
 export const PF2E_BADGE_TYPES = [
   'default',
@@ -39,15 +34,23 @@ export const PF2E_BADGE_TYPES = [
 ] as const;
 export type PF2eBadgeType = (typeof PF2E_BADGE_TYPES)[number];
 
-export interface PF2eNinePatchThemeStyle {
-  readonly key: string;
-  readonly columns: readonly [number, undefined, number];
-  readonly rows: readonly [number, undefined, number];
-  readonly stretchMode?: PF2eNinePatchStretchMode;
+export interface PF2eSurfaceThemeStyle {
+  readonly fillColor: number;
+  readonly fillAlpha: number;
+  readonly strokeColor: number;
+  readonly strokeAlpha: number;
+  readonly strokeWidth: number;
+  readonly radius: number;
 }
 
-export interface PF2eNineLabelThemeStyle {
-  readonly backgroundVariant: PF2eNinePatchVariant;
+export interface PF2eVisualStateStyle {
+  readonly fillAlphaScale: number;
+  readonly strokeAlphaScale: number;
+  readonly strokeColor: number | null;
+}
+
+export interface PF2eLabelThemeStyle {
+  readonly backgroundVariant: PF2eSurfaceVariant;
   readonly fontFamily: string;
   readonly fontSize: number;
   readonly fontStyle: 'normal' | 'bold';
@@ -124,6 +127,18 @@ export const PF2E_ELF_THEME = {
       modalDepth: 1050,
       modalCoverAlpha: 0.82,
     },
+    themeMod: {
+      screenInset: 14,
+      headerInsetY: 8,
+      footerInsetY: 6,
+      headerTextGap: 3,
+      screenTitleFontSize: 28,
+      instructionFontSize: 13,
+      statusFontSize: 13,
+      galleryHeadingHeight: 54,
+      galleryHeadingFontSize: 15,
+      galleryGap: 6,
+    },
     tree: {
       inset: 28,
       topInset: 48,
@@ -179,6 +194,17 @@ export const PF2E_ELF_THEME = {
       cellInsetY: 18,
       titleFontSize: 18,
       detailFontSize: 14,
+    },
+    cardGrid: {
+      cellInset: 6,
+      cellGap: 8,
+      captionGap: 4,
+      captionHeight: 22,
+      captionFontSize: 13,
+      dragThreshold: 14,
+      dragPreviewWidth: 180,
+      dragPreviewAlpha: 0.82,
+      dragPreviewDepth: 1200,
     },
     confirmDialog: {
       inset: 42,
@@ -239,16 +265,21 @@ export const PF2E_ELF_THEME = {
     },
     card: {
       compactWidth: 160,
+      boardMinimumWidth: 72,
+      boardMaximumWidth: 150,
       minimumWidth: 200,
       maximumWidth: 360,
       defaultWidth: 320,
       aspectRatio: 2 / 3,
+      frameDisplayScale: 1.075,
       statBadgeSize: 56,
       statBadgeInset: 20,
       statBadgeFontSize: 18,
       contentInsetX: 38,
       contentBottomInset: 74,
+      boardContentBottomInset: 38,
       contentHeight: 124,
+      boardNameHeight: 58,
       contentPaddingX: 14,
       contentPaddingY: 11,
       contentGap: 5,
@@ -260,6 +291,9 @@ export const PF2E_ELF_THEME = {
       nameTextColor: '#f7e9bd',
       rulesTextColor: '#f2ead4',
       textStrokeColor: '#06110d',
+      selectedTint: 0xe6c768,
+      legalTargetTint: 0x8cc9aa,
+      disabledAlpha: 0.46,
       frameVariants: {
         COMMON: { key: CARD_FRAME_ASSET_KEYS.COMMON },
         RARE: { key: CARD_FRAME_ASSET_KEYS.RARE },
@@ -286,101 +320,116 @@ export const PF2E_ELF_THEME = {
       popupStrokeColor: '#06110d',
       popupStrokeThickness: 4,
     },
-    battleCard: {
-      aspectRatio: 2 / 3,
-      frameInset: 4,
-      nameHeightRatio: 0.26,
-      nameBackgroundColor: 0x06110d,
-      nameBackgroundAlpha: 0.88,
-      nameFontRatio: 0.11,
-      statFontRatio: 0.115,
-      statBadgeRatio: 0.24,
-      statInsetRatio: 0.05,
-      textStrokeColor: '#06110d',
-      textStrokeThickness: 2,
-      selectedTint: 0xbce8d0,
-    },
     battleBoard: {
       headerHeight: 44,
       headerFontSize: 16,
       slotGap: 6,
       rowGap: 8,
       zoneGap: 10,
-      slotBackgroundColor: 0x0b2a1e,
-      slotBackgroundAlpha: 0.62,
-      slotBorderColor: 0x9a7944,
-      slotBorderAlpha: 0.7,
-      slotBorderWidth: 2,
       handInset: 8,
       handGap: 5,
     },
-    battleHud: {
-      actionListMinimumHeight: 190,
-      statusFontSize: 14,
-      statusLineSpacing: 4,
-      groupGap: 8,
-      compactButtonFontSize: 14,
-      compactButtonPaddingX: 8,
+    battleDirect: {
+      pileWidthRatio: 0.68,
+      pileMinimumWidth: 52,
+      pileGap: 3,
+      pileInset: 5,
+      pileLabelFontSize: 10,
+      pileCountFontSize: 16,
+      commandInsetX: 10,
+      commandGap: 8,
+      commandTitleFontSize: 16,
+      commandStatusFontSize: 12,
+      commandButtonFontSize: 12,
+      commandButtonPaddingX: 6,
+      commandStackBreakpoint: 700,
+      commandCompactSummaryHeight: 30,
+      handInset: 12,
+      handHandleHeight: 38,
+      handCardGap: 10,
+      handTweenDuration: 180,
+      handDepth: 800,
+      previewDepth: 950,
+      previewAlpha: 0.96,
+      dragPreviewAlpha: 0.8,
+      dragPreviewDepth: 1000,
+      dragThreshold: 14,
     },
   },
-  ninePatch: {
+  surfaces: {
     panel: {
-      key: ASSET_KEYS.pf2eElfPanel,
-      columns: [104, undefined, 104],
-      rows: [104, undefined, 104],
+      fillColor: 0x0b2a1e,
+      fillAlpha: 0.94,
+      strokeColor: 0x6f957b,
+      strokeAlpha: 0.72,
+      strokeWidth: 2,
+      radius: 18,
     },
     control: {
-      key: ASSET_KEYS.pf2eElfControl,
-      columns: [56, undefined, 56],
-      rows: [32, undefined, 32],
+      fillColor: 0x153a2c,
+      fillAlpha: 0.96,
+      strokeColor: 0x709981,
+      strokeAlpha: 0.78,
+      strokeWidth: 1,
+      radius: 12,
     },
     tab: {
-      key: ASSET_KEYS.pf2eElfTab,
-      columns: [56, undefined, 56],
-      rows: [32, undefined, 32],
+      fillColor: 0x123326,
+      fillAlpha: 0.98,
+      strokeColor: 0x8cc9aa,
+      strokeAlpha: 0.66,
+      strokeWidth: 1,
+      radius: 12,
     },
     scrollTrack: {
-      key: ASSET_KEYS.pf2eElfScrollTrack,
-      columns: [14, undefined, 14],
-      rows: [92, undefined, 92],
+      fillColor: 0x071811,
+      fillAlpha: 0.82,
+      strokeColor: 0x315c49,
+      strokeAlpha: 0.58,
+      strokeWidth: 1,
+      radius: 12,
     },
     scrollThumb: {
-      key: ASSET_KEYS.pf2eElfScrollThumb,
-      columns: [20, undefined, 20],
-      rows: [56, undefined, 56],
-      stretchMode: {
-        edge: 'scale',
-        internal: 'scale',
-      },
+      fillColor: 0x709981,
+      fillAlpha: 0.94,
+      strokeColor: 0xbce8d0,
+      strokeAlpha: 0.78,
+      strokeWidth: 1,
+      radius: 12,
     },
     gridCell: {
-      key: ASSET_KEYS.pf2eElfGridCell,
-      columns: [84, undefined, 84],
-      rows: [48, undefined, 48],
+      fillColor: 0x102f23,
+      fillAlpha: 0.94,
+      strokeColor: 0x557a65,
+      strokeAlpha: 0.72,
+      strokeWidth: 1,
+      radius: 12,
     },
     dialog: {
-      key: ASSET_KEYS.pf2eElfDialog,
-      columns: [96, undefined, 96],
-      rows: [96, undefined, 96],
+      fillColor: 0x0b2319,
+      fillAlpha: 0.99,
+      strokeColor: 0xc8aa68,
+      strokeAlpha: 0.92,
+      strokeWidth: 2,
+      radius: 22,
     },
     button: {
-      key: ASSET_KEYS.pf2eElfButton,
-      columns: [84, undefined, 84],
-      rows: [44, undefined, 44],
+      fillColor: 0x1b4937,
+      fillAlpha: 0.98,
+      strokeColor: 0x9fc9ad,
+      strokeAlpha: 0.86,
+      strokeWidth: 2,
+      radius: 12,
     },
-  } satisfies Record<PF2eNinePatchVariant, PF2eNinePatchThemeStyle>,
-  ninePatchStretchMode: {
-    edge: 'scale',
-    internal: 'repeat',
-  },
+  } satisfies Record<PF2eSurfaceVariant, PF2eSurfaceThemeStyle>,
   visualStates: {
-    idle: { tint: 0xffffff, alpha: 1 },
-    hover: { tint: 0xdfffea, alpha: 1 },
-    pressed: { tint: 0xa7c4b2, alpha: 0.96 },
-    focused: { tint: 0xc8f3dc, alpha: 1 },
-    selected: { tint: 0x8ed8b1, alpha: 1 },
-    disabled: { tint: 0x67716a, alpha: 0.62 },
-  } satisfies Record<PF2eNinePatchVisualState, { readonly tint: number; readonly alpha: number }>,
+    idle: { fillAlphaScale: 1, strokeAlphaScale: 1, strokeColor: null },
+    hover: { fillAlphaScale: 1, strokeAlphaScale: 1, strokeColor: 0xbce8d0 },
+    pressed: { fillAlphaScale: 0.78, strokeAlphaScale: 1, strokeColor: 0x8cc9aa },
+    focused: { fillAlphaScale: 1, strokeAlphaScale: 1, strokeColor: 0xc8f3dc },
+    selected: { fillAlphaScale: 1, strokeAlphaScale: 1, strokeColor: 0xe6c768 },
+    disabled: { fillAlphaScale: 0.48, strokeAlphaScale: 0.46, strokeColor: null },
+  } satisfies Record<PF2eVisualState, PF2eVisualStateStyle>,
   label: {
     heading: {
       backgroundVariant: 'control',
@@ -454,5 +503,5 @@ export const PF2E_ELF_THEME = {
       paddingX: 28,
       paddingY: 14,
     },
-  } satisfies Record<PF2eNineLabelVariant, PF2eNineLabelThemeStyle>,
+  } satisfies Record<PF2eLabelVariant, PF2eLabelThemeStyle>,
 } as const;

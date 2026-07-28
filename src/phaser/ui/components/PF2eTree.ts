@@ -4,9 +4,9 @@ import Sizer from 'phaser4-rex-plugins/templates/ui/sizer/Sizer.js';
 import { Trees } from 'phaser4-rex-plugins/templates/ui/ui-components.js';
 import type Tree from 'phaser4-rex-plugins/templates/ui/trees/tree/Tree.js';
 
-import { PF2E_ELF_THEME, type PF2eNinePatchVisualState } from '../theme/pf2eElfTheme';
-import { PF2eNineLabel } from './PF2eNineLabel';
-import { PF2eNinePatch2 } from './PF2eNinePatch2';
+import { PF2E_ELF_THEME, type PF2eVisualState } from '../theme/pf2eElfTheme';
+import { PF2eLabel } from './PF2eLabel';
+import { PF2eSurface } from './PF2eSurface';
 
 export interface PF2eTreeNodeDefinition {
   readonly id: string;
@@ -20,7 +20,7 @@ export interface PF2eTreeConfig {
 
 export class PF2eTree extends Trees {
   private readonly rootTree: Tree;
-  private readonly nodeById = new Map<string, PF2eNineLabel>();
+  private readonly nodeById = new Map<string, PF2eLabel>();
   private readonly idByNode = new Map<Phaser.GameObjects.GameObject, string>();
 
   constructor(scene: Phaser.Scene, config: PF2eTreeConfig) {
@@ -76,7 +76,7 @@ export class PF2eTree extends Trees {
     scene.add.existing(this);
     if (config.showBackground ?? true) {
       this.addBackground(
-        new PF2eNinePatch2(scene, {
+        new PF2eSurface(scene, {
           variant: 'panel',
           width: 2,
           height: 2,
@@ -118,7 +118,7 @@ export class PF2eTree extends Trees {
       if (this.nodeById.has(definition.id)) {
         throw new Error(`Duplicate PF2e tree node id: ${definition.id}`);
       }
-      const node = new PF2eNineLabel(scene, {
+      const node = new PF2eLabel(scene, {
         text: definition.text,
         variant: 'status',
         fontSize: treeTheme.rowFontSize,
@@ -142,7 +142,7 @@ export class PF2eTree extends Trees {
     return this.idByNode.get(node);
   }
 
-  setNodeVisualState(nodeId: string, state: PF2eNinePatchVisualState): this {
+  setNodeVisualState(nodeId: string, state: PF2eVisualState): this {
     const node = this.nodeById.get(nodeId);
     if (!node) {
       throw new Error(`Unknown PF2e tree node: ${nodeId}`);

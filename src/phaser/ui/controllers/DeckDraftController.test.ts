@@ -120,4 +120,27 @@ describe('DeckDraftController', () => {
     expect(controller.addUnit(firstId).code).toBe('CARD_ALREADY_IN_DECK');
     expect(controller.addUnit(thirdCopy.id).code).toBe('COPY_LIMIT_REACHED');
   });
+
+  it('maps direct card taps to type-aware add, remove, and leader mutations', () => {
+    const fixture = createPhaseOneFixtures();
+    const unitId = fixture.deck.unitInstanceIds[0];
+    const leaderId = fixture.deck.leaderInstanceId;
+    if (unitId === undefined || leaderId === null) {
+      throw new Error('테스트 덱 카드가 필요합니다.');
+    }
+    const controller = new DeckDraftController(
+      fixture.deck,
+      fixture.collection,
+      fixture.cardCatalog.cardDefinitions,
+    );
+
+    expect(controller.toggleCard(unitId)).toMatchObject({ changed: true, code: 'UPDATED' });
+    expect(controller.value.unitInstanceIds).not.toContain(unitId);
+    expect(controller.toggleCard(unitId)).toMatchObject({ changed: true, code: 'UPDATED' });
+    expect(controller.value.unitInstanceIds).toContain(unitId);
+    expect(controller.toggleCard(leaderId)).toMatchObject({ changed: true, code: 'UPDATED' });
+    expect(controller.value.leaderInstanceId).toBeNull();
+    expect(controller.addCard(leaderId)).toMatchObject({ changed: true, code: 'UPDATED' });
+    expect(controller.value.leaderInstanceId).toBe(leaderId);
+  });
 });

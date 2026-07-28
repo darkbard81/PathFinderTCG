@@ -4,10 +4,10 @@ import { BadgeLabel, Label } from 'phaser4-rex-plugins/templates/ui/ui-component
 import {
   PF2E_ELF_THEME,
   type PF2eBadgeType,
-  type PF2eNineLabelVariant,
-  type PF2eNinePatchVisualState,
+  type PF2eLabelVariant,
+  type PF2eVisualState,
 } from '../theme/pf2eElfTheme';
-import { PF2eNineLabel } from './PF2eNineLabel';
+import { PF2eLabel } from './PF2eLabel';
 
 export type PF2eBadgePosition =
   | 'leftTop'
@@ -24,7 +24,7 @@ export interface PF2eBadgeLabelConfig {
   readonly text: string;
   readonly badgeValue: string | number;
   readonly badgeType?: PF2eBadgeType;
-  readonly variant?: PF2eNineLabelVariant;
+  readonly variant?: PF2eLabelVariant;
   readonly badgePosition?: PF2eBadgePosition;
   /**
    * Minimum bounds. A parent rexUI Sizer owns the final bounds and expands the main label.
@@ -34,7 +34,7 @@ export interface PF2eBadgeLabelConfig {
 }
 
 export class PF2eBadgeLabel extends BadgeLabel {
-  private readonly mainLabel: PF2eNineLabel;
+  private readonly mainLabel: PF2eLabel;
   private readonly badge: Label;
   private readonly badgeText: Phaser.GameObjects.Text;
 
@@ -42,7 +42,7 @@ export class PF2eBadgeLabel extends BadgeLabel {
     const badgeSize = PF2E_ELF_THEME.sizes.badge;
     const badgePosition = config.badgePosition ?? 'rightTop';
     const badgeStyle = PF2E_ELF_THEME.components.badgeLabel.variants[config.badgeType ?? 'default'];
-    const mainLabel = new PF2eNineLabel(scene, {
+    const mainLabel = new PF2eLabel(scene, {
       text: config.text,
       variant: config.variant ?? 'status',
       width: config.width,
@@ -104,7 +104,7 @@ export class PF2eBadgeLabel extends BadgeLabel {
     return this;
   }
 
-  setVisualState(state: PF2eNinePatchVisualState): this {
+  setVisualState(state: PF2eVisualState): this {
     this.mainLabel.setVisualState(state);
     return this;
   }

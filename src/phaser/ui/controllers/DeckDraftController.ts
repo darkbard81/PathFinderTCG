@@ -70,6 +70,29 @@ export class DeckDraftController {
     return freezeDeck(this.draft);
   }
 
+  addCard(instanceId: StableId): DeckDraftMutationResult {
+    const instance = this.instanceById.get(instanceId);
+    if (instance === undefined) {
+      return this.unchanged('CARD_NOT_OWNED', '소유하지 않은 카드는 덱에 넣을 수 없습니다.');
+    }
+
+    const definition = this.definitionById.get(instance.cardDefinitionId);
+    return definition?.type === 'LEADER' ? this.setLeader(instanceId) : this.addUnit(instanceId);
+  }
+
+  removeCard(instanceId: StableId): DeckDraftMutationResult {
+    return this.draft.leaderInstanceId === instanceId
+      ? this.clearLeader()
+      : this.removeUnit(instanceId);
+  }
+
+  toggleCard(instanceId: StableId): DeckDraftMutationResult {
+    return this.draft.leaderInstanceId === instanceId ||
+      this.draft.unitInstanceIds.includes(instanceId)
+      ? this.removeCard(instanceId)
+      : this.addCard(instanceId);
+  }
+
   setLeader(instanceId: StableId): DeckDraftMutationResult {
     const instance = this.instanceById.get(instanceId);
 
