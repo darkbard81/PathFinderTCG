@@ -132,7 +132,7 @@
       "enum": ["LEADER", "UNIT"]
     },
     "actionType": {
-      "description": "플레이어가 선택할 수 있는 행동이다.",
+      "description": "Active Skill의 대상 선택 범위와 Effect 문맥을 선언하는 기존 종류다. 실제 플레이어 BattleAction과는 별도 계약이다.",
       "type": "string",
       "enum": ["DRAW", "PLACE", "MOVE", "ATTACK", "DISCARD", "END_TURN"]
     },
@@ -174,7 +174,7 @@
       }
     },
     "effectTarget": {
-      "description": "Skill 출처, 연결 Action 또는 Trigger를 기준으로 해석할 Effect 대상이다.",
+      "description": "Skill 출처, 현재 ACTIVE 대상 또는 Trigger를 기준으로 해석할 Effect 대상이다.",
       "type": "string",
       "enum": ["SELF", "OWNER", "OPPONENT", "ACTION_TARGET", "TRIGGER_SOURCE", "TRIGGER_SUBJECT"]
     },
@@ -397,7 +397,7 @@
       }
     },
     "activeSkill": {
-      "description": "플레이어가 연결된 Action을 선택했을 때 실행하는 카드 규칙이다.",
+      "description": "플레이어가 독립 ACTIVE Action으로 실행하며 action으로 대상 문맥을 정하는 카드 규칙이다.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "description", "type", "action", "effects"],

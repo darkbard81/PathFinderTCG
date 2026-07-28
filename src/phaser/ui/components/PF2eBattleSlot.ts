@@ -20,6 +20,7 @@ export class PF2eBattleSlot extends OverlapSizer {
   readonly fieldPosition: BattleFieldPosition;
   private readonly background: PF2eSurface;
   private readonly emptyLabel: Phaser.GameObjects.Text;
+  private readonly dominanceText: Phaser.GameObjects.Text;
   private card?: PF2eCard;
   private cardInstanceId?: string;
 
@@ -35,6 +36,15 @@ export class PF2eBattleSlot extends OverlapSizer {
       fontSize: `${Math.max(9, Math.round(config.width * 0.1))}px`,
       align: 'center',
     });
+    const dominanceText = scene.add.text(0, 0, '0', {
+      color: PF2E_ELF_THEME.colors.accentText,
+      fontFamily: PF2E_ELF_THEME.typography.display,
+      fontSize: `${PF2E_ELF_THEME.components.battleDirect.slotDominanceFontSize}px`,
+      fontStyle: 'bold',
+      align: 'center',
+      stroke: PF2E_ELF_THEME.components.card.textStrokeColor,
+      strokeThickness: PF2E_ELF_THEME.components.battleDirect.slotDominanceStrokeThickness,
+    });
 
     super(scene, {
       width: config.width,
@@ -46,15 +56,25 @@ export class PF2eBattleSlot extends OverlapSizer {
     this.fieldPosition = config.fieldPosition;
     this.background = background;
     this.emptyLabel = emptyLabel;
+    this.dominanceText = dominanceText;
     this.add(background, {
       key: 'background',
       align: 'center',
       expand: false,
-    }).add(emptyLabel, {
-      key: 'empty-label',
-      align: 'center',
-      expand: false,
-    });
+    })
+      .add(emptyLabel, {
+        key: 'empty-label',
+        align: 'center',
+        expand: false,
+      })
+      .add(dominanceText, {
+        key: 'dominance',
+        align: 'top',
+        expand: false,
+        padding: {
+          top: PF2E_ELF_THEME.components.battleDirect.slotDominanceInsetY,
+        },
+      });
   }
 
   get currentCard(): PF2eCard | undefined {
@@ -79,6 +99,7 @@ export class PF2eBattleSlot extends OverlapSizer {
     card.setDepth(this.depth + 1);
     this.background.setVisible(false);
     this.emptyLabel.setVisible(false);
+    this.dominanceText.setVisible(false);
     this.add(card, { key: 'card', align: 'center', expand: false });
     return this;
   }
@@ -93,6 +114,12 @@ export class PF2eBattleSlot extends OverlapSizer {
     this.cardInstanceId = undefined;
     this.background.setVisible(true);
     this.emptyLabel.setVisible(true);
+    this.dominanceText.setVisible(true);
+    return this;
+  }
+
+  setDominance(value: number): this {
+    this.dominanceText.setText(String(value));
     return this;
   }
 

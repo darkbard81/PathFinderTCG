@@ -1,4 +1,4 @@
-# Pathfinder TCG 코어 게임 설계 v1.0
+# Pathfinder TCG 코어 게임 설계 v1.1
 
 ## 0. 문서의 지위
 
@@ -10,7 +10,8 @@
 
 - 종류: `type` (`LEADER`, `UNIT`)
 - 기본 수치: `cost`, `dominance`, `hp`, `attack`
-- 행동: `DRAW`, `PLACE`, `MOVE`, `ATTACK`, `DISCARD`, `END_TURN`
+- 선택 행동: `PLACE`, `MOVE`, `ATTACK`, `ACTIVE`와 수동 `END_TURN`
+- 자동 행동: 각 턴 시작의 `DRAW` 1장
 - 사건: 현재 `TriggerType` 11종
 - 스킬: 카드당 선택적인 Active, Reactive, Passive 각 1개
 - 결과: 현재 `Effect` 10종
@@ -28,16 +29,17 @@
 ### 1.1 한 문장 정의
 
 두 플레이어가 3개 전선의 전열과 후열에 리더와 유닛을 배치하고, 카드가 인접 칸에 퍼뜨리는
-지배망과 번갈아 오는 한 번의 행동을 사용해 상대 리더를 먼저 쓰러뜨리는 전술 TCG다.
+지배망과 카드별 행동 기회를 사용해 상대 리더를 먼저 쓰러뜨리는 전술 TCG다.
 
 ### 1.2 플레이 경험
 
 한 선택은 항상 적어도 두 가치 사이의 교환이어야 한다.
 
-- 공격, 이동, 등장, 손패 교체 중 하나를 고르면 같은 턴에 다른 Action을 할 수 없다.
+- 한 턴에 여러 카드를 운용할 수 있지만 같은 카드의 MOVE, ATTACK, ACTIVE는 각각 한 번뿐이다.
+- ATTACK을 선언한 카드는 그 턴에 더는 MOVE나 ACTIVE를 사용할 수 없다.
 - 후열은 보호받으며 지배력에 기여하지만 일반공격을 선언할 수 없다.
 - 유닛을 등장시키는 동안에는 그 유닛이 공격하지 못하므로 상대가 진형 변화에 대응할 턴을 얻는다.
-- 손패를 순환하면 당장의 선택지는 바뀌지만, Field를 바꿀 한 번의 행동을 포기한다.
+- Active를 먼저 쓸지 ATTACK으로 행동을 잠글지에 따라 카드별 순서가 달라진다.
 - 높은 공격력은 전투 위협이고 높은 지배력은 더 강한 유닛을 놓을 위치를 만든다.
 
 운보다 선택이 승패에 더 큰 영향을 주되, 덱 순서가 매 판 같은 풀이를 강요하지 않을 만큼의
@@ -68,7 +70,6 @@
 - 각 Field에 현재 합산된 아군 지배력
 - Drop과 Exile의 카드 앞면과 순서
 - Deck, Hand, Drop, Exile의 카드 수
-- 현재 턴 플레이어와 그 턴에 선택한 Action
 - 대기 중인 Active/Reactive Skill과 그 해결 순서
 
 Deck의 순서와 Hand의 내용만 비공개다. 효과가 명시하지 않는 한 자신의 Deck 순서도 볼 수 없다.
@@ -206,7 +207,7 @@ Deck의 순서와 Hand의 내용만 비공개다. 효과가 명시하지 않는 
    않는다.
 6. 리더의 피해를 0으로 둔다.
 7. 리더 이외의 Field와 양쪽 Drop/Exile을 비운다.
-8. 첫 턴 플레이어가 턴을 시작한다. 그 플레이어만 첫 턴의 의무 드로우를 생략한다.
+8. 첫 턴 플레이어가 턴을 시작하고 Deck 맨 위 카드 1장을 자동으로 뽑는다.
 
 교환은 카드 우위를 만들지 않고, 제외한 카드를 즉시 다시 뽑는 문제도 막는다.
 
@@ -216,25 +217,32 @@ Deck의 순서와 Hand의 내용만 비공개다. 효과가 명시하지 않는 
 
 ### 7.1 핵심 리듬
 
-두 플레이어는 자기 턴을 번갈아 진행하며 **한 턴에 여섯 Action 중 정확히 하나만** 선택한다.
-선택한 Action과 연결 Skill을 완전히 해결한 뒤 턴을 끝낸다. 따라서 PLACE로 지배망을 넓히기,
-공격하기, 이동하기, 추가 드로우, 손패 교체가 서로 실제 기회비용이 된다.
+두 플레이어는 자기 턴을 번갈아 진행하며 합법적인 PLACE, MOVE, ATTACK, ACTIVE를 하나씩
+완전히 해결한다. 해결 뒤 다른 합법 행동이 남으면 같은 플레이어가 다음 행동을 고르고, 하나도
+남지 않으면 자동으로 턴을 끝낸다.
 
 ### 7.2 턴 시작
 
 다음 순서를 바꾸지 않는다.
 
-1. 이전 자기 턴이 끝난 뒤 Field에 등장한 카드까지 포함하여 자기 카드의 등장 대기를 해제한다.
-2. 턴 플레이어에 대해 `TURN_STARTED` 사건을 만들고 모든 반응을 해결한다.
-3. 첫 게임 턴이 아니라면 Deck 맨 위 카드 1장을 Hand로 가져오고 `CARD_DRAWN` 사건과 반응을
-   해결한다. 빈 Deck에서 뽑아야 하면 패배한다.
-4. Action 단계로 간다.
+1. 자기 카드의 MOVE, ATTACK, ACTIVE 사용 표시를 초기화한다.
+2. 이전 자기 턴이 끝난 뒤 Field에 등장한 카드까지 포함하여 자기 카드의 등장 대기를 해제한다.
+3. 턴 플레이어에 대해 `TURN_STARTED` 사건을 만들고 모든 반응을 해결한다.
+4. Deck 맨 위 카드 1장을 Hand로 가져오고 `CARD_DRAWN` 사건과 반응을 해결한다. 첫 게임 턴도
+   생략하지 않으며 빈 Deck에서 뽑아야 하면 패배한다.
+5. Action 단계로 간다.
 
 ### 7.3 Action 단계
 
-턴 플레이어는 DRAW, PLACE, MOVE, ATTACK, DISCARD, END_TURN 중 합법적인 하나를 선택해 완전히
-해결한다. 합법적인 다른 Action이 없어도 END_TURN은 항상 선택할 수 있다. 다른 Action이나
-Effect가 해결 중일 때 새 Action을 끼워 넣을 수 없으며, 해결 후 추가 Action을 선택하지 않는다.
+턴 플레이어는 합법적인 PLACE, MOVE, ATTACK, ACTIVE를 하나씩 선택해 완전히 해결한다.
+
+- 첫 게임 턴에는 PLACE와 MOVE만 선택할 수 있다.
+- 같은 카드는 한 턴에 MOVE, ATTACK, ACTIVE를 각각 최대 한 번 사용한다.
+- ATTACK을 사용한 카드는 그 턴에 MOVE와 ACTIVE를 더 사용할 수 없다.
+- 등장 대기 카드는 MOVE, ATTACK, ACTIVE를 사용할 수 없다.
+- 다른 Action이나 Effect 해결 중에는 새 Action을 끼워 넣을 수 없다.
+- 합법적인 PLACE, MOVE, ATTACK, ACTIVE가 하나도 남지 않으면 자동으로 턴을 종료한다.
+- `END_TURN`은 행동이 남아 있어도 턴을 넘길 수 있는 수동 제어다.
 
 행동을 되돌릴 수 있는 확인 창은 선언 전에만 제공한다. 대상 선택, 카드 공개가 끝난
 뒤에는 상대가 허락해도 임의로 되돌리지 않는다.
@@ -275,58 +283,36 @@ Effect가 해결 중일 때 새 Action을 끼워 넣을 수 없으며, 해결 �
 
 ---
 
-## 9. 여섯 Action
+## 9. 선택 Action
 
-모든 Action은 선언 시 필요한 카드, 대상, 목적지를 먼저 고정한다. 기본 결과가 성공하면 연결된
-Active Skill은 출처가 나중에 Field를 떠나도 독립적으로 해결한다. 기본 결과가 불법이 되어
-실패하면 그 Active Skill도 해결하지 않는다.
+모든 Action은 선언 시 필요한 카드, 대상, 목적지를 먼저 고정하며 하나를 완전히 해결한 뒤 다음
+Action을 받는다.
 
-### 9.1 DRAW
+### 9.1 PLACE
 
-선택 Action으로 사용하며, 턴 시작의 의무 드로우와는 별개다.
-
-1. Deck 맨 위 카드 1장을 Hand로 가져오고 `CARD_DRAWN` 사건을 만든다.
-2. 선택적으로 등장 대기가 아닌 아군 Field 카드 중 `activeSkill.action === 'DRAW'`인 카드 1장을
-   출처로 지정할 수 있다. 지정했다면 기본 드로우 뒤 Active Skill을 해결한다.
-3. 출처를 지정하지 않은 일반 DRAW도 합법이다.
-
-빈 Deck에서 DRAW를 선언할 수 없다. 다른 규칙이나 Effect 때문에 반드시 뽑아야 할 때 Deck이
-비어 있으면 패배한다.
-
-### 9.2 PLACE
-
-선택 Action으로 사용한다.
-
-1. Hand의 유닛 1장과 자기 진영의 빈 필드 1개를 고른다.
-2. 선택적으로 등장 대기가 아닌 아군 Field 카드 중 `activeSkill.action === 'PLACE'`인 카드 1장을
-   지원 출처로 지정한다.
-3. 선택한 빈 Field의 합산 지배력이 놓을 유닛의 유효 `cost` 이상인지 확인하고 두 값을
-   선언값으로 고정한다.
-4. 유닛을 선택한 필드에 놓고 등장 대기를 표시한 뒤 `CARD_PLACED` 사건을 만든다.
-5. 지원 출처를 지정했다면 그 출처의 Active Skill을 해결한다. `ACTION_TARGET`은 새로 놓인
-   유닛이다.
-
-새로 등장한 유닛 자신의 Active Skill은 해결하지 않는다. PLACE Active Skill은 이미 Field에서
-다음 유닛의 등장을 지원하는 카드가 사용하는 능력이다.
+1. Hand의 유닛 1장과 자기 진영의 빈 Field 1개를 고른다.
+2. 선택한 빈 Field의 합산 지배력이 놓을 유닛의 유효 `cost` 이상인지 확인한다.
+3. 유닛을 선택한 Field에 놓고 등장 대기를 표시한 뒤 `CARD_PLACED` 사건을 만든다.
 
 빈 Field가 없거나 목표 Field의 합산 지배력이 유효 `cost`보다 낮으면 선언할 수 없다.
 
-### 9.3 MOVE
+### 9.2 MOVE
 
-1. 등장 대기가 아닌 아군 Field 카드 1장과 인접한 자기 빈 필드 1개를 고른다.
-2. 출처를 목적지로 옮긴 뒤 `CARD_MOVED` 사건을 만든다.
-3. `activeSkill.action === 'MOVE'`이면 Active Skill을 해결한다.
+1. 이번 턴에 MOVE하지 않았고 ATTACK하지 않은, 등장 대기가 아닌 아군 Field 카드 1장과 인접한
+   자기 빈 Field 1개를 고른다.
+2. 출처를 목적지로 옮기고 이번 턴 MOVE 사용을 표시한 뒤 `CARD_MOVED` 사건을 만든다.
 
-같은 필드에 머무르기, 다른 카드를 밀기, 좌에서 우로 건너뛰기, 상대 진영으로 이동하기는 모두
+같은 Field에 머무르기, 다른 카드를 밀기, 좌에서 우로 건너뛰기, 상대 진영으로 이동하기는 모두
 불법이다.
 
-### 9.4 ATTACK
+### 9.3 ATTACK
 
-1. 등장 대기가 아니며 공격 가능한 아군 Field 카드 1장을 고른다.
-2. 그 카드의 공격 범위 안에서 합법 대상 1장을 골라 고정한다.
+1. 첫 게임 턴이 아니며 이번 턴에 ATTACK하지 않은, 등장 대기가 아닌 아군 Field 카드 1장을
+   고른다.
+2. 그 카드의 공격 범위 안에서 합법 대상 1장을 골라 고정하고 이번 턴 ATTACK 사용을 표시한다.
 3. `ATTACK_DECLARED` 사건과 그 반응을 먼저 해결한다.
 4. 공격자와 대상이 여전히 합법이면 기본 전투 피해를 해결한다.
-5. `activeSkill.action === 'ATTACK'`이면 Active Skill을 해결한다.
+5. 이 카드는 그 턴에 MOVE와 ACTIVE를 더 사용할 수 없다.
 
 공격 가능 조건과 표적 범위는 다음과 같다.
 
@@ -344,27 +330,21 @@ Active Skill은 출처가 나중에 Field를 떠나도 독립적으로 해결한
 등장 대기가 아닌 후열 카드도 방어자로 공격받았을 때는 반격할 수 있다. 리더 역시 합법 대상으로
 공격받으면 반격한다. 초과 피해는 다른 카드나 리더로 넘어가지 않는다.
 
-### 9.5 DISCARD
+### 9.4 ACTIVE
 
-선택 Action으로 사용한다.
+1. 첫 게임 턴이 아니며 이번 턴에 ACTIVE를 사용하지도 ATTACK하지도 않은, 등장 대기가 아닌
+   아군 Field 카드 1장을 고른다.
+2. Skill Effect에 `ACTION_TARGET`이 있으면 선언 전에 합법 대상을 고정한다. 현재
+   `activeSkill.action === 'ATTACK'`인 Skill은 그 카드의 일반공격 범위 안에서 대상을 고른다.
+3. 이번 턴 ACTIVE 사용을 표시하고 Skill의 Effect를 순서대로 해결한다.
 
-1. Hand의 유닛 1장을 고른다.
-2. 선택적으로 등장 대기가 아닌 아군 Field 카드 중 `activeSkill.action === 'DISCARD'`인 카드
-   1장을 지원 출처로 지정한다.
-3. Hand에서 고른 유닛을 공개하고 자기 Exile로 보낸다.
-4. `CARD_DISCARDED` 사건을 만든다.
-5. 자기 Deck 맨 위 카드 1장을 뽑고 `CARD_DRAWN` 사건을 만든다.
-6. 지원 출처를 지정했다면 그 출처의 Active Skill을 해결한다. `ACTION_TARGET`은 버린 유닛이다.
+ACTIVE는 `activeSkill.action`에 적힌 기본 DRAW, MOVE, ATTACK, DISCARD 또는 END_TURN을 함께
+실행하지 않는다. 이 값은 대상 선택 범위와 Effect 문맥만 정한다.
 
-이는 손패 1장을 다른 1장으로 바꾸는 안전판이지, 카드 수를 늘리는 드로우 엔진이 아니다.
+### 9.5 END_TURN
 
-### 9.6 END_TURN
-
-1. 선택적으로 등장 대기가 아닌 아군 Field 카드 중 `activeSkill.action === 'END_TURN'`인 카드
-   1장을 지정하고 그 Active Skill을 해결한다.
-2. 살아남았다면 다른 Action을 선언하지 않고 턴 종료 절차로 간다.
-
-Active Skill을 해결한 결과 승패가 나면 턴 종료 절차 없이 게임을 끝낸다.
+수동 종료를 선택하거나 합법적인 PLACE, MOVE, ATTACK, ACTIVE가 하나도 남지 않으면 턴 종료
+절차로 간다.
 
 ---
 
@@ -449,22 +429,14 @@ Active Skill/상태에 의해 들어가는 되돌릴 수 없는 격리 구간이
 - 카드 한 장은 Active, Reactive, Passive를 각각 최대 하나만 가진다.
 - `effects`는 배열 순서대로 하나씩 해결한다.
 - 앞 Effect가 실패해도 뒤 Effect는 계속 해결한다.
-- Skill은 별도 자원을 요구하지 않는다. Active는 한 턴에 선택한 연결 Action에서만 실행된다.
+- Skill은 별도 자원을 요구하지 않는다. 한 카드는 자기 턴마다 ACTIVE를 최대 한 번 실행한다.
 - 이미 대기열에 들어간 Skill은 출처가 파괴되어도 해결한다.
 
 ### 12.2 Active Skill
 
-Active Skill은 플레이어가 해당 Action을 실제로 선택했을 때만 실행된다. 카드 위치는 Action별로
-고정한다.
-
-| Action   | Active Skill 출처 존                       |
-| -------- | ------------------------------------------ |
-| DRAW     | 등장 대기가 아닌 Field 카드(선택)          |
-| PLACE    | 새 유닛의 등장을 지원하는 Field 카드(선택) |
-| MOVE     | 이동하는 Field 카드                        |
-| ATTACK   | 공격하는 Field 카드                        |
-| DISCARD  | 손패 순환을 지원하는 Field 카드(선택)      |
-| END_TURN | 등장 대기가 아닌 Field 카드(선택)          |
+Active Skill은 독립 ACTIVE Action을 선택했을 때만 실행된다. 출처는 등장 대기가 아니고 이번 턴에
+ACTIVE나 ATTACK을 사용하지 않은 현재 플레이어의 Field 카드여야 한다. `activeSkill.action`은
+대상 선택 범위와 `ACTION_TARGET` 문맥을 정하지만 해당 기본 Action을 자동 실행하지 않는다.
 
 ### 12.3 Reactive Skill
 
@@ -553,8 +525,8 @@ Reactive Skill 출처를 기준으로 `Trigger.subject`를 판정한다. 생략�
 ### 14.3 ATTACK_DECLARED의 개입
 
 ATTACK은 선언 사건의 반응을 모두 해결한 다음 기본 전투로 간다. 그 사이 공격자가 Field를
-떠나거나 공격 조건을 잃으면 기본 전투와 Active Skill은 모두 실패한다. 대상만 Field를 떠난
-경우 새 대상을 고르지 않고 공격 전체가 실패한다.
+떠나거나 공격 조건을 잃으면 기본 전투가 실패한다. 대상만 Field를 떠난 경우 새 대상을 고르지
+않고 공격 전체가 실패한다.
 
 ---
 
@@ -565,8 +537,8 @@ ATTACK은 선언 사건의 반응을 모두 해결한 다음 기본 전투로 �
 - `SELF`: Skill 출처 카드. 존이 바뀌어도 해결 대기열이 기억한 동일 객체를 가리킨다.
 - `OWNER`: Skill 출처의 조종자.
 - `OPPONENT`: Skill 출처 조종자의 상대.
-- `ACTION_TARGET`: 연결 Action이 고정한 대상. PLACE/MOVE는 행동한 카드, DRAW/END_TURN은
-  행동 플레이어, DISCARD는 버린 카드, ATTACK은 공격 대상이다.
+- `ACTION_TARGET`: ACTIVE 선언 시 고정한 대상. 현재 `activeSkill.action === 'ATTACK'`이면 그
+  카드의 일반공격 범위 안에서 선택한 상대 Field 카드다.
 - `TRIGGER_SOURCE`: 13.2의 사건 원인.
 - `TRIGGER_SUBJECT`: 13.2의 사건 주체. 복합 사건 묶음에 서로 다른 주체가 둘 이상이면 이
   참조를 사용하는 Effect는 실패한다.
@@ -652,15 +624,14 @@ cost의 유닛을 등장시키고 진형을 확장한다. hp는 공격과 지배
 
 ### 18.3 템포와 가치
 
-한 턴에 Action 하나뿐이므로 어느 Field에서 지배망을 확장할지가 중요하다. MOVE는 공격 위치와
-지배력 공급 위치를 동시에 바꾸지만 그 턴의 공격과 PLACE를 포기한다. DISCARD는 손패를
-교체하지만 Field를 바꾸지 못한 채 턴을 넘긴다.
+한 턴에 여러 카드를 운용하므로 카드별 행동 순서와 지배망 확장이 중요하다. MOVE 뒤 ATTACK은
+가능하지만 ATTACK 뒤에는 같은 카드의 MOVE와 ACTIVE가 잠긴다. ACTIVE를 먼저 사용할지 공격
+기회를 먼저 확정할지가 카드별 템포를 만든다.
 
 ### 18.4 공개 반응과 예측
 
 Reactive Skill은 Field에서 공개되어 있다. 상대는 숨겨진 함정에 걸리는 대신, 보이는 반응 순서와
-피해 교환을 계산하고 공격 여부를 정한다. Hand의 불확실성은 새로 PLACE하거나 DISCARD할 카드에
-남는다.
+피해 교환을 계산하고 공격 여부를 정한다. Hand의 불확실성은 새로 PLACE할 카드에 남는다.
 
 ---
 
@@ -733,7 +704,7 @@ Skill 중 하나를 줄인 뒤 대전 검증을 거쳐야 한다.
 수학적으로 최소 15개가 필요하지만, 그 이상은 실제 카드 제작과 대전 검증의 결과로 결정한다.
 
 - 카드 종류는 리더와 유닛으로 고정한다.
-- 새 콘텐츠도 현재 Action, Trigger, Effect, target, 상태 목록만 사용한다.
+- 새 콘텐츠도 현재 카드 선언 `ActionType`, Trigger, Effect, target, 상태 목록만 사용한다.
 - 희귀도에 따른 성능 차이, 팩 전용 규칙, 세트별 신규 메커니즘을 두지 않는다.
 - 카드 수로 다양성 부족을 덮기 전에 중복 역할과 과도한 범용 카드를 먼저 교정한다.
 
@@ -796,15 +767,15 @@ Action, Trigger, Effect, 상태, 존을 추가해 문제를 덮지 않는다.
 ### 22.1 전투 해결
 
 아군 중앙 전열에는 등장 대기가 아닌 화염 기사(`attack 2`, `hp 5`, `dominance 2`)가 있고 상대 중앙
-전열에는 `attack 3`, `hp 4`, `dominance 1` 카드가 있다고 가정한다.
+전열에는 `attack 3`, `hp 6`, `dominance 1` 카드가 있다고 가정한다.
 
-1. 아군이 화염 기사로 ATTACK을 선언한다.
-2. `ATTACK_DECLARED` 반응을 상대 것부터 해결한다.
-3. 양쪽 카드가 남아 있으면 동시에 2와 3의 기본 전투 피해를 준다.
-4. 상태 확인 결과 둘 다 hp 미만의 피해이므로 남는다.
-5. 기본 전투의 `DAMAGE_RECEIVED` 반응을 해결한다. 예시 화염 기사의 반응 피해 1은
+1. 아군이 화염 기사의 ACTIVE를 선언하고 같은 전열의 상대를 `ACTION_TARGET`으로 고정한다.
+2. Active Skill의 DAMAGE 3을 대상에 적용한다.
+3. 아직 같은 턴이며 화염 기사는 ATTACK하지 않았으므로 이어서 그 대상으로 ATTACK을 선언한다.
+4. `ATTACK_DECLARED` 반응을 상대 것부터 해결한다.
+5. 양쪽 카드가 남아 있으면 동시에 2와 3의 기본 전투 피해를 준다.
+6. 기본 전투의 `DAMAGE_RECEIVED` 반응을 해결한다. 예시 화염 기사의 반응 피해 1은
    `TRIGGER_SOURCE`, 즉 기본 전투에서 화염 기사에게 피해를 준 상대 카드에 적용된다.
-6. 예시 Active Skill의 DAMAGE 3을 `ACTION_TARGET`에 적용한다.
 7. 상대 카드는 기본 전투 피해 2, 반응 피해 1, Active Skill 피해 3으로 누적 피해 6이 되어
    파괴되고 Drop으로 간다.
 8. 관련 `CARD_DESTROYED` 반응을 정해진 순서로 해결한다.
@@ -815,7 +786,8 @@ Action, Trigger, Effect, 상태, 존을 추가해 문제를 덮지 않는다.
 
 ### 22.2 종료와 사건 대상
 
-- 양쪽이 END_TURN만 선택해도 각 의무 드로우로 Deck이 한 장 줄고, 손패 제한 카드는 Exile로
+- 양쪽이 수동 END_TURN을 선택하거나 행동이 없어 자동 종료돼도 각 턴의 자동 드로우로 Deck이
+  한 장 줄고, 손패 제한 카드는 Exile로
   이동한다. 게임 준비 이후 어떤 카드도 Deck으로 돌아오지 않으므로 결국 빈 Deck에서 의무
   드로우에 실패한다.
 - 단일 아군 유닛이 파괴됐을 때 다른 아군 카드의 `CARD_DESTROYED + OWNER` Reactive Skill은
@@ -834,7 +806,7 @@ Action, Trigger, Effect, 상태, 존을 추가해 문제를 덮지 않는다.
 
 - 덱을 어떻게 만들고 시작 손을 어떻게 교환하는가?
 - 전열/후열과 좌/중앙/우의 6개 필드가 공격, 보호, 이동, 지배에 어떤 영향을 주는가?
-- 한 턴에 여섯 Action 중 하나를 어떤 순서로 선택하고 해결하는가?
+- 한 턴의 여러 Action을 어떤 순서로 선택하고 카드별 사용 제한을 적용하는가?
 - 각 Field의 합산 지배력이 어떻게 계산되고 어떤 cost의 유닛을 등장시키는가?
 - 유닛과 리더의 피해, 동시 사망, 동시 패배를 어떻게 처리하는가?
 - Active/Reactive/Passive가 언제, 어느 존에서 기능하는가?
@@ -861,5 +833,5 @@ Action, Trigger, Effect, 상태, 존을 추가해 문제를 덮지 않는다.
 - [Pokémon Trading Card Game Rules](https://www.pokemon.com/static-assets/content-assets/cms2/pdf/trading-card-game/rulebook/par_rulebook_en.pdf):
   존, 준비, 시작 손 교환, 승리 조건을 초보자도 실제 플레이 가능한 순서로 제시하는 방식.
 
-이 문서의 12칸 전장, 인접 지배력 등장, 여섯 Action, Drop/Exile 규칙은 Pathfinder TCG의
+이 문서의 12칸 전장, 인접 지배력 등장, 카드별 Action, Drop/Exile 규칙은 Pathfinder TCG의
 현재 카드 선언에 맞춰 정한 독자 코어 규칙이다.

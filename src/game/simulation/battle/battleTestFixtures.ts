@@ -136,6 +136,9 @@ export function moveBattleCardForTest(
   card.damage = 0;
   card.statusIds = [];
   card.isDeploymentPending = false;
+  card.hasMovedThisTurn = false;
+  card.hasAttackedThisTurn = false;
+  card.hasUsedActiveSkillThisTurn = false;
   card.statModifiers = createEmptyStatModifiers();
   card.lastDamageSourceCardId = null;
   const player = state.players[card.ownerId];

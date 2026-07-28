@@ -22,56 +22,54 @@ function freezeAction<T extends BattleAction>(action: T): T {
 
 export function battleActionKey(action: BattleAction): string {
   switch (action.type) {
-    case 'DRAW':
-      return `DRAW:${action.activeSkillSourceCardId ?? ''}`;
     case 'PLACE':
-      return `PLACE:${action.cardId}:${action.fieldPosition}:${
-        action.activeSkillSourceCardId ?? ''
-      }`;
+      return `PLACE:${action.cardId}:${action.fieldPosition}`;
     case 'MOVE':
       return `MOVE:${action.cardId}:${action.fieldPosition}`;
     case 'ATTACK':
       return `ATTACK:${action.cardId}:${action.targetCardId}`;
-    case 'DISCARD':
-      return `DISCARD:${action.cardId}:${action.activeSkillSourceCardId ?? ''}`;
+    case 'ACTIVE':
+      return `ACTIVE:${action.cardId}:${action.targetCardId ?? ''}`;
     case 'END_TURN':
-      return `END_TURN:${action.activeSkillSourceCardId ?? ''}`;
+      return 'END_TURN';
   }
 }
 
-function getEligibleActiveSkillSourceIds(
+function activeSkillRequiresActionTarget(
+  cardDefinitions: readonly CardDefinition[],
+  state: BattleState,
+  cardId: StableId,
+): boolean {
+  const card = getBattleCard(state, cardId);
+  const definition = getCardDefinition(cardDefinitions, card.cardDefinitionId);
+  return (
+    definition.activeSkill?.effects.some((effect) => effect.target === 'ACTION_TARGET') ?? false
+  );
+}
+
+export function getActiveSkillTargetCardIds(
   state: BattleState,
   cardDefinitions: readonly CardDefinition[],
   playerId: BattlePlayerId,
-  actionType: 'DRAW' | 'PLACE' | 'DISCARD' | 'END_TURN',
+  cardId: StableId,
 ): readonly StableId[] {
-  const player = state.players[playerId];
-  const sourceIds: StableId[] = [];
+  const location = locateBattleCard(state, cardId);
+  const card = getBattleCard(state, cardId);
+  const definition = getCardDefinition(cardDefinitions, card.cardDefinitionId);
+  const activeSkill = definition.activeSkill;
 
-  for (const position of BATTLE_FIELD_POSITIONS) {
-    const cardId = player.field[position];
-
-    if (cardId === null) {
-      continue;
-    }
-
-    const card = getBattleCard(state, cardId);
-    const definition = getCardDefinition(cardDefinitions, card.cardDefinitionId);
-
-    if (
-      !card.isDeploymentPending &&
-      definition.activeSkill !== undefined &&
-      definition.activeSkill.action === actionType
-    ) {
-      sourceIds.push(cardId);
-    }
+  if (
+    location.playerId !== playerId ||
+    location.zone !== 'FIELD' ||
+    activeSkill === undefined ||
+    !activeSkillRequiresActionTarget(cardDefinitions, state, cardId)
+  ) {
+    return Object.freeze([]);
   }
 
-  return Object.freeze(sourceIds);
-}
-
-function getActiveSourceVariants(sourceIds: readonly StableId[]): readonly (StableId | null)[] {
-  return Object.freeze([null, ...sourceIds]);
+  return activeSkill.action === 'ATTACK'
+    ? getAttackTargetCardIds(state, cardId)
+    : Object.freeze([]);
 }
 
 export function getLegalPlacementPositions(
@@ -110,20 +108,6 @@ export function getLegalBattleActions(
   const player = state.players[playerId];
   const actions: BattleAction[] = [];
 
-  if (player.drawPileIds.length > 0) {
-    const sourceIds = getEligibleActiveSkillSourceIds(state, cardDefinitions, playerId, 'DRAW');
-
-    for (const sourceId of getActiveSourceVariants(sourceIds)) {
-      actions.push(
-        sourceId === null
-          ? freezeAction({ type: 'DRAW' })
-          : freezeAction({ type: 'DRAW', activeSkillSourceCardId: sourceId }),
-      );
-    }
-  }
-
-  const placeSourceIds = getEligibleActiveSkillSourceIds(state, cardDefinitions, playerId, 'PLACE');
-
   for (const cardId of player.handIds) {
     for (const fieldPosition of getLegalPlacementPositions(
       state,
@@ -131,18 +115,7 @@ export function getLegalBattleActions(
       playerId,
       cardId,
     )) {
-      for (const sourceId of getActiveSourceVariants(placeSourceIds)) {
-        actions.push(
-          sourceId === null
-            ? freezeAction({ type: 'PLACE', cardId, fieldPosition })
-            : freezeAction({
-                type: 'PLACE',
-                cardId,
-                fieldPosition,
-                activeSkillSourceCardId: sourceId,
-              }),
-        );
-      }
+      actions.push(freezeAction({ type: 'PLACE', cardId, fieldPosition }));
     }
   }
 
@@ -159,61 +132,52 @@ export function getLegalBattleActions(
       continue;
     }
 
-    for (const fieldPosition of getAdjacentBattleFields(position)) {
-      if (player.field[fieldPosition] === null) {
-        actions.push(freezeAction({ type: 'MOVE', cardId, fieldPosition }));
+    if (!card.hasMovedThisTurn && !card.hasAttackedThisTurn) {
+      for (const fieldPosition of getAdjacentBattleFields(position)) {
+        if (player.field[fieldPosition] === null) {
+          actions.push(freezeAction({ type: 'MOVE', cardId, fieldPosition }));
+        }
       }
     }
 
-    for (const targetCardId of getAttackTargetCardIds(state, cardId)) {
-      actions.push(freezeAction({ type: 'ATTACK', cardId, targetCardId }));
+    if (state.turnNumber > 1 && !card.hasAttackedThisTurn) {
+      for (const targetCardId of getAttackTargetCardIds(state, cardId)) {
+        actions.push(freezeAction({ type: 'ATTACK', cardId, targetCardId }));
+      }
     }
-  }
 
-  const discardSourceIds = getEligibleActiveSkillSourceIds(
-    state,
-    cardDefinitions,
-    playerId,
-    'DISCARD',
-  );
-
-  for (const cardId of player.handIds) {
-    const card = getBattleCard(state, cardId);
     const definition = getCardDefinition(cardDefinitions, card.cardDefinitionId);
-
-    if (definition.type !== 'UNIT') {
-      continue;
-    }
-
-    for (const sourceId of getActiveSourceVariants(discardSourceIds)) {
-      actions.push(
-        sourceId === null
-          ? freezeAction({ type: 'DISCARD', cardId })
-          : freezeAction({
-              type: 'DISCARD',
-              cardId,
-              activeSkillSourceCardId: sourceId,
-            }),
-      );
+    if (
+      state.turnNumber > 1 &&
+      !card.hasAttackedThisTurn &&
+      !card.hasUsedActiveSkillThisTurn &&
+      definition.activeSkill !== undefined
+    ) {
+      if (activeSkillRequiresActionTarget(cardDefinitions, state, cardId)) {
+        for (const targetCardId of getActiveSkillTargetCardIds(
+          state,
+          cardDefinitions,
+          playerId,
+          cardId,
+        )) {
+          actions.push(freezeAction({ type: 'ACTIVE', cardId, targetCardId }));
+        }
+      } else {
+        actions.push(freezeAction({ type: 'ACTIVE', cardId }));
+      }
     }
   }
 
-  const endTurnSourceIds = getEligibleActiveSkillSourceIds(
-    state,
-    cardDefinitions,
-    playerId,
-    'END_TURN',
-  );
-
-  for (const sourceId of getActiveSourceVariants(endTurnSourceIds)) {
-    actions.push(
-      sourceId === null
-        ? freezeAction({ type: 'END_TURN' })
-        : freezeAction({ type: 'END_TURN', activeSkillSourceCardId: sourceId }),
-    );
-  }
+  actions.push(freezeAction({ type: 'END_TURN' }));
 
   return Object.freeze(actions);
+}
+
+export function hasPlayableBattleActions(
+  state: BattleState,
+  cardDefinitions: readonly CardDefinition[],
+): boolean {
+  return getLegalBattleActions(state, cardDefinitions).some((action) => action.type !== 'END_TURN');
 }
 
 export function isLegalBattleAction(

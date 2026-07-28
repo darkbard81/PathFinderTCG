@@ -75,7 +75,7 @@ export const ENEMY_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 0,
       activeSkill: {
         id: 'enemy-gloam-whisperer-unravel-thought',
-        description: 'DRAW를 선택하면 상대가 손패 1장을 버린다.',
+        description: 'Active 사용 시 상대가 손패 1장을 버린다.',
         type: 'ACTIVE',
         action: 'DRAW',
         effects: [{ type: 'DISCARD', target: 'OPPONENT', count: 1 }],
@@ -168,7 +168,7 @@ export const ENEMY_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 1,
       activeSkill: {
         id: 'enemy-hex-weaver-thorn-bind',
-        description: 'ATTACK을 선택하면 공격 대상의 공격력을 1 낮춘다.',
+        description: 'Active 사용 시 공격 범위 안의 대상 공격력을 1 낮춘다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [
@@ -267,7 +267,7 @@ export const ENEMY_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 2,
       activeSkill: {
         id: 'enemy-moonfang-raider-lunar-gouge',
-        description: 'ATTACK을 선택하면 공격 대상에게 피해 2를 추가로 준다.',
+        description: 'Active 사용 시 공격 범위 안의 대상에게 피해 2를 준다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [{ type: 'DAMAGE', target: 'ACTION_TARGET', amount: 2 }],
@@ -373,7 +373,7 @@ export const ENEMY_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 3,
       activeSkill: {
         id: 'enemy-bloodmoon-blade-red-arc',
-        description: 'ATTACK을 선택하면 공격 대상에게 피해 2를 추가로 준다.',
+        description: 'Active 사용 시 공격 범위 안의 대상에게 피해 2를 준다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [{ type: 'DAMAGE', target: 'ACTION_TARGET', amount: 2 }],
@@ -465,7 +465,7 @@ export const ENEMY_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 1,
       activeSkill: {
         id: 'enemy-void-exiler-cast-beyond',
-        description: 'ATTACK을 선택하면 공격 대상에게 EXILED 상태를 추가한다.',
+        description: 'Active 사용 시 공격 범위 안의 대상에게 EXILED 상태를 추가한다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [{ type: 'ADD_STATUS', target: 'ACTION_TARGET', statusId: 'EXILED' }],

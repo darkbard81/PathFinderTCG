@@ -34,6 +34,9 @@ export interface MutableBattleCardState {
   damage: number;
   statusIds: CardStatusId[];
   isDeploymentPending: boolean;
+  hasMovedThisTurn: boolean;
+  hasAttackedThisTurn: boolean;
+  hasUsedActiveSkillThisTurn: boolean;
   statModifiers: MutableBattleStatModifiers;
   lastDamageSourceCardId: StableId | null;
 }
@@ -53,7 +56,7 @@ export interface MutableBattlePlayerState {
 }
 
 export interface MutableBattleState {
-  schemaVersion: 1;
+  schemaVersion: 2;
   seed: number;
   firstPlayerId: BattlePlayerId;
   activePlayerId: BattlePlayerId;
@@ -183,7 +186,7 @@ export function cloneBattleState(state: BattleState): MutableBattleState {
   });
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     seed: state.seed,
     firstPlayerId: state.firstPlayerId,
     activePlayerId: state.activePlayerId,
@@ -203,6 +206,9 @@ export function cloneBattleState(state: BattleState): MutableBattleState {
       damage: card.damage,
       statusIds: [...card.statusIds],
       isDeploymentPending: card.isDeploymentPending,
+      hasMovedThisTurn: card.hasMovedThisTurn,
+      hasAttackedThisTurn: card.hasAttackedThisTurn,
+      hasUsedActiveSkillThisTurn: card.hasUsedActiveSkillThisTurn,
       statModifiers: { ...card.statModifiers },
       lastDamageSourceCardId: card.lastDamageSourceCardId,
     })),
@@ -264,6 +270,9 @@ function freezeCard(card: MutableBattleCardState): BattleCardState {
     damage: card.damage,
     statusIds: Object.freeze([...card.statusIds]),
     isDeploymentPending: card.isDeploymentPending,
+    hasMovedThisTurn: card.hasMovedThisTurn,
+    hasAttackedThisTurn: card.hasAttackedThisTurn,
+    hasUsedActiveSkillThisTurn: card.hasUsedActiveSkillThisTurn,
     statModifiers: freezeStatModifiers(card.statModifiers),
     lastDamageSourceCardId: card.lastDamageSourceCardId,
   });
@@ -285,7 +294,7 @@ function freezePlayer(player: MutableBattlePlayerState): BattlePlayerState {
 
 export function freezeBattleState(state: MutableBattleState): BattleState {
   return Object.freeze({
-    schemaVersion: 1,
+    schemaVersion: 2,
     seed: state.seed,
     firstPlayerId: state.firstPlayerId,
     activePlayerId: state.activePlayerId,

@@ -109,7 +109,6 @@ export class BattleScene extends Phaser.Scene {
     const commandBar = new PF2eBattleCommandBar(this, {
       width: layout.rootWidth,
       height: layout.battle.commandBarHeight,
-      state,
       speed: this.playbackSpeed,
       volume: 0.8,
       muted: false,
@@ -295,7 +294,7 @@ export class BattleScene extends Phaser.Scene {
     this.pointerController = undefined;
     board.renderState(state);
     handDeck.renderItems(this.createHandItems(state, board));
-    commandBar.setBattleState(state).setStatus(status);
+    commandBar.setStatus(status);
     this.legalActions = this.createLegalActions(state);
     this.bindPointerController(state, layout);
     this.game.canvas.dataset.activePlayer = state.activePlayerId.toLowerCase();

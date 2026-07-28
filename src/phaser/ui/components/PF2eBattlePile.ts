@@ -5,7 +5,7 @@ import type { BattlePlayerId } from '../../../game/simulation/battle/index.js';
 import { PF2E_ELF_THEME } from '../theme/pf2eElfTheme.js';
 import { PF2eSurface } from './PF2eSurface.js';
 
-export type PF2eBattlePileZone = 'DECK' | 'DROP';
+export type PF2eBattlePileZone = 'DECK' | 'DROP' | 'EXILE';
 
 export interface PF2eBattlePileConfig {
   readonly playerId: BattlePlayerId;
@@ -15,7 +15,7 @@ export interface PF2eBattlePileConfig {
 }
 
 /**
- * 전장의 덱 또는 Drop/Exile 상태를 포인터 target으로 표시하는 OverlapSizer다.
+ * 전장의 Deck, Drop 또는 Exile 장수를 표시하는 OverlapSizer다.
  */
 export class PF2eBattlePile extends OverlapSizer {
   readonly playerId: BattlePlayerId;
@@ -33,7 +33,7 @@ export class PF2eBattlePile extends OverlapSizer {
     const titleText = scene.add.text(
       0,
       0,
-      `${config.playerId === 'PLAYER' ? '내' : '적'} ${config.zone === 'DECK' ? 'DECK' : 'DROP'}`,
+      `${config.playerId === 'PLAYER' ? '내' : '적'} ${config.zone}`,
       {
         color: PF2E_ELF_THEME.colors.mutedText,
         fontFamily: PF2E_ELF_THEME.typography.body,
@@ -82,8 +82,8 @@ export class PF2eBattlePile extends OverlapSizer {
     this.add(background, { align: 'center' }).add(content, { align: 'center' });
   }
 
-  setCounts(primary: number, exile = 0): this {
-    this.countText.setText(this.zone === 'DROP' ? `${primary}\nEX ${exile}` : String(primary));
+  setCount(count: number): this {
+    this.countText.setText(String(count));
     return this;
   }
 

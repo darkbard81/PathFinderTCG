@@ -56,12 +56,6 @@ function getCardName(
   return getCardDefinition(cardDefinitions, card.cardDefinitionId).name;
 }
 
-function skillSuffix(action: BattleAction): string {
-  return !('activeSkillSourceCardId' in action) || action.activeSkillSourceCardId === undefined
-    ? ''
-    : ' · Active Skill';
-}
-
 export function formatBattleFieldPosition(position: BattleFieldPosition): string {
   return FIELD_POSITION_LABELS[position];
 }
@@ -107,18 +101,11 @@ export function createBattleActionListItems(
       const id = `battle-action-${index}`;
 
       switch (action.type) {
-        case 'DRAW':
-          return Object.freeze({
-            id,
-            title: `카드 뽑기${skillSuffix(action)}`,
-            detail: `덱 ${state.players[state.activePlayerId].drawPileIds.length}장 · 손 ${state.players[state.activePlayerId].handIds.length}장`,
-            action,
-          });
         case 'PLACE':
           return Object.freeze({
             id,
             title: `${getCardName(state, cardDefinitions, action.cardId)} 배치`,
-            detail: `${formatBattleFieldPosition(action.fieldPosition)}${skillSuffix(action)}`,
+            detail: formatBattleFieldPosition(action.fieldPosition),
             action,
           });
         case 'MOVE':
@@ -135,17 +122,20 @@ export function createBattleActionListItems(
             detail: `대상 · ${getCardName(state, cardDefinitions, action.targetCardId)}`,
             action,
           });
-        case 'DISCARD':
+        case 'ACTIVE':
           return Object.freeze({
             id,
-            title: `${getCardName(state, cardDefinitions, action.cardId)} 버리기`,
-            detail: `손에서 Drop으로 이동${skillSuffix(action)}`,
+            title: `${getCardName(state, cardDefinitions, action.cardId)} Active`,
+            detail:
+              action.targetCardId === undefined
+                ? '대상 없음'
+                : `대상 · ${getCardName(state, cardDefinitions, action.targetCardId)}`,
             action,
           });
         case 'END_TURN':
           return Object.freeze({
             id,
-            title: `턴 종료${skillSuffix(action)}`,
+            title: '턴 종료',
             detail: `${state.activePlayerId === 'PLAYER' ? '내' : '적'} ${state.turnNumber}턴을 마칩니다.`,
             action,
           });

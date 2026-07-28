@@ -11,7 +11,7 @@ export const flameKnight: CardDefinition = {
   attack: 2,
   activeSkill: {
     id: 'flame-strike',
-    description: '공격할 때 공격 대상에게 피해 3을 추가로 준다.',
+    description: 'Active 사용 시 공격 범위 안의 대상에게 피해 3을 준다.',
     type: 'ACTIVE',
     action: 'ATTACK',
     effects: [

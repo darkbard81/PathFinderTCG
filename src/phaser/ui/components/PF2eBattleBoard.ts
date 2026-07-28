@@ -6,6 +6,7 @@ import { TEST_CARD_CATALOG } from '../../../game/content/index.js';
 import type { BattleFieldPosition, CardPresentation, StableId } from '../../../game/data/index.js';
 import {
   BATTLE_FIELD_POSITIONS,
+  getFieldDominance,
   locateBattleCard,
   type BattlePlayerId,
   type BattleState,
@@ -57,10 +58,9 @@ function fieldAbbreviation(position: BattleFieldPosition): string {
   return `${row}·${column}`;
 }
 
-function playerSummary(state: BattleState, playerId: BattlePlayerId): string {
-  const player = state.players[playerId];
-  const label = playerId === 'PLAYER' ? '아군' : '적군';
-  return `${label} · 손 ${player.handIds.length} · 덱 ${player.drawPileIds.length} · Drop ${player.dropIds.length} · Exile ${player.exileIds.length}`;
+function playerSummary(state: BattleState): string {
+  const player = state.players.PLAYER;
+  return `아군 · 손 ${player.handIds.length} · 덱 ${player.drawPileIds.length} · Drop ${player.dropIds.length} · Exile ${player.exileIds.length}`;
 }
 
 function createSummaryText(scene: Phaser.Scene, text: string): Phaser.GameObjects.Text {
@@ -119,11 +119,21 @@ function createFieldArea(
     PF2E_ELF_THEME.components.battleDirect.pileMinimumWidth,
     Math.round(cardWidth * PF2E_ELF_THEME.components.battleDirect.pileWidthRatio),
   );
+  const pileHeight = Math.max(
+    1,
+    Math.floor((height - PF2E_ELF_THEME.components.battleDirect.pileStackGap) / 2),
+  );
   const drop = new PF2eBattlePile(scene, {
     playerId,
     zone: 'DROP',
     width: pileWidth,
-    height,
+    height: pileHeight,
+  });
+  const exile = new PF2eBattlePile(scene, {
+    playerId,
+    zone: 'EXILE',
+    width: pileWidth,
+    height: pileHeight,
   });
   const deck = new PF2eBattlePile(scene, {
     playerId,
@@ -132,7 +142,18 @@ function createFieldArea(
     height,
   });
   pileByKey.set(`${playerId}:DROP`, drop);
+  pileByKey.set(`${playerId}:EXILE`, exile);
   pileByKey.set(`${playerId}:DECK`, deck);
+  const removedZones = new Sizer(scene, {
+    width: pileWidth,
+    height,
+    orientation: 'y',
+    space: {
+      item: PF2E_ELF_THEME.components.battleDirect.pileStackGap,
+    },
+  });
+  scene.add.existing(removedZones);
+  removedZones.add(drop, { expand: true }).add(exile, { expand: true });
   const area = new Sizer(scene, {
     width: width + pileWidth * 2 + theme.zoneGap * 2,
     height,
@@ -142,7 +163,10 @@ function createFieldArea(
     },
   });
   scene.add.existing(area);
-  area.add(drop, { expand: true }).add(grid, { align: 'center' }).add(deck, { expand: true });
+  area
+    .add(removedZones, { expand: true })
+    .add(grid, { align: 'center' })
+    .add(deck, { expand: true });
   return area;
 }
 
@@ -157,9 +181,7 @@ export class PF2eBattleBoard extends Sizer {
   private readonly slotByKey: Map<string, PF2eBattleSlot>;
   private readonly pileByKey: Map<string, PF2eBattlePile>;
   private readonly cardById = new Map<StableId, PF2eCard>();
-  private readonly enemySummaryText: Phaser.GameObjects.Text;
   private readonly playerSummaryText: Phaser.GameObjects.Text;
-  private readonly turnText: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, config: PF2eBattleBoardConfig) {
     const theme = PF2E_ELF_THEME.components.battleBoard;
@@ -170,15 +192,7 @@ export class PF2eBattleBoard extends Sizer {
       width: 2,
       height: 2,
     });
-    const enemySummaryText = createSummaryText(scene, '');
     const playerSummaryText = createSummaryText(scene, '');
-    const turnText = scene.add.text(0, 0, '', {
-      color: PF2E_ELF_THEME.colors.text,
-      fontFamily: PF2E_ELF_THEME.typography.display,
-      fontSize: `${theme.headerFontSize}px`,
-      fontStyle: 'bold',
-      align: 'center',
-    });
     const enemyField = createFieldArea(
       scene,
       'ENEMY',
@@ -215,13 +229,9 @@ export class PF2eBattleBoard extends Sizer {
     this.cardPresentations = config.cardPresentations ?? TEST_CARD_CATALOG.cardPresentations;
     this.slotByKey = slotByKey;
     this.pileByKey = pileByKey;
-    this.enemySummaryText = enemySummaryText;
     this.playerSummaryText = playerSummaryText;
-    this.turnText = turnText;
     this.addBackground(background)
-      .add(enemySummaryText, { align: 'center' })
       .add(enemyField, { align: 'center' })
-      .add(turnText, { align: 'center' })
       .add(playerField, { align: 'center' })
       .add(playerSummaryText, { align: 'center' });
     this.renderState(config.initialState);
@@ -245,21 +255,19 @@ export class PF2eBattleBoard extends Sizer {
   }
 
   renderState(state: BattleState): void {
-    this.enemySummaryText.setText(playerSummary(state, 'ENEMY'));
-    this.playerSummaryText.setText(playerSummary(state, 'PLAYER'));
-    this.turnText.setText(
-      `${state.activePlayerId === 'PLAYER' ? '내 턴' : '적 턴'} · Turn ${state.turnNumber} · Action ${state.actionCount}`,
-    );
+    this.playerSummaryText.setText(playerSummary(state));
     for (const playerId of ['ENEMY', 'PLAYER'] as const) {
       const player = state.players[playerId];
-      this.requirePile(playerId, 'DECK').setCounts(player.drawPileIds.length);
-      this.requirePile(playerId, 'DROP').setCounts(player.dropIds.length, player.exileIds.length);
+      this.requirePile(playerId, 'DECK').setCount(player.drawPileIds.length);
+      this.requirePile(playerId, 'DROP').setCount(player.dropIds.length);
+      this.requirePile(playerId, 'EXILE').setCount(player.exileIds.length);
     }
 
     const detachedCards = new Map<StableId, PF2eCard>();
     for (const playerId of ['ENEMY', 'PLAYER'] as const) {
       for (const position of BATTLE_FIELD_POSITIONS) {
         const slot = this.requireSlot(playerId, position);
+        slot.setDominance(getFieldDominance(state, this.cardDefinitions, playerId, position));
         const desiredCardId = state.players[playerId].field[position];
         const current = slot.currentCard;
 
@@ -324,19 +332,17 @@ export class PF2eBattleBoard extends Sizer {
       return Object.freeze({ x: slot.x, y: slot.y });
     }
 
-    const summary = location.playerId === 'PLAYER' ? this.playerSummaryText : this.enemySummaryText;
-    const horizontalOffset =
-      location.zone === 'DECK'
-        ? this.width * 0.27
-        : location.zone === 'DROP'
-          ? -this.width * 0.27
-          : location.zone === 'EXILE'
-            ? -this.width * 0.38
-            : 0;
+    if (location.zone === 'DECK' || location.zone === 'DROP' || location.zone === 'EXILE') {
+      const pile = this.requirePile(location.playerId, location.zone);
+      return Object.freeze({ x: pile.x, y: pile.y });
+    }
 
     return Object.freeze({
-      x: summary.x + horizontalOffset,
-      y: summary.y,
+      x: location.playerId === 'PLAYER' ? this.playerSummaryText.x : this.x,
+      y:
+        location.playerId === 'PLAYER'
+          ? this.playerSummaryText.y
+          : this.y - this.height / 2 + PF2E_ELF_THEME.components.battleBoard.handInset,
     });
   }
 
@@ -352,7 +358,7 @@ export class PF2eBattleBoard extends Sizer {
     return Object.freeze([...this.slotByKey.values()]);
   }
 
-  getPile(playerId: BattlePlayerId, zone: 'DECK' | 'DROP'): PF2eBattlePile {
+  getPile(playerId: BattlePlayerId, zone: 'DECK' | 'DROP' | 'EXILE'): PF2eBattlePile {
     return this.requirePile(playerId, zone);
   }
 
@@ -413,7 +419,7 @@ export class PF2eBattleBoard extends Sizer {
     return slot;
   }
 
-  private requirePile(playerId: BattlePlayerId, zone: 'DECK' | 'DROP'): PF2eBattlePile {
+  private requirePile(playerId: BattlePlayerId, zone: 'DECK' | 'DROP' | 'EXILE'): PF2eBattlePile {
     const pile = this.pileByKey.get(`${playerId}:${zone}`);
     if (pile === undefined) {
       throw new Error(`전투 pile을 찾을 수 없습니다: ${playerId}:${zone}`);

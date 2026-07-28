@@ -1,10 +1,4 @@
-import type {
-  ActionType,
-  CardDefinition,
-  Effect,
-  StatType,
-  TriggerType,
-} from '../../cards/card.js';
+import type { CardDefinition, Effect, StatType, TriggerType } from '../../cards/card.js';
 import type {
   BattleCardSource,
   BattleDeck,
@@ -26,15 +20,6 @@ export const BATTLE_FIELD_POSITIONS = [
   'BACK_RIGHT',
 ] as const satisfies readonly BattleFieldPosition[];
 
-export const BATTLE_ACTION_TYPES = [
-  'DRAW',
-  'PLACE',
-  'MOVE',
-  'ATTACK',
-  'DISCARD',
-  'END_TURN',
-] as const satisfies readonly ActionType[];
-
 export interface BattleStatModifiers {
   readonly ATTACK: number;
   readonly HEALTH: number;
@@ -50,6 +35,9 @@ export interface BattleCardState {
   readonly damage: number;
   readonly statusIds: readonly CardStatusId[];
   readonly isDeploymentPending: boolean;
+  readonly hasMovedThisTurn: boolean;
+  readonly hasAttackedThisTurn: boolean;
+  readonly hasUsedActiveSkillThisTurn: boolean;
   readonly statModifiers: BattleStatModifiers;
   readonly lastDamageSourceCardId: StableId | null;
 }
@@ -92,16 +80,21 @@ export type BattleResult =
 
 export type BattlePhase = 'ACTION' | 'ENDED';
 
+export type BattleActionType = 'PLACE' | 'MOVE' | 'ATTACK' | 'ACTIVE' | 'END_TURN';
+
+export const BATTLE_ACTION_TYPES = [
+  'PLACE',
+  'MOVE',
+  'ATTACK',
+  'ACTIVE',
+  'END_TURN',
+] as const satisfies readonly BattleActionType[];
+
 export type BattleAction =
-  | {
-      readonly type: 'DRAW';
-      readonly activeSkillSourceCardId?: StableId;
-    }
   | {
       readonly type: 'PLACE';
       readonly cardId: StableId;
       readonly fieldPosition: BattleFieldPosition;
-      readonly activeSkillSourceCardId?: StableId;
     }
   | {
       readonly type: 'MOVE';
@@ -114,17 +107,16 @@ export type BattleAction =
       readonly targetCardId: StableId;
     }
   | {
-      readonly type: 'DISCARD';
+      readonly type: 'ACTIVE';
       readonly cardId: StableId;
-      readonly activeSkillSourceCardId?: StableId;
+      readonly targetCardId?: StableId;
     }
   | {
       readonly type: 'END_TURN';
-      readonly activeSkillSourceCardId?: StableId;
     };
 
 export interface BattleState {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly seed: number;
   readonly firstPlayerId: BattlePlayerId;
   readonly activePlayerId: BattlePlayerId;

@@ -20,7 +20,7 @@ export default defineConfig(({ isPreview, mode }) => {
             }),
           ],
     build: {
-      chunkSizeWarningLimit: 2500,
+      chunkSizeWarningLimit: 3500,
     },
     server: {
       allowedHosts: ['mcp.krdp.ddns.net'],

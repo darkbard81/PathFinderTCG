@@ -434,6 +434,7 @@ describe('Phase 6 BattlePresentationController', () => {
       'enemy-crimson-duelist',
     );
     const combatState = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, defenderId, 'FIELD', 'FRONT_CENTER');
     });

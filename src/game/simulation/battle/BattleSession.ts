@@ -16,6 +16,7 @@ import { validateBattleDeck } from '../../data/validation.js';
 import {
   battleActionKey,
   getLegalBattleActions,
+  hasPlayableBattleActions,
   isAttackStillLegal,
   isLegalBattleAction,
 } from './rules.js';
@@ -55,6 +56,7 @@ import {
 const UINT32_MAX = 0xffff_ffff;
 const STARTING_HAND_SIZE = 5;
 const MAXIMUM_HAND_SIZE = 7;
+const MAXIMUM_AUTOMATIC_TURN_ADVANCES = 128;
 
 export class InvalidBattleSetupError extends Error {
   constructor(message: string) {
@@ -181,6 +183,9 @@ function createMutableCards(deck: BattleDeck, ownerId: BattlePlayerId): MutableB
     damage: 0,
     statusIds: [],
     isDeploymentPending: false,
+    hasMovedThisTurn: false,
+    hasAttackedThisTurn: false,
+    hasUsedActiveSkillThisTurn: false,
     statModifiers: createEmptyStatModifiers(),
     lastDamageSourceCardId: null,
   }));
@@ -268,7 +273,7 @@ function createUnstartedBattleState(setup: BattleSetup): BattleState {
 
   const firstPlayerId = setup.firstPlayerId ?? 'PLAYER';
   const mutable: MutableBattleState = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     seed: setup.seed,
     firstPlayerId,
     activePlayerId: firstPlayerId,
@@ -389,7 +394,14 @@ class BattleResolver {
   }
 
   startInitialTurn(): void {
-    this.beginTurn(true);
+    this.beginTurn(false);
+
+    if (
+      this.state.result.type === 'ONGOING' &&
+      !hasPlayableBattleActions(this.snapshot(), this.cardDefinitions)
+    ) {
+      this.finishTurn();
+    }
   }
 
   resolve(action: BattleAction): ActionResolution {
@@ -420,7 +432,11 @@ class BattleResolver {
       this.resolveSelectedAction(action, actionChain);
     }
 
-    if (this.state.result.type === 'ONGOING') {
+    if (
+      this.state.result.type === 'ONGOING' &&
+      (action.type === 'END_TURN' ||
+        !hasPlayableBattleActions(this.snapshot(), this.cardDefinitions))
+    ) {
       this.finishTurn();
     }
 
@@ -494,21 +510,15 @@ class BattleResolver {
       case 'PLACE':
       case 'MOVE':
       case 'ATTACK':
-      case 'DISCARD':
+      case 'ACTIVE':
         return cardRef(action.cardId);
-      case 'DRAW':
       case 'END_TURN':
-        return action.activeSkillSourceCardId === undefined
-          ? playerRef(playerId)
-          : cardRef(action.activeSkillSourceCardId);
+        return playerRef(playerId);
     }
   }
 
   private resolveSelectedAction(action: BattleAction, chain: ReactionChain): void {
     switch (action.type) {
-      case 'DRAW':
-        this.resolveDrawAction(action, chain);
-        break;
       case 'PLACE':
         this.resolvePlaceAction(action, chain);
         break;
@@ -518,29 +528,23 @@ class BattleResolver {
       case 'ATTACK':
         this.resolveAttackAction(action, chain);
         break;
-      case 'DISCARD':
-        this.resolveDiscardAction(action, chain);
+      case 'ACTIVE':
+        this.resolveActiveAction(action, chain);
         break;
       case 'END_TURN':
-        this.resolveEndTurnAction(action, chain);
         break;
     }
   }
 
   private captureActiveSkill(
-    sourceCardId: StableId | undefined,
-    expectedAction: ActiveSkill['action'],
-    actionTarget: BattleEntityRef,
-  ): SkillInvocation | null {
-    if (sourceCardId === undefined) {
-      return null;
-    }
-
+    sourceCardId: StableId,
+    actionTarget: BattleEntityRef | null,
+  ): SkillInvocation {
     const card = this.mutableCard(sourceCardId);
     const definition = getCardDefinition(this.cardDefinitions, card.cardDefinitionId);
     const skill = definition.activeSkill;
 
-    if (skill === undefined || skill.action !== expectedAction) {
+    if (skill === undefined) {
       throw new Error(`합법 Action의 Active Skill 출처가 유효하지 않습니다: ${sourceCardId}`);
     }
 
@@ -553,33 +557,11 @@ class BattleResolver {
     };
   }
 
-  private resolveDrawAction(
-    action: Extract<BattleAction, { readonly type: 'DRAW' }>,
-    chain: ReactionChain,
-  ): void {
-    const playerId = this.state.activePlayerId;
-    const invocation = this.captureActiveSkill(
-      action.activeSkillSourceCardId,
-      'DRAW',
-      playerRef(playerId),
-    );
-    this.runDrawStep('action:DRAW', playerId, 1, playerRef(playerId), chain);
-
-    if (invocation !== null && this.state.result.type === 'ONGOING') {
-      this.resolveSkill(invocation, chain);
-    }
-  }
-
   private resolvePlaceAction(
     action: Extract<BattleAction, { readonly type: 'PLACE' }>,
     chain: ReactionChain,
   ): void {
     const playerId = this.state.activePlayerId;
-    const invocation = this.captureActiveSkill(
-      action.activeSkillSourceCardId,
-      'PLACE',
-      cardRef(action.cardId),
-    );
     this.runAtomic('action:PLACE', chain, () => {
       this.moveCardToZone(action.cardId, 'FIELD', action.fieldPosition);
       return [
@@ -594,10 +576,6 @@ class BattleResolver {
         }),
       ];
     });
-
-    if (invocation !== null && this.state.result.type === 'ONGOING') {
-      this.resolveSkill(invocation, chain);
-    }
   }
 
   private resolveMoveAction(
@@ -605,7 +583,6 @@ class BattleResolver {
     chain: ReactionChain,
   ): void {
     const card = this.mutableCard(action.cardId);
-    const definition = getCardDefinition(this.cardDefinitions, card.cardDefinitionId);
     const location = locateBattleCard(this.state, action.cardId);
 
     if (location.fieldPosition === null) {
@@ -613,12 +590,9 @@ class BattleResolver {
     }
 
     const from = location.fieldPosition;
-    const invocation =
-      definition.activeSkill?.action === 'MOVE'
-        ? this.captureActiveSkill(action.cardId, 'MOVE', cardRef(action.cardId))
-        : null;
     this.runAtomic('action:MOVE', chain, () => {
       this.moveCardWithinField(action.cardId, action.fieldPosition);
+      card.hasMovedThisTurn = true;
       return [
         Object.freeze({
           type: 'MOVE',
@@ -632,10 +606,6 @@ class BattleResolver {
         }),
       ];
     });
-
-    if (invocation !== null && this.state.result.type === 'ONGOING') {
-      this.resolveSkill(invocation, chain);
-    }
   }
 
   private resolveAttackAction(
@@ -643,22 +613,20 @@ class BattleResolver {
     chain: ReactionChain,
   ): void {
     const attacker = this.mutableCard(action.cardId);
-    const definition = getCardDefinition(this.cardDefinitions, attacker.cardDefinitionId);
-    const invocation =
-      definition.activeSkill?.action === 'ATTACK'
-        ? this.captureActiveSkill(action.cardId, 'ATTACK', cardRef(action.targetCardId))
-        : null;
 
-    this.runAtomic('action:ATTACK:declared', chain, () => [
-      Object.freeze({
-        type: 'ATTACK_DECLARED',
-        triggerType: 'ATTACK_DECLARED',
-        subject: cardRef(action.cardId),
-        source: cardRef(action.cardId),
-        attackerCardId: action.cardId,
-        targetCardId: action.targetCardId,
-      }),
-    ]);
+    this.runAtomic('action:ATTACK:declared', chain, () => {
+      attacker.hasAttackedThisTurn = true;
+      return [
+        Object.freeze({
+          type: 'ATTACK_DECLARED',
+          triggerType: 'ATTACK_DECLARED',
+          subject: cardRef(action.cardId),
+          source: cardRef(action.cardId),
+          attackerCardId: action.cardId,
+          targetCardId: action.targetCardId,
+        }),
+      ];
+    });
 
     if (
       this.state.result.type !== 'ONGOING' ||
@@ -682,51 +650,22 @@ class BattleResolver {
     }
 
     this.runCombatDamage(action.cardId, action.targetCardId, chain);
-
-    if (invocation !== null && this.state.result.type === 'ONGOING') {
-      this.resolveSkill(invocation, chain);
-    }
   }
 
-  private resolveDiscardAction(
-    action: Extract<BattleAction, { readonly type: 'DISCARD' }>,
+  private resolveActiveAction(
+    action: Extract<BattleAction, { readonly type: 'ACTIVE' }>,
     chain: ReactionChain,
   ): void {
-    const playerId = this.state.activePlayerId;
+    const source = this.mutableCard(action.cardId);
     const invocation = this.captureActiveSkill(
-      action.activeSkillSourceCardId,
-      'DISCARD',
-      cardRef(action.cardId),
+      action.cardId,
+      action.targetCardId === undefined ? null : cardRef(action.targetCardId),
     );
-    this.runDiscardStep(
-      'action:DISCARD:discard',
-      playerId,
-      [action.cardId],
-      cardRef(action.cardId),
-      chain,
-    );
-
+    this.runAtomic('action:ACTIVE:used', chain, () => {
+      source.hasUsedActiveSkillThisTurn = true;
+      return Object.freeze([]);
+    });
     if (this.state.result.type === 'ONGOING') {
-      this.runDrawStep('action:DISCARD:draw', playerId, 1, cardRef(action.cardId), chain);
-    }
-
-    if (invocation !== null && this.state.result.type === 'ONGOING') {
-      this.resolveSkill(invocation, chain);
-    }
-  }
-
-  private resolveEndTurnAction(
-    action: Extract<BattleAction, { readonly type: 'END_TURN' }>,
-    chain: ReactionChain,
-  ): void {
-    const playerId = this.state.activePlayerId;
-    const invocation = this.captureActiveSkill(
-      action.activeSkillSourceCardId,
-      'END_TURN',
-      playerRef(playerId),
-    );
-
-    if (invocation !== null) {
       this.resolveSkill(invocation, chain);
     }
   }
@@ -849,26 +788,46 @@ class BattleResolver {
   }
 
   private finishTurn(): void {
-    const endingPlayerId = this.state.activePlayerId;
-    const turnEndChain = createReactionChain();
-    this.runAtomic('rule:turn:end', turnEndChain, () => [
-      Object.freeze({
-        type: 'TURN_ENDED',
-        triggerType: 'TURN_ENDED',
-        subject: playerRef(endingPlayerId),
-        source: playerRef(endingPlayerId),
-        playerId: endingPlayerId,
-      }),
-    ]);
+    let automaticAdvanceCount = 0;
 
-    if (this.state.result.type !== 'ONGOING') {
-      return;
-    }
+    while (this.state.result.type === 'ONGOING') {
+      const endingPlayerId = this.state.activePlayerId;
+      const turnEndChain = createReactionChain();
+      this.runAtomic('rule:turn:end', turnEndChain, () => [
+        Object.freeze({
+          type: 'TURN_ENDED',
+          triggerType: 'TURN_ENDED',
+          subject: playerRef(endingPlayerId),
+          source: playerRef(endingPlayerId),
+          playerId: endingPlayerId,
+        }),
+      ]);
 
-    this.enforceHandLimit(endingPlayerId);
+      if (this.state.result.type !== 'ONGOING') {
+        return;
+      }
 
-    if (this.state.result.type === 'ONGOING') {
+      this.enforceHandLimit(endingPlayerId);
+
+      if (this.state.result.type !== 'ONGOING') {
+        return;
+      }
+
       this.beginTurn(false, true);
+
+      if (
+        this.state.result.type !== 'ONGOING' ||
+        hasPlayableBattleActions(this.snapshot(), this.cardDefinitions)
+      ) {
+        return;
+      }
+
+      automaticAdvanceCount += 1;
+      if (automaticAdvanceCount >= MAXIMUM_AUTOMATIC_TURN_ADVANCES) {
+        throw new Error(
+          `${MAXIMUM_AUTOMATIC_TURN_ADVANCES}회 연속으로 합법 Action이 없어 자동 턴 종료를 중단했습니다.`,
+        );
+      }
     }
   }
 
@@ -917,6 +876,16 @@ class BattleResolver {
 
       const player = this.state.players[nextPlayerId];
       const readyCardIds: StableId[] = [];
+
+      for (const card of this.state.cards) {
+        if (card.ownerId !== nextPlayerId) {
+          continue;
+        }
+
+        card.hasMovedThisTurn = false;
+        card.hasAttackedThisTurn = false;
+        card.hasUsedActiveSkillThisTurn = false;
+      }
 
       for (const position of BATTLE_FIELD_POSITIONS) {
         const cardId = player.field[position];
@@ -1011,6 +980,9 @@ class BattleResolver {
     card.damage = 0;
     card.statusIds = [];
     card.isDeploymentPending = false;
+    card.hasMovedThisTurn = false;
+    card.hasAttackedThisTurn = false;
+    card.hasUsedActiveSkillThisTurn = false;
     card.statModifiers = createEmptyStatModifiers();
     card.lastDamageSourceCardId = null;
   }
@@ -2080,7 +2052,7 @@ function assertRestorableBattleState(
   assertUniqueDefinitionIds(cardDefinitions);
 
   if (
-    state.schemaVersion !== 1 ||
+    state.schemaVersion !== 2 ||
     !Number.isInteger(state.turnNumber) ||
     state.turnNumber < 1 ||
     !Number.isInteger(state.actionCount) ||
@@ -2110,6 +2082,9 @@ function assertRestorableBattleState(
       !Number.isInteger(card.statModifiers.HEALTH) ||
       !Number.isInteger(card.statModifiers.COST) ||
       !Number.isInteger(card.statModifiers.DOMINANCE) ||
+      typeof card.hasMovedThisTurn !== 'boolean' ||
+      typeof card.hasAttackedThisTurn !== 'boolean' ||
+      typeof card.hasUsedActiveSkillThisTurn !== 'boolean' ||
       new Set(card.statusIds).size !== card.statusIds.length ||
       card.statusIds.some((statusId) => statusId !== 'EXILED')
     ) {

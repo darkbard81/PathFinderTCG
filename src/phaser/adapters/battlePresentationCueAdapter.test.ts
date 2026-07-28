@@ -301,6 +301,7 @@ describe('Phase 6 battle presentation cue adapter', () => {
       'enemy-crimson-duelist',
     );
     const combatState = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, defenderId, 'FIELD', 'FRONT_CENTER');
     });
@@ -345,6 +346,7 @@ describe('Phase 6 battle presentation cue adapter', () => {
       'enemy-crimson-duelist',
     );
     const combatState = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, defenderId, 'FIELD', 'FRONT_CENTER');
       const defender = mutable.cards.find((card) => card.id === defenderId);

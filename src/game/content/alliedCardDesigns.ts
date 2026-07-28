@@ -14,7 +14,7 @@ export const ALLIED_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 0,
       activeSkill: {
         id: 'allied-leader-aelira-sunlit-command',
-        description: 'DRAW를 선택하면 기본 드로우 뒤 카드 1장을 추가로 뽑는다.',
+        description: 'Active 사용 시 카드 1장을 뽑는다.',
         type: 'ACTIVE',
         action: 'DRAW',
         effects: [{ type: 'DRAW', target: 'OWNER', count: 1 }],
@@ -75,7 +75,7 @@ export const ALLIED_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 0,
       activeSkill: {
         id: 'allied-dawn-scribe-living-chronicle',
-        description: 'DRAW를 선택하면 기본 드로우 뒤 카드 1장을 추가로 뽑는다.',
+        description: 'Active 사용 시 카드 1장을 뽑는다.',
         type: 'ACTIVE',
         action: 'DRAW',
         effects: [{ type: 'DRAW', target: 'OWNER', count: 1 }],
@@ -161,7 +161,7 @@ export const ALLIED_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 1,
       activeSkill: {
         id: 'allied-pollen-saboteur-blinding-cloud',
-        description: 'DISCARD를 선택하면 상대가 손패 1장을 버린다.',
+        description: 'Active 사용 시 상대가 손패 1장을 버린다.',
         type: 'ACTIVE',
         action: 'DISCARD',
         effects: [{ type: 'DISCARD', target: 'OPPONENT', count: 1 }],
@@ -253,7 +253,7 @@ export const ALLIED_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 3,
       activeSkill: {
         id: 'allied-gleam-lancer-piercing-ray',
-        description: 'ATTACK을 선택하면 공격 대상에게 피해 1을 추가로 준다.',
+        description: 'Active 사용 시 공격 범위 안의 대상에게 피해 1을 준다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [{ type: 'DAMAGE', target: 'ACTION_TARGET', amount: 1 }],
@@ -352,7 +352,7 @@ export const ALLIED_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 3,
       activeSkill: {
         id: 'allied-solar-blade-corona-cut',
-        description: 'ATTACK을 선택하면 공격 대상에게 피해 2를 추가로 준다.',
+        description: 'Active 사용 시 공격 범위 안의 대상에게 피해 2를 준다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [{ type: 'DAMAGE', target: 'ACTION_TARGET', amount: 2 }],
@@ -451,7 +451,7 @@ export const ALLIED_CARD_DESIGNS: readonly CardDesignRecord[] = Object.freeze([
       attack: 2,
       activeSkill: {
         id: 'allied-twilight-exiler-sever-from-dawn',
-        description: 'ATTACK을 선택하면 공격 대상에게 EXILED 상태를 추가한다.',
+        description: 'Active 사용 시 공격 범위 안의 대상에게 EXILED 상태를 추가한다.',
         type: 'ACTIVE',
         action: 'ATTACK',
         effects: [{ type: 'ADD_STATUS', target: 'ACTION_TARGET', statusId: 'EXILED' }],

@@ -1,10 +1,14 @@
 /**
  * 카드 정의에서 사용하는 선언 전용 도메인 타입이다.
  *
- * Action -> ActiveSkill -> Effect 흐름과,
+ * ActiveSkill의 Action 문맥 -> ActiveSkill -> Effect 흐름과,
  * Event -> Trigger -> ReactiveSkill -> Effect 흐름을 구분한다.
  */
 
+/**
+ * Active Skill의 대상 선택 범위와 Effect 문맥을 선언하는 기존 종류다.
+ * 실제 플레이어 행동인 `BattleActionType`과는 별도 계약이다.
+ */
 export type ActionType = 'DRAW' | 'PLACE' | 'MOVE' | 'ATTACK' | 'DISCARD' | 'END_TURN';
 
 export const TriggerType = {
@@ -125,7 +129,10 @@ interface SkillBase {
   readonly effects: readonly Effect[];
 }
 
-/** 플레이어가 선택한 Action으로 실행하는 카드 규칙이다. */
+/**
+ * 플레이어가 독립 ACTIVE Action으로 실행하는 카드 규칙이다.
+ * `action`은 대상 선택 범위와 Effect 문맥을 정하며 해당 기본 Action 자체를 함께 실행하지 않는다.
+ */
 export interface ActiveSkill extends SkillBase {
   readonly type: 'ACTIVE';
   readonly action: ActionType;

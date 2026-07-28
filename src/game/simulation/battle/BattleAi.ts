@@ -40,8 +40,7 @@ export const STAGE_ONE_AI_SCORES = Object.freeze({
   projectedDominance: 100,
   placedCardCost: 50,
   moveOpensRoute: 300,
-  draw: 200,
-  discard: 50,
+  active: 200,
   endTurn: 0,
 } as const);
 
@@ -55,8 +54,7 @@ export interface BattleAiScoreBreakdown {
   readonly projectedDominance: number;
   readonly placedCardCost: number;
   readonly moveOpensRoute: number;
-  readonly draw: number;
-  readonly discard: number;
+  readonly active: number;
   readonly endTurn: number;
 }
 
@@ -135,8 +133,7 @@ function sumBreakdown(breakdown: BattleAiScoreBreakdown): number {
     breakdown.projectedDominance +
     breakdown.placedCardCost +
     breakdown.moveOpensRoute +
-    breakdown.draw +
-    breakdown.discard +
+    breakdown.active +
     breakdown.endTurn
   );
 }
@@ -195,8 +192,7 @@ export function scoreBattleAiAction(
   let projectedDominance = 0;
   let placedCardCost = 0;
   let moveRoute = 0;
-  let draw = 0;
-  let discard = 0;
+  let active = 0;
   let endTurn = 0;
 
   switch (action.type) {
@@ -218,11 +214,8 @@ export function scoreBattleAiAction(
         ? STAGE_ONE_AI_SCORES.moveOpensRoute
         : 0;
       break;
-    case 'DRAW':
-      draw = STAGE_ONE_AI_SCORES.draw;
-      break;
-    case 'DISCARD':
-      discard = STAGE_ONE_AI_SCORES.discard;
+    case 'ACTIVE':
+      active = STAGE_ONE_AI_SCORES.active;
       break;
     case 'END_TURN':
       endTurn = STAGE_ONE_AI_SCORES.endTurn;
@@ -242,8 +235,7 @@ export function scoreBattleAiAction(
     projectedDominance,
     placedCardCost,
     moveOpensRoute: moveRoute,
-    draw,
-    discard,
+    active,
     endTurn,
   });
 
@@ -267,8 +259,13 @@ function getActionFieldPosition(
       const location = locateBattleCard(state, action.targetCardId);
       return location.fieldPosition;
     }
-    case 'DRAW':
-    case 'DISCARD':
+    case 'ACTIVE': {
+      if (action.targetCardId === undefined) {
+        return null;
+      }
+      const location = locateBattleCard(state, action.targetCardId);
+      return location.fieldPosition;
+    }
     case 'END_TURN':
       return null;
   }
@@ -285,12 +282,10 @@ function getActionCardDefinitionId(
     case 'PLACE':
     case 'MOVE':
     case 'ATTACK':
-    case 'DISCARD':
+    case 'ACTIVE':
       cardId = action.cardId;
       break;
-    case 'DRAW':
     case 'END_TURN':
-      cardId = action.activeSkillSourceCardId;
       break;
   }
 
@@ -351,8 +346,13 @@ export function getScoredBattleAiActions(
   state: BattleState,
   cardDefinitions: readonly CardDefinition[],
 ): readonly ScoredBattleAction[] {
+  const legalActions = getLegalBattleActions(state, cardDefinitions);
+  const candidates = legalActions.some((action) => action.type !== 'END_TURN')
+    ? legalActions.filter((action) => action.type !== 'END_TURN')
+    : legalActions;
+
   return Object.freeze(
-    getLegalBattleActions(state, cardDefinitions)
+    candidates
       .map((action) => scoreBattleAiAction(state, cardDefinitions, action))
       .sort((left, right) => compareScoredActions(state, cardDefinitions, left, right)),
   );

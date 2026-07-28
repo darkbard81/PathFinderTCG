@@ -46,27 +46,13 @@ function replaceDefinition(
 describe('Phase 5 deterministic rule-based AI', () => {
   it('uses the approved Stage 01 profile and exact base Action score constants', () => {
     const fixture = createPhaseFiveBattleFixture();
-    const state = fixture.session.getState();
+    const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
+    });
     const actions = getLegalBattleActions(state, fixture.cardDefinitions);
     const placeAction = requireAction(actions, 'PLACE');
-    const drawAction = requireAction(
-      actions.filter(
-        (action) => action.type !== 'DRAW' || action.activeSkillSourceCardId === undefined,
-      ),
-      'DRAW',
-    );
-    const discardAction = requireAction(
-      actions.filter(
-        (action) => action.type !== 'DISCARD' || action.activeSkillSourceCardId === undefined,
-      ),
-      'DISCARD',
-    );
-    const endTurnAction = requireAction(
-      actions.filter(
-        (action) => action.type !== 'END_TURN' || action.activeSkillSourceCardId === undefined,
-      ),
-      'END_TURN',
-    );
+    const activeAction = requireAction(actions, 'ACTIVE');
+    const endTurnAction = requireAction(actions, 'END_TURN');
     const placeScore = scoreBattleAiAction(state, fixture.cardDefinitions, placeAction);
     const dominanceIncrease = Math.max(
       0,
@@ -86,11 +72,8 @@ describe('Phase 5 deterministic rule-based AI', () => {
     expect(placeScore.breakdown.place).toBe(400);
     expect(placeScore.breakdown.projectedDominance).toBe(dominanceIncrease * 100);
     expect(placeScore.breakdown.placedCardCost).toBe(placedCost * 50);
-    expect(scoreBattleAiAction(state, fixture.cardDefinitions, drawAction).score).toBe(
-      STAGE_ONE_AI_SCORES.draw,
-    );
-    expect(scoreBattleAiAction(state, fixture.cardDefinitions, discardAction).score).toBe(
-      STAGE_ONE_AI_SCORES.discard,
+    expect(scoreBattleAiAction(state, fixture.cardDefinitions, activeAction).score).toBe(
+      STAGE_ONE_AI_SCORES.active,
     );
     expect(scoreBattleAiAction(state, fixture.cardDefinitions, endTurnAction).score).toBe(
       STAGE_ONE_AI_SCORES.endTurn,
@@ -106,6 +89,7 @@ describe('Phase 5 deterministic rule-based AI', () => {
     );
     const enemyLeaderId = fixture.session.getState().players.ENEMY.leaderCardId;
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       const enemyLeader = mutable.cards.find((card) => card.id === enemyLeaderId);
 
@@ -157,6 +141,7 @@ describe('Phase 5 deterministic rule-based AI', () => {
       passiveSkill: undefined,
     });
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       for (const cardId of [
         ...mutable.players.PLAYER.handIds,
         ...mutable.players.PLAYER.drawPileIds,
@@ -186,6 +171,13 @@ describe('Phase 5 deterministic rule-based AI', () => {
       });
       moveBattleCardForTest(mutable, leftTargetId, 'FIELD', 'FRONT_LEFT');
       moveBattleCardForTest(mutable, rightTargetId, 'FIELD', 'FRONT_RIGHT');
+      for (const card of mutable.cards) {
+        if (card.ownerId === 'PLAYER' && card.id !== attackerId) {
+          card.hasMovedThisTurn = true;
+          card.hasAttackedThisTurn = true;
+          card.hasUsedActiveSkillThisTurn = true;
+        }
+      }
     });
     const scored = getScoredBattleAiActions(state, definitions);
 
@@ -195,7 +187,11 @@ describe('Phase 5 deterministic rule-based AI', () => {
       cardId: attackerId,
       targetCardId: leftTargetId,
     });
-    expect(scored.at(-1)?.action.type).toBe('END_TURN');
+    expect(
+      scored.some(
+        (entry) => entry.action.type === 'ATTACK' && entry.action.targetCardId === rightTargetId,
+      ),
+    ).toBe(true);
   });
 
   it('uses card definition ID after equal PLACE scores and Field indexes', () => {
@@ -214,8 +210,7 @@ describe('Phase 5 deterministic rule-based AI', () => {
       (entry) =>
         entry.action.type === 'PLACE' &&
         entry.action.fieldPosition === 'FRONT_CENTER' &&
-        (entry.action.cardId === amberId || entry.action.cardId === scribeId) &&
-        entry.action.activeSkillSourceCardId === undefined,
+        (entry.action.cardId === amberId || entry.action.cardId === scribeId),
     );
 
     expect(matchingScores).toHaveLength(2);

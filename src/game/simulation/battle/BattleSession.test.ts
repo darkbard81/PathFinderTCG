@@ -10,12 +10,13 @@ describe('Phase 5 BattleSession setup and state contract', () => {
     const enemyDeckSnapshot = JSON.stringify(fixture.enemyDeck);
     const state = fixture.session.getState();
 
+    expect(state.schemaVersion).toBe(2);
     expect(state.firstPlayerId).toBe('PLAYER');
     expect(state.activePlayerId).toBe('PLAYER');
     expect(state.turnNumber).toBe(1);
-    expect(state.players.PLAYER.handIds).toHaveLength(5);
+    expect(state.players.PLAYER.handIds).toHaveLength(6);
     expect(state.players.ENEMY.handIds).toHaveLength(5);
-    expect(state.players.PLAYER.drawPileIds).toHaveLength(24);
+    expect(state.players.PLAYER.drawPileIds).toHaveLength(23);
     expect(state.players.ENEMY.drawPileIds).toHaveLength(24);
     expect(state.players.PLAYER.field.BACK_CENTER).toBe(state.players.PLAYER.leaderCardId);
     expect(state.players.ENEMY.field.BACK_CENTER).toBe(state.players.ENEMY.leaderCardId);
@@ -38,7 +39,10 @@ describe('Phase 5 BattleSession setup and state contract', () => {
     });
 
     expect(repeated).toEqual(first);
-    expect(differentSeed.players.PLAYER.handIds).toEqual(first.players.PLAYER.handIds);
+    expect(differentSeed.players.PLAYER.handIds.slice(0, 5)).toEqual(
+      first.players.PLAYER.handIds.slice(0, 5),
+    );
+    expect(differentSeed.players.PLAYER.handIds).not.toEqual(first.players.PLAYER.handIds);
     expect(differentSeed.players.PLAYER.drawPileIds).not.toEqual(first.players.PLAYER.drawPileIds);
   });
 
@@ -51,28 +55,28 @@ describe('Phase 5 BattleSession setup and state contract', () => {
       playerMulliganCardIds: exchangedIds,
     });
 
-    expect(state.players.PLAYER.handIds).toHaveLength(5);
-    expect(exchangedIds.every((cardId) => !state.players.PLAYER.handIds.includes(cardId))).toBe(
-      true,
-    );
+    expect(state.players.PLAYER.handIds).toHaveLength(6);
+    expect(
+      exchangedIds.every((cardId) => !state.players.PLAYER.handIds.slice(0, 5).includes(cardId)),
+    ).toBe(true);
     expect(exchangedIds.every((cardId) => state.players.PLAYER.drawPileIds.includes(cardId))).toBe(
       true,
     );
-    expect(state.players.PLAYER.handIds.slice(3)).toEqual(
+    expect(state.players.PLAYER.handIds.slice(3, 5)).toEqual(
       fixture.playerDeck.drawPileIds.slice(5, 7),
     );
   });
 
-  it('skips only the first game-turn draw and performs the next mandatory draw', () => {
+  it('draws one card automatically at the start of every turn', () => {
     const fixture = createPhaseFiveBattleFixture();
     const before = fixture.session.getState();
     const resolution = fixture.session.resolveAction({ type: 'END_TURN' });
     const after = resolution.finalState;
 
-    expect(before.players.PLAYER.handIds).toHaveLength(5);
+    expect(before.players.PLAYER.handIds).toHaveLength(6);
     expect(after.activePlayerId).toBe('ENEMY');
     expect(after.turnNumber).toBe(2);
-    expect(after.players.PLAYER.handIds).toHaveLength(5);
+    expect(after.players.PLAYER.handIds).toHaveLength(6);
     expect(after.players.ENEMY.handIds).toHaveLength(6);
     expect(after.players.ENEMY.drawPileIds).toHaveLength(23);
   });

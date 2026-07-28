@@ -15,8 +15,9 @@ JSON 카드 데이터를 검증하는 JSON Schema Draft 2020-12 계약이다. �
   -> Effect
 ```
 
-- `Action`: 플레이어가 선택하는 행동이다. `ActiveSkill.action`으로 그 Skill이 실행될
-  행동을 정한다.
+- `Action`: 플레이어가 선택하는 행동이다. Active Skill은 독립 `ACTIVE` Action으로 실행한다.
+  `ActiveSkill.action`은 대상 선택 범위와 Effect 문맥을 정하고 해당 기본 Action을 함께
+  실행하지 않는다.
 - `Trigger`: ReactiveSkill이 반응할 게임 사건의 조건이다. Action 선택 자체를 Trigger로
   사용하지 않는다.
 - `ActiveSkill`, `ReactiveSkill`, `PassiveSkill`: 카드가 가진 실행 규칙이다. 카드에는
@@ -26,8 +27,8 @@ JSON 카드 데이터를 검증하는 JSON Schema Draft 2020-12 계약이다. �
   직접 가진다.
 - `CardDefinition.type`: 코어 카드의 종류를 `LEADER` 또는 `UNIT`으로 구분한다.
 
-`ActiveSkill`은 `action`으로 플레이어 선택과 연결된다. `ReactiveSkill`은 `trigger`를
-가진다. `PassiveSkill`은 사건을 기다리지 않고 카드가 유효한 동안 계속 적용된다.
+`ActiveSkill`은 `action`으로 대상 선택 범위와 Effect 문맥을 선언한다. `ReactiveSkill`은
+`trigger`를 가진다. `PassiveSkill`은 사건을 기다리지 않고 카드가 유효한 동안 계속 적용된다.
 모든 카드는 카드 자체를 설명하는 `description`을 반드시 가진다.
 
 ## JSON Schema
@@ -43,7 +44,8 @@ JSON Schema는 카드 한 장만으로 판정할 수 있는 선언 데이터의 
 
 ## Effect 대상
 
-- `SELF`, `OWNER`, `OPPONENT`, `ACTION_TARGET`은 Skill 출처와 연결 Action을 기준으로 해석한다.
+- `SELF`, `OWNER`, `OPPONENT`, `ACTION_TARGET`은 Skill 출처와 현재 ACTIVE 또는 Trigger 문맥을
+  기준으로 해석한다.
 - `TRIGGER_SOURCE`는 사건을 일으킨 원인, `TRIGGER_SUBJECT`는 사건이 발생한 주체를 가리킨다.
 - `TRIGGER_SUBJECT`는 서로 다른 사건 주체가 하나일 때만 해석한다. 복합 사건에 서로 다른 주체가
   둘 이상이면 그 Effect는 실패하며, 임의 대상 선택이나 일괄 적용으로 확장하지 않는다.
@@ -66,7 +68,7 @@ export const flameKnight: CardDefinition = {
   attack: 2,
   activeSkill: {
     id: 'flame-strike',
-    description: '공격할 때 공격 대상에게 피해 3을 추가로 준다.',
+    description: 'Active 사용 시 공격 범위 안의 대상에게 피해 3을 준다.',
     type: 'ACTIVE',
     action: 'ATTACK',
     effects: [
@@ -98,7 +100,7 @@ export const flameKnight: CardDefinition = {
 
 ## 확장 규칙
 
-- 새 플레이어 행동은 `ActionType`에 추가하고 `ActiveSkill.action`에서 사용한다.
+- 새 Active 대상 문맥은 `ActionType`에 추가하고 `ActiveSkill.action`에서 사용한다.
 - 새 사건은 `TriggerType`에만 추가하고, Action과 동일시하지 않는다.
 - 새 결과는 `Effect` union에 필요한 필드를 가진 새 variant로 추가한다. 범용 `options`,
   `payload`, `any` 객체를 두지 않는다.

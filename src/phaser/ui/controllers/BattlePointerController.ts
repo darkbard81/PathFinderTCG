@@ -7,7 +7,6 @@ import {
   type BattleState,
 } from '../../../game/simulation/battle/index.js';
 import type { PF2eBattleBoard } from '../components/PF2eBattleBoard.js';
-import type { PF2eBattlePile } from '../components/PF2eBattlePile.js';
 import type { PF2eBattleSlot } from '../components/PF2eBattleSlot.js';
 import { PF2eCard } from '../components/PF2eCard.js';
 import type { PF2eHandDeck } from '../components/PF2eHandDeck.js';
@@ -60,8 +59,10 @@ interface SlotHandlers {
   readonly up: () => void;
 }
 
+const ACTIVE_HOLD_DURATION_MS = 1_000;
+
 /**
- * 전장 카드, 슬롯, pile과 popup HandDeck의 포인터 입력을 합법 BattleAction으로 변환한다.
+ * 전장 카드, 슬롯과 popup HandDeck의 포인터 입력을 합법 BattleAction으로 변환한다.
  */
 export class BattlePointerController {
   private readonly scene: Phaser.Scene;
@@ -84,7 +85,6 @@ export class BattlePointerController {
   private readonly onHandExpandedChange?: BattlePointerControllerConfig['onHandExpandedChange'];
   private readonly cardHandlers = new Map<PF2eCard, CardHandlers>();
   private readonly slotHandlers = new Map<PF2eBattleSlot, SlotHandlers>();
-  private readonly pileHandlers = new Map<PF2eBattlePile, () => void>();
   private selectedCardId?: StableId;
   private activeSkillSourceCardId?: StableId;
   private preview?: PF2eCard;
@@ -94,6 +94,8 @@ export class BattlePointerController {
   private suppressTargetTap = false;
   private handExpanded = false;
   private handTargetY?: number;
+  private activeHoldTimer?: Phaser.Time.TimerEvent;
+  private activeHoldTriggered = false;
 
   constructor(scene: Phaser.Scene, config: BattlePointerControllerConfig) {
     this.scene = scene;
@@ -124,8 +126,6 @@ export class BattlePointerController {
     for (const slot of this.board.getSlots()) {
       this.bindSlot(slot);
     }
-    this.bindPile(this.board.getPile('PLAYER', 'DECK'));
-    this.bindPile(this.board.getPile('PLAYER', 'DROP'));
     this.handDeck.handleView.setInteractive({ useHandCursor: true });
     this.scene.input
       .on(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove)
@@ -154,11 +154,7 @@ export class BattlePointerController {
     if (!this.isEnabled()) {
       return undefined;
     }
-    const action = findDirectBattleAction(
-      this.actions,
-      { type: 'END_TURN' },
-      this.activeSkillSourceCardId,
-    );
+    const action = findDirectBattleAction(this.actions, { type: 'END_TURN' });
     if (action === undefined) {
       this.onStatus('현재 선택으로는 턴을 종료할 수 없습니다.', true);
       return undefined;
@@ -180,15 +176,12 @@ export class BattlePointerController {
       slot.off(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, handlers.up).removeInteractive();
     }
     this.slotHandlers.clear();
-    for (const [pile, handler] of this.pileHandlers) {
-      pile.off(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, handler).removeInteractive();
-    }
-    this.pileHandlers.clear();
     this.handDeck.handleView.removeInteractive();
     this.scene.input
       .off(Phaser.Input.Events.POINTER_MOVE, this.handlePointerMove)
       .off(Phaser.Input.Events.POINTER_UP, this.handlePointerUp);
     this.scene.tweens.killTweensOf(this.handDeck);
+    this.cancelActiveHold();
     this.preview?.destroy();
     this.dragPreview?.destroy();
     this.preview = undefined;
@@ -210,6 +203,8 @@ export class BattlePointerController {
         }
       },
       down: (pointer) => {
+        this.cancelActiveHold();
+        this.activeHoldTriggered = false;
         this.pendingCardPointer = {
           pointerId: pointer.id,
           cardId,
@@ -218,6 +213,7 @@ export class BattlePointerController {
           startX: pointer.worldX,
           startY: pointer.worldY,
         };
+        this.startActiveHold(pointer, cardId, card, inHand);
       },
     };
     card
@@ -242,22 +238,32 @@ export class BattlePointerController {
     this.slotHandlers.set(slot, handlers);
   }
 
-  private bindPile(pile: PF2eBattlePile): void {
-    const handler = () => {
-      if (!this.suppressTargetTap) {
-        this.handlePileTap(pile);
-      }
-    };
-    pile
-      .setInteractive({ useHandCursor: true })
-      .on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, handler);
-    this.pileHandlers.set(pile, handler);
-  }
-
   private handleCardTap(cardId: StableId): void {
     if (!this.isEnabled()) {
       return;
     }
+    if (this.activeSkillSourceCardId !== undefined) {
+      if (cardId === this.activeSkillSourceCardId) {
+        this.activeSkillSourceCardId = undefined;
+        this.onStatus('Active 대상 선택을 취소했습니다.');
+        this.refreshHighlights();
+        this.onSelectionChange?.(this.selectedCardId, undefined);
+        return;
+      }
+
+      const active = findDirectBattleAction(this.actions, {
+        type: 'ACTIVE',
+        cardId: this.activeSkillSourceCardId,
+        targetCardId: cardId,
+      });
+      if (active !== undefined) {
+        this.emitAction(active);
+        return;
+      }
+      this.onStatus('강조된 카드만 Active 대상으로 선택할 수 있습니다.', true);
+      return;
+    }
+
     if (this.selectedCardId !== undefined && this.selectedCardId !== cardId) {
       const attack = findDirectBattleAction(this.actions, {
         type: 'ATTACK',
@@ -278,22 +284,13 @@ export class BattlePointerController {
     }
 
     const activeSources = getDirectActiveSkillSourceIds(this.actions);
-    if (this.selectedCardId === cardId && activeSources.includes(cardId)) {
-      this.activeSkillSourceCardId = this.activeSkillSourceCardId === cardId ? undefined : cardId;
-      this.onStatus(
-        this.activeSkillSourceCardId === cardId
-          ? 'Active Skill 준비됨 · 다음 Draw/Place/Discard/턴 종료에 적용'
-          : 'Active Skill 선택을 해제했습니다.',
-      );
-    } else {
-      this.selectedCardId = cardId;
-      this.activeSkillSourceCardId = undefined;
-      this.onStatus(
-        activeSources.includes(cardId)
-          ? '카드 선택됨 · 한 번 더 누르면 Active Skill, 대상까지 드래그하면 기본 Action'
-          : '카드 선택됨 · 합법 target을 누르거나 드래그하세요.',
-      );
-    }
+    this.selectedCardId = cardId;
+    this.activeSkillSourceCardId = undefined;
+    this.onStatus(
+      activeSources.includes(cardId)
+        ? '카드 선택됨 · 1초간 누르면 Active, 대상까지 드래그하면 기본 Action'
+        : '카드 선택됨 · 합법 target을 누르거나 드래그하세요.',
+    );
     this.showPreview(cardId);
     this.refreshHighlights();
     this.onSelectionChange?.(this.selectedCardId, this.activeSkillSourceCardId);
@@ -304,18 +301,18 @@ export class BattlePointerController {
     if (!this.isEnabled() || selectedCardId === undefined || slot.playerId !== 'PLAYER') {
       return;
     }
+    if (this.activeSkillSourceCardId !== undefined) {
+      this.onStatus('강조된 카드 중 Active 대상을 선택하세요.', true);
+      return;
+    }
     const location = locateBattleCard(this.state, selectedCardId);
     const action =
       location.zone === 'HAND'
-        ? findDirectBattleAction(
-            this.actions,
-            {
-              type: 'PLACE',
-              cardId: selectedCardId,
-              fieldPosition: slot.fieldPosition,
-            },
-            this.activeSkillSourceCardId,
-          )
+        ? findDirectBattleAction(this.actions, {
+            type: 'PLACE',
+            cardId: selectedCardId,
+            fieldPosition: slot.fieldPosition,
+          })
         : findDirectBattleAction(this.actions, {
             type: 'MOVE',
             cardId: selectedCardId,
@@ -328,36 +325,11 @@ export class BattlePointerController {
     this.emitAction(action);
   }
 
-  private handlePileTap(pile: PF2eBattlePile): void {
-    if (!this.isEnabled() || pile.playerId !== 'PLAYER') {
-      return;
-    }
-    const action =
-      pile.zone === 'DECK'
-        ? findDirectBattleAction(this.actions, { type: 'DRAW' }, this.activeSkillSourceCardId)
-        : this.selectedCardId === undefined
-          ? undefined
-          : findDirectBattleAction(
-              this.actions,
-              { type: 'DISCARD', cardId: this.selectedCardId },
-              this.activeSkillSourceCardId,
-            );
-    if (action === undefined) {
-      this.onStatus(
-        pile.zone === 'DECK'
-          ? '현재 선택으로는 카드를 뽑을 수 없습니다.'
-          : 'Drop으로 보낼 수 있는 손패 카드를 먼저 선택하세요.',
-        true,
-      );
-      return;
-    }
-    this.emitAction(action);
-  }
-
   private handleDragStart(cardId: StableId, pointer: Phaser.Input.Pointer): void {
     if (!this.isEnabled()) {
       return;
     }
+    this.cancelActiveHold();
     this.draggedCardId = cardId;
     this.suppressTargetTap = true;
     this.selectedCardId = cardId;
@@ -415,12 +387,6 @@ export class BattlePointerController {
       return;
     }
 
-    const drop = this.board.getPile('PLAYER', 'DROP');
-    if (drop.getBounds().contains(pointer.worldX, pointer.worldY)) {
-      this.handlePileTap(drop);
-      return;
-    }
-
     this.onStatus('합법 target 위에 카드를 놓아야 합니다.', true);
     this.refreshHighlights();
   }
@@ -431,7 +397,8 @@ export class BattlePointerController {
       pending === undefined ||
       pending.pointerId !== pointer.id ||
       !pending.draggable ||
-      !pointer.isDown
+      !pointer.isDown ||
+      this.activeHoldTriggered
     ) {
       return;
     }
@@ -446,12 +413,14 @@ export class BattlePointerController {
       if (distance < PF2E_ELF_THEME.components.battleDirect.dragThreshold) {
         return;
       }
+      this.cancelActiveHold();
       this.handleDragStart(pending.cardId, pointer);
     }
     this.dragPreview?.setPosition(pointer.worldX, pointer.worldY);
   };
 
   private readonly handlePointerUp = (pointer: Phaser.Input.Pointer): void => {
+    this.cancelActiveHold();
     if (this.draggedCardId === undefined && this.isPointerOnHandHandle(pointer)) {
       this.pendingCardPointer = undefined;
       this.handleHandToggle();
@@ -466,6 +435,10 @@ export class BattlePointerController {
     }
     this.pendingCardPointer = undefined;
 
+    if (this.activeHoldTriggered) {
+      this.activeHoldTriggered = false;
+      return;
+    }
     if (this.draggedCardId === pending.cardId) {
       this.handleDragEnd(pending.cardId, pointer);
       return;
@@ -510,15 +483,6 @@ export class BattlePointerController {
     for (const slot of this.board.getSlots()) {
       slot.setTargetState('idle');
     }
-    const deck = this.board.getPile('PLAYER', 'DECK');
-    const drop = this.board.getPile('PLAYER', 'DROP');
-    deck.setTargetState(
-      findDirectBattleAction(this.actions, { type: 'DRAW' }, this.activeSkillSourceCardId) ===
-        undefined
-        ? 'disabled'
-        : 'legal-target',
-    );
-    drop.setTargetState('idle');
 
     if (this.selectedCardId === undefined) {
       return;
@@ -538,9 +502,70 @@ export class BattlePointerController {
     for (const targetCardId of targets.targetCardIds) {
       this.board.getCardView(targetCardId)?.setSelectionState('legal-target');
     }
-    if (targets.canDiscard) {
-      drop.setTargetState('legal-target');
+  }
+
+  private startActiveHold(
+    pointer: Phaser.Input.Pointer,
+    cardId: StableId,
+    card: PF2eCard,
+    inHand: boolean,
+  ): void {
+    if (
+      inHand ||
+      !this.isEnabled() ||
+      !getDirectActiveSkillSourceIds(this.actions).includes(cardId)
+    ) {
+      return;
     }
+
+    this.activeHoldTimer = this.scene.time.delayedCall(ACTIVE_HOLD_DURATION_MS, () => {
+      const pending = this.pendingCardPointer;
+      if (
+        pending === undefined ||
+        pending.pointerId !== pointer.id ||
+        pending.cardId !== cardId ||
+        this.draggedCardId !== undefined ||
+        !pointer.isDown ||
+        !card.getBounds().contains(pointer.worldX, pointer.worldY) ||
+        !this.isEnabled()
+      ) {
+        return;
+      }
+
+      this.activeHoldTimer = undefined;
+      this.activeHoldTriggered = true;
+      this.activateHeldCard(cardId);
+    });
+  }
+
+  private activateHeldCard(cardId: StableId): void {
+    const immediate = findDirectBattleAction(this.actions, {
+      type: 'ACTIVE',
+      cardId,
+    });
+    if (immediate !== undefined) {
+      this.onStatus('Active Skill을 발동합니다.');
+      this.emitAction(immediate);
+      return;
+    }
+
+    const targets = getDirectCardTargets(this.actions, cardId, cardId);
+    if (targets.targetCardIds.length === 0) {
+      this.onStatus('현재 선택할 수 있는 Active 대상이 없습니다.', true);
+      return;
+    }
+
+    this.selectedCardId = cardId;
+    this.activeSkillSourceCardId = cardId;
+    this.showPreview(cardId);
+    this.refreshHighlights();
+    this.onStatus('Active Skill 준비됨 · 강조된 대상을 선택하세요.');
+    this.onSelectionChange?.(cardId, cardId);
+  }
+
+  private cancelActiveHold(): void {
+    this.activeHoldTimer?.remove(false);
+    this.activeHoldTimer = undefined;
   }
 
   private showPreview(cardId: StableId): void {

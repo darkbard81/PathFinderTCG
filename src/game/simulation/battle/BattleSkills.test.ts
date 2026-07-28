@@ -47,6 +47,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     );
     const enemyLeaderId = fixture.session.getState().players.ENEMY.leaderCardId;
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
     });
     const session = BattleSession.fromState(state, fixture.cardDefinitions);
@@ -79,6 +80,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     );
     const enemyLeaderId = fixture.session.getState().players.ENEMY.leaderCardId;
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
     });
     const session = BattleSession.fromState(state, fixture.cardDefinitions);
@@ -95,13 +97,8 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     expect(
       effectIds.filter((effectId) => effectId.includes('allied-twilight-exiler-last-light')),
     ).toHaveLength(1);
-    expect(resolution.finalState.result).toEqual({
-      type: 'WIN',
-      winnerId: 'PLAYER',
-      loserIds: ['ENEMY'],
-      reason: 'LEADER_DEFEATED',
-    });
-    expect(locateBattleCard(resolution.finalState, enemyLeaderId).zone).toBe('EXILE');
+    expect(resolution.finalState.result.type).toBe('ONGOING');
+    expect(locateBattleCard(resolution.finalState, enemyLeaderId).zone).toBe('FIELD');
   });
 
   it('uses controller-provided stacking order and resolves the opponent stack first', () => {
@@ -125,6 +122,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       1,
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, targetId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, firstGuardId, 'FIELD', 'BACK_LEFT');
@@ -165,12 +163,12 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       'allied-pollen-saboteur',
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, supportId, 'FIELD', 'BACK_LEFT');
     });
-    const playerDiscardId = state.players.PLAYER.handIds[0];
     const expectedEnemyDiscardId = state.players.ENEMY.handIds.at(-1);
 
-    if (playerDiscardId === undefined || expectedEnemyDiscardId === undefined) {
+    if (expectedEnemyDiscardId === undefined) {
       throw new Error('DISCARD 선택 테스트 Hand 카드가 부족합니다.');
     }
 
@@ -187,14 +185,20 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     const session = BattleSession.fromState(state, fixture.cardDefinitions);
     const resolution = session.resolveAction(
       {
-        type: 'DISCARD',
-        cardId: playerDiscardId,
-        activeSkillSourceCardId: supportId,
+        type: 'ACTIVE',
+        cardId: supportId,
       },
       decisions,
     );
 
     expect(resolution.finalState.players.ENEMY.exileIds).toContain(expectedEnemyDiscardId);
+    expect(getBattleCard(resolution.finalState, supportId).hasUsedActiveSkillThisTurn).toBe(true);
+    expect(resolution.finalState.activePlayerId).toBe('PLAYER');
+    expect(
+      BattleSession.fromState(resolution.finalState, fixture.cardDefinitions)
+        .getLegalActions()
+        .some((action) => action.type === 'ACTIVE' && action.cardId === supportId),
+    ).toBe(false);
 
     const invalidSession = BattleSession.fromState(state, fixture.cardDefinitions);
     const beforeInvalidDecision = invalidSession.getState();
@@ -209,9 +213,8 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     expect(() =>
       invalidSession.resolveAction(
         {
-          type: 'DISCARD',
-          cardId: playerDiscardId,
-          activeSkillSourceCardId: supportId,
+          type: 'ACTIVE',
+          cardId: supportId,
         },
         invalidDecisions,
       ),
@@ -233,6 +236,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       'allied-grove-renewer',
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       mutable.activePlayerId = 'ENEMY';
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, targetId, 'FIELD', 'FRONT_CENTER');
@@ -257,7 +261,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
         ? undefined
         : getBattleCard(returnStep.afterState, targetId).isDeploymentPending,
     ).toBe(true);
-    expect(target.isDeploymentPending).toBe(false);
+    expect(target.isDeploymentPending).toBe(true);
     expect(
       resolution.steps
         .flatMap((step) => step.events)
@@ -289,6 +293,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       'enemy-nightroot-scout',
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, revenantId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, supportId, 'FIELD', 'FRONT_LEFT');
@@ -331,6 +336,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       'allied-grove-renewer',
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, firstTargetId, 'FIELD', 'FRONT_LEFT');
       moveBattleCardForTest(mutable, secondTargetId, 'FIELD', 'FRONT_RIGHT');
       moveBattleCardForTest(mutable, renewerId, 'FIELD', 'BACK_LEFT');
@@ -390,6 +396,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     };
     const definitions = replaceDefinition(fixture.cardDefinitions, syntheticDefinition);
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, sourceId, 'FIELD', 'FRONT_LEFT');
       const source = mutable.cards.find((card) => card.id === sourceId);
 
@@ -400,9 +407,8 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     });
     const session = BattleSession.fromState(state, definitions);
     const resolution = session.resolveAction({
-      type: 'MOVE',
+      type: 'ACTIVE',
       cardId: sourceId,
-      fieldPosition: 'FRONT_CENTER',
     });
     const skillEvents = resolution.steps
       .filter((step) => step.effectId.includes('phase5-all-effects'))
@@ -459,12 +465,13 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
     };
     const definitions = replaceDefinition(fixture.cardDefinitions, syntheticDefinition);
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, sourceId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, targetId, 'FIELD', 'FRONT_CENTER');
     });
     const session = BattleSession.fromState(state, definitions);
     const resolution = session.resolveAction({
-      type: 'ATTACK',
+      type: 'ACTIVE',
       cardId: sourceId,
       targetCardId: targetId,
     });
@@ -493,12 +500,13 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       'enemy-blackthorn-anchor',
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, attackerId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, targetId, 'FIELD', 'FRONT_CENTER');
     });
     const session = BattleSession.fromState(state, fixture.cardDefinitions);
     const resolution = session.resolveAction({
-      type: 'ATTACK',
+      type: 'ACTIVE',
       cardId: attackerId,
       targetCardId: targetId,
     });
@@ -543,6 +551,7 @@ describe('Phase 5 Skills, Trigger queue, Effects, and state checks', () => {
       },
     );
     const state = editBattleState(fixture.session.getState(), (mutable) => {
+      mutable.turnNumber = 2;
       moveBattleCardForTest(mutable, playerLeaderId, 'FIELD', 'FRONT_CENTER');
       moveBattleCardForTest(mutable, enemyLeaderId, 'FIELD', 'FRONT_CENTER');
       const playerLeader = mutable.cards.find((card) => card.id === playerLeaderId);
