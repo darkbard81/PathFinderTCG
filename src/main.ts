@@ -1,10 +1,12 @@
 import { DomLayer } from './dom/DomLayer';
 import { loadThemeFont } from './dom/theme-font';
 import { joinAssetUrl } from './game/assets/manifest';
+import type { GameSession } from './game/save/session';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
 import { formatPreloadSummary } from './pixi/assets/asset-loader';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
+import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
 import { TitleScene } from './pixi/scenes/TitleScene';
 import { ViewportProbeScene } from './pixi/scenes/ViewportProbeScene';
@@ -64,10 +66,40 @@ void (async (): Promise<void> => {
       new LoaderScene({
         assetBaseUrl: ASSET_BASE_URL,
         onComplete: (result) => {
-          void router.goto(
-            new ViewportProbeScene({ preloadSummary: formatPreloadSummary(result) }),
-          );
+          void showSaveSlot(formatPreloadSummary(result));
         },
+      }),
+    );
+  }
+
+  function showSaveSlot(preloadSummary?: string): Promise<void> {
+    return router.goto(
+      new SaveSlotScene({
+        services,
+        backgroundImageUrl,
+        // MainMenu 이식 전 임시: 원본 Back은 MainMenu로 돌아가지만 아직 없으므로 목록만 다시 연다.
+        onBack: () => {
+          void showSaveSlot(preloadSummary);
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
+        },
+        onSessionReady: (session) => {
+          void showSessionPending(session, preloadSummary);
+        },
+      }),
+    );
+  }
+
+  // Stage 화면 이식 전 임시 착지점. 세션이 준비됐다는 것만 확인한다.
+  function showSessionPending(session: GameSession, preloadSummary?: string): Promise<void> {
+    return router.goto(
+      new ViewportProbeScene({
+        preloadSummary: [
+          `Save ready · Slot ${session.slotId} · ${session.saveName}`,
+          `Leader ${session.deck.leader.instance.name}`,
+          ...(preloadSummary ? [preloadSummary] : []),
+        ].join('\n'),
       }),
     );
   }

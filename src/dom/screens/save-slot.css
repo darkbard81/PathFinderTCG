@@ -1,0 +1,253 @@
+/* 배경은 캔버스 Sprite/Graphics가 그린다. DOM은 투명 크롬만 얹는다. */
+.pf-save-slot {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--pf-space-lg);
+  width: 100%;
+  height: 100%;
+  padding: var(--pf-space-xl);
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: transparent;
+}
+
+.pf-save-slot__top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--pf-space-md);
+}
+
+.pf-save-slot__chrome-button {
+  min-width: 180px;
+  min-height: 58px;
+  border: var(--pf-login-button-border);
+  border-radius: 6px;
+  background: var(--pf-surface-button);
+  color: var(--pf-color-primary);
+  font: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.pf-save-slot__chrome-button:hover:not(:disabled),
+.pf-save-slot__chrome-button:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-save-slot__title-group {
+  display: grid;
+  justify-items: center;
+  gap: var(--pf-space-sm);
+  padding-top: 24px;
+}
+
+.pf-save-slot__title {
+  margin: 0;
+  color: var(--pf-text-screen-title-color);
+  font-size: var(--pf-text-screen-title-size);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.pf-save-slot__subtitle {
+  margin: 0;
+  color: var(--pf-text-subtitle-color);
+  font-size: var(--pf-text-subtitle-size);
+  line-height: 1.3;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.pf-save-slot__body {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--pf-space-lg);
+  min-height: 0;
+}
+
+.pf-save-slot__status {
+  margin: 0;
+  min-height: 1.5em;
+  color: var(--pf-text-status-large-color);
+  font-size: var(--pf-text-status-large-size);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.pf-save-slot__status[data-tone='danger'],
+.pf-save-slot__status[data-tone='error'] {
+  color: var(--pf-color-danger);
+}
+
+.pf-save-slot__slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 330px));
+  gap: 28px;
+  width: min(100%, 1046px);
+  justify-content: center;
+}
+
+.pf-save-slot__card {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  min-height: 260px;
+  padding: 24px 20px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border-width: 2px;
+  border-style: solid;
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+}
+
+.pf-save-slot__card:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.pf-save-slot__card--empty {
+  background: var(--pf-surface-slot-empty);
+  border-color: color-mix(in srgb, var(--pf-color-muted) 70%, transparent);
+}
+
+.pf-save-slot__card--empty:hover:not(:disabled),
+.pf-save-slot__card--empty:focus-visible {
+  background: var(--pf-surface-slot-empty-hover);
+}
+
+.pf-save-slot__card--ready {
+  background: var(--pf-surface-slot-ready);
+  border-color: color-mix(in srgb, var(--pf-color-accent) 94%, transparent);
+}
+
+.pf-save-slot__card--ready:hover:not(:disabled),
+.pf-save-slot__card--ready:focus-visible {
+  background: var(--pf-surface-slot-ready-hover);
+}
+
+.pf-save-slot__card--delete {
+  background: var(--pf-surface-slot-delete);
+  border-color: color-mix(in srgb, var(--pf-color-danger-border) 94%, transparent);
+}
+
+.pf-save-slot__card--delete:hover:not(:disabled),
+.pf-save-slot__card--delete:focus-visible {
+  background: var(--pf-surface-slot-delete-hover);
+}
+
+.pf-save-slot__slot-label {
+  margin: 0;
+  font-size: var(--pf-text-slot-label-size);
+  color: var(--pf-text-slot-label-color);
+}
+
+.pf-save-slot__card--empty .pf-save-slot__slot-label {
+  color: var(--pf-color-disabled-accent);
+}
+
+.pf-save-slot__card--delete .pf-save-slot__slot-label {
+  color: var(--pf-color-danger);
+}
+
+.pf-save-slot__card-title {
+  margin: 0;
+  max-width: 100%;
+  font-size: var(--pf-text-slot-title-size);
+  color: var(--pf-text-slot-title-color);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.pf-save-slot__card--empty .pf-save-slot__card-title {
+  font-size: var(--pf-text-slot-title-empty-size);
+  color: var(--pf-text-slot-title-empty-color);
+  font-weight: 400;
+}
+
+.pf-save-slot__card-subtitle {
+  margin: 0;
+  max-width: 100%;
+  font-size: var(--pf-text-slot-subtitle-size);
+  color: var(--pf-text-slot-subtitle-color);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.pf-save-slot__card--empty .pf-save-slot__card-subtitle {
+  color: var(--pf-color-disabled-detail);
+}
+
+.pf-save-slot__card-footer {
+  margin: 12px 0 0;
+  font-size: var(--pf-text-slot-footer-size);
+  color: var(--pf-text-slot-footer-color);
+  opacity: 0.92;
+}
+
+.pf-save-slot__card--empty .pf-save-slot__card-footer {
+  color: var(--pf-text-caption-color);
+}
+
+.pf-save-slot__card--delete .pf-save-slot__card-footer {
+  color: var(--pf-color-danger);
+}
+
+.pf-save-slot__footer {
+  display: grid;
+  justify-items: center;
+  gap: var(--pf-space-md);
+}
+
+.pf-save-slot__action-button {
+  min-width: 280px;
+  min-height: 64px;
+  border: var(--pf-login-button-border);
+  border-radius: 6px;
+  background: var(--pf-surface-button);
+  color: var(--pf-color-primary);
+  font: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.pf-save-slot__action-button:hover:not(:disabled),
+.pf-save-slot__action-button:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-save-slot__action-button:disabled,
+.pf-save-slot__chrome-button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.pf-save-slot__retry[hidden],
+.pf-save-slot__delete[hidden] {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .pf-save-slot__slots {
+    grid-template-columns: 1fr;
+    width: min(100%, 420px);
+  }
+
+  .pf-save-slot__top {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .pf-save-slot__chrome-button {
+    width: min(100%, 280px);
+  }
+}
