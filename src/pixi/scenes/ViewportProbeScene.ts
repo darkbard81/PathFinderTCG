@@ -1,5 +1,8 @@
 // TODO: 5단계 실제 화면 이식 시 제거할 임시 viewport 확인 화면이다.
+// 진단 전용이라 테마에 없는 색을 직접 쓴다. 이 파일에만 적용되는 예외이며,
+// 이 색들을 위해 theme.ts에 토큰을 추가하지 않는다.
 import { Container, Graphics, Text } from 'pixi.js';
+import { createProbeView, type ProbeView } from '../../dom/screens/probe-view';
 import type { ViewportLayout } from '../app/viewport';
 import type { Scene } from './scene';
 
@@ -27,8 +30,14 @@ export class ViewportProbeScene implements Scene {
     label: 'viewport-metrics',
   });
 
+  public readonly element: HTMLElement;
+
+  private readonly probeView: ProbeView;
+
   public constructor(private readonly options: ViewportProbeSceneOptions = {}) {
     this.view.addChild(this.guides, this.metrics);
+    this.probeView = createProbeView();
+    this.element = this.probeView.element;
   }
 
   /** 전달받은 논리 사각형 전체를 사용해 경계, 중심선, 측정값을 다시 배치한다. */
@@ -52,6 +61,9 @@ export class ViewportProbeScene implements Scene {
       `scale ${layout.scale.toFixed(4)}`,
       ...(this.options.preloadSummary ? [this.options.preloadSummary] : []),
     ].join('\n');
+    this.probeView.setLabel(
+      `DOM ${formatMetric(layout.width)} x ${formatMetric(layout.height)} @ ${layout.scale.toFixed(4)}`,
+    );
     this.metrics.position.set(centerX, layout.height / 4);
   }
 }

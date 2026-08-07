@@ -1,4 +1,5 @@
 import { Application, Container } from 'pixi.js';
+import { UI_THEME } from '../../theme';
 import { resolveViewportLayout, type ViewportLayout } from './viewport';
 
 export type ViewportSubscriber = (layout: ViewportLayout) => void;
@@ -23,7 +24,7 @@ export async function createPixiApp(): Promise<CreatedPixiApp> {
     antialias: true,
     autoDensity: true,
     resolution: window.devicePixelRatio,
-    background: '#071018',
+    background: UI_THEME.colors.background.canvas,
     preference: 'webgl',
   });
 

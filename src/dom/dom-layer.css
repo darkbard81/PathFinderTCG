@@ -1,0 +1,20 @@
+/*
+ * DOM 오버레이 루트.
+ * 논리 크기와 배율은 DomLayer가 인라인 스타일로 주입한다. 여기서 다시 계산하지 않는다.
+ */
+.pf-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  overflow: hidden;
+  font-family: var(--pf-font-family), system-ui, sans-serif;
+  color: var(--pf-color-primary);
+
+  /* 오버레이 자체는 입력을 통과시킨다. 개별 위젯만 auto로 되돌린다. */
+  pointer-events: none;
+}
+
+.pf-overlay :where(button, a, input, select, textarea, [data-interactive='true']) {
+  pointer-events: auto;
+}

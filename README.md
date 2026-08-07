@@ -25,7 +25,7 @@ PixiJS는 렌더러이지 게임 프레임워크가 아니다. Phaser가 기본 
 | `Scene`, Scene Manager | 없음 → `src/pixi/scenes/SceneRouter` | `Container` 기반 화면 + 명시적 lifecycle을 직접 구현 |
 | `Phaser.Scale.FIT` | 없음 → `resolveViewportLayout` + 루트 `Container` scale | 고정 가상 해상도를 버리고 반응형으로 전환한다 (아래 참조) |
 | `this.load.*` (Loader) | `Assets.init` / `Assets.load` / bundle | `assets.json` manifest를 Pixi 번들로 변환해 등록 |
-| rexUI (`this.rexUI.add.*`) | 없음 → `src/pixi/ui/UiFactory` | `Graphics`, `NineSliceSprite`, `Text`로 직접 조립 |
+| rexUI (`this.rexUI.add.*`) | **DOM + CSS** (`src/dom/`) | 캔버스 위젯을 다시 만들지 않는다 (아래 참조) |
 | `this.tweens`, `time.delayedCall` | 없음 → `src/pixi/sequence/SequenceRunner` | `Ticker` 위에 시간축 연출을 직접 구현 |
 | `GameObject`, `setInteractive()` | `Container` 파생 + `eventMode` | `DisplayObject`는 v8에 없다 |
 | `Phaser.GameObjects.Video` | `Assets.load` 비디오 텍스처 + `Sprite` | `.webm` 알파 재생 정책은 이식 시 재검증 필요 |
@@ -49,6 +49,26 @@ logical = { width: viewportWidth / scale, height: viewportHeight / scale }
 - devicePixelRatio는 이 계산과 무관하다. `resolution` + `autoDensity`가 따로 처리한다.
 
 UI는 이 정책 위에서 단계별로 변형한다. 큰 화면에서 논리 크기가 계속 커지는 것을 어느 지점에서 멈출지(상한 스케일)는 UI 작업 중에 정한다.
+
+## UI 계층: DOM과 캔버스
+
+원본은 rexUI로 캔버스 위에 UI를 그렸다. 이 저장소는 **화면 크롬을 DOM으로 만든다.**
+
+원본에서 rexUI 호출은 7군데뿐이었고 전부 레이아웃 용도였다 — `sizer`(flexbox), `gridSizer`(grid), `scrollablePanel`(overflow), `overlapSizer`(absolute), `BBCodeText`(리치 텍스트). 브라우저가 이미 공짜로 주는 것을 캔버스 위에 다시 만들 이유가 없고, 반응형 목표에는 CSS가 압도적으로 유리하다. 원본도 타이틀·메인 메뉴는 이미 DOM으로 만들고 있었다.
+
+| 담당 | 대상 |
+| --- | --- |
+| **DOM** (`src/dom/`) | 타이틀, 저장 슬롯, 메인 메뉴, 스테이지 선택, 덱 편집, 장비, 성장, 로딩, 설정, HUD 크롬 |
+| **캔버스** (`src/pixi/`) | 전장 월드 — 보드, 필드 위 카드, **손패**, 드래그 프리뷰, 이펙트, 카메라 |
+
+경계 기준: **월드 좌표계에 속하고 드래그·애니메이션 대상이면 캔버스, 나머지는 DOM.** 손패는 보드로 끌어다 놓는 대상이므로 캔버스에 둔다. 제스처가 DOM과 캔버스 경계를 넘지 않게 하기 위함이다.
+
+지켜야 할 것:
+
+- **스케일 동기화** — 오버레이 루트에 논리 크기와 `transform: scale(scale)`을 적용한다. `scale = 1`에서는 no-op이라 평범한 반응형 CSS고, 최소 해상도 미만에서만 캔버스와 함께 균일 축소된다. 정책 소유자는 `resolveViewportLayout` 하나뿐이다.
+- **이벤트** — 오버레이 루트는 `pointer-events: none`, 개별 위젯만 `auto`. 그렇지 않으면 오버레이가 캔버스 입력을 모두 가로챈다.
+- **토큰 공유** — `src/theme.ts`가 색·텍스트·surface의 유일한 원본이다. 토큰은 `{ canvas: number, css: '#rrggbb' }` 두 표현을 함께 갖고, 부팅 시 CSS 커스텀 속성으로 주입되어 DOM과 캔버스가 같은 값을 쓴다.
+- **z-order 제약** — DOM은 항상 캔버스 위에 있다. 캔버스 이펙트를 DOM UI 위에 얹어야 하면 별도 캔버스 레이어가 필요하다.
 
 ## 실행
 
@@ -91,10 +111,10 @@ src/
     battle/  save/  stage/  assets/  auth/
   pixi/
     app/             # Application 생성, 반응형 viewport 정책, 부트스트랩
-    scenes/          # Container 기반 화면과 SceneRouter
-    ui/              # UiFactory — Canvas UI 생성의 유일한 경계 (rexUI 대체)
+    scenes/          # 화면과 SceneRouter
     sequence/        # SequenceRunner — Ticker 기반 연출 시퀀스 (SequencePlugin 대체)
     assets/          # assets.json manifest ↔ Pixi Assets 번들 연결
+  dom/               # DOM UI 오버레이. 화면 크롬은 전부 여기 (rexUI 대체)
   server/            # /tcg 자산과 /api/save-slots middleware
   tools/card-text/   # 카드 텍스트 편집 도구 (별도 진입점)
   config.ts          # 환경 변수와 서버·자산 기본 설정
@@ -110,7 +130,7 @@ documents/           # 프로젝트 규칙 문서
 1. **골격** — Vite + TS + PixiJS v8 프로젝트 설정, `Application` 부트, 반응형 viewport 정책, `SceneRouter`.
 2. **도메인 이식** — `src/game/`과 `cards/`를 변경 없이 옮기고 기존 Vitest를 전부 통과시킨다. 이 단계가 끝나기 전에는 뷰 코드를 쓰지 않는다.
 3. **자산 계층** — `assets.json` manifest를 Pixi `Assets` 번들로 등록하고 로딩 진행률·실패 재시도를 갖춘 Loader 화면을 만든다.
-4. **UI 기반** — `theme.ts` 이식 후 `UiFactory`로 버튼·패널·라벨·스크롤 목록 등 rexUI가 담당하던 primitive를 구현한다.
+4. **UI 기반** — `theme.ts` 이식, 토큰을 CSS 커스텀 속성으로 주입, DOM 오버레이와 스케일 동기화를 담당하는 `DomLayer` 구현. 로딩 화면을 DOM으로 다시 만든다.
 5. **화면 이식** — Title → SaveSlot → MainMenu → Stage → DeckBuild → Equipment → Growth 순으로 옮긴다. 규칙이 가장 복잡한 Battlefield는 마지막이다.
 6. **연출** — `SequenceRunner`로 wait/shake/video/custom step과 입력 잠금을 복원하고 Battlefield 연출을 붙인다.
 7. **서버·도구** — `/tcg`, `/api/save-slots`, 카드 텍스트 도구를 이식하고 두 build 진입점을 확인한다.

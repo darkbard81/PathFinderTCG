@@ -26,14 +26,6 @@ export type PreloadCallbacks = {
 const VIDEO_SOURCE_OPTIONS = { autoPlay: false, muted: true };
 
 /**
- * 한 번에 요청할 비디오 수다.
- * `Assets.load`는 넘긴 목록 전체를 `Promise.all`로 띄운다. 텍스처는 브라우저의 연결 풀이
- * 알아서 줄을 세우지만, `<video>`는 동시 미디어 엘리먼트 상한이 따로 있어 초과분이 데이터를
- * 받지 못하면 `canplay`가 오지 않는다. 비디오에만 상한을 둔다.
- */
-const VIDEO_PRELOAD_CONCURRENCY = 8;
-
-/**
  * `assets.json`을 읽어 부팅에 필요한 자산을 모두 받는다.
  * 개별 자산 실패는 전체를 중단시키지 않고 집계해 돌려준다.
  */
@@ -66,28 +58,11 @@ export async function preloadManifestAssets(
     callbacks.onStatus?.(`Skipping failed asset: ${alias}`);
   };
 
-  const textures = assets.filter((asset) => asset.kind === 'texture').map(toUnresolvedAsset);
-  const videos = assets.filter((asset) => asset.kind === 'video').map(toUnresolvedAsset);
-  const total = assets.length;
-  let completed = 0;
-
-  const runBatch = async (batch: UnresolvedAsset[]): Promise<void> => {
-    await Assets.load(batch, {
-      strategy: 'skip',
-      onProgress: (ratio) => callbacks.onProgress?.((completed + ratio * batch.length) / total),
-      onError,
-    });
-    completed += batch.length;
-    callbacks.onProgress?.(completed / total);
-  };
-
-  if (textures.length > 0) {
-    await runBatch(textures);
-  }
-
-  for (const batch of toBatches(videos, VIDEO_PRELOAD_CONCURRENCY)) {
-    await runBatch(batch);
-  }
+  await Assets.load(unresolved, {
+    strategy: 'skip',
+    onProgress: (ratio) => callbacks.onProgress?.(ratio),
+    onError,
+  });
 
   return {
     totalCount: assets.length,
@@ -112,17 +87,6 @@ function toUnresolvedAsset(asset: PreloadAsset): UnresolvedAsset {
   }
 
   return { alias: asset.alias, src: asset.src };
-}
-
-/** 동시 요청 수를 제한하기 위해 자산 목록을 고정 크기 묶음으로 나눈다. */
-function toBatches<T>(items: T[], size: number): T[][] {
-  const batches: T[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    batches.push(items.slice(index, index + size));
-  }
-
-  return batches;
 }
 
 /** `onError`의 url은 문자열이거나 resolve된 asset이므로 두 경우를 모두 다룬다. */

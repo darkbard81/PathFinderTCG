@@ -5,6 +5,15 @@ import type { Scene } from './scene';
 type UpdateCallback = (ticker: Ticker) => void;
 
 /**
+ * 라우터가 화면 크롬을 붙이고 떼기 위해 필요한 최소 계약이다.
+ * 실제 구현은 `src/dom/DomLayer.ts`이며, 테스트는 이 계약만 만족시키면 된다.
+ */
+export type SceneDomLayer = {
+  mount(element: HTMLElement | undefined): void;
+  unmount(): void;
+};
+
+/**
  * 하나의 활성 화면을 소유하며 비동기 화면 교체를 호출 순서대로 직렬화한다.
  */
 export class SceneRouter {
@@ -17,6 +26,7 @@ export class SceneRouter {
     private readonly root: Container,
     private readonly ticker: Ticker,
     initialLayout: ViewportLayout,
+    private readonly domLayer?: SceneDomLayer,
   ) {
     this.layout = initialLayout;
   }
@@ -60,6 +70,7 @@ export class SceneRouter {
       if (previousUpdate) {
         this.ticker.remove(previousUpdate);
       }
+      this.domLayer?.unmount();
       this.root.removeChild(previousScene.view);
       previousScene.view.destroy({ children: true });
 
@@ -69,6 +80,7 @@ export class SceneRouter {
     }
 
     this.root.addChild(scene.view);
+    this.domLayer?.mount(scene.element);
     this.currentScene = scene;
     scene.resize(this.layout);
     await scene.enter?.();

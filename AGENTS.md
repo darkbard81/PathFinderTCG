@@ -29,7 +29,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - `src/game/`: PixiJS에 의존하지 않는 전투 규칙, 카드·덱·장비·성장, 저장 상태, 스테이지 진행, 자산 manifest 해석. 원본에서 **로직 변경 없이** 이식한다.
 - `src/pixi/app/`: `Application` 생성, 반응형 viewport 정책(`viewport.ts`), 부트스트랩
 - `src/pixi/scenes/`: `Container` 기반 화면과 `SceneRouter`. 화면 전환, 입력 전달, 월드 렌더링
-- `src/pixi/ui/`: Canvas UI 생성 경계와 UI 아키텍처 테스트. 중심 API는 `UiFactory.ts` (원본 `CanvasUiFactory` 대체)
+- `src/dom/`: DOM UI 오버레이. 화면 크롬 전체와 스케일 동기화를 담당한다 (원본 rexUI 대체)
 - `src/pixi/sequence/`: `Ticker` 기반 연출 시퀀스. 원본 `SequencePlugin` / `AnimationSequence` 대체
 - `src/pixi/assets/`: `assets.json` manifest를 Pixi `Assets` 번들로 등록하는 경계
 - `src/theme.ts`: Canvas UI와 DOM UI가 공유하는 semantic 색상·텍스트·surface 토큰
@@ -118,15 +118,19 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 저장소 공용 Helper가 책임지는 기능을 화면이나 기능 파일에서 다시 구현하지 않는다. 먼저 기존 API를 사용하고, 현재 API가 재사용 가능한 요구를 표현하지 못할 때는 소유 모듈의 타입·구현·테스트를 함께 확장한다. 한 화면에만 필요한 도메인 규칙을 억지로 전역화하지 않으며 mutable singleton도 만들지 않는다.
 
-### Canvas UI
+### UI 경계: DOM과 캔버스
 
-- Canvas UI 생성, 입력 표면, semantic 스타일, layout 조립은 `src/pixi/ui/UiFactory.ts`를 사용한다.
-- 화면은 `UiFactory`가 반환한 객체를 배치·갱신할 수 있지만 UI를 위해 `new Text()` / `new Graphics()`를 직접 만들지 않는다.
-- 보드, 카드, 드래그 프리뷰, 월드 이펙트 같은 월드 렌더링만 Pixi 객체 직접 생성을 허용한다. Canvas UI에는 이 예외를 적용하지 않는다.
-- 새 UI 표현은 화면에 raw 색상·폰트·`TextStyle`을 넣기 전에 `src/theme.ts`에 semantic variant를 추가한다.
-- 필요한 primitive가 없으면 화면 로컬 wrapper를 만들지 말고 `UiFactory`의 config 타입과 메서드를 확장하고 `UiFactory.test.ts`, `ui-boundary.test.ts`를 함께 갱신한다.
-- 텍스트가 많고 반응형 상호작용이 중요한 HUD·설정·서사 화면은 DOM overlay가 더 적합한지 먼저 판단한다. DOM UI는 Factory로 감싸지 않되 Theme 토큰을 공유한다.
-- rexUI 위젯을 1:1로 흉내 내지 않는다. 원본 화면이 만족시키던 **요구**를 재현하고 구현은 Pixi에 맞게 고른다.
+**화면 크롬은 DOM으로 만든다. 캔버스 위젯 툴킷을 다시 만들지 않는다.**
+
+- **DOM**(`src/dom/`): 타이틀, 저장 슬롯, 메인 메뉴, 스테이지 선택, 덱 편집, 장비, 성장, 로딩, 설정, HUD 크롬.
+- **캔버스**(`src/pixi/`): 전장 월드 — 보드, 필드 위 카드, **손패**, 드래그 프리뷰, 이펙트, 카메라.
+- 경계 기준은 하나다: **월드 좌표계에 속하고 드래그·애니메이션 대상이면 캔버스, 나머지는 DOM.** 손패는 보드로 끌어다 놓는 대상이라 캔버스에 둔다. 제스처가 DOM/캔버스 경계를 넘게 만들지 않는다.
+- 레이아웃은 CSS로 한다. flexbox, grid, `overflow`, `position`을 캔버스 좌표 계산으로 대체하지 않는다.
+- 색·폰트·surface 값은 `src/theme.ts`가 유일한 원본이다. DOM에는 CSS 커스텀 속성으로 주입된 토큰을 쓰고, 캔버스에는 같은 토큰의 `canvas` 표현을 쓴다. CSS나 화면 코드에 raw hex를 직접 적지 않는다.
+- 오버레이 루트는 `pointer-events: none`이고 개별 위젯만 `auto`로 되돌린다. 이 규칙을 어기면 캔버스 입력이 죽는다.
+- DOM 오버레이의 스케일은 `DomLayer`가 `resolveViewportLayout` 결과로만 적용한다. 화면이나 CSS에서 스케일을 다시 계산하지 않는다.
+- 화면 전환 시 DOM 루트도 캔버스 `view`와 함께 반드시 정리한다. 남은 노드는 다음 화면의 입력을 가로챈다.
+- rexUI 위젯을 1:1로 흉내 내지 않는다. 원본 화면이 만족시키던 **요구**를 재현하고 구현은 DOM에 맞게 고른다.
 
 ### 연출 시퀀스
 
@@ -175,7 +179,9 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 요청 없이 commit, push, branch 생성, PR 작성 또는 이슈 수정을 하지 않는다.
 - `.env`, credential, `.data/`, `dist/`, coverage, 임시 캡처, 로컬 runtime asset을 커밋하지 않는다.
 - 의존성 변경 없이 `package-lock.json`을 갱신하지 않는다. 새 런타임 의존성(UI·트윈·사운드 라이브러리 포함)은 먼저 사용자에게 확인한다.
-- `UiFactory` 경계를 우회해 화면에서 UI용 `Text`/`Graphics`를 직접 만들지 않는다.
+- 화면 크롬을 캔버스에 그리지 않는다. 버튼·목록·패널·폼은 DOM으로 만든다.
+- CSS나 화면 코드에 raw hex 색상을 적지 않는다. `src/theme.ts`의 토큰을 쓴다.
+- DOM 오버레이에서 스케일이나 논리 크기를 다시 계산하지 않는다.
 - 화면 로컬 타이머 조합으로 이미 `SequenceRunner`가 소유하는 연출 정책을 중복 구현하지 않는다.
 - 보간·애니메이션 완료 여부에 게임 규칙의 정답을 의존시키지 않는다.
 - 브라우저를 직접 띄워 시각적 결론을 내리지 않는다. 화면 확인은 사용자의 몫이다.
@@ -187,7 +193,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 - 전투·턴·카드 효과: 이식한 `src/game/battle/*.test.ts`. **원본과 동일하게 통과해야 한다.**
 - 저장·덱·장비·성장: 관련 save 모듈 테스트와 필요 시 save-slot API 테스트
-- Canvas UI 경계: `src/pixi/ui/UiFactory.test.ts`, `src/pixi/ui/ui-boundary.test.ts`
+- UI 경계와 테마 토큰: `src/dom/**/*.test.ts`, `src/theme.test.ts`
 - 연출: `src/pixi/sequence/*.test.ts`
 - manifest·자산 URL: `src/game/assets/manifest.test.ts`와 자산 middleware 동작
 - Vite API·도구: 관련 server 테스트, main과 card-text 두 build entry

@@ -5,7 +5,11 @@ import type { ViewportLayout } from '../app/viewport';
  * SceneRouter가 관리하는 화면의 명시적 lifecycle 계약이다.
  */
 export interface Scene {
+  /** 월드 렌더링을 담는 캔버스 노드다. DOM만 쓰는 화면은 비어 있을 수 있다. */
   readonly view: Container;
+
+  /** 화면 크롬의 DOM 루트다. 라우터가 오버레이에 붙이고 전환 시 함께 제거한다. */
+  readonly element?: HTMLElement;
 
   /** 화면이 루트에 연결된 뒤 필요한 비동기 초기화를 수행한다. */
   enter?(): void | Promise<void>;

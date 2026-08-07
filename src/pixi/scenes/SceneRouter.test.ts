@@ -117,6 +117,48 @@ describe('SceneRouter', () => {
     root.destroy({ children: true });
   });
 
+  it('화면 크롬을 새 화면보다 먼저 떼어내고 새 화면 것을 붙인다', async () => {
+    const domEvents: string[] = [];
+    const domLayer = {
+      mount: (element: HTMLElement | undefined) =>
+        domEvents.push(`mount:${(element as { name?: string } | undefined)?.name ?? 'none'}`),
+      unmount: () => domEvents.push('unmount'),
+    };
+    const root = new Container();
+    const ticker = new Ticker();
+    const router = new SceneRouter(root, ticker, initialLayout, domLayer);
+    const first = createScene('first', [], false, { name: 'first' } as unknown as HTMLElement);
+    const second = createScene('second', [], false, { name: 'second' } as unknown as HTMLElement);
+
+    await router.goto(first);
+    await router.goto(second);
+
+    expect(domEvents).toEqual(['mount:first', 'unmount', 'mount:second']);
+
+    ticker.destroy();
+    root.destroy({ children: true });
+  });
+
+  it('크롬이 없는 화면으로 전환해도 이전 크롬을 제거한다', async () => {
+    const domEvents: string[] = [];
+    const domLayer = {
+      mount: (element: HTMLElement | undefined) => domEvents.push(element ? 'mount' : 'mount:none'),
+      unmount: () => domEvents.push('unmount'),
+    };
+    const root = new Container();
+    const ticker = new Ticker();
+    const router = new SceneRouter(root, ticker, initialLayout, domLayer);
+    const first = createScene('first', [], false, { name: 'first' } as unknown as HTMLElement);
+
+    await router.goto(first);
+    await router.goto(createScene('second', []));
+
+    expect(domEvents).toEqual(['mount', 'unmount', 'mount:none']);
+
+    ticker.destroy();
+    root.destroy({ children: true });
+  });
+
   it('화면 view의 자식까지 파괴한다', async () => {
     const root = new Container();
     const ticker = new Ticker();
@@ -135,9 +177,15 @@ describe('SceneRouter', () => {
   });
 });
 
-function createScene(name: string, events: string[], withUpdate = false): Scene {
+function createScene(
+  name: string,
+  events: string[],
+  withUpdate = false,
+  element?: HTMLElement,
+): Scene {
   const scene: Scene = {
     view: new Container({ label: name }),
+    ...(element ? { element } : {}),
     enter: () => {
       events.push(`${name}:enter`);
     },
