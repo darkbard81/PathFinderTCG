@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://elvenbattle.local/schemas/card.schema.json",
+  "title": "ElvenBattle Card Schema",
+  "description": "ElvenBattle card data schema v0.3",
+  "type": "object",
+  "required": ["version", "cards"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "card-json-v0.3",
+      "description": "카드 JSON 데이터 버전"
+    },
+    "cards": {
+      "type": "array",
+      "description": "카드 목록",
+      "items": {
+        "$ref": "#/$defs/card"
+      }
+    }
+  },
+  "$defs": {
+    "rarity": {
+      "oneOf": [
+        {
+          "const": "C",
+          "title": "Common",
+          "description": "일반 등급 카드"
+        },
+        {
+          "const": "UC",
+          "title": "Uncommon",
+          "description": "언커먼 등급 카드"
+        },
+        {
+          "const": "R",
+          "title": "Rare",
+          "description": "레어 등급 카드"
+        },
+        {
+          "const": "SR",
+          "title": "Super Rare",
+          "description": "슈퍼 레어 등급 카드"
+        },
+        {
+          "const": "EU",
+          "title": "Eushully",
+          "description": "특수/최상위 등급 카드"
+        }
+      ]
+    },
+    "cardType": {
+      "oneOf": [
+        {
+          "const": "UNIT",
+          "title": "Unit",
+          "description": "전장에 배치되어 이동, 공격, 퇴각의 대상이 되는 일반 전투 카드"
+        },
+        {
+          "const": "LEADER",
+          "title": "Leader",
+          "description": "플레이어 또는 적 진영의 중심 카드. HP가 0이 되면 승패에 직접 연결되는 카드"
+        },
+        {
+          "const": "EQUIPMENT",
+          "title": "Equipment",
+          "description": "카드의 슬롯을 사용해 능력치나 능력을 부여하는 장비 카드"
+        },
+        {
+          "const": "ITEM",
+          "title": "Item",
+          "description": "전투, 성장, 연성, 이벤트 등에 사용되는 아이템 카드"
+        }
+      ]
+    },
+    "abilityCategory": {
+      "oneOf": [
+        {
+          "const": "SPECIAL",
+          "title": "특수",
+          "description": "특정 행동에 묶이지 않는 특수 규칙. 피해 감소, 예외 처리, 상시 보정 등에 사용한다."
+        },
+        {
+          "const": "MOVE",
+          "title": "이동",
+          "description": "카드가 필드 위에서 다른 칸으로 이동했을 때 발동하는 능력이다."
+        },
+        {
+          "const": "SUMMON",
+          "title": "등장",
+          "description": "카드가 손패나 효과를 통해 전장에 등장했을 때 발동하는 능력이다."
+        },
+        {
+          "const": "ACTION",
+          "title": "행동",
+          "description": "플레이어가 직접 선택해 사용하는 활성 능력이다. 보통 비용이나 행동 완료 조건을 가진다."
+        },
+        {
+          "const": "ATTACK",
+          "title": "공격",
+          "description": "공격 선언, 공격 성공, 피해 처리 등 공격 과정에서 발동하는 능력이다."
+        },
+        {
+          "const": "RETREAT",
+          "title": "퇴각",
+          "description": "카드가 HP 0, 효과, 비용 등으로 전장에서 퇴각할 때 발동하는 능력이다."
+        },
+        {
+          "const": "FRONT",
+          "title": "전위",
+          "description": "카드가 전위에 있을 때 적용되는 지속 능력이다."
+        },
+        {
+          "const": "BACK",
+          "title": "후위",
+          "description": "카드가 후위에 있을 때 적용되는 지속 능력이다."
+        },
+        {
+          "const": "GLOBAL",
+          "title": "전역",
+          "description": "카드가 전장에 존재하는 동안 전체 영역이나 조건 대상에게 계속 적용되는 지속 능력이다."
+        }
+      ]
+    },
+    "trait": {
+      "type": "object",
+      "description": "필터와 분류에 사용하는 카드 특성",
+      "required": ["key", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "특성 분류. 예: race, role, attribute"
+        },
+        "text": {
+          "type": "string",
+          "description": "특성 값. 예: 괴물, 기계, 어택커"
+        }
+      }
+    },
+    "ability": {
+      "type": "object",
+      "description": "카드 능력",
+      "required": ["id", "category", "name", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "능력 고유 ID"
+        },
+        "category": {
+          "$ref": "#/$defs/abilityCategory"
+        },
+        "name": {
+          "type": "string",
+          "description": "능력 이름"
+        },
+        "text": {
+          "type": "string",
+          "description": "능력 설명 원문 또는 번역문"
+        }
+      }
+    },
+    "growthValue": {
+      "type": "object",
+      "description": "특정 레벨에서 증가하거나 변화하는 수치",
+      "required": ["stat", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "stat": {
+          "type": "string",
+          "enum": ["hp", "attack", "slot", "dominance"],
+          "description": "성장 대상 능력치"
+        },
+        "value": {
+          "type": "integer",
+          "description": "증가 또는 변화 수치"
+        }
+      }
+    },
+    "growth": {
+      "type": "object",
+      "description": "레벨별 성장 정보",
+      "required": ["lv2", "lv3", "lv4", "lv5", "lv6", "lv7", "lv8", "lv9"],
+      "additionalProperties": false,
+      "properties": {
+        "lv2": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv3": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv4": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv5": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv6": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv7": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv8": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        },
+        "lv9": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/growthValue"
+          }
+        }
+      }
+    },
+    "card": {
+      "type": "object",
+      "description": "카드 1장의 정의",
+      "required": ["id", "name", "rarity", "type", "traits", "abilities", "description", "note"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "카드 고유 ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "카드 이름"
+        },
+        "rarity": {
+          "$ref": "#/$defs/rarity"
+        },
+        "type": {
+          "$ref": "#/$defs/cardType"
+        },
+        "traits": {
+          "type": "array",
+          "description": "카드의 필터용 특성 목록",
+          "items": {
+            "$ref": "#/$defs/trait"
+          }
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "장비 가능한 슬롯 수"
+        },
+        "cost": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "카드 배치에 필요한 코스트"
+        },
+        "dominance": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "인접 칸에 제공하는 지배력"
+        },
+        "hp": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "카드의 체력. 리더의 LP도 hp로 통합 관리한다."
+        },
+        "attack": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "카드의 공격력"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9,
+          "description": "카드의 현재 레벨. 기본 범위는 LV1~LV9이다."
+        },
+        "exp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "카드의 현재 경험치"
+        },
+        "abilities": {
+          "type": "array",
+          "description": "카드가 가진 능력 목록",
+          "items": {
+            "$ref": "#/$defs/ability"
+          }
+        },
+        "growth": {
+          "$ref": "#/$defs/growth"
+        },
+        "description": {
+          "type": "string",
+          "description": "카드의 운용 설명 또는 플레이상 특징"
+        },
+        "note": {
+          "type": "string",
+          "description": "카드 일러스트, 외형, 메모 등 비전투 정보"
+        }
+      }
+    }
+  }
+}

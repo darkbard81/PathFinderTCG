@@ -1,0 +1,70 @@
+/**
+ * `assets.json`의 최소 manifest entry 구조를 표현한다.
+ */
+export type AssetManifestEntry = {
+  key: string;
+  path: string;
+  revision: string;
+};
+
+/**
+ * `assets.json`의 최소 manifest 구조를 표현한다.
+ * 씬에서는 이 manifest를 읽어 webp 텍스처와 webm 모션을 로딩한다.
+ */
+export type AssetsManifest = {
+  assetBaseUrl: string;
+  textures: AssetManifestEntry[];
+  videos: AssetManifestEntry[];
+  manifestRevision: string;
+  schemaVersion: number;
+  revisionAlgorithm: string;
+};
+
+type AssetsManifestResponse = Omit<AssetsManifest, 'videos'> & {
+  videos?: AssetManifestEntry[];
+};
+
+/**
+ * 서버가 제공하는 `assets.json`을 읽어 런타임 자산 manifest로 해석한다.
+ * 응답 실패는 로딩 씬에서 처리하고, 여기서는 Scene이 바로 사용할 수 있는 manifest로 정규화한다.
+ */
+export async function fetchAssetsManifest(assetBaseUrl: string): Promise<AssetsManifest> {
+  const response = await fetch(joinAssetUrl(assetBaseUrl, 'assets.json'));
+  if (!response.ok) {
+    throw new Error(`Failed to load assets.json: ${response.status} ${response.statusText}`);
+  }
+
+  return normalizeAssetsManifest((await response.json()) as AssetsManifestResponse);
+}
+
+/**
+ * 구버전 `assets.json`처럼 videos 필드가 없는 manifest를 현재 런타임 구조로 맞춘다.
+ */
+export function normalizeAssetsManifest(manifest: AssetsManifestResponse): AssetsManifest {
+  return {
+    ...manifest,
+    videos: Array.isArray(manifest.videos) ? manifest.videos : [],
+  };
+}
+
+/**
+ * `/tcg` 하위 경로와 개별 자산 경로를 안전하게 합친다.
+ * 이미 절대 경로처럼 들어온 조각은 앞쪽 슬래시만 정리한다.
+ */
+export function joinAssetUrl(assetBaseUrl: string, assetPath: string): string {
+  const normalizedBase = normalizeAssetBaseUrl(assetBaseUrl);
+  const normalizedPath = assetPath.replace(/^\/+/, '');
+  return `${normalizedBase}/${normalizedPath}`;
+}
+
+/**
+ * 자산 base URL이 요청 경로와 비교 가능한 형태가 되도록 정규화한다.
+ * 루트 경로는 `/`로 유지하고, 그 외 경로는 앞뒤 중복 슬래시를 정리한다.
+ */
+export function normalizeAssetBaseUrl(assetBaseUrl: string): string {
+  if (!assetBaseUrl.startsWith('/')) {
+    return `/${assetBaseUrl.replace(/^\/+/, '')}`.replace(/\/+$/, '');
+  }
+
+  return assetBaseUrl.replace(/\/+$/, '') || '/';
+}

@@ -1,0 +1,992 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "oaxKg1yQDmK2PWXG",
+      "name": "Arbiter",
+      "rarity": "C",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "1"
+        },
+        {
+          "key": "size",
+          "text": "tiny"
+        },
+        {
+          "key": "creatureType",
+          "text": "aeon, monitor"
+        },
+        {
+          "key": "role",
+          "text": "중재자"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 18,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "다중우주의 균형을 감시하고 동맹을 중재하는 에이온 리더.",
+      "note": "구형 몸체를 지닌 작은 에이온 정찰병이자 외교관. 원본 PF2E 레벨은 1이다."
+    },
+    {
+      "id": "ybkelAOtSIA06fnj",
+      "name": "Animated Broom",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "-1"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "construct, mindless"
+        },
+        {
+          "key": "role",
+          "text": "수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "animated_resilience",
+          "category": "SPECIAL",
+          "name": "마법 구조물",
+          "text": "이 카드가 받는 피해를 1 줄인다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "침입자가 나타나면 단단한 자루로 버티며 방을 지키는 저비용 구조물.",
+      "note": "청소와 시설 관리를 수행하다가 침입자를 공격하도록 마법으로 움직이는 빗자루. 원본 PF2E 레벨은 -1이다."
+    },
+    {
+      "id": "uzH85ifDz5GU525p",
+      "name": "Compsognathus",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "-1"
+        },
+        {
+          "key": "size",
+          "text": "tiny"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal, dinosaur"
+        },
+        {
+          "key": "role",
+          "text": "척후"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "빠른 움직임과 독이 든 이빨로 빈틈을 노리는 기본 경량 유닛.",
+      "note": "호기심이 많고 빠르게 움직이는 작은 이족보행 공룡. 머리부터 꼬리까지 약 3피트이며 원본 PF2E 레벨은 -1이다."
+    },
+    {
+      "id": "WBPEvEqIGvxeQKlp",
+      "name": "Eagle",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "-1"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal"
+        },
+        {
+          "key": "role",
+          "text": "기동 공격"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 3,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "eagle_dive",
+          "category": "MOVE",
+          "name": "급강하",
+          "text": "이 카드가 이동했을 때 다음 공격 동안 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "높은 곳에서 이동한 뒤 급강하해 강한 발톱으로 공격하는 기동 유닛.",
+      "note": "높은 나무나 절벽에 둥지를 틀고 먹잇감을 향해 급강하하는 커다란 맹금류. 원본 PF2E 레벨은 -1이다."
+    },
+    {
+      "id": "E2XL2egIA3QaSDBM",
+      "name": "Flash Beetle",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "-1"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal"
+        },
+        {
+          "key": "role",
+          "text": "교란"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "flash_beetle_glare",
+          "category": "SUMMON",
+          "name": "눈부신 섬광",
+          "text": "등장한 다음 상대 턴이 끝날 때까지 정면으로 인접한 적의 공격력을 -1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "전장에 등장하며 발광 기관을 번쩍여 인접한 적을 교란하는 지원 유닛.",
+      "note": "배 뒤쪽에 밝은 빛을 내는 발광 기관 한 쌍과 단단한 외골격을 지닌 약 3피트 길이의 딱정벌레. 원본 PF2E 레벨은 -1이다."
+    },
+    {
+      "id": "v1UK3IwCB8wCbL3L",
+      "name": "Leaf Leshy",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "0"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "leshy, plant"
+        },
+        {
+          "key": "role",
+          "text": "지원"
+        }
+      ],
+      "slot": 1,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "leshy_leaf_mending",
+          "category": "ACTION",
+          "name": "잎사귀 보살핌",
+          "text": "아군 1장의 HP를 1 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "신중하게 전투를 살피며 다친 아군을 돌보는 작은 식물 수호자.",
+      "note": "과일과 꽃, 잎으로 만든 갑옷과 모자를 걸친 작은 숲의 수호자. 원본 PF2E 레벨은 0이다."
+    },
+    {
+      "id": "Ytp0kRaG8iexmPfN",
+      "name": "Hryngar Sharpshooter",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "0"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "duergar, dwarf, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "명사수"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "hryngar_overwatch",
+          "category": "ATTACK",
+          "name": "감시탑 저격",
+          "text": "공격할 때 대상이 후위라면 이 카드의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "후방에서 전장을 감시하며 멀리 있는 표적을 제압하는 원거리 유닛.",
+      "note": "대상단의 원거리 지원병이자 감시탑 저격수로 일하는 흐린가르 드워프. 원본 PF2E 레벨은 0이다."
+    },
+    {
+      "id": "9wNjq9BirBoxyJVH",
+      "name": "Homunculus",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "0"
+        },
+        {
+          "key": "size",
+          "text": "tiny"
+        },
+        {
+          "key": "creatureType",
+          "text": "construct"
+        },
+        {
+          "key": "role",
+          "text": "조수"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "homunculus_last_service",
+          "category": "RETREAT",
+          "name": "마지막 봉사",
+          "text": "퇴각할 때 인접한 아군 중 HP가 가장 낮은 1장의 HP를 1 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "퇴각하는 순간까지 주인을 보조하는 작은 하인형 구조물.",
+      "note": "진흙과 재, 맨드레이크 뿌리, 샘물, 창조자의 피로 만들어진 작은 첩자 겸 전령. 원본 PF2E 레벨은 0이다."
+    },
+    {
+      "id": "IjFlp5eVVTEg902W",
+      "name": "Dwarf Warrior",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "1"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "dwarf, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "전위 전사"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "dwarf_hold_ground",
+          "category": "FRONT",
+          "name": "자리 지키기",
+          "text": "전위에 있을 때 이 카드의 HP를 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "훌륭한 장비와 흔들리지 않는 결의로 전위를 지키는 방어 유닛.",
+      "note": "정교하게 만든 장비를 갖추고 강력한 적을 상대로도 자리를 지키는 드워프 전사. 원본 PF2E 레벨은 1이다."
+    },
+    {
+      "id": "9XccneFB5DmMHig0",
+      "name": "Gnome Bard",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "1"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "gnome, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "음유시인"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "gnome_traveling_song",
+          "category": "BACK",
+          "name": "여행의 노래",
+          "text": "후위에 있을 때 다른 아군의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "후위에서 활기찬 공연으로 아군의 전투 의지를 북돋우는 지원 유닛.",
+      "note": "선명한 머리카락과 눈 색깔, 활기찬 성격을 지닌 창의적이고 호기심 많은 노움 바드. 원본 PF2E 레벨은 1이다."
+    },
+    {
+      "id": "BN5Lb6IsQ9Wyu3rL",
+      "name": "Wolf",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "1"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal"
+        },
+        {
+          "key": "role",
+          "text": "무리 사냥꾼"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "wolf_pack_hunt",
+          "category": "GLOBAL",
+          "name": "무리 사냥",
+          "text": "다른 아군 동물의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "무리를 이루어 약한 먹잇감을 포위하고 아군 동물의 공격을 강화하는 유닛.",
+      "note": "부모와 새끼로 이루어진 가족 무리를 지어 숲과 언덕을 돌아다니며 사냥하는 늑대. 원본 PF2E 레벨은 1이다."
+    }
+  ]
+}

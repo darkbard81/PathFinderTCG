@@ -1,0 +1,30 @@
+{
+  "$schema": "../stage.schema.json",
+  "id": "level07",
+  "order": 8,
+  "name": "Level 07",
+  "description": "PF2E Monster Core의 레벨 7 몬스터로 구성된 강화 덱과 전투하는 Stage입니다.",
+  "enemyDeckId": "deck-enemy-level07",
+  "enemyDeckPath": "cards/deck_level07.json",
+  "victoryCondition": {
+    "type": "DEFEAT_ENEMY_LEADER"
+  },
+  "defeatConditions": [
+    {
+      "type": "PLAYER_LEADER_DEFEATED"
+    }
+  ],
+  "rewards": {
+    "description": "승리 시 Level 07 적 카드 일부를 보상 후보로 사용할 수 있습니다.",
+    "enemyCardDrop": {
+      "source": "ENEMY_DROP",
+      "chancePercent": 50,
+      "maxCards": 5,
+      "excludeLeader": true
+    }
+  },
+  "unlock": {
+    "type": "STAGE_CLEARED",
+    "stageId": "level06"
+  }
+}

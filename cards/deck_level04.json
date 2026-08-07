@@ -1,0 +1,999 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "SipdgBCL7XuuEjn6",
+      "name": "Kholo Sergeant",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "humanoid, kholo"
+        },
+        {
+          "key": "role",
+          "text": "용병 지휘관"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 2,
+      "hp": 33,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "동료의 안전과 전쟁 기술을 책임지는 Level 04 콜로 지휘관.",
+      "note": "콜로가 용병단이나 습격대를 만들면 가장 강하거나 존경받는 구성원을 헌트 리더 또는 서전트로 정하는 경우가 많다. 이들은 무리 동료의 안전과 성공을 책임지며 전쟁 기술을 집중적으로 훈련한다. 무기 솜씨가 뛰어나 강력한 상대다. 가정 내 분쟁을 해결하거나 경쟁 콜로 집단과 협상하는 등 용병단의 다른 문제에서도 지도자 역할을 맡을 수 있다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "0rm0UDbXvwg4sSxQ",
+      "name": "Arboreal Warden",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "plant, wood"
+        },
+        {
+          "key": "role",
+          "text": "삼림 수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 9,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "arboreal_bark_armor",
+          "category": "SPECIAL",
+          "name": "두꺼운 수피",
+          "text": "받는 피해를 3 줄인다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "두꺼운 수피로 숲의 경계를 지키는 방랑 수호자.",
+      "note": "아보리얼 워든은 아보리얼 사회의 레인저다. 이 떠돌이들은 자신이 사는 숲에 타고난 호기심을 지녀 같은 장소에 두 번 뿌리내리고 쉬는 일이 거의 없다. 이런 방랑벽 덕분에 숲 순찰병과 정찰병으로 이상적이다. 튼튼한 전투원이지만 위험한 적을 혼자 상대할 만큼 무모하지는 않아, 위협을 발견하면 아보리얼 리전트에게 보고한다. 드물게 많은 워든이 모여 '콥스'라는 집단을 이룬다. 콥스는 숲의 경계를 넘어 변두리를 조사하고 잠재적 위협에 관한 정보를 모은 뒤 돌아와 보고한다. 다른 생물의 동기를 이해한다고 주장하지 않으며, 자연계의 여러 힘처럼 자기 숲과 관계없는 필멸자의 일에는 무관심하다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "nEB0UekUmP5L8Tj8",
+      "name": "Dwarf Stonecaster",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "dwarf, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "대지술사"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 9,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "stonecaster_fault_step",
+          "category": "MOVE",
+          "name": "단층 이동",
+          "text": "이동했을 때 다음 공격 동안 공격력을 +3으로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "지면을 흔들어 자리를 바꾸고 다음 일격을 강화하는 대지술사.",
+      "note": "모든 드워프는 대지와 연결되어 있지만 스톤캐스터는 그 유대를 집중적으로 다듬었다. 여러 해의 명상으로 바위를 만들어 내고 땅 자체를 흔드는 능력을 얻었다. 이 원소 전문가는 지맥술을 중요하게 여기는 공동체에서 높은 존경을 받는 경우가 많다. 대지와 평범한 수준보다 강하게 연결된 어린 드워프는 일찍부터 스톤캐스터에게 보내져 훈련받기도 한다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "cvfIkEF6xmWn2soN",
+      "name": "Gargoyle",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, earth"
+        },
+        {
+          "key": "role",
+          "text": "매복 석상"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 8,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "gargoyle_ambush_drop",
+          "category": "SUMMON",
+          "name": "석상 낙하",
+          "text": "전열에 등장했을 때 정면의 적 UNIT에게 피해를 3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "석상으로 위장했다가 정면의 적 위로 떨어지는 사냥꾼.",
+      "note": "가고일은 원소의 돌로 이루어진 괴물 사냥꾼이다. 장식용 석상과 닮은 모습을 이용해 낮에는 도시 한가운데 숨어 있다가 밤에 운 나쁜 보행자를 덮친다. 가장 흔한 모습은 박쥐 같은 날개와 뿔을 지닌 인간형이지만 개체마다 차이가 크며, 더 인간에 가깝거나 알려진 어떤 생물과도 닮지 않은 경우도 있다. 특징은 고정되지 않아 한 도시에 오래 머문 가고일은 날마다 조금씩 현지 건축 양식과 닮아 간다. 인내심이 강해 공격할 기회를 기다리며 오랜 시간 석상으로 위장할 수 있다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "gWgMg7cARqOe82O6",
+      "name": "Griffon",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal"
+        },
+        {
+          "key": "role",
+          "text": "비행 지원수"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 2,
+      "hp": 8,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "griffon_wind_lift",
+          "category": "ACTION",
+          "name": "상승 기류",
+          "text": "행동으로 아군 카드 하나의 공격력을 +2 한다. 이 효과는 이 카드가 전장을 떠날 때까지 지속된다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "강한 날갯짓으로 아군의 공격을 밀어 올리는 그리폰.",
+      "note": "그리폰은 많은 문화에서 자유와 힘의 상징으로 존경받는 위엄 있는 짐승이다. 사자의 뒷부분과 거대한 맹금류의 머리, 날개, 앞다리를 지닌 눈에 띄는 모습이다. 보통 독수리를 닮지만 매나 송골매, 물수리, 독수리의 특징을 지닌 개체도 있다. 드물게 뒷부분이 표범이나 호랑이 같은 다른 대형 고양잇과를 닮는다. 이런 변화는 환경에 맞춰 나타나는 듯하다. 예를 들어 북부 아비스탄의 매우 희귀한 그리폰은 그룬기르 스라소니의 뒷몸과 흰올빼미의 상반신을 지녔다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "vN2alMciNlKpBpKN",
+      "name": "Minotaur Hunter",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "미궁 사냥꾼"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 9,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "minotaur_opening_gore",
+          "category": "ATTACK",
+          "name": "미궁의 첫 돌진",
+          "text": "피해를 입지 않은 적을 공격할 때 피해를 +3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "온전한 먹잇감에 뿔을 세우고 첫 돌진을 가하는 사냥꾼.",
+      "note": "미노타우로스는 뿔과 발굽, 온몸을 덮은 털 같은 소의 특징을 지닌 거대한 인간형 종족이다. 머리도 황소나 암소를 닮았으며, 성격에 따라 눈에는 호기심이나 분노가 가득하다. 몸집과 평판 때문에 공격적인 야만인으로 오해받지만, 많은 미노타우로스는 삶의 대부분을 기술 연마에 바치는 숙련된 장인이다. 공동체는 외부와 거리를 두는 경향이 있으며, 교묘한 미궁 한가운데나 복잡하게 얽힌 지하 동굴에서 발견된다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "9VMoTqyVaKc4ZR4H",
+      "name": "Phantom Knight",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "ethereal, incorporeal, phantom, spirit"
+        },
+        {
+          "key": "role",
+          "text": "영체 기사"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "phantom_last_oath",
+          "category": "RETREAT",
+          "name": "마지막 맹세",
+          "text": "퇴각할 때 모든 적 UNIT에게 피해를 3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "사라지는 순간에도 평생의 맹세를 적에게 새기는 기사.",
+      "note": "자신이 믿는 대의를 위해 생을 마친 캐벌리어나 기사는 의지가 특히 강한 팬텀이 된다. 동기는 서로 다르지만, 연옥과 같은 상태에서도 평생의 임무를 계속하려는 경우가 많다. 강한 의지 덕분에 물질적인 몸이 없어도 만만치 않은 전투원이 된다. 살아 있는 교회나 기사단 구성원을 찾거나, 생전에 알던 필멸자를 만나 현실과 연결된 감각을 유지하고 언데드의 타락을 피하려 할 수 있다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "Ehtm5k9iBYTvSUcZ",
+      "name": "Pixie",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "fey, sprite"
+        },
+        {
+          "key": "role",
+          "text": "요정 궁수"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "pixie_dust_guard",
+          "category": "FRONT",
+          "name": "보호의 가루",
+          "text": "전열에 있는 동안 HP를 +3으로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "픽시 가루로 공격을 비껴 내며 전열을 누비는 궁수.",
+      "note": "끝없는 호기심과 지나친 흥분, 약간의 장난기를 지닌 픽시는 떠돌이이자 장난꾼이다. 픽시 가루로 온갖 기발한 상황을 만들고 자신을 보호한다. 화살에 마법 효과를 싣지 않을 때조차 활쏘기 실력을 매우 자랑스러워한다. 이슬방울을 맞히거나 덩굴과 머리카락을 끊는 연습을 자주 한다. 빠르고 두서없이 이어지는 말투 때문에 다른 생물이 이해하기 어려워하기도 한다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "C1gYuDSwTkTIkAcC",
+      "name": "Ratfolk Grenadier",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "humanoid, ratfolk"
+        },
+        {
+          "key": "role",
+          "text": "연금 지원병"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 2,
+      "hp": 7,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "grenadier_underdog_mix",
+          "category": "BACK",
+          "name": "약자의 혼합물",
+          "text": "후열에 있는 동안 기본 공격력이 3 이하인 다른 아군 UNIT의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "약한 동료에게 연금 혼합물을 건네 전력을 끌어올리는 지원병.",
+      "note": "그레나디어는 연금술 기술과 은신을 이용해 공동체를 지킨다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "VotlWUsFKdOrHWF6",
+      "name": "Shadow",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "incorporeal, undead, unholy"
+        },
+        {
+          "key": "role",
+          "text": "그림자 교란자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "shadow_dominance_drain",
+          "category": "GLOBAL",
+          "name": "잠식하는 그림자",
+          "text": "전장에 있는 동안 모든 적 UNIT의 지배력을 -1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "적 진형의 영향력을 그림자 속으로 잠식시키는 언데드.",
+      "note": "섀도라고 알려진 신비로운 언데드는 어두운 곳에 숨어 빛에서 너무 멀리 벗어난 이를 노린다. 원본 PF2E 레벨은 4이다."
+    },
+    {
+      "id": "h3JksV9Idr9eZLkE",
+      "name": "Werebear",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "4"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, human, humanoid, werecreature"
+        },
+        {
+          "key": "role",
+          "text": "격노 수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 10,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "werebear_wounded_fury",
+          "category": "ATTACK",
+          "name": "상처의 확신",
+          "text": "자신의 HP가 절반 이하일 때 공격 피해를 +2 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "상처가 깊어질수록 확신과 분노가 강해지는 곰인간.",
+      "note": "곰인간은 변신하는 동안 흔들림 없는 확신에 사로잡힌다. 이 확신은 숭고한 대의를 위해 열정적으로 행동하게 만들기도 하지만, 냉혹하고 난폭하며 한 가지 목표에만 집착하게 할 수도 있다. 야수의 기질과 목표가 모든 것을 압도하면 동맹조차 잊어버리기 쉽다. 그 때문에 곰인간은 대개 홀로 살며, 가족끼리도 필요한 기간 이상 함께 지내는 일이 드물다. 자신이나 보호하는 자연 지역, 보통 숲을 위협하는 것이 없다면 동물 형태의 곰인간은 먹이를 찾고 잠을 자며 밤을 보내는 데 만족한다. 원본 PF2E 레벨은 4이다."
+    }
+  ]
+}

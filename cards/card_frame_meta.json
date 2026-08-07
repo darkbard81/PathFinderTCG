@@ -1,0 +1,243 @@
+{
+  "version": "card-frame-metadata-v0.2",
+  "canvas": {
+    "width": 1024,
+    "height": 1536,
+    "ratio": "2:3"
+  },
+  "layoutRule": {
+    "lowerOrbTopY": 1294,
+    "description": "하단 수정구슬의 상단 y좌표를 크로마키 영역과 은색 내부 프레임의 최하단 기준선으로 사용한다."
+  },
+  "regions": {
+    "card_base": {
+      "type": "background",
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 1536,
+      "fill": "silver_metal_gradient",
+      "description": "카드 전체 배경. 크로마키 영역 바깥의 은색 금속 영역."
+    },
+    "inner_chroma_area": {
+      "type": "image_placeholder",
+      "x": 96,
+      "y": 120,
+      "width": 832,
+      "height": 1174,
+      "bottomY": 1294,
+      "cornerRadius": 42,
+      "fill": "#FF00FF",
+      "description": "카드 일러스트 또는 메인 비주얼이 들어가는 크로마키 영역. 하단은 하단 수정구슬 상단과 일치한다."
+    },
+    "outer_gold_frame": {
+      "type": "frame",
+      "x": 24,
+      "y": 24,
+      "width": 976,
+      "height": 1488,
+      "strokeWidth": 48,
+      "stroke": "gold_gradient",
+      "corner": "square",
+      "description": "카드 전체 외곽을 감싸는 금색 프레임."
+    },
+    "inner_silver_frame": {
+      "type": "frame",
+      "x": 58,
+      "y": 58,
+      "width": 908,
+      "height": 1236,
+      "bottomY": 1294,
+      "strokeWidth": 28,
+      "stroke": "silver_dark_gradient",
+      "description": "크로마키 영역 바깥을 감싸는 은색 내부 프레임. 하단은 하단 수정구슬 상단과 일치한다."
+    },
+    "top_left_orb": {
+      "type": "orb",
+      "position": "top_left",
+      "center": {
+        "x": 136,
+        "y": 136
+      },
+      "radius": 106,
+      "holderRadius": 117,
+      "color": "blue",
+      "bounds": {
+        "x": 30,
+        "y": 30,
+        "width": 212,
+        "height": 212
+      },
+      "holderBounds": {
+        "x": 19,
+        "y": 19,
+        "width": 234,
+        "height": 234
+      },
+      "description": "좌상단 청색 수정구슬 영역."
+    },
+    "top_right_orb": {
+      "type": "orb",
+      "position": "top_right",
+      "center": {
+        "x": 888,
+        "y": 136
+      },
+      "radius": 106,
+      "holderRadius": 117,
+      "color": "green",
+      "bounds": {
+        "x": 782,
+        "y": 30,
+        "width": 212,
+        "height": 212
+      },
+      "holderBounds": {
+        "x": 771,
+        "y": 19,
+        "width": 234,
+        "height": 234
+      },
+      "description": "우상단 초록색 수정구슬 영역."
+    },
+    "bottom_left_orb": {
+      "type": "orb",
+      "position": "bottom_left",
+      "center": {
+        "x": 136,
+        "y": 1400
+      },
+      "radius": 106,
+      "holderRadius": 117,
+      "color": "yellow",
+      "topY": 1294,
+      "bounds": {
+        "x": 30,
+        "y": 1294,
+        "width": 212,
+        "height": 212
+      },
+      "holderBounds": {
+        "x": 19,
+        "y": 1283,
+        "width": 234,
+        "height": 234
+      },
+      "description": "좌하단 노란색 수정구슬 영역. 구슬 상단 y=1294가 크로마키/내부 프레임 하단 기준선이다."
+    },
+    "bottom_right_orb": {
+      "type": "orb",
+      "position": "bottom_right",
+      "center": {
+        "x": 888,
+        "y": 1400
+      },
+      "radius": 106,
+      "holderRadius": 117,
+      "color": "red",
+      "topY": 1294,
+      "bounds": {
+        "x": 782,
+        "y": 1294,
+        "width": 212,
+        "height": 212
+      },
+      "holderBounds": {
+        "x": 771,
+        "y": 1283,
+        "width": 234,
+        "height": 234
+      },
+      "description": "우하단 빨간색 수정구슬 영역. 구슬 상단 y=1294가 크로마키/내부 프레임 하단 기준선이다."
+    },
+    "ability_text_area": {
+      "type": "text_area",
+      "x": 128,
+      "y": 900,
+      "width": 768,
+      "height": 330,
+      "cornerRadius": 22,
+      "fill": "#FFFFFF",
+      "opacity": 0.5,
+      "stroke": "#FFFFFF",
+      "fontFamily": "CookieRun",
+      "fontFile": "fonts/CookieRun Bold.ttf",
+      "fontSize": 31,
+      "titleFontSize": 31,
+      "nameColor": "#12351A",
+      "titleColor": "#7A2D18",
+      "textColor": "#17251A",
+      "textStrokeColor": "#DFDFDF",
+      "textStrokeWidth": 0,
+      "paddingX": 28,
+      "paddingY": 24,
+      "description": "카드 능력 텍스트를 배치하는 반투명 흰색 텍스트 영역. textStrokeColor와 textStrokeWidth로 어빌리티 글자 외곽선을 조정한다."
+    },
+    "name_text_area": {
+      "type": "text_area",
+      "x": 253,
+      "y": 1306,
+      "width": 517,
+      "height": 100,
+      "cornerRadius": 14,
+      "fill": "#000000",
+      "opacity": 0.48,
+      "stroke": "#000000",
+      "fontFamily": "CookieRun",
+      "fontFile": "fonts/CookieRun Bold.ttf",
+      "fontSize": 42,
+      "titleFontSize": 42,
+      "nameColor": "#12351A",
+      "titleColor": "#7A2D18",
+      "textColor": "#FFFFFF",
+      "textStrokeColor": "#222222",
+      "textStrokeWidth": 2,
+      "paddingX": 18,
+      "paddingY": 18,
+      "description": "카드 이름을 하단 중앙 영역에 배치하는 텍스트 영역. textStrokeColor와 textStrokeWidth로 이름 글자 외곽선을 조정한다."
+    }
+  },
+  "safeAreas": {
+    "main_art": {
+      "x": 96,
+      "y": 120,
+      "width": 832,
+      "height": 1174,
+      "description": "크로마키를 교체해 실제 카드 일러스트를 넣을 안전 영역."
+    },
+    "bottom_center_between_orbs": {
+      "x": 253,
+      "y": 1294,
+      "width": 518,
+      "height": 222,
+      "description": "하단 좌우 수정구슬 holder 사이의 중앙 안전 영역. 카드명 또는 짧은 메타 텍스트 배치 후보."
+    },
+    "bottom_center_between_crystals": {
+      "x": 242,
+      "y": 1294,
+      "width": 540,
+      "height": 212,
+      "description": "하단 좌우 수정구슬 실제 원형 영역 사이의 중앙 안전 영역."
+    }
+  },
+  "anchors": {
+    "lower_orb_top_line": {
+      "y": 1294,
+      "description": "하단 수정구슬 상단 기준선."
+    },
+    "card_center": {
+      "x": 512,
+      "y": 768
+    }
+  },
+  "layerOrder": [
+    "card_base",
+    "inner_chroma_area",
+    "outer_gold_frame",
+    "inner_silver_frame",
+    "corner_plates",
+    "orb_holders",
+    "orbs",
+    "orb_highlights"
+  ]
+}

@@ -1,0 +1,999 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "xgKDQB6ZYmAutwAm",
+      "name": "Hobgoblin General",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "hobgoblin, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "군단 지휘관"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 3,
+      "hp": 48,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "군대의 선두에서 전술을 증명하는 Level 06 홉고블린 장군.",
+      "note": "홉고블린 제너럴은 전체 군대의 지휘관이자 홉고블린 정착지의 통치자다. 지배자의 사치가 자신을 나약하게 만드는 것을 허용하지 않는다. 직접 전장에 나가 군대를 이끌며, 평생 전투 기술을 갈고닦은 진정한 보상은 군대의 선두에서 실력을 증명할 기회라고 생각한다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "MXSKccQqbQqQ77Ii",
+      "name": "Aapoph Granitescale",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "humanoid, mutant, serpentfolk"
+        },
+        {
+          "key": "role",
+          "text": "화강암 수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 13,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "granitescale_plating",
+          "category": "SPECIAL",
+          "name": "화강암 비늘",
+          "text": "받는 피해를 3 줄인다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "단단한 회색 판으로 모든 공격을 받아 내는 서펀트포크.",
+      "note": "그래니트스케일이라 불리는 돌연변이 아포프는 단단한 회색 판으로 덮인 육중한 몸을 지녔다. 이 비늘은 몸을 보호하지만 너무 강한 충격을 받으면 떨어진다. 그래니트스케일은 떨어진 비늘을 작은 조각으로 깎아 창에 달아 딸랑이로 쓰는 것을 좋아한다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "CYt04IKRQeiC9Ly9",
+      "name": "Ankylosaurus",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "huge"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal, dinosaur"
+        },
+        {
+          "key": "role",
+          "text": "중장 돌격수"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 13,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "ankylosaurus_tail_momentum",
+          "category": "MOVE",
+          "name": "꼬리 관성",
+          "text": "이동했을 때 다음 공격 동안 공격력을 +4로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "육중한 몸의 관성을 꼬리 일격으로 이어 가는 공룡.",
+      "note": "안킬로사우루스는 몸이 낮고 네 발로 걷는 중무장한 공룡으로, 고집이 세고 성미가 급하다. 초식동물이지만 기분이 나쁘다는 이유만으로 영역에 들어온 존재를 공격하기도 한다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "Bkr0soTDhQq1qjWx",
+      "name": "Hydra",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "huge"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast"
+        },
+        {
+          "key": "role",
+          "text": "다두 포식자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 12,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "hydra_many_maws",
+          "category": "SUMMON",
+          "name": "다중 습격",
+          "text": "전열에 등장했을 때 정면의 적 UNIT에게 피해를 4 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "여러 머리가 동시에 정면의 적을 물어뜯는 히드라.",
+      "note": "히드라는 머리가 여러 개 달린 성질 고약한 뱀 형태의 야수다. 식욕이 왕성하며 놀라운 재생 능력 때문에 널리 두려움의 대상이 된다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "lfUUnFazGLAtqRsP",
+      "name": "Iron Hag",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "hag, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "감금 마녀"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 10,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "iron_hag_cage_hex",
+          "category": "ACTION",
+          "name": "철창 저주",
+          "text": "행동으로 적 카드 하나에 피해를 4 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "마법 철창의 저주로 선택한 적을 짓누르는 해그.",
+      "note": "아이언 해그는 맞서 싸우는 법조차 모를 만큼 어린 이들을 노리는 유괴범이다. 가장 흔히 요람의 아기를 데려가지만, 겁이 많거나 불안에 시달리는 어린이와 청소년을 표적으로 삼기도 한다. 붙잡은 아이를 탑이나 마법이 걸린 지하 감옥에 가두고, 바깥세상은 무섭고 위험하다는 이야기를 들려주어 탈출할 생각조차 하지 못하게 한다. 이런 방법이 통하지 않으면 더 노골적으로 감금하면서도 모두 상대를 위한 일이라고 주장한다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "vqYrJ33XgoeQUUle",
+      "name": "Lamia",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "저주 포식자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 11,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "lamia_backline_curse",
+          "category": "ATTACK",
+          "name": "야수화 저주",
+          "text": "후열의 적을 공격할 때 피해를 +4 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "후열의 이성을 흐려 야수적 공포에 빠뜨리는 라미아.",
+      "note": "라미아는 오래전 자신들이 저주받았던 것처럼, 접촉한 이에게 저주를 내릴 수 있다. 이 저주는 정신을 흐리고 의식적인 사고를 야수의 본능 쪽으로 몰아간다. 영향을 받은 생물은 무모해지고 자기 행동의 결과를 제대로 인식하지 못한다. 그 결과 라미아의 교묘한 환영과 은밀한 매혹에 더욱 쉽게 넘어간다. 라미아의 야수적 본성과 저주받은 손길을 근거로, 일부 학자는 최초의 라미아가 수천 년 전 스스로 이성과 지성을 버리고 단순한 짐승의 삶을 받아들였다고 추측한다. 그 변화가 라마슈투가 내린 괴물 같은 선물이었는지, 아니면 책임을 저버린 대가로 파라스마가 내린 저주였는지는 오늘날까지 논쟁거리다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "XZWUQklzWF6YFPmG",
+      "name": "Mummy Guardian",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "mummy, undead, unholy"
+        },
+        {
+          "key": "role",
+          "text": "무덤 수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 13,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "mummy_tomb_miasma",
+          "category": "RETREAT",
+          "name": "무덤의 독기",
+          "text": "퇴각할 때 모든 적 UNIT에게 피해를 4 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "쓰러지며 무덤의 보존 독기를 전장에 퍼뜨리는 미라.",
+      "note": "대부분의 미라 가디언은 잔인하고 이기적인 주인이 무덤을 침입자로부터 지키게 하려고 만들었다. 전통적인 제작법은 희생자가 죽기 훨씬 전부터 시작되는 길고 가혹한 과정이다. 희생자에게 영양가 있는 음식을 주지 않고, 몸이 빠르게 마르도록 특수한 향신료와 보존제, 독성 물질을 먹인다. 마지막 단계에서는 움직일 수 없지만 의식은 남은 상태에서 신체를 미라화하는 시술을 받는다. 이후 장례용 붕대로 감싸고 강령 마법이 걸린 석관에 봉인해, 먼 훗날의 명령을 기다리게 한다. 이미 죽은 몸으로 미라 가디언을 만드는 다른 방법도 가능하지만, 사후의 수호자로 이런 언데드를 만들려는 이들은 대개 그 결과물이 열등하다고 여긴다. 그들은 살아 있는 이를 미라로 만드는 과정의 고통이 필수 단계라고 믿기 때문이다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "qRUqoezeEnQ2KdyT",
+      "name": "Nightmare",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, fiend, unholy"
+        },
+        {
+          "key": "role",
+          "text": "화염 기병"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 11,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "nightmare_blazing_vanguard",
+          "category": "FRONT",
+          "name": "죽음의 전조",
+          "text": "전열에 있는 동안 공격력을 +3으로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "불꽃에 휩싸인 몸으로 전열을 짓밟는 악몽마.",
+      "note": "나이트메어는 불꽃에 휩싸인 말의 모습을 한 죽음의 전조다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "bsrQp0pLgvjJr6mC",
+      "name": "Revenant",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "undead"
+        },
+        {
+          "key": "role",
+          "text": "복수 지원자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 12,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "revenant_wounded_vengeance",
+          "category": "BACK",
+          "name": "상처의 복수",
+          "text": "후열에 있는 동안 피해를 입은 다른 아군 undead UNIT의 공격력을 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "상처 입은 언데드 동료의 복수심을 끌어내는 추적자.",
+      "note": "레버넌트는 자신의 죽음 뒤 일어나 범인을 향한 복수 하나만을 좇는 집착적인 언데드 추적자다. 일반적으로 철저히 배신당하거나 버려진 채 고통스럽게 죽은 사람만 레버넌트가 된다고 알려져 있지만, 그런 희생자도 반드시 무덤에서 일어나는 것은 아니다. 때로는 실제로 사고였던 죽음도 레버넌트가 전모를 이해하지 못하면 살인으로 받아들일 수 있다. 그런 경우 상대가 죽일 의도가 없었더라도 의미가 없다. 레버넌트는 자비를 모르고 용서하지 않기 때문이다. 생전의 기억은 거의 남지 않으며, 복수라는 목표를 이루는 데 필요한 것만 기억한다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "KgJq51AeYrENo3Db",
+      "name": "Will-o'-Wisp",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "aberration, air"
+        },
+        {
+          "key": "role",
+          "text": "공포 유인자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 8,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "wisp_unmoved_dread",
+          "category": "GLOBAL",
+          "name": "길 잃은 공포",
+          "text": "전장에 있는 동안 이번 턴에 이동하거나 공격하지 않은 모든 적 UNIT의 공격력을 -1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "움직임을 멈춘 적의 불안을 먹고 공격 의지를 약화시키는 빛.",
+      "note": "윌오위스프는 악의적인 색색의 빛덩이로, 외딴 습지와 숲을 떠돌며 방심한 여행자를 위험한 곳으로 유인한다. 빛의 색과 밝기를 바꿀 수 있으며, 흔들리는 등불이나 멀리 있는 불을 흉내 내 길을 잃은 여행자를 안전한 길에서 벗어나게 만드는 것을 즐긴다. 빛을 완전히 꺼 Invisible 상태가 될 수도 있다. 희생자가 완전히 길을 잃고 멀리서 흔들리던 빛이 안전으로 이끄는 것이 아니었음을 깨달은 순간 이 능력을 쓰는 것을 특히 좋아한다. 보이지 않는 상태에서도 먹잇감에서 멀리 떨어지지 않는데, 상대가 느끼는 공포와 불안을 먹이로 삼기 때문이다. 원본 PF2E 레벨은 6이다."
+    },
+    {
+      "id": "5iqkL9Me5164H7NY",
+      "name": "Wyvern",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "6"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "dragon"
+        },
+        {
+          "key": "role",
+          "text": "독성 비룡"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 12,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "wyvern_opposing_dive",
+          "category": "ATTACK",
+          "name": "정면 급강하",
+          "text": "자신과 같은 열의 적을 공격할 때 피해를 +3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "정면의 먹잇감에 발톱부터 급강하하는 독성 드레이크.",
+      "note": "와이번은 성급하고 공격적이라는 평판이 충분히 납득되는 독성 드레이크다. 몸길이는 최대 15피트, 무게는 1,000파운드에 이르며 튼튼한 몸 덕분에 큰 먹잇감에게 발톱부터 들이받아도 큰 위험이 없다. 돌진의 힘으로 상대를 휘청이게 만든 뒤 타는 듯한 독을 주입하거나 가까운 절벽 너머로 운반한다. 먹잇감을 온전한 상태로 둥지까지 옮길 힘은 부족하므로, 협곡 위로 들어 올렸다가 떨어뜨린 뒤 내려가 먹는 경우가 훨씬 많다. 원본 PF2E 레벨은 6이다."
+    }
+  ]
+}

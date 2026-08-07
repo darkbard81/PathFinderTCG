@@ -24,6 +24,9 @@ coverage/
 /assets/*
 !/assets/README.md
 
+# 카드 도구의 임시 산출물 (원본 저장소 기준 약 72MB)
+/cards/temp/
+
 # Generated helper files
 /generated/
 !/generated/README.md

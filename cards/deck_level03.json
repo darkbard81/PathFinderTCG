@@ -1,0 +1,999 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "7w1w7VTnIWMBdFux",
+      "name": "Xulgath Leader",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "humanoid, xulgath"
+        },
+        {
+          "key": "role",
+          "text": "전투 지휘관"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 2,
+      "hp": 27,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "폭력적인 힘으로 Level 03 무리를 지휘하는 줄가스 지도자.",
+      "note": "줄가스 지도자는 보통 공동체에서 가장 강하고 폭력적인 구성원이다. 하지만 특히 큰 집단에서는 강력한 데몬 숭배자나 다른 괴물이 줄가스를 하인이나 제물로 이용하려고 클러치를 이끄는 경우도 있다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "yQ2mosomuAPiLMkU",
+      "name": "Animated Statue",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "construct, mindless"
+        },
+        {
+          "key": "role",
+          "text": "석상 수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 8,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "statue_stone_shell",
+          "category": "SPECIAL",
+          "name": "석재 외피",
+          "text": "받는 피해를 2 줄인다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "단단한 석재 외피로 공격을 흘리는 전열 수호자.",
+      "note": "움직이는 석상은 무덤과 작은 성소, 관공서의 특정 구역을 지키는 데 자주 쓰인다. 평범한 석상 사이에 배치해 침입자가 분노를 일으킬 때까지 정체를 숨길 수 있다. 양심이 부족하고 의심이 많은 모험가 중에는 모든 석상이 움직여 공격할 것이라 생각해 보이는 것마다 부수고, 무해한 고대 유물을 망가뜨리는 이도 많다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "V1Kr5aiPaTM0mDFu",
+      "name": "Ankhrav",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal"
+        },
+        {
+          "key": "role",
+          "text": "굴착 돌격수"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "ankhrav_burrow_rush",
+          "category": "MOVE",
+          "name": "굴착 돌진",
+          "text": "이동했을 때 다음 공격 동안 공격력을 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "지하로 파고들어 위치를 바꾼 뒤 강하게 들이받는 돌격수.",
+      "note": "말 크기의 굴 파는 괴물인 앙크라브는 대도시처럼 인구가 밀집한 곳을 대체로 피한다. 하지만 가축과 인간형 종족을 좋아하는 습성 때문에 깊은 야생에만 오래 머물지는 않는다. 밭에 앙크라브가 들끓기 시작한 절박한 농부는 모험가에게 도움을 청하는 것 외에 선택지가 거의 없다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "pzQhR0mc8HEhXLOZ",
+      "name": "Athamaru Hunter",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "amphibious, humanoid, locathah"
+        },
+        {
+          "key": "role",
+          "text": "작살 사냥꾼"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "athamaru_harpoon_entry",
+          "category": "SUMMON",
+          "name": "가시 작살",
+          "text": "전열에 등장했을 때 정면의 적 UNIT에게 피해를 2 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "등장과 함께 가시 작살로 정면의 적을 붙드는 사냥꾼.",
+      "note": "깊은 바다에서 창과 특수 쇠뇌로 무장한 물고기형 인간종 아타마루 무리는 거대 곰치에 올라 상어, 바다뱀, 거대 오징어를 추적한다. 첫 공격을 맡은 사냥꾼은 큰 해초 부채가 펼쳐지는 가시 작살을 쏘아 먹잇감의 움직임을 늦추고 지치게 한다. 대담한 일부는 박힌 작살을 손잡이처럼 이용해 잠시 먹잇감 위에 매달리기도 한다. 대상이 지치면 남은 사냥꾼이 장창으로 마무리한다. 이 사냥 전통은 숙련된 전사를 길러 내고 잠재적인 공격자를 억제하기 위해 발전했으며, 다른 수생 문화권에서 수세기 동안 억압과 부당한 대우를 받은 경험도 배경이 되었다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "F2Xhn4rqPAj55w3O",
+      "name": "Boggard Swampseer",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "amphibious, boggard, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "늪지 주술사"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "swampseer_bog_bolt",
+          "category": "ACTION",
+          "name": "늪의 저주",
+          "text": "행동으로 적 카드 하나에 피해를 3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "고군타의 늪지 마법을 응축해 적을 공격하는 주술사.",
+      "note": "보가드 스왐프시어는 데몬 군주 고군타를 숭배해 마법을 받았다. 그 힘으로 보가드 마을을 지배하고 주민을 통제하며 주변 공동체에 대한 습격을 계획한다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "Q1qjdG3i8TZuEOq6",
+      "name": "Centaur Herbalist",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, centaur, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "약초 전사"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "herbalist_weakening_strike",
+          "category": "ATTACK",
+          "name": "쇠약 약초",
+          "text": "피해를 입지 않은 적을 공격할 때 피해를 +2 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "약초 독으로 온전한 적의 방어를 먼저 무너뜨리는 전사.",
+      "note": "많은 켄타우로스는 자신들이 돌아다니는 지역의 식물 연구에 능숙하다. 이런 약초를 사용해 동료를 치료하거나 자신을 공격하는 상대에게 불편한 증상을 일으킬 수 있다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "xN5J9S485LxFZMkL",
+      "name": "Cinder Rat",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "elemental, fire"
+        },
+        {
+          "key": "role",
+          "text": "연기 원소"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "cinder_rat_smoke_burst",
+          "category": "RETREAT",
+          "name": "유독 연무",
+          "text": "퇴각할 때 모든 적 UNIT에게 피해를 2 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "퇴각하며 해로운 연기를 퍼뜨리는 불 원소 짐승.",
+      "note": "이 거대한 설치류는 타오르는 숯과 원소 불꽃으로 이루어졌으며, 불붙은 몸에서 해로운 연기가 끊임없이 뿜어져 나온다. 다른 불 원소조차 신더 랫을 불쾌하게 여기며 이들이 불의 차원에서 다른 곳으로 소환되면 반가워한다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "MrzlaE7k1PEsd3iQ",
+      "name": "Cockatrice",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast"
+        },
+        {
+          "key": "role",
+          "text": "석화 파수꾼"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "cockatrice_stone_guard",
+          "category": "FRONT",
+          "name": "석화 피부",
+          "text": "전열에 있는 동안 HP를 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "석화 독으로 굳어진 몸을 앞세우는 파수꾼.",
+      "note": "못생기고 공격적인 코카트리스는 쓰레기 구덩이와 언덕의 폐기물 더미를 돌아다니며 먹잇감을 찾는다. 석화시키는 부리로 대상을 돌로 만든 뒤 부서진 조각을 먹는다. 마르고 병든 수탉 같은 몸에 박쥐 날개와 뱀 꼬리를 지녔으며, 키는 보통 2피트 이하이고 길이는 그 두 배 정도다. 멍하니 꼬꼬거리는 소리 덕분에 영리한 먹잇감은 미리 존재를 알아차릴 수 있다. 화가 나면 수탉 같은 날카로운 울음을 낸다. 쪼기에는 살을 빠르게 단단하게 만드는 마법 독이 있어, 여러 번 쪼인 생물은 결국 자기 모습 그대로 돌 조각상이 된다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "4MoqBCDQA6FR1sPw",
+      "name": "Dryad",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "fey, nymph, plant, wood"
+        },
+        {
+          "key": "role",
+          "text": "숲의 치유자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "dryad_wounded_grove",
+          "category": "BACK",
+          "name": "상처 입은 숲",
+          "text": "후열에 있는 동안 피해를 입은 다른 아군 UNIT의 HP를 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "후열에서 상처 입은 숲의 동료를 지탱하는 님프.",
+      "note": "드라이어드는 숲의 나무와 그곳에 사는 생물을 지키는 페이다. 신성한 숲과 사랑하는 삼림을 해치려는 자를 직접 싸우기보다 간접적인 방법으로 단념시키는 것을 선호한다. 말만으로 사악한 위협을 막을 수 없을 때는 마법으로 동료의 도움을 얻기도 한다. 평화로운 시기에는 자기 나무 안에서 기쁘게 은둔 생활을 하므로, 자연과 조화를 이루는 공동체는 근처에 드라이어드가 사는 사실조차 모를 수 있다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "RTviEfjYnsXa0wkT",
+      "name": "Hell Hound",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, fiend, fire, unholy"
+        },
+        {
+          "key": "role",
+          "text": "지옥 추적자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 2,
+      "hp": 6,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "hell_hound_finisher_aura",
+          "category": "GLOBAL",
+          "name": "지옥의 추격",
+          "text": "전장에 있는 동안 HP가 절반 이하인 모든 적 UNIT의 공격력을 -1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "약해진 적을 지옥불의 공포로 압박하는 사냥개.",
+      "note": "헬 하운드는 불타는 역청빛 살과 마귀의 쇠스랑만큼 날카로운 이빨, 꺼지지 않는 지옥불의 장막을 지녀 지옥 출신이라는 사실을 의심할 여지가 없다. 원본 PF2E 레벨은 3이다."
+    },
+    {
+      "id": "lYoAwofYGbhWL75Q",
+      "name": "Unicorn",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "3"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, fey, holy"
+        },
+        {
+          "key": "role",
+          "text": "성역 수호자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "unicorn_purifying_charge",
+          "category": "ATTACK",
+          "name": "정화의 돌진",
+          "text": "공격한 뒤 자신이 전장에 남아 있으면 HP를 1 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "돌진 뒤 성스러운 힘으로 상처를 정화하는 유니콘.",
+      "note": "우아함과 순수함의 상징인 유니콘은 당당하고 고귀한 말을 닮았다. 보통 순백의 털을 지녔지만 이마 중앙에서 뻗은 섬세한 뿔 하나로 가장 잘 알려져 있다. 오염되지 않은 야생과 신성한 장소를 자주 지키지만, 강력한 마법 성질이 있다고 전해지는 뿔 때문에 유니콘 자체가 사냥 대상이 된다. 이렇게 장엄한 생물의 뿔을 얻기 위해 사냥한다는 생각만으로도 많은 이는 혐오감을 느낀다. 실제로 뿔을 잃은 유니콘은 안타까운 모습이며 야생에서 오래 살아남는 경우가 드물다. 원본 PF2E 레벨은 3이다."
+    }
+  ]
+}

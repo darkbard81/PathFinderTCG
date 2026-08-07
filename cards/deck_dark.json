@@ -1,0 +1,1249 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "leader_dark_empress",
+      "name": "심연여왕",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "지배자"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 18,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "여성형 몬스터 리더 카드. 승패 조건 검증을 위한 기준 카드다.",
+      "note": "검은 염소뿔, 박쥐 날개, 긴 악마 꼬리, 붉은 세로 동공, 발굽형 다리를 가진 여성형 악마 여왕."
+    },
+    {
+      "id": "unit_dark_guardian_001",
+      "name": "흑석 수문수",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "수문수"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "stonehide_stance",
+          "category": "FRONT",
+          "name": "흑석 자세",
+          "text": "전위에 있을 때 이 카드의 HP를 +1로 취급한다."
+        },
+        {
+          "id": "stonewall_guard",
+          "category": "GLOBAL",
+          "name": "석벽 엄호",
+          "text": "인접한 아군 몬스터가 공격받을 때, 블럭 할 수 있다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "전방 수비에 적합한 기본 몬스터 유닛.",
+      "note": "용비늘로 덮인 목과 팔, 이마의 굽은 용뿔, 두꺼운 꼬리, 발톱 손을 가진 여성형 드라코니드 수문수."
+    },
+    {
+      "id": "unit_dark_archer_001",
+      "name": "월식 궁수",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "궁수"
+        }
+      ],
+      "slot": 1,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 3,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "eclipse_shot",
+          "category": "ATTACK",
+          "name": "월식 화살",
+          "text": "공격할 때 대상이 후위라면 이 카드의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "후위 견제에 특화된 원거리 몬스터.",
+      "note": "팔과 이어진 까마귀 날개, 깃털 목깃, 갈고리 발톱 발, 새처럼 날카로운 얼굴선을 가진 여성형 하피 궁수."
+    },
+    {
+      "id": "unit_dark_scout_001",
+      "name": "안개잠입자",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "정찰자"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "mist_stride",
+          "category": "MOVE",
+          "name": "안개 보행",
+          "text": "이 카드가 이동했을 때 다음 턴 동안 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "위치 이동과 기동성 검증용 정찰 몬스터.",
+      "note": "은빛 여우귀, 세 갈래의 긴 여우 꼬리, 발톱 손가락, 짐승처럼 좁은 동공을 가진 여성형 요호 정찰자."
+    },
+    {
+      "id": "unit_dark_healer_001",
+      "name": "저주치유사",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "치유사"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "curse_reversal",
+          "category": "ACTION",
+          "name": "저주 되감기",
+          "text": "아군 1장의 HP를 2 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "dominance",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "회복과 보조 능력 검증에 쓰는 몬스터 지원 카드.",
+      "note": "창백한 피부, 큰 나방 날개, 머리의 더듬이, 가루 비늘이 묻은 긴 손가락을 가진 여성형 나방 요괴 치유사."
+    },
+    {
+      "id": "unit_dark_mage_001",
+      "name": "흑염 마도사",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "마도사"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "blackflame_bolt",
+          "category": "ACTION",
+          "name": "흑염탄",
+          "text": "적 1장에게 2 피해를 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "직접 피해를 주는 공격형 몬스터 마법 유닛.",
+      "note": "살아 움직이는 뱀 머리카락, 비늘 돋은 목과 어깨, 금빛 세로 동공, 갈라진 혀를 가진 여성형 고르곤 마도사."
+    },
+    {
+      "id": "unit_dark_bladedancer_001",
+      "name": "그림자 검무희",
+      "rarity": "R",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "검무희"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "shadow_blade_flurry",
+          "category": "ATTACK",
+          "name": "그림자 연격",
+          "text": "공격 후 이 카드의 HP가 3 이상이면 다음 1턴 동안 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "공격 조건을 활용하는 근접 몬스터 딜러.",
+      "note": "거미 하반신, 여덟 개의 검은 절지 다리, 등껍질의 붉은 무늬, 이마의 작은 보조 눈을 가진 여성형 아라크네 검무희."
+    },
+    {
+      "id": "unit_dark_lancer_001",
+      "name": "흑철 창병",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "창병"
+        }
+      ],
+      "slot": 1,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "iron_spike_charge",
+          "category": "SUMMON",
+          "name": "흑철 돌진",
+          "text": "등장한 다음 1턴 동안 이 카드의 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "등장 후 보정이 있는 기본 몬스터 창병.",
+      "note": "허리 아래가 거대한 검은 뱀 꼬리로 이어지고, 복부와 팔에 비늘이 돋은 여성형 라미아 창병."
+    },
+    {
+      "id": "unit_dark_bard_001",
+      "name": "저주음유시인",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "음유시인"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 3,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "hollow_chorus",
+          "category": "GLOBAL",
+          "name": "공허의 합창",
+          "text": "다른 아군 몬스터의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "dominance",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "전역 강화 성격의 몬스터 지원 카드.",
+      "note": "반투명한 회색 피부, 움푹 꺼진 눈, 입가까지 찢어진 검은 입술, 길고 마른 손톱을 가진 여성형 밴시 음유시인."
+    },
+    {
+      "id": "unit_dark_runesmith_001",
+      "name": "흑문 룬대장장이",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "룬대장장이"
+        }
+      ],
+      "slot": 2,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "rune_forge",
+          "category": "ACTION",
+          "name": "흑문 단조",
+          "text": "등장을 마친 아군 1장의 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "slot",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "아군 강화와 슬롯 확장을 함께 검증하는 몬스터 제작 유닛.",
+      "note": "소의 굵은 뿔, 넓은 어깨, 근육질 팔, 검은 발굽 다리, 고리 달린 코를 가진 여성형 미노타우로스 룬대장장이."
+    },
+    {
+      "id": "unit_dark_assassin_001",
+      "name": "심야 암살자",
+      "rarity": "R",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "몬스터"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "암살자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "night_prey",
+          "category": "ATTACK",
+          "name": "심야 포식",
+          "text": "이 카드가 HP 3 이하인 적을 공격할 때 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "저체력 대상 마무리에 특화된 고공격 몬스터 유닛.",
+      "note": "사자 같은 귀와 송곳니, 등줄기의 검은 갈기, 전갈 꼬리, 고양잇과 발톱을 가진 여성형 만티코어 암살자."
+    }
+  ]
+}

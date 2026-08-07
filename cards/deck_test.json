@@ -1,0 +1,1278 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "leader_minerva",
+      "name": "미네르바",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "리더"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 18,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "기본 테스트 리더. 능력 없이 전투와 승패 조건 검증에 사용한다.",
+      "note": "은빛 머리와 녹색 망토를 두른 엘프 여성 리더. 차분한 표정으로 전장을 지휘한다."
+    },
+    {
+      "id": "unit_elf_guardian_001",
+      "name": "실바니아 수호기사",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "수호기사"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 7,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "guardian_stance",
+          "category": "FRONT",
+          "name": "수호 태세",
+          "text": "전위에 있을 때 이 카드의 HP를 +1로 취급한다."
+        },
+        {
+          "id": "guardian_block",
+          "category": "GLOBAL",
+          "name": "보호",
+          "text": "인접 아군이 공격받을 때, 블럭 할 수 있다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "낮은 공격력 대신 버티기에 적합한 전위 유닛.",
+      "note": "잎사귀 문양의 방패와 짧은 검을 든 엘프 여성 기사."
+    },
+    {
+      "id": "unit_elf_archer_001",
+      "name": "달그늘 궁수",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "궁수"
+        }
+      ],
+      "slot": 1,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 3,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "moonlit_shot",
+          "category": "ATTACK",
+          "name": "달빛 사격",
+          "text": "공격할 때 대상이 후위라면 이 카드의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "저코스트 원거리 공격 역할을 검증하기 위한 궁수.",
+      "note": "푸른 활과 달빛색 망토를 지닌 엘프 여성 궁수."
+    },
+    {
+      "id": "unit_elf_scout_001",
+      "name": "새벽숲 정찰병",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "정찰병"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "forest_path",
+          "category": "MOVE",
+          "name": "숲길 돌파",
+          "text": "이 카드가 이동했을 때 다음 턴 동안 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "이동 후 공격 보정 테스트에 쓰는 기동형 유닛.",
+      "note": "가벼운 가죽 갑옷과 짧은 단검을 착용한 엘프 여성 정찰병."
+    },
+    {
+      "id": "unit_elf_healer_001",
+      "name": "별샘 치유사",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "치유사"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "starlight_mend",
+          "category": "ACTION",
+          "name": "별빛 치유",
+          "text": "아군 1장의 HP를 2 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "dominance",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "회복형 행동 능력 검증을 위한 후방 지원 유닛.",
+      "note": "별빛이 담긴 지팡이와 흰 로브를 입은 엘프 여성 치유사."
+    },
+    {
+      "id": "unit_elf_mage_001",
+      "name": "녹옥 마법사",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "마법사"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "emerald_bolt",
+          "category": "ACTION",
+          "name": "녹옥 화살",
+          "text": "적 1장에게 2 피해를 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "직접 피해 행동 능력을 가진 공격형 마법 유닛.",
+      "note": "녹색 보석 장식 지팡이를 든 엘프 여성 마법사."
+    },
+    {
+      "id": "unit_elf_bladedancer_001",
+      "name": "잎바람 검무희",
+      "rarity": "R",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "검무희"
+        }
+      ],
+      "slot": 1,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "leafwind_flurry",
+          "category": "ATTACK",
+          "name": "잎바람 연격",
+          "text": "공격 후 이 카드의 HP가 3 이상이면 다음 1턴 동안 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "공격 조건부 보정을 테스트하는 근접 딜러.",
+      "note": "쌍검과 잎사귀 장식 의상을 갖춘 엘프 여성 검무희."
+    },
+    {
+      "id": "unit_elf_lancer_001",
+      "name": "청목 창병",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "창병"
+        }
+      ],
+      "slot": 1,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 5,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "greenwood_charge",
+          "category": "SUMMON",
+          "name": "청목 돌격",
+          "text": "등장한 다음 1턴 동안 이 카드의 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "등장 시 일시 공격 보정을 확인하는 기본 창병.",
+      "note": "청록색 장창과 경갑을 착용한 엘프 여성 창병."
+    },
+    {
+      "id": "unit_elf_bard_001",
+      "name": "은현 음유시인",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "음유시인"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 1,
+      "hp": 3,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "silver_chord",
+          "category": "GLOBAL",
+          "name": "은빛 선율",
+          "text": "다른 아군 엘프의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "dominance",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "전역 버프 효과 검증을 위한 지원 유닛.",
+      "note": "은색 현악기를 들고 노래하는 엘프 여성 음유시인."
+    },
+    {
+      "id": "unit_elf_runesmith_001",
+      "name": "나무룬 대장장이",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "룬대장장이"
+        }
+      ],
+      "slot": 2,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 6,
+      "attack": 2,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "rune_tempering",
+          "category": "ACTION",
+          "name": "룬 담금질",
+          "text": "등장을 마친 아군 1장의 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "slot",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "장비 슬롯과 아군 강화 능력 테스트에 쓰는 제작 계열 유닛.",
+      "note": "작은 망치와 나무룬 모루를 다루는 엘프 여성 대장장이."
+    },
+    {
+      "id": "unit_elf_assassin_001",
+      "name": "그늘잎 암살자",
+      "rarity": "R",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "race",
+          "text": "엘프"
+        },
+        {
+          "key": "gender",
+          "text": "여성"
+        },
+        {
+          "key": "role",
+          "text": "암살자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 4,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "shadow_leaf_strike",
+          "category": "ATTACK",
+          "name": "그늘잎 일격",
+          "text": "이 카드가 HP 3 이하인 적을 공격할 때 공격력을 +1한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "hp",
+            "value": 1
+          },
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "낮은 체력의 대상을 마무리하는 고공격 저코스트 유닛.",
+      "note": "어두운 녹색 후드와 짧은 쌍단검을 지닌 엘프 여성 암살자."
+    },
+    {
+      "id": "equipment_rapier_001",
+      "name": "레이피어",
+      "rarity": "C",
+      "type": "EQUIPMENT",
+      "traits": [
+        {
+          "key": "role",
+          "text": "무기"
+        }
+      ],
+      "slot": 1,
+      "cost": 0,
+      "dominance": 0,
+      "hp": 0,
+      "attack": 1,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "rapier_thrust",
+          "category": "ATTACK",
+          "name": "찌르기",
+          "text": "장착한 카드가 공격할 때 공격력을 +2로 취급한다."
+        }
+      ],
+      "description": "가벼운 찌르기 공격에 특화된 기본 무기 장비.",
+      "note": "가느다란 은빛 검신과 잎사귀 문양 손잡이를 가진 엘프식 레이피어."
+    }
+  ]
+}

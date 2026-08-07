@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1536" viewBox="0 0 1024 1536">
+  <defs>
+    <linearGradient id="frameGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff3a3"/>
+      <stop offset="25%" stop-color="#c8952f"/>
+      <stop offset="55%" stop-color="#6b3f12"/>
+      <stop offset="80%" stop-color="#d6a84a"/>
+      <stop offset="100%" stop-color="#fff1a0"/>
+    </linearGradient>
+
+    <linearGradient id="frameSilver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8f8f8"/>
+      <stop offset="18%" stop-color="#bfc3c7"/>
+      <stop offset="42%" stop-color="#6f767d"/>
+      <stop offset="62%" stop-color="#e4e7ea"/>
+      <stop offset="82%" stop-color="#8b9299"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+
+    <linearGradient id="frameSilverDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8dde2"/>
+      <stop offset="45%" stop-color="#6d747c"/>
+      <stop offset="100%" stop-color="#eef1f4"/>
+    </linearGradient>
+
+    <radialGradient id="orbBlue" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="18%" stop-color="#9ee8ff"/>
+      <stop offset="55%" stop-color="#147dff"/>
+      <stop offset="100%" stop-color="#003f9e"/>
+    </radialGradient>
+
+    <radialGradient id="orbGreen" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="18%" stop-color="#baffc6"/>
+      <stop offset="55%" stop-color="#19c85a"/>
+      <stop offset="100%" stop-color="#006b2e"/>
+    </radialGradient>
+
+    <radialGradient id="orbYellow" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="18%" stop-color="#fff7a8"/>
+      <stop offset="55%" stop-color="#ffd21a"/>
+      <stop offset="100%" stop-color="#a56b00"/>
+    </radialGradient>
+
+    <radialGradient id="orbRed" cx="35%" cy="28%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="18%" stop-color="#ffb0a8"/>
+      <stop offset="55%" stop-color="#ff2b1f"/>
+      <stop offset="100%" stop-color="#8d0000"/>
+    </radialGradient>
+
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Outer card base: silver area outside chromakey -->
+  <rect x="0" y="0" width="1024" height="1536" fill="url(#frameSilver)"/>
+
+  <!-- Main chromakey inner area: bottom aligned to top of lower crystal balls, y=1294 -->
+  <rect x="96" y="120" width="832" height="1174" rx="42" ry="42" fill="#FF00FF"/>
+
+  <!-- Outer frame remains full card size -->
+  <rect x="24" y="24" width="976" height="1488"
+        fill="none" stroke="url(#frameGold)" stroke-width="48"/>
+
+  <!-- Silver inner frame stroke: bottom aligned to top of lower crystal balls, y=1294 -->
+  <rect x="58" y="58" width="908" height="1236"
+        fill="none" stroke="url(#frameSilverDark)" stroke-width="28"/>
+
+  <!-- Decorative corner plates -->
+  <path d="M48 48 L280 48 Q190 86 132 146 Q86 194 48 288 Z"
+        fill="url(#frameGold)" opacity="0.9"/>
+  <path d="M976 48 L744 48 Q834 86 892 146 Q938 194 976 288 Z"
+        fill="url(#frameGold)" opacity="0.9"/>
+  <path d="M48 1488 L280 1488 Q190 1450 132 1390 Q86 1342 48 1248 Z"
+        fill="url(#frameGold)" opacity="0.9"/>
+  <path d="M976 1488 L744 1488 Q834 1450 892 1390 Q938 1342 976 1248 Z"
+        fill="url(#frameGold)" opacity="0.9"/>
+
+  <!-- Orb holders -->
+  <circle cx="136" cy="136" r="117" fill="url(#frameGold)" stroke="url(#frameGold)" stroke-width="21" filter="url(#softShadow)"/>
+  <circle cx="888" cy="136" r="117" fill="url(#frameGold)" stroke="url(#frameGold)" stroke-width="21" filter="url(#softShadow)"/>
+  <circle cx="136" cy="1400" r="117" fill="url(#frameGold)" stroke="url(#frameGold)" stroke-width="21" filter="url(#softShadow)"/>
+  <circle cx="888" cy="1400" r="117" fill="url(#frameGold)" stroke="url(#frameGold)" stroke-width="21" filter="url(#softShadow)"/>
+
+  <!-- Crystal balls expanded -->
+  <circle cx="136" cy="136" r="106" fill="url(#orbBlue)" stroke="#eaf8ff" stroke-width="6"/>
+  <circle cx="888" cy="136" r="106" fill="url(#orbGreen)" stroke="#efffee" stroke-width="6"/>
+  <circle cx="136" cy="1400" r="106" fill="url(#orbYellow)" stroke="#fff9d8" stroke-width="6"/>
+  <circle cx="888" cy="1400" r="106" fill="url(#orbRed)" stroke="#ffe1dc" stroke-width="6"/>
+
+  <!-- Orb highlights expanded -->
+  <ellipse cx="98" cy="91" rx="29" ry="45" fill="#ffffff" opacity="0.75" transform="rotate(35 98 91)"/>
+  <ellipse cx="850" cy="91" rx="29" ry="45" fill="#ffffff" opacity="0.75" transform="rotate(35 850 91)"/>
+  <ellipse cx="98" cy="1355" rx="29" ry="45" fill="#ffffff" opacity="0.75" transform="rotate(35 98 1355)"/>
+  <ellipse cx="850" cy="1355" rx="29" ry="45" fill="#ffffff" opacity="0.75" transform="rotate(35 850 1355)"/>
+</svg>

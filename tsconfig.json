@@ -19,6 +19,6 @@
     "tsBuildInfoFile": "node_modules/.tmp/tsconfig.tsbuildinfo",
     "types": ["vitest/globals", "vite/client", "node"]
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src", "cards/**/*.json", "vite.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

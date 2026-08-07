@@ -1,0 +1,999 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "oZVeE7D70bHOrs1d",
+      "name": "Cyclops",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "giant, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "예지 지휘관"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 2,
+      "hp": 40,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "무너진 제국의 예지로 Level 05 전장을 읽는 사이클롭스.",
+      "note": "사이클롭스의 왕국은 인간이 번성하기 전, 용과 거인, 뱀인간이 세계를 지배하던 시대까지 거슬러 올라간다. 사이클롭스는 거대한 석조 도시를 세우고 잔혹함과 분노를 상징하는 고대 신들을 섬겼지만, 미래를 내다보는 능력은 그들을 구하지 못했고 문명은 무너졌다. 오늘날 대부분의 사이클롭스는 과거 종족이 누렸던 영광을 거의 알지 못하며, 자신들의 위대한 유적 사이에 살면서도 그 의미를 이해하지 못한다. 사이클롭스 도시에는 그들의 역사를 묘사한 기념물과 위압적인 벽화가 남아 있지만, 이제 이를 읽거나 해석할 수 있는 이는 거의 없다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "mX47c0W9rizbmMBM",
+      "name": "Basilisk",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast"
+        },
+        {
+          "key": "role",
+          "text": "석화 수호수"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 10,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "basilisk_crystal_hide",
+          "category": "SPECIAL",
+          "name": "결정 비늘",
+          "text": "한 번에 4 이상의 피해를 받을 때 그 피해를 3 줄인다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "석화 마력이 밴 비늘로 강한 일격을 흘리는 괴수.",
+      "note": "바실리스크는 성질이 사나운 파충류로, 시선만으로 생물을 돌로 바꾸는 능력이 있다. 민간 전승에서는 코카트리스와 마찬가지로 최초의 바실리스크가 뱀이 낳고 수탉이 품은 질긴 껍질의 알에서 태어났다고 전하지만, 바실리스크의 생리적 특징에서 이를 뒷받침할 만한 근거는 거의 찾을 수 없다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "6UrgCT8MwC8CeGbu",
+      "name": "Brimorak",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "demon, fiend, unholy"
+        },
+        {
+          "key": "role",
+          "text": "화염 돌격수"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 9,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "brimorak_burning_step",
+          "category": "MOVE",
+          "name": "불타는 발굽",
+          "text": "이동했을 때 다음 공격 동안 공격력을 +3으로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "불붙은 발굽으로 전장을 가로질러 다음 공격을 달구는 악마.",
+      "note": "염소 머리와 빛나는 붉은 눈, 불타는 발굽을 지닌 이 악마들은 방화범의 영혼에서 태어난다. 브리모락은 생전에 하던 일을 계속하듯, 닿는 곳마다 빠르게 불길을 일으킨다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "qlxVPpwVFw5qIVQM",
+      "name": "Flame Drake",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "dragon, fire"
+        },
+        {
+          "key": "role",
+          "text": "화산 드레이크"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 10,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "flame_drake_eruption",
+          "category": "SUMMON",
+          "name": "화산 분출",
+          "text": "전열에 등장했을 때 정면의 적 UNIT에게 피해를 3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "등장과 함께 정면으로 화염을 분출하는 드레이크.",
+      "note": "플레임 드레이크는 화산과 마그마 근처에 살지만, 때로는 인근 숲이나 나무가 우거진 구릉지로 흘러들기도 한다. 비늘은 대개 붉은 계열이며, 날개 가장자리와 꼬리 끝으로 갈수록 연기 같은 검정이나 회색으로 흐려지는 경우도 있다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "htK4dElL6YvFCLkz",
+      "name": "Forest Troll",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "giant, humanoid, troll, wood"
+        },
+        {
+          "key": "role",
+          "text": "재생 거인"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 1,
+      "hp": 13,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "forest_troll_regrowth",
+          "category": "ACTION",
+          "name": "숲의 재생",
+          "text": "행동으로 아군 카드 하나의 HP를 3 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "숲의 생명력으로 동료의 상처를 재생시키는 트롤.",
+      "note": "포레스트 트롤은 문명의 변두리를 배회하는 팔다리가 긴 거인이다. 엄청난 힘으로 적을 제압하며 날카로운 발톱과 이빨 가득한 입을 무기로 삼는다. 키는 12~16피트에 이르지만, 편안함을 위해 몸을 구부리고 상대가 크기를 오판하게 만들기도 한다. 이 트롤들은 진정한 숲의 생물로서 자신들의 영역인 푸른 서식지와 육체적으로 깊이 연결되어 있다. 포레스트 트롤이 죽으면 몸은 검게 탄 숯덩이로 변하며, 때로는 잔불이 남아 빛나기도 한다. 그럼에도 이들은 다른 트롤보다 훨씬 넓은 지역을 돌아다니기 때문에, 보통 사람이 '트롤'이라는 말을 들었을 때 가장 먼저 떠올리는 존재다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "uBNm3R9wbLTPrM9i",
+      "name": "Harpy",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "air, beast, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "공중 사냥꾼"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 9,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "harpy_backline_gale",
+          "category": "ATTACK",
+          "name": "납치의 돌풍",
+          "text": "후열의 적을 공격할 때 피해를 +3 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "바람으로 후열의 먹잇감을 끌어당겨 덮치는 하피.",
+      "note": "하피는 인간과 새가 뒤섞인 모습으로, 날개와 발톱, 날카로운 이빨을 지닌 야성적인 인간처럼 보인다. 조상에게서 물려받은 바람의 지배력을 이용해 먹잇감을 유인하거나 다음 먹이를 직접 끌어당긴다. 공격하기 전에 상대를 혼란스럽고 두렵게 만드는 것을 즐기며, 그러면 먹이가 더 맛있어진다고 믿는다. 하피는 대부분의 생물을 먹을 수 있지만 지성을 지닌 먹이, 특히 인간과 엘프를 강하게 선호한다. 충분히 배고프면 고블린도 먹지만 맛을 싫어해 가능하면 피한다. 물론 이런 사실도 하피를 몹시 두려워하는 고블린에게는 별 위안이 되지 않는다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "4Ejgj6p1LAu1RAN3",
+      "name": "Living Landslide",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "earth, elemental"
+        },
+        {
+          "key": "role",
+          "text": "대지 방벽"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 11,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "landslide_last_shelter",
+          "category": "RETREAT",
+          "name": "마지막 토벽",
+          "text": "퇴각할 때 인접한 아군 중 HP가 가장 낮은 카드의 HP를 3 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "무너지며 남은 흙으로 인접한 동료를 보호하는 원소.",
+      "note": "리빙 랜드슬라이드는 흙과 자갈로 이루어진 인간형 생물처럼 보인다. 필멸자 우주의 여러 지표 위를 이동하는 경험을 이상할 만큼 자유롭게 느낀다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "zpd6b6UPP72ZELCj",
+      "name": "Poltergeist",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "incorporeal, spirit, undead, unholy"
+        },
+        {
+          "key": "role",
+          "text": "염동 전위"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 1,
+      "hp": 8,
+      "attack": 3,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "poltergeist_flying_debris",
+          "category": "FRONT",
+          "name": "비산 잔해",
+          "text": "전열에 있는 동안 공격력을 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "주변 물체를 날려 전열의 공격을 강화하는 영체.",
+      "note": "생물이 죽은 뒤 어떤 이유로 영혼이 죽은 장소를 떠날 수 없거나 떠나기를 거부하면 폴터가이스트로 나타날 수 있다. 폴터가이스트는 불안정하고 보이지 않는 영혼이지만 물리적인 물체를 움직일 수 있다. 많은 폴터가이스트는 극심한 감정적 충격과 관련된 방식으로 죽음을 맞았다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "fWAjkhQ0y50Eh2BT",
+      "name": "Redcap",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "sm"
+        },
+        {
+          "key": "creatureType",
+          "text": "fey"
+        },
+        {
+          "key": "role",
+          "text": "비겁한 선동자"
+        }
+      ],
+      "slot": 0,
+      "cost": 2,
+      "dominance": 2,
+      "hp": 8,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "redcap_bully_support",
+          "category": "BACK",
+          "name": "강자 편들기",
+          "text": "후열에 있는 동안 기본 공격력이 자신보다 높은 다른 아군 UNIT의 공격력을 +1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "강한 동료 뒤에 숨어 그들의 폭력을 부추기는 레드캡.",
+      "note": "레드캡은 남을 괴롭히고 해치는 데서 즐거움을 느끼는 변덕스러운 페이다. 주름지고 수염 난 남성의 모습으로 가장 널리 알려졌지만, 다른 성별의 레드캡도 똑같이 무섭고 잔인하다. 그러나 본질적으로는 약자를 괴롭히는 겁쟁이라 자신보다 강한 존재 앞에서는 움츠러든다. 이 성향 때문에 신을 상징하는 표식을 두려워하고 혐오한다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "diU0V2M3LiMDMsS0",
+      "name": "Witchwarg",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "beast, cold"
+        },
+        {
+          "key": "role",
+          "text": "한기 포식자"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 9,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "witchwarg_chilling_pressure",
+          "category": "GLOBAL",
+          "name": "얼어붙는 위압",
+          "text": "전장에 있는 동안 기본 공격력이 4 이상인 모든 적 UNIT의 공격력을 -1로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "강한 적의 숨결을 얼려 공격 기세를 꺾는 위치와그.",
+      "note": "위치와그는 와그와 친척이지만 더 크고 영리하며 훨씬 위험하다. 얼어붙는 숨결의 구름을 내뿜을 수 있다. 다른 존재를 섬기기로 마음먹는 경우에도 보통 이리센의 겨울 마녀처럼 특히 위험하고 강력한 주인에게만 그 특권을 허락한다. 원본 PF2E 레벨은 5이다."
+    },
+    {
+      "id": "alPZcKVrHTcMdtIU",
+      "name": "Yeti",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "5"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "humanoid"
+        },
+        {
+          "key": "role",
+          "text": "설산 거인"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 9,
+      "attack": 4,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "yeti_size_hunt",
+          "category": "ATTACK",
+          "name": "거구의 사냥",
+          "text": "자신보다 크기가 작은 적을 공격할 때 피해를 +2 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "체격 차이를 이용해 작은 먹잇감을 눈 속에 짓누르는 예티.",
+      "note": "예티는 거의 전설에 가까울 만큼 보기 드물며, 모습을 발견했을 때는 이미 늦은 경우가 많다. 예티는 세상에서 가장 높고 외딴 봉우리에 살다가 눈 덮인 산악 거점에서 내려와 습격하거나 가축을 훔친다. 일부는 파괴적인 충동을 채우기 위해 내려오기도 한다. 예티가 지배하는 산기슭 주민들은 눈 위에 기묘하고 불길한 발자국을 남기는, 털로 뒤덮인 거대한 인간형 생물 '설인'을 경고한다. 원본 PF2E 레벨은 5이다."
+    }
+  ]
+}

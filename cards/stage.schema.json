@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://elvenbattle.local/schemas/stage.schema.json",
+  "title": "ElvenBattle Stage Schema",
+  "description": "ElvenBattle stage data schema v0.1",
+  "type": "object",
+  "required": [
+    "id",
+    "order",
+    "name",
+    "description",
+    "enemyDeckId",
+    "enemyDeckPath",
+    "victoryCondition",
+    "defeatConditions",
+    "rewards",
+    "unlock"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Stage JSON 작성 도구가 참조할 schema 경로"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stage 고유 ID"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Stage 목록 표시 순서"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stage 표시 이름"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stage 상세 설명"
+    },
+    "enemyDeckId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "전투 런타임에 표시할 적 덱 ID"
+    },
+    "enemyDeckPath": {
+      "type": "string",
+      "pattern": "^cards/deck_[A-Za-z0-9_-]+\\.json$",
+      "description": "cards/deck_*.json 규칙을 따르는 적 덱 JSON 경로"
+    },
+    "victoryCondition": {
+      "$ref": "#/$defs/victoryCondition"
+    },
+    "defeatConditions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/defeatCondition"
+      }
+    },
+    "rewards": {
+      "$ref": "#/$defs/rewards"
+    },
+    "unlock": {
+      "$ref": "#/$defs/unlockCondition"
+    }
+  },
+  "$defs": {
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "victoryCondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "DEFEAT_ENEMY_LEADER"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "turns"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "SURVIVE_TURNS"
+            },
+            "turns": {
+              "$ref": "#/$defs/positiveInteger"
+            }
+          }
+        }
+      ]
+    },
+    "defeatCondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "PLAYER_LEADER_DEFEATED"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "turns"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TURN_LIMIT"
+            },
+            "turns": {
+              "$ref": "#/$defs/positiveInteger"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "DECK_OUT"
+            }
+          }
+        }
+      ]
+    },
+    "rewards": {
+      "type": "object",
+      "required": ["description", "enemyCardDrop"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enemyCardDrop": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": ["source", "chancePercent", "maxCards", "excludeLeader"],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "ENEMY_DROP"
+                },
+                "chancePercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "maxCards": {
+                  "$ref": "#/$defs/positiveInteger"
+                },
+                "excludeLeader": {
+                  "type": "boolean"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "unlockCondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "ALWAYS"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "stageId"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "STAGE_CLEARED"
+            },
+            "stageId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

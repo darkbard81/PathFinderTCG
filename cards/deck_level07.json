@@ -1,0 +1,999 @@
+{
+  "version": "card-json-v0.3",
+  "cards": [
+    {
+      "id": "oopxVowT2jnUQJiS",
+      "name": "Ogre Boss",
+      "rarity": "R",
+      "type": "LEADER",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "giant, humanoid"
+        },
+        {
+          "key": "role",
+          "text": "폭군 지휘관"
+        }
+      ],
+      "slot": 0,
+      "cost": 1,
+      "dominance": 3,
+      "hp": 58,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "힘을 규칙으로 삼아 Level 07 무리를 복종시키는 오거 보스.",
+      "note": "오거 사회에서 힘은 정당함을 넘어 규칙 그 자체를 만든다. 가족에서 가장 강하거나 난폭한 오거가 언제나 우두머리가 되며, 대개 둘은 같은 오거다. 쓰러진 적을 무기에 재빨리 걸어 두는 모습 때문에 다른 오거조차 우두머리를 화나게 했을 때의 결과를 두려워한다. 오거 보스가 명령하면 가족 구성원은 즉시 복종한다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "GNwLVbfFx8EPz7xO",
+      "name": "Dullahan",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "undead, unholy"
+        },
+        {
+          "key": "role",
+          "text": "머리 없는 기사"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 2,
+      "hp": 13,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "dullahan_deathless_guard",
+          "category": "SPECIAL",
+          "name": "죽음의 갑주",
+          "text": "받는 피해를 4 줄인다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "죽음의 사명을 갑주 삼아 공격을 버티는 머리 없는 기사.",
+      "note": "둘라한은 밤처럼 검은 말을 타고 다니는 머리 없는 사냥꾼이다. 계속 살아갈 자격이 없다고 판단한 이를 추적해 목숨을 거둔다. 목표에 다가가면 먼저 희생자의 이름을 속삭인 뒤 빠르게 임무를 끝내며, 그 광경을 목격한 모두에게 깊은 공포를 남긴다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "2SixuEUfKpEyfOEY",
+      "name": "Frost Drake",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "cold, dragon"
+        },
+        {
+          "key": "role",
+          "text": "빙설 드레이크"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 2,
+      "hp": 14,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "frost_drake_glacial_rush",
+          "category": "MOVE",
+          "name": "빙하 돌진",
+          "text": "이동했을 때 다음 공격 동안 공격력을 +5로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "얼어붙은 지형을 가르며 다음 일격을 극대화하는 드레이크.",
+      "note": "프로스트 드레이크는 자신들이 사는 얼어붙은 지역에서 엄청난 위험이 된다. 순록과 늑대, 작은 곰, 툰드라 주민, 심지어 홀로 있는 서리 거인까지 찾아 넓은 지역을 돌아다닌다. 행동의 결과를 피할 수 있는 먼 거리를 이용하며, 드레이크 중에서도 특히 타락하고 노골적으로 악의적인 편이다. 건방진 성격도 강해 다른 드레이크보다 싸움에서 물러날 가능성이 낮다. 혼자 서리 거인 씨족이나 요새화된 마을을 상대하는 등 능력 이상의 잔혹한 일을 벌이려다 최후를 맞은 프로스트 드레이크도 많다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "I00S3LWnDJfCn4zv",
+      "name": "Giant Animated Statue",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "huge"
+        },
+        {
+          "key": "creatureType",
+          "text": "construct, mindless"
+        },
+        {
+          "key": "role",
+          "text": "거대 석상"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 2,
+      "hp": 15,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "giant_statue_crushing_entry",
+          "category": "SUMMON",
+          "name": "거상 강림",
+          "text": "전열에 등장했을 때 정면의 적 UNIT에게 피해를 5 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "거대한 몸으로 전열에 강림해 정면의 적을 짓누르는 석상.",
+      "note": "거대 애니메이티드 스태추는 커진 몸집과 힘 덕분에 큰 금고, 넓은 방, 야외 장소에서 가장 유용하다. 능력 범위를 넘어서는 임무에는 움직이는 물체보다 더 발전된 구조물이 필요하다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "5meW7DytYnF7Iq2V",
+      "name": "Greater Shadow",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "incorporeal, undead, unholy"
+        },
+        {
+          "key": "role",
+          "text": "암흑 영체"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 11,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "greater_shadow_void_touch",
+          "category": "ACTION",
+          "name": "네더의 손길",
+          "text": "행동으로 적 카드 하나에 피해를 5 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "네더월드의 마력을 뻗어 선택한 적의 생기를 빼앗는 그림자.",
+      "note": "네더월드에서 오랜 시간을 보내며 그 마법을 흡수한 섀도는 그레이터 섀도가 된다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "QCPpQya5TEUuIxQn",
+      "name": "Medusa",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "humanoid"
+        },
+        {
+          "key": "role",
+          "text": "석화 궁수"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 2,
+      "hp": 13,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "medusa_first_gaze",
+          "category": "ATTACK",
+          "name": "첫 석화 시선",
+          "text": "피해를 입지 않은 적을 공격할 때 피해를 +5 준다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "온전한 적을 먼저 응시해 굳힌 뒤 독화살을 쏘는 메두사.",
+      "note": "메두사는 머리카락 대신 뱀이 달린 인간을 닮은 괴물형 인간이다. 오래 바라보면 필멸자를 영구적으로 돌로 바꾸는 석화의 시선으로 가장 유명하다. 영리하고 사람을 조종하는 데 능한 적으로, 비밀을 수집하고 탐내며 위협과 책략으로 약한 생물의 두려움을 이용한다. 강력한 마법 물품을 찾거나 점술로 비밀 지식을 알아내 금지된 힘을 열 수도 있고, 사회에 침투해 영향력 있는 정치인을 현혹하기도 한다. 강력한 조직 안으로 파고드는 능력 덕분에 범죄 집단이나 도둑 길드의 지도자가 되기 쉽다. 마법 현상에 관심을 가진 일부는 예언자가 되어, 대가를 받고 모험가가 원하는 것을 찾도록 돕는다. 지혜와 속임수가 통하지 않으면 시선 한 번으로 경쟁자를 화려한 석상으로 바꿀 수도 있다. 많은 메두사가 정교한 은신처를 꾸미고, 돌이 된 적의 조각상을 음산한 전리품처럼 눈에 띄게 전시한다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "H8lGFF3PKUv2yRL2",
+      "name": "Naiad Queen",
+      "rarity": "UC",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "med"
+        },
+        {
+          "key": "creatureType",
+          "text": "amphibious, fey, nymph, water"
+        },
+        {
+          "key": "role",
+          "text": "수역의 여왕"
+        }
+      ],
+      "slot": 0,
+      "cost": 3,
+      "dominance": 2,
+      "hp": 13,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "naiad_parting_tide",
+          "category": "RETREAT",
+          "name": "작별의 물결",
+          "text": "퇴각할 때 인접한 아군 중 HP가 가장 낮은 카드의 HP를 5 회복한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "물러나며 깨끗한 물결로 인접한 동료를 회복시키는 님프 여왕.",
+      "note": "나이아드 퀸은 오염되지 않은 호수와 거대한 강, 여러 담수 지역을 중심으로 펼쳐진 깨끗한 야생을 다스린다. 바드의 노래와 화가의 그림은 이 강력한 님프를 좀 더 인간형에 가까운 모습으로 묘사하는 경우가 많다. 문명 지역으로 드물게 여행해 동맹을 얻거나 소식을 모으고 위협을 살필 때 그 모습을 취하기 때문이다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "7Uf4Q9w3dCDEV30e",
+      "name": "Omen Dragon (Young)",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "lg"
+        },
+        {
+          "key": "creatureType",
+          "text": "dragon, occult"
+        },
+        {
+          "key": "role",
+          "text": "운명 수호룡"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 2,
+      "hp": 14,
+      "attack": 6,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "omen_dragon_mirrored_fate",
+          "category": "FRONT",
+          "name": "비친 운명",
+          "text": "전열에 있는 동안 HP를 +4로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "날개에 비친 미래로 치명적인 순간을 피하는 오멘 드래곤.",
+      "note": "골라리온에서 운명은 변덕스럽다. 세계의 예언이 깨진 뒤에도 가까운 미래를 엿보거나 장기적인 사건을 희미하게 느낄 방법은 남아 있다. 오멘 드래곤은 아무리 모호하더라도 항상 미래를 보도록 운명 지어졌다. 미래의 환영은 마음속에서 결코 멈추지 않는 조용한 노래처럼 따라다닌다. 운명의 음악에 집중하거나 무시할 수는 있지만 노래 자체는 계속된다. 겉모습은 다른 오컬트 드래곤과 비슷하지만 날개의 안쪽 막이 거울처럼 빛난다. 그 날개에는 흐릿하고 모호하지만 대체로, 적어도 기술적으로는 맞는 미래의 장면이 비친다. 오멘 드래곤은 본 미래를 공유하려는 본능적인 충동을 지녔다. 환영의 내용에 도덕적 판단을 하지 않으며, 순박한 마을 주민에게도 사악한 폭군에게도 똑같이 지식을 전한다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "a4LgD3NrgkiINvru",
+      "name": "Quetzalcoatlus",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "huge"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal"
+        },
+        {
+          "key": "role",
+          "text": "거대 비행수"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 3,
+      "hp": 15,
+      "attack": 7,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "quetzalcoatlus_wing_command",
+          "category": "BACK",
+          "name": "거대 날개 신호",
+          "text": "후열에 있는 동안 전열의 다른 아군 UNIT의 지배력을 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "후열의 거대한 날개 신호로 전열의 영역 장악을 돕는 익룡.",
+      "note": "케찰코아틀루스는 익룡 가운데 가장 큰 비행 생물이며, 엄청난 몸집과 40피트에 이르는 날개폭 때문에 흔히 용으로 오인된다. 거대한 날개의 관절을 앞다리처럼 사용해 육지에서도 능숙하게 움직이며, 땅이나 개울에서 작은 먹잇감을 낚아챈다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "V4rVnbjJbcOIdC4Z",
+      "name": "Skeletal Hulk",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "huge"
+        },
+        {
+          "key": "creatureType",
+          "text": "mindless, skeleton, undead, unholy"
+        },
+        {
+          "key": "role",
+          "text": "해골 거인"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 2,
+      "hp": 15,
+      "attack": 5,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "skeletal_hulk_bone_bulwark",
+          "category": "GLOBAL",
+          "name": "뼈의 성벽",
+          "text": "전장에 있는 동안 기본 HP가 자신보다 낮은 다른 아군 UNIT의 HP를 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "거대한 뼈대를 성벽 삼아 작은 동료를 보호하는 해골.",
+      "note": "거대한 자이언트나 다른 초대형 생물의 뼈는 강력한 스켈레톤이 된다. 원본 PF2E 레벨은 7이다."
+    },
+    {
+      "id": "qtJ36jlcRQw5sBnr",
+      "name": "Stegosaurus",
+      "rarity": "C",
+      "type": "UNIT",
+      "traits": [
+        {
+          "key": "sourceLevel",
+          "text": "7"
+        },
+        {
+          "key": "size",
+          "text": "huge"
+        },
+        {
+          "key": "creatureType",
+          "text": "animal, dinosaur"
+        },
+        {
+          "key": "role",
+          "text": "갑판 공룡"
+        }
+      ],
+      "slot": 0,
+      "cost": 4,
+      "dominance": 3,
+      "hp": 15,
+      "attack": 7,
+      "level": 1,
+      "exp": 0,
+      "abilities": [
+        {
+          "id": "stegosaurus_guarded_swing",
+          "category": "ATTACK",
+          "name": "등판 반동",
+          "text": "공격한 뒤 자신이 전장에 남아 있으면 다음 자신의 턴 종료까지 HP를 +2로 취급한다."
+        }
+      ],
+      "growth": {
+        "lv2": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv3": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv4": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv5": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv6": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv7": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ],
+        "lv8": [
+          {
+            "stat": "hp",
+            "value": 1
+          }
+        ],
+        "lv9": [
+          {
+            "stat": "attack",
+            "value": 1
+          }
+        ]
+      },
+      "description": "꼬리를 휘두른 반동을 등판으로 받아 다음 공격을 버티는 공룡.",
+      "note": "스테고사우루스는 척추를 따라 두 줄로 늘어선 마름모꼴 등판과 네 개의 큰 가시가 달린 굵은 꼬리 덕분에 쉽게 알아볼 수 있다. 등판은 공격을 흘려 초식동물인 몸을 보호하고, 꼬리 가시로 포식자를 찌른다. 원본 PF2E 레벨은 7이다."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "../stage.schema.json",
+  "id": "level06",
+  "order": 7,
+  "name": "Level 06",
+  "description": "PF2E Monster Core의 레벨 6 몬스터로 구성된 강화 덱과 전투하는 Stage입니다.",
+  "enemyDeckId": "deck-enemy-level06",
+  "enemyDeckPath": "cards/deck_level06.json",
+  "victoryCondition": {
+    "type": "DEFEAT_ENEMY_LEADER"
+  },
+  "defeatConditions": [
+    {
+      "type": "PLAYER_LEADER_DEFEATED"
+    }
+  ],
+  "rewards": {
+    "description": "승리 시 Level 06 적 카드 일부를 보상 후보로 사용할 수 있습니다.",
+    "enemyCardDrop": {
+      "source": "ENEMY_DROP",
+      "chancePercent": 50,
+      "maxCards": 5,
+      "excludeLeader": true
+    }
+  },
+  "unlock": {
+    "type": "STAGE_CLEARED",
+    "stageId": "level05"
+  }
+}

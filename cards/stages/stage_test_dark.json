@@ -1,0 +1,29 @@
+{
+  "$schema": "../stage.schema.json",
+  "id": "test-stage-dark",
+  "order": 1,
+  "name": "Test Stage",
+  "description": "기본 전투 흐름과 리더 격파 승리 조건을 검증하는 테스트 Stage입니다.",
+  "enemyDeckId": "deck-enemy-dark-test",
+  "enemyDeckPath": "cards/deck_dark.json",
+  "victoryCondition": {
+    "type": "DEFEAT_ENEMY_LEADER"
+  },
+  "defeatConditions": [
+    {
+      "type": "PLAYER_LEADER_DEFEATED"
+    }
+  ],
+  "rewards": {
+    "description": "승리 시 적 배하 카드 일부를 보상 후보로 사용할 수 있습니다.",
+    "enemyCardDrop": {
+      "source": "ENEMY_DROP",
+      "chancePercent": 20,
+      "maxCards": 1,
+      "excludeLeader": true
+    }
+  },
+  "unlock": {
+    "type": "ALWAYS"
+  }
+}
