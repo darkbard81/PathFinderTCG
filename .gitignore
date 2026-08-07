@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+/.codex/
+/.agents/
+
+# Local state
+.data/
+
+# Environment files
+.env
+.env.*
+*.local
+
+# OS junk
+.DS_Store
+
+# Generated asset outputs
+/assets/*
+!/assets/README.md
+
+# Generated helper files
+/generated/
+!/generated/README.md
