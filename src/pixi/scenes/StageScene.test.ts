@@ -39,6 +39,7 @@ function createHarness(session: GameSession, view = createMockView()) {
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     session,
     onBack: vi.fn(),
+    onDeck: vi.fn(),
     onLoggedOut: vi.fn(),
     onStartBattle,
     view,

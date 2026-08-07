@@ -4,6 +4,7 @@ import { joinAssetUrl } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
+import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
 import { MainMenuScene } from './pixi/scenes/MainMenuScene';
 import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
@@ -120,11 +121,29 @@ void (async (): Promise<void> => {
         onBack: () => {
           void showSaveSlot();
         },
+        onDeck: (currentSession) => {
+          void showDeckBuild(currentSession);
+        },
         onLoggedOut: (message) => {
           void showTitle(message);
         },
         onStartBattle: (nextSession, stageId) => {
           void showBattlePending(nextSession, stageId);
+        },
+      }),
+    );
+  }
+
+  function showDeckBuild(session: GameSession): Promise<void> {
+    return router.goto(
+      new DeckBuildScene({
+        services,
+        backgroundImageUrl,
+        assetBaseUrl: ASSET_BASE_URL,
+        session,
+        // 저장했다면 갱신된 세션으로, 아니면 들어올 때 세션으로 Stage에 돌아간다.
+        onBack: (nextSession) => {
+          void showStage(nextSession);
         },
       }),
     );

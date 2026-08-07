@@ -1,0 +1,291 @@
+.pf-deck-build {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: var(--pf-deck-build-panel-gap);
+  padding: var(--pf-space-lg);
+  box-sizing: border-box;
+  font-family: var(--pf-font-family);
+  color: var(--pf-color-primary);
+  overflow: hidden;
+}
+
+.pf-deck-build__sidebar {
+  width: var(--pf-deck-build-sidebar-width);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-sm);
+  padding: var(--pf-space-md);
+  box-sizing: border-box;
+  background: var(--pf-deck-build-sidebar-background);
+  border: var(--pf-deck-build-panel-border);
+  border-radius: var(--pf-deck-build-panel-radius);
+  box-shadow: var(--pf-deck-build-panel-shadow);
+}
+
+.pf-deck-build__title {
+  margin: 0;
+  font-size: var(--pf-text-panel-title-size);
+  color: var(--pf-text-panel-title-color);
+}
+
+.pf-deck-build__mode-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-deck-build__mode-tab {
+  font-family: inherit;
+  font-size: var(--pf-text-tab-size);
+  color: var(--pf-text-tab-color);
+  background: var(--pf-deck-build-tab-background);
+  border: 1px solid transparent;
+  border-radius: var(--pf-deck-build-tab-radius);
+  padding: var(--pf-deck-build-tab-padding);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pf-deck-build__mode-tab.is-selected {
+  background: var(--pf-deck-build-tab-selected-background);
+  border: var(--pf-deck-build-tab-selected-border);
+  color: var(--pf-text-tab-selected-color);
+}
+
+.pf-deck-build__mode-tab:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.pf-deck-build__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-deck-build__summary-label {
+  font-size: var(--pf-text-row-id-size);
+  color: var(--pf-color-muted-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: var(--pf-space-xs);
+}
+
+.pf-deck-build__summary-value,
+.pf-deck-build__summary-leader {
+  font-size: var(--pf-text-row-title-size);
+  color: var(--pf-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-deck-build__summary-count {
+  font-size: var(--pf-text-detail-title-size);
+  color: var(--pf-color-primary-warm);
+}
+
+.pf-deck-build__spacer {
+  flex: 1;
+}
+
+.pf-deck-build__status {
+  margin: 0;
+  font-size: var(--pf-text-body-small-size);
+  color: var(--pf-text-body-small-color);
+  line-height: 1.45;
+  min-height: 3em;
+}
+
+.pf-deck-build__status.is-error {
+  color: var(--pf-color-danger);
+}
+
+.pf-deck-build__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-xs);
+}
+
+.pf-deck-build__button {
+  font-family: inherit;
+  font-size: var(--pf-text-button-label-size);
+  color: var(--pf-text-button-label-color);
+  background: var(--pf-deck-build-tab-background);
+  border: 1px solid rgba(218, 246, 211, 0.62);
+  border-radius: var(--pf-deck-build-tab-radius);
+  padding: 10px;
+  cursor: pointer;
+}
+
+.pf-deck-build__button--primary {
+  background: var(--pf-deck-build-tab-selected-background);
+  border: var(--pf-deck-build-tab-selected-border);
+}
+
+.pf-deck-build__button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pf-deck-build__panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-deck-build-panel-header-gap);
+  padding: var(--pf-space-md);
+  box-sizing: border-box;
+  background: var(--pf-deck-build-panel-background);
+  border: var(--pf-deck-build-panel-border);
+  border-radius: var(--pf-deck-build-panel-radius);
+  box-shadow: var(--pf-deck-build-panel-shadow);
+  overflow: hidden;
+}
+
+.pf-deck-build__panel-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pf-space-xs);
+}
+
+.pf-deck-build__panel-title {
+  margin: 0;
+  font-size: var(--pf-text-panel-title-size);
+  color: var(--pf-text-panel-title-color);
+}
+
+.pf-deck-build__panel-subtitle {
+  font-size: var(--pf-text-panel-subtitle-size);
+  color: var(--pf-text-panel-subtitle-color);
+}
+
+.pf-deck-build__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-deck-build-filter-gap);
+  min-height: var(--pf-deck-build-filter-size);
+}
+
+.pf-deck-build__filter {
+  width: var(--pf-deck-build-filter-size);
+  height: var(--pf-deck-build-filter-size);
+  flex: none;
+  font-family: inherit;
+  font-size: var(--pf-deck-build-filter-font-size);
+  font-weight: 700;
+  color: var(--pf-color-primary);
+  background: var(--pf-deck-build-filter-background);
+  border: 1px solid rgba(183, 201, 186, 0.42);
+  /* 목업의 마름모 코스트 배지 형태를 그대로 쓴다. */
+  clip-path: polygon(50% 0%, 100% 38%, 50% 100%, 0% 62%);
+  cursor: pointer;
+  padding: 0;
+}
+
+.pf-deck-build__filter.is-active {
+  background: var(--pf-deck-build-filter-active-background);
+  color: var(--pf-color-ink);
+  box-shadow: var(--pf-deck-build-filter-active-ring);
+}
+
+.pf-deck-build__filter:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pf-deck-build__grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--pf-deck-build-card-gap);
+  overflow-y: auto;
+}
+
+.pf-deck-build__empty {
+  margin: 0;
+  font-size: var(--pf-text-empty-size);
+  color: var(--pf-text-empty-color);
+}
+
+.pf-deck-build__card {
+  position: relative;
+  width: var(--pf-deck-build-card-width);
+  /* 카드 이미지가 2:3이다. 높이를 따로 두지 않고 비율로 맞춘다. */
+  aspect-ratio: 2 / 3;
+  flex: none;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: inherit;
+  background: var(--pf-deck-build-card-fallback-background);
+  border: var(--pf-deck-build-card-border);
+  border-radius: var(--pf-deck-build-card-radius);
+  box-shadow: var(--pf-deck-build-card-shadow);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.pf-deck-build__card:hover:not(:disabled) {
+  border: var(--pf-deck-build-card-hover-border);
+}
+
+.pf-deck-build__card:focus-visible {
+  outline: none;
+  box-shadow: var(--pf-deck-build-card-select-glow);
+}
+
+.pf-deck-build__card:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.pf-deck-build__card-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+}
+
+/*
+ * 수치는 카드 이미지에 이미 그려진 수정구슬 위에 얹는다.
+ * 좌표는 card_frame_meta.json의 orb center 비율이라 타일 크기가 바뀌어도 따라간다.
+ */
+.pf-deck-build__orb {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  line-height: 1;
+  font-size: calc(var(--pf-deck-build-card-width) * var(--pf-deck-build-orb-font-scale));
+  color: var(--pf-deck-build-orb-color);
+  text-shadow: var(--pf-deck-build-orb-text-shadow);
+  pointer-events: none;
+}
+
+.pf-deck-build__orb--cost {
+  left: var(--pf-deck-build-orb-inset-x);
+  top: var(--pf-deck-build-orb-inset-y);
+}
+
+.pf-deck-build__orb--dominance {
+  right: var(--pf-deck-build-orb-inset-x);
+  top: var(--pf-deck-build-orb-inset-y);
+  transform: translate(50%, -50%);
+}
+
+.pf-deck-build__orb--attack {
+  left: var(--pf-deck-build-orb-inset-x);
+  bottom: var(--pf-deck-build-orb-inset-y);
+  transform: translate(-50%, 50%);
+}
+
+.pf-deck-build__orb--hp {
+  right: var(--pf-deck-build-orb-inset-x);
+  bottom: var(--pf-deck-build-orb-inset-y);
+  transform: translate(50%, 50%);
+}
