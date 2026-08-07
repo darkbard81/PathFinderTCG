@@ -323,24 +323,33 @@ async function handleCardTextToolRequest(
         selectFirstAssetPath(referenceImages, 'reference image');
       const artOffsetY = toInteger(payload.artOffsetY, readDefaultArtOffsetY(meta));
 
-      const outputCardPath = path.join(projectRoot, `cards/temp/${card.id}_final.png`);
+      // 임시 경로는 요청마다 고유해야 한다. 카드 ID로만 짓고 디렉터리를 통째로 비우면
+      // 동시에 진행 중인 다른 생성의 중간 산출물까지 지워 버린다.
+      const outputCardPath = path.join(
+        projectRoot,
+        `cards/temp/${card.id}_${crypto.randomUUID()}.png`,
+      );
       await fs.mkdir(path.dirname(outputCardPath), { recursive: true });
 
-      await renderCardByScreenshot({
-        area,
-        nameArea,
-        deckId: selectedDeck.id,
-        cardId: card.id,
-        canvas: meta.canvas,
-        outputCardPath,
-        artImage,
-        referenceImage,
-        artOffsetY,
-        captureOrigin: options.resolveCaptureOrigin(),
-      });
+      let outputAssets: CardAssetPaths;
+      try {
+        await renderCardByScreenshot({
+          area,
+          nameArea,
+          deckId: selectedDeck.id,
+          cardId: card.id,
+          canvas: meta.canvas,
+          outputCardPath,
+          artImage,
+          referenceImage,
+          artOffsetY,
+          captureOrigin: options.resolveCaptureOrigin(),
+        });
 
-      const outputAssets = await finalizeCardAssets(card.id, outputCardPath);
-      await clearTempFiles();
+        outputAssets = await finalizeCardAssets(card.id, outputCardPath);
+      } finally {
+        await fs.rm(outputCardPath, { force: true });
+      }
 
       const outputPath = outputAssets.png;
       sendJson(response, {
@@ -520,39 +529,45 @@ async function renderCardByScreenshot(input: {
   captureUrl.searchParams.set('referenceImage', input.referenceImage);
   captureUrl.searchParams.set('artOffsetY', String(input.artOffsetY));
 
-  const browser = await launchCaptureBrowser();
-
+  // 브라우저 실행 자체가 실패해도 pendingCaptures 항목은 반드시 회수한다.
+  // 남아 있는 captureId는 무인증 조회를 계속 통과시키는 열쇠가 된다.
   try {
-    const page = await browser.newPage({
-      viewport: {
-        width: input.canvas.width,
-        height: input.canvas.height,
-      },
-      deviceScaleFactor: 1,
-    });
+    const browser = await launchCaptureBrowser();
 
-    await page.goto(captureUrl.href, { waitUntil: 'networkidle' });
-    // 클라이언트가 데이터 조회·글꼴 등록·최초 렌더를 마치고 세우는 신호다.
-    // 글꼴은 /data 응답 뒤에 등록되므로 document.fonts만 보면 등록 전에 통과해 버린다.
-    await page.waitForFunction(
-      () =>
-        (window as unknown as { __CARD_TEXT_TOOL_READY?: boolean }).__CARD_TEXT_TOOL_READY === true,
-      undefined,
-      { timeout: 15000 },
-    );
-    await page.waitForFunction(() => document.fonts.status === 'loaded');
-    await page.locator('[data-stage] canvas').first().waitFor({ timeout: 10000 });
-    await page.waitForFunction(() =>
-      Array.from(document.images).every((image) => image.complete && image.naturalWidth > 0),
-    );
-    await page.waitForTimeout(500);
-    await page.locator('[data-stage]').screenshot({
-      path: input.outputCardPath,
-      animations: 'disabled',
-    });
+    try {
+      const page = await browser.newPage({
+        viewport: {
+          width: input.canvas.width,
+          height: input.canvas.height,
+        },
+        deviceScaleFactor: 1,
+      });
+
+      await page.goto(captureUrl.href, { waitUntil: 'networkidle' });
+      // 클라이언트가 데이터 조회·글꼴 등록·최초 렌더를 마치고 세우는 신호다.
+      // 글꼴은 /data 응답 뒤에 등록되므로 document.fonts만 보면 등록 전에 통과해 버린다.
+      await page.waitForFunction(
+        () =>
+          (window as unknown as { __CARD_TEXT_TOOL_READY?: boolean }).__CARD_TEXT_TOOL_READY ===
+          true,
+        undefined,
+        { timeout: 15000 },
+      );
+      await page.waitForFunction(() => document.fonts.status === 'loaded');
+      await page.locator('[data-stage] canvas').first().waitFor({ timeout: 10000 });
+      await page.waitForFunction(() =>
+        Array.from(document.images).every((image) => image.complete && image.naturalWidth > 0),
+      );
+      await page.waitForTimeout(500);
+      await page.locator('[data-stage]').screenshot({
+        path: input.outputCardPath,
+        animations: 'disabled',
+      });
+    } finally {
+      await browser.close();
+    }
   } finally {
     pendingCaptures.delete(captureId);
-    await browser.close();
   }
 }
 
@@ -630,17 +645,6 @@ function toAssetUrl(assetBaseUrl: string, assetPath: string): string {
   const normalizedBaseUrl = normalizeAssetBaseUrl(assetBaseUrl);
   const normalizedPath = assetPath.replace(/^\/+/, '');
   return `${normalizedBaseUrl}/${normalizedPath}`;
-}
-
-function clearTempFiles(): Promise<void> {
-  return fs
-    .readdir(path.join(projectRoot, 'cards/temp'))
-    .catch(() => [])
-    .then((entries) =>
-      Promise.all(
-        entries.map((entry) => fs.rm(path.join(projectRoot, 'cards/temp', entry), { force: true })),
-      ).then(() => undefined),
-    );
 }
 
 function createNameTextAreaFromSafeArea(meta: FrameMeta): TextAreaRegion {
