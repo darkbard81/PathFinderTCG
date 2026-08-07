@@ -20,6 +20,8 @@
     "src/config.ts",
     "src/server/**/*.ts",
     "src/game/**/*.ts",
+    "src/tools/card-text/access.ts",
+    "src/tools/card-text/server/**/*.ts",
     "cards/**/*.json",
     "vite.config.ts"
   ]

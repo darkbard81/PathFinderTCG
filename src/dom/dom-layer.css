@@ -15,6 +15,11 @@
   pointer-events: none;
 }
 
+/*
+ * 폼 컨트롤과 명시적 interactive 영역만 클릭을 받는다.
+ * overflow 스크롤 컨테이너도 스크롤바 드래그를 쓰려면 data-interactive="true" 를 달 것.
+ * (휠은 자식 button 위에서 조상 overflow로 전파되지만, 스크롤바 트랙 클릭은 컨테이너 자체가 타깃이다.)
+ */
 .pf-overlay :where(button, a, input, select, textarea, [data-interactive='true']) {
   pointer-events: auto;
 }

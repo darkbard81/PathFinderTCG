@@ -20,6 +20,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
+        cardTextTool: 'tools/card-text/index.html',
       },
       output: {
         manualChunks(id) {

@@ -1,11 +1,14 @@
 import { DomLayer } from './dom/DomLayer';
 import { loadThemeFont } from './dom/theme-font';
 import { joinAssetUrl } from './game/assets/manifest';
+import type { GameSession } from './game/save/session';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
-import { formatPreloadSummary } from './pixi/assets/asset-loader';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
+import { MainMenuScene } from './pixi/scenes/MainMenuScene';
+import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
+import { StageScene } from './pixi/scenes/StageScene';
 import { TitleScene } from './pixi/scenes/TitleScene';
 import { ViewportProbeScene } from './pixi/scenes/ViewportProbeScene';
 import { createGameServices } from './services/game-services';
@@ -42,6 +45,7 @@ void (async (): Promise<void> => {
   await loadThemeFont();
 
   const backgroundImageUrl = joinAssetUrl(ASSET_BASE_URL, TITLE_BACKGROUND_PATH);
+  let preloadCounts = { loadedCount: 0, failedCount: 0 };
   const services = createGameServices({
     onSessionExpired: (message) => {
       void showTitle(message);
@@ -64,10 +68,77 @@ void (async (): Promise<void> => {
       new LoaderScene({
         assetBaseUrl: ASSET_BASE_URL,
         onComplete: (result) => {
-          void router.goto(
-            new ViewportProbeScene({ preloadSummary: formatPreloadSummary(result) }),
-          );
+          // 프리로드는 세션당 한 번이다. 메뉴로 되돌아와도 같은 요약을 보여준다.
+          preloadCounts = { loadedCount: result.loadedCount, failedCount: result.failedCount };
+          void showMainMenu();
         },
+      }),
+    );
+  }
+
+  function showMainMenu(): Promise<void> {
+    return router.goto(
+      new MainMenuScene({
+        services,
+        backgroundImageUrl,
+        loadedCount: preloadCounts.loadedCount,
+        failedCount: preloadCounts.failedCount,
+        onStartGame: () => {
+          void showSaveSlot();
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
+        },
+      }),
+    );
+  }
+
+  function showSaveSlot(): Promise<void> {
+    return router.goto(
+      new SaveSlotScene({
+        services,
+        backgroundImageUrl,
+        onBack: () => {
+          void showMainMenu();
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
+        },
+        onSessionReady: (session) => {
+          void showStage(session);
+        },
+      }),
+    );
+  }
+
+  function showStage(session: GameSession): Promise<void> {
+    return router.goto(
+      new StageScene({
+        services,
+        backgroundImageUrl,
+        session,
+        onBack: () => {
+          void showSaveSlot();
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
+        },
+        onStartBattle: (nextSession, stageId) => {
+          void showBattlePending(nextSession, stageId);
+        },
+      }),
+    );
+  }
+
+  // Battlefield 이식 전 임시 착지점.
+  function showBattlePending(session: GameSession, stageId: string): Promise<void> {
+    return router.goto(
+      new ViewportProbeScene({
+        preloadSummary: [
+          `Battle ready · Stage ${stageId}`,
+          `Slot ${session.slotId} · ${session.saveName}`,
+          `Leader ${session.deck.leader.instance.name}`,
+        ].join('\n'),
       }),
     );
   }

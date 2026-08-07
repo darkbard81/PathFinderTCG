@@ -7,3 +7,4 @@ assets
 package-lock.json
 .old_version
 *.md
+/documents/Pathfinder TCG UI System (standalone).html

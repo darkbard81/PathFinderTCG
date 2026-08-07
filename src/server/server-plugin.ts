@@ -1,12 +1,18 @@
 import path from 'node:path';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 import { appConfig } from '../config';
+import { CARD_TEXT_TOOL_ACCOUNT_ID } from '../tools/card-text/access';
+import { createCardTextApiHandler } from '../tools/card-text/server/api';
 import { createAssetsMiddleware } from './assets-middleware';
-import { createAuthApiHandler } from './auth-api';
+import { authenticateHttpRequest, createAuthApiHandler } from './auth-api';
 import { AuthService } from './auth-service';
 import { createSaveSlotsApiHandler, migrateLegacySaveSlots } from './save-slots-api';
 
-type HttpServerLike = { once(event: 'close', listener: () => void): unknown } | null;
+type HttpServerLike = {
+  once(event: 'close', listener: () => void): unknown;
+  address(): { port: number } | string | null;
+} | null;
 
 /**
  * dev 서버와 preview 서버에 자산, 인증, 저장 슬롯 라우트를 등록한다.
@@ -16,10 +22,11 @@ export function serverPlugin(): Plugin {
   return {
     name: 'pathfinder-tcg-server',
     configureServer(server: ViteDevServer) {
-      registerMiddlewares(server.middlewares, server.httpServer);
+      // 카드 텍스트 도구는 작업 트리(cards/, assets/)를 직접 고친다. dev에서만 연다.
+      registerMiddlewares(server.middlewares, server.httpServer, { enableCardTextTool: true });
     },
     configurePreviewServer(server) {
-      registerMiddlewares(server.middlewares, server.httpServer);
+      registerMiddlewares(server.middlewares, server.httpServer, { enableCardTextTool: false });
     },
   };
 }
@@ -27,6 +34,7 @@ export function serverPlugin(): Plugin {
 function registerMiddlewares(
   middlewares: ViteDevServer['middlewares'],
   httpServer: HttpServerLike,
+  options: { enableCardTextTool: boolean },
 ): void {
   const { dataRoot } = appConfig.storage;
   const handleAssets = createAssetsMiddleware();
@@ -43,6 +51,12 @@ function registerMiddlewares(
 
   const handleAuthApi = createAuthApiHandler(authService);
   const handleSaveSlotsApi = createSaveSlotsApiHandler({ authService, dataRoot });
+  const handleCardTextApi = options.enableCardTextTool
+    ? createCardTextApiHandler({
+        authorize: (request, response) => authorizeCardTextTool(authService, request, response),
+        resolveCaptureOrigin: () => resolveCaptureOrigin(httpServer),
+      })
+    : null;
 
   middlewares.use((request, response, next) => {
     void (async () => {
@@ -58,7 +72,51 @@ function registerMiddlewares(
         return;
       }
 
+      if (handleCardTextApi) {
+        await handleCardTextApi(request, response, next);
+        return;
+      }
+
       next();
-    })();
+    })().catch((error) => {
+      next(error as Error);
+    });
   });
+}
+
+/**
+ * 카드 텍스트 도구 API를 로그인한 도구 담당 계정으로 제한한다.
+ * 이 API는 저장소의 카드 메타와 자산 파일을 덮어쓰므로 메뉴 노출과 같은 계정 조건을 서버에서도 강제한다.
+ */
+function authorizeCardTextTool(
+  authService: AuthService,
+  request: IncomingMessage,
+  response: ServerResponse,
+): boolean {
+  // 실패 시 401 응답은 authenticateHttpRequest가 이미 마감한다.
+  const account = authenticateHttpRequest(authService, request, response);
+  if (!account) {
+    return false;
+  }
+
+  if (account.loginId !== CARD_TEXT_TOOL_ACCOUNT_ID) {
+    response.statusCode = 403;
+    response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    response.end('Forbidden');
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * 캡처 브라우저가 접속할 origin을 실제 리스닝 포트에서 만든다.
+ * 설정값을 그대로 믿으면 포트가 달라졌을 때 캡처가 엉뚱한 곳을 친다.
+ */
+function resolveCaptureOrigin(httpServer: HttpServerLike): string {
+  const address = httpServer?.address();
+  const port =
+    typeof address === 'object' && address !== null ? address.port : appConfig.server.port;
+
+  return `http://${appConfig.capture.host}:${port}`;
 }
