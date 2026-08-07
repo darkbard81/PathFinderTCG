@@ -4,8 +4,8 @@ import { joinAssetUrl } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
-import { formatPreloadSummary } from './pixi/assets/asset-loader';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
+import { MainMenuScene } from './pixi/scenes/MainMenuScene';
 import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
 import { TitleScene } from './pixi/scenes/TitleScene';
@@ -66,39 +66,55 @@ void (async (): Promise<void> => {
       new LoaderScene({
         assetBaseUrl: ASSET_BASE_URL,
         onComplete: (result) => {
-          void showSaveSlot(formatPreloadSummary(result));
+          void showMainMenu(result.loadedCount, result.failedCount);
         },
       }),
     );
   }
 
-  function showSaveSlot(preloadSummary?: string): Promise<void> {
+  function showMainMenu(loadedCount: number, failedCount: number): Promise<void> {
+    return router.goto(
+      new MainMenuScene({
+        services,
+        backgroundImageUrl,
+        loadedCount,
+        failedCount,
+        onStartGame: () => {
+          void showSaveSlot();
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
+        },
+      }),
+    );
+  }
+
+  function showSaveSlot(): Promise<void> {
     return router.goto(
       new SaveSlotScene({
         services,
         backgroundImageUrl,
-        // MainMenu 이식 전 임시: 원본 Back은 MainMenu로 돌아가지만 아직 없으므로 목록만 다시 연다.
+        // 원본과 같이 Back은 MainMenu로 돌아가며, 재진입 시 로딩 요약은 0으로 둔다.
         onBack: () => {
-          void showSaveSlot(preloadSummary);
+          void showMainMenu(0, 0);
         },
         onLoggedOut: (message) => {
           void showTitle(message);
         },
         onSessionReady: (session) => {
-          void showSessionPending(session, preloadSummary);
+          void showSessionPending(session);
         },
       }),
     );
   }
 
   // Stage 화면 이식 전 임시 착지점. 세션이 준비됐다는 것만 확인한다.
-  function showSessionPending(session: GameSession, preloadSummary?: string): Promise<void> {
+  function showSessionPending(session: GameSession): Promise<void> {
     return router.goto(
       new ViewportProbeScene({
         preloadSummary: [
           `Save ready · Slot ${session.slotId} · ${session.saveName}`,
           `Leader ${session.deck.leader.instance.name}`,
-          ...(preloadSummary ? [preloadSummary] : []),
         ].join('\n'),
       }),
     );

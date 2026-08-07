@@ -1,0 +1,233 @@
+/* 배경은 캔버스 Sprite/Graphics가 그린다. DOM은 투명 크롬만 얹는다. */
+.pf-main-menu {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  padding: 88px var(--pf-space-xl) var(--pf-space-xl);
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: transparent;
+}
+
+.pf-main-menu__title-group {
+  display: grid;
+  justify-items: center;
+  gap: var(--pf-space-sm);
+  margin-bottom: 128px;
+}
+
+.pf-main-menu__title {
+  margin: 0;
+  color: var(--pf-text-menu-title-color);
+  font-size: var(--pf-text-menu-title-size);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.pf-main-menu__subtitle {
+  margin: 0;
+  color: var(--pf-text-menu-subtitle-color);
+  font-size: var(--pf-text-menu-subtitle-size);
+  line-height: 1.3;
+  text-align: center;
+  opacity: 0.88;
+}
+
+.pf-main-menu__actions {
+  display: grid;
+  gap: 22px;
+  width: min(360px, 100%);
+  margin-bottom: 52px;
+}
+
+.pf-main-menu__button {
+  min-height: 72px;
+  border: var(--pf-login-button-border);
+  border-radius: 6px;
+  background: var(--pf-surface-button);
+  color: var(--pf-color-primary);
+  font: inherit;
+  font-size: var(--pf-text-button-label-size);
+  cursor: pointer;
+}
+
+.pf-main-menu__button:hover:not(:disabled),
+.pf-main-menu__button:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-main-menu__button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+  color: var(--pf-text-button-label-disabled-color);
+  background: var(--pf-surface-button-disabled);
+}
+
+.pf-main-menu__status-group {
+  display: grid;
+  justify-items: center;
+  gap: var(--pf-space-sm);
+  width: min(640px, 100%);
+}
+
+.pf-main-menu__status {
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--pf-text-menu-status-color);
+  font-size: var(--pf-text-menu-status-size);
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.92;
+}
+
+.pf-main-menu__status[data-error='true'] {
+  color: var(--pf-color-danger);
+}
+
+.pf-main-menu__helper {
+  margin: 0;
+  color: var(--pf-text-helper-color);
+  font-size: var(--pf-text-helper-size);
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.pf-main-menu__license {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pf-license-dialog-overlay-padding);
+  box-sizing: border-box;
+  background: var(--pf-license-dialog-overlay-background);
+}
+
+.pf-main-menu__license[hidden] {
+  display: none;
+}
+
+.pf-main-menu__license-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(760px, 88%);
+  overflow: hidden;
+  border: var(--pf-license-dialog-panel-border);
+  border-radius: var(--pf-license-dialog-panel-radius);
+  background: var(--pf-license-dialog-panel-background);
+  box-shadow: var(--pf-license-dialog-panel-shadow);
+  box-sizing: border-box;
+  color: var(--pf-color-primary);
+  pointer-events: auto;
+}
+
+/* 타이틀·닫기는 스크롤 밖. 목록만 아래로 밀린다. */
+.pf-main-menu__license-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pf-license-dialog-header-gap);
+  padding: var(--pf-license-dialog-panel-padding);
+  padding-bottom: var(--pf-space-md);
+  border-bottom: 1px solid color-mix(in srgb, var(--pf-color-accent) 28%, transparent);
+}
+
+.pf-main-menu__license-title {
+  margin: 0;
+  font-size: var(--pf-license-dialog-title-font-size);
+  line-height: 1.2;
+}
+
+.pf-main-menu__license-close {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: var(--pf-license-dialog-close-button-border);
+  border-radius: var(--pf-license-dialog-close-button-radius);
+  background: var(--pf-surface-button);
+  color: var(--pf-color-primary);
+  font: inherit;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pf-main-menu__license-close:hover,
+.pf-main-menu__license-close:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-main-menu__license-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--pf-license-dialog-panel-padding);
+  padding-top: var(--pf-space-md);
+  box-sizing: border-box;
+}
+
+.pf-main-menu__license-intro {
+  margin: var(--pf-license-dialog-intro-margin);
+  color: var(--pf-color-secondary);
+  font-size: var(--pf-license-dialog-intro-font-size);
+  line-height: var(--pf-license-dialog-intro-line-height);
+}
+
+.pf-main-menu__license-list {
+  display: grid;
+  gap: var(--pf-license-dialog-list-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pf-main-menu__license-link {
+  display: block;
+  padding: var(--pf-license-dialog-link-padding);
+  border: var(--pf-license-dialog-link-border);
+  border-radius: var(--pf-license-dialog-link-radius);
+  background: var(--pf-license-dialog-link-background);
+  color: var(--pf-color-primary);
+  font-size: var(--pf-license-dialog-link-font-size);
+  line-height: var(--pf-license-dialog-link-line-height);
+  text-decoration: none;
+}
+
+.pf-main-menu__license-link:hover,
+.pf-main-menu__license-link:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-main-menu__license-link-title {
+  display: block;
+  margin-bottom: var(--pf-license-dialog-link-title-margin-bottom);
+  font-size: var(--pf-license-dialog-link-title-font-size);
+  color: var(--pf-color-primary);
+}
+
+.pf-main-menu__license-link-purpose {
+  display: block;
+  margin-bottom: var(--pf-license-dialog-link-purpose-margin-bottom);
+  color: var(--pf-color-secondary);
+  font-size: var(--pf-license-dialog-link-purpose-font-size);
+}
+
+.pf-main-menu__license-link-url {
+  display: block;
+  color: var(--pf-license-dialog-link-url-color);
+  font-size: var(--pf-license-dialog-link-url-font-size);
+  overflow-wrap: anywhere;
+}
