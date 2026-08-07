@@ -490,10 +490,10 @@ export const UI_THEME = {
       linkUrlFontSize: '13px',
     },
     /**
-     * 덱 구성 화면 토큰이다.
-     * 목업의 카드 타일·배지·필터 구조를 따르되 색은 이 프로젝트 팔레트를 쓴다.
+     * 덱 구성·장비·성장 화면이 공유하는 3분할 레이아웃 토큰이다.
+     * 목업의 사이드바·패널·필터 구조를 따르되 색은 이 프로젝트 팔레트를 쓴다.
      */
-    deckBuild: {
+    cardWorkbench: {
       sidebarWidth: '196px',
       panelGap: '14px',
       panelBackground: 'rgba(16, 34, 29, 0.92)',
@@ -507,15 +507,29 @@ export const UI_THEME = {
       tabBackground: 'rgba(23, 53, 45, 0.72)',
       tabSelectedBackground: 'rgba(49, 84, 61, 0.95)',
       tabSelectedBorder: '1px solid rgba(191, 238, 197, 0.72)',
-      cardWidth: '104px',
-      cardGap: '12px',
-      cardRadius: '6px',
-      cardBackground: 'rgba(26, 58, 45, 0.95)',
-      cardBorder: '1px solid rgba(183, 201, 186, 0.42)',
-      cardHoverBorder: '1px solid rgba(191, 238, 197, 0.9)',
-      cardShadow: '0 2px 6px rgba(0, 0, 0, 0.5)',
-      cardSelectGlow: '0 0 0 2px rgba(255, 243, 194, 0.9), 0 0 16px rgba(255, 243, 194, 0.45)',
-      cardFallbackBackground: 'radial-gradient(circle at 50% 35%, #1f3a2c, #0d1712)',
+      filterSize: '26px',
+      filterGap: '8px',
+      filterFontSize: '11px',
+      filterBackground: 'rgba(23, 53, 45, 0.8)',
+      filterActiveBackground: '#bfeec5',
+      filterActiveRing: '0 0 0 2px rgba(255, 243, 194, 0.85)',
+      dividerBorder: '1px solid rgba(158, 207, 170, 0.28)',
+    },
+    /** 카드 이미지 타일 토큰이다. 세 화면이 같은 타일을 쓴다. */
+    cardTile: {
+      width: '104px',
+      gap: '12px',
+      radius: '6px',
+      border: '1px solid rgba(183, 201, 186, 0.42)',
+      hoverBorder: '1px solid rgba(191, 238, 197, 0.9)',
+      shadow: '0 2px 6px rgba(0, 0, 0, 0.5)',
+      selectGlow: '0 0 0 2px rgba(255, 243, 194, 0.9), 0 0 16px rgba(255, 243, 194, 0.45)',
+      fallbackBackground: 'radial-gradient(circle at 50% 35%, #1f3a2c, #0d1712)',
+      chipBackground: 'rgba(7, 16, 13, 0.86)',
+      chipColor: '#fff3c2',
+      chipFontScale: '0.105',
+      chipPadding: '1px 5px',
+      chipRadius: '3px',
       /**
        * 수치는 카드 이미지에 이미 그려진 orb 위에 얹는다.
        * 좌표는 cards/card_frame_meta.json의 orb center를 1024x1536 캔버스 비율로 환산한 값이다.
@@ -526,12 +540,6 @@ export const UI_THEME = {
       orbColor: '#ffffff',
       orbTextShadow:
         '0 0 2px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.9), 1px 0 1px rgba(0, 0, 0, 0.75), -1px 0 1px rgba(0, 0, 0, 0.75)',
-      filterSize: '26px',
-      filterGap: '8px',
-      filterFontSize: '11px',
-      filterBackground: 'rgba(23, 53, 45, 0.8)',
-      filterActiveBackground: '#bfeec5',
-      filterActiveRing: '0 0 0 2px rgba(255, 243, 194, 0.85)',
     },
   },
 } as const;

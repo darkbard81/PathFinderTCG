@@ -238,7 +238,8 @@ function maybeApplyBattleExp(
   return grown.card;
 }
 
-function readCardExp(card: RuntimeCardInstance): number {
+/** 카드의 누적 EXP다. 성장 화면이 계산과 같은 기준으로 표시하도록 공개한다. */
+export function readCardExp(card: RuntimeCardInstance): number {
   const exp = card.instance.exp ?? card.definition.exp ?? 0;
   assertNonNegativeInteger(exp, 'card exp');
   return exp;

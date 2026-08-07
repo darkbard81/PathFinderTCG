@@ -1,12 +1,15 @@
 import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { toCardTile, type CardTile } from '../../dom/screens/card-tile';
 import {
   buildCostFilters,
-  createDeckBuildView,
-  filterCardsByCost,
+  filterTilesByCost,
   pruneCostFilters,
-  toDeckBuildCardTile,
   toggleCostFilter,
-  type DeckBuildCardTile,
+  type CardGridEntry,
+} from '../../dom/screens/card-workbench';
+import {
+  createDeckBuildView,
+  toDeckBuildEntry,
   type DeckBuildMode,
   type DeckBuildPanelModel,
   type DeckBuildView,
@@ -79,8 +82,6 @@ export class DeckBuildScene implements Scene {
           this.collectionCostFilters = toggleCostFilter(this.collectionCostFilters, cost);
           this.renderView();
         },
-        onDeckCardClick: (instanceId) => this.handleDeckCardClick(instanceId),
-        onCollectionCardClick: (instanceId) => this.handleCollectionCardClick(instanceId),
         onSave: () => {
           void this.save();
         },
@@ -213,12 +214,18 @@ export class DeckBuildScene implements Scene {
   }
 
   private renderView(status = '', statusIsError = false): void {
-    const deckTiles = this.buildDeckTiles();
-    const collectionTiles = this.buildCollectionTiles();
+    const deckEntries = this.buildDeckEntries();
+    const collectionEntries = this.buildCollectionEntries();
 
     // 옮긴 카드 때문에 사라진 코스트는 필터에서 뺀다. 버튼 없이 필터만 남으면 해제할 수 없다.
-    this.deckCostFilters = pruneCostFilters(this.deckCostFilters, deckTiles);
-    this.collectionCostFilters = pruneCostFilters(this.collectionCostFilters, collectionTiles);
+    this.deckCostFilters = pruneCostFilters(
+      this.deckCostFilters,
+      deckEntries.map((entry) => entry.tile),
+    );
+    this.collectionCostFilters = pruneCostFilters(
+      this.collectionCostFilters,
+      collectionEntries.map((entry) => entry.tile),
+    );
 
     this.deckBuildView.render({
       mode: this.mode,
@@ -227,13 +234,13 @@ export class DeckBuildScene implements Scene {
       deckCardCount: this.draftSession.deck.cards.length,
       deck: this.buildPanelModel(
         this.mode === 'UNIT' ? '내 덱' : '현재 리더',
-        deckTiles,
+        deckEntries,
         this.deckCostFilters,
         this.mode === 'UNIT' ? '덱이 비어 있습니다.' : '리더가 없습니다.',
       ),
       collection: this.buildPanelModel(
         '수집품',
-        collectionTiles,
+        collectionEntries,
         this.collectionCostFilters,
         this.mode === 'UNIT' ? '보유한 유닛이 없습니다.' : '보유한 리더가 없습니다.',
       ),
@@ -246,41 +253,52 @@ export class DeckBuildScene implements Scene {
 
   private buildPanelModel(
     title: string,
-    tiles: DeckBuildCardTile[],
+    entries: CardGridEntry[],
     activeCosts: ReadonlySet<number>,
     emptyMessage: string,
   ): DeckBuildPanelModel {
-    const visible = filterCardsByCost(tiles, activeCosts);
+    const visible = filterTilesByCost(entries, activeCosts);
 
     return {
       title,
       subtitle:
-        visible.length === tiles.length
-          ? `${tiles.length}장`
-          : `${visible.length}/${tiles.length}장`,
-      cards: visible,
-      costFilters: buildCostFilters(tiles, activeCosts),
-      emptyMessage: tiles.length === 0 ? emptyMessage : '필터에 맞는 카드가 없습니다.',
+        visible.length === entries.length
+          ? `${entries.length}장`
+          : `${visible.length}/${entries.length}장`,
+      entries: visible,
+      costFilters: buildCostFilters(
+        entries.map((entry) => entry.tile),
+        activeCosts,
+      ),
+      emptyMessage: entries.length === 0 ? emptyMessage : '필터에 맞는 카드가 없습니다.',
     };
   }
 
-  private buildDeckTiles(): DeckBuildCardTile[] {
+  private buildDeckEntries(): CardGridEntry[] {
     if (this.mode === 'LEADER') {
       // 리더는 클릭으로 제거할 수 없다. 교체는 수집품 쪽에서만 일어난다.
-      return [toDeckBuildCardTile(this.draftSession.deck.leader, this.options.assetBaseUrl, false)];
+      return [toDeckBuildEntry(this.toTile(this.draftSession.deck.leader), false, () => undefined)];
     }
 
-    return this.draftSession.deck.cards.map((card) =>
-      toDeckBuildCardTile(card, this.options.assetBaseUrl, true),
-    );
+    return this.draftSession.deck.cards.map((card) => {
+      const tile = this.toTile(card);
+      return toDeckBuildEntry(tile, true, () => this.handleDeckCardClick(tile.instanceId));
+    });
   }
 
-  private buildCollectionTiles(): DeckBuildCardTile[] {
+  private buildCollectionEntries(): CardGridEntry[] {
     const wantedType = this.mode === 'UNIT' ? 'UNIT' : 'LEADER';
 
     return this.draftSession.collection.cards
       .filter((card) => card.definition.type === wantedType)
-      .map((card) => toDeckBuildCardTile(card, this.options.assetBaseUrl, true));
+      .map((card) => {
+        const tile = this.toTile(card);
+        return toDeckBuildEntry(tile, true, () => this.handleCollectionCardClick(tile.instanceId));
+      });
+  }
+
+  private toTile(card: Parameters<typeof toCardTile>[0]): CardTile {
+    return toCardTile(card, this.options.assetBaseUrl);
   }
 
   private async ensureBackground(): Promise<void> {

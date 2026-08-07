@@ -1,0 +1,249 @@
+/*
+ * 덱 구성·장비·성장 화면이 공유하는 3분할 작업대 레이아웃이다.
+ * 왼쪽 사이드바에 요약과 동작, 오른쪽에 카드 그리드 패널을 놓는다.
+ */
+.pf-workbench {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: var(--pf-card-workbench-panel-gap);
+  padding: var(--pf-space-lg);
+  box-sizing: border-box;
+  font-family: var(--pf-font-family);
+  color: var(--pf-color-primary);
+  overflow: hidden;
+}
+
+.pf-workbench__sidebar {
+  width: var(--pf-card-workbench-sidebar-width);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-sm);
+  padding: var(--pf-space-md);
+  box-sizing: border-box;
+  background: var(--pf-card-workbench-sidebar-background);
+  border: var(--pf-card-workbench-panel-border);
+  border-radius: var(--pf-card-workbench-panel-radius);
+  box-shadow: var(--pf-card-workbench-panel-shadow);
+  overflow-y: auto;
+}
+
+.pf-workbench__title {
+  margin: 0;
+  font-size: var(--pf-text-panel-title-size);
+  color: var(--pf-text-panel-title-color);
+}
+
+.pf-workbench__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-workbench__tab {
+  font-family: inherit;
+  font-size: var(--pf-text-tab-size);
+  color: var(--pf-text-tab-color);
+  background: var(--pf-card-workbench-tab-background);
+  border: 1px solid transparent;
+  border-radius: var(--pf-card-workbench-tab-radius);
+  padding: var(--pf-card-workbench-tab-padding);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pf-workbench__tab.is-selected {
+  background: var(--pf-card-workbench-tab-selected-background);
+  border: var(--pf-card-workbench-tab-selected-border);
+  color: var(--pf-text-tab-selected-color);
+}
+
+.pf-workbench__tab:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.pf-workbench__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pf-workbench__summary-label {
+  font-size: var(--pf-text-row-id-size);
+  color: var(--pf-color-muted-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: var(--pf-space-xs);
+}
+
+.pf-workbench__summary-value {
+  font-size: var(--pf-text-row-title-size);
+  color: var(--pf-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-workbench__summary-strong {
+  font-size: var(--pf-text-detail-title-size);
+  color: var(--pf-color-primary-warm);
+}
+
+.pf-workbench__spacer {
+  flex: 1;
+  min-height: var(--pf-space-sm);
+}
+
+.pf-workbench__status {
+  margin: 0;
+  font-size: var(--pf-text-body-small-size);
+  color: var(--pf-text-body-small-color);
+  line-height: 1.45;
+  min-height: 3em;
+}
+
+.pf-workbench__status.is-error {
+  color: var(--pf-color-danger);
+}
+
+.pf-workbench__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-xs);
+}
+
+.pf-workbench__button {
+  font-family: inherit;
+  font-size: var(--pf-text-button-label-size);
+  color: var(--pf-text-button-label-color);
+  background: var(--pf-card-workbench-tab-background);
+  border: 1px solid rgba(218, 246, 211, 0.62);
+  border-radius: var(--pf-card-workbench-tab-radius);
+  padding: 10px;
+  cursor: pointer;
+}
+
+.pf-workbench__button--primary {
+  background: var(--pf-card-workbench-tab-selected-background);
+  border: var(--pf-card-workbench-tab-selected-border);
+}
+
+.pf-workbench__button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pf-workbench__panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-card-workbench-panel-header-gap);
+  padding: var(--pf-space-md);
+  box-sizing: border-box;
+  background: var(--pf-card-workbench-panel-background);
+  border: var(--pf-card-workbench-panel-border);
+  border-radius: var(--pf-card-workbench-panel-radius);
+  box-shadow: var(--pf-card-workbench-panel-shadow);
+  overflow: hidden;
+}
+
+.pf-workbench__panel-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pf-space-xs);
+  flex: none;
+}
+
+.pf-workbench__panel-title {
+  margin: 0;
+  font-size: var(--pf-text-panel-title-size);
+  color: var(--pf-text-panel-title-color);
+}
+
+.pf-workbench__panel-subtitle {
+  font-size: var(--pf-text-panel-subtitle-size);
+  color: var(--pf-text-panel-subtitle-color);
+}
+
+.pf-workbench__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-card-workbench-filter-gap);
+  flex: none;
+}
+
+.pf-workbench__filters:empty {
+  display: none;
+}
+
+.pf-workbench__filter {
+  width: var(--pf-card-workbench-filter-size);
+  height: var(--pf-card-workbench-filter-size);
+  flex: none;
+  font-family: inherit;
+  font-size: var(--pf-card-workbench-filter-font-size);
+  font-weight: 700;
+  color: var(--pf-color-primary);
+  background: var(--pf-card-workbench-filter-background);
+  border: 1px solid rgba(183, 201, 186, 0.42);
+  /* 목업의 마름모 코스트 배지 형태를 그대로 쓴다. */
+  clip-path: polygon(50% 0%, 100% 38%, 50% 100%, 0% 62%);
+  cursor: pointer;
+  padding: 0;
+}
+
+.pf-workbench__filter.is-active {
+  background: var(--pf-card-workbench-filter-active-background);
+  color: var(--pf-color-ink);
+  box-shadow: var(--pf-card-workbench-filter-active-ring);
+}
+
+.pf-workbench__filter:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pf-workbench__grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--pf-card-tile-gap);
+  overflow-y: auto;
+}
+
+/* 장비 화면처럼 한 패널을 위아래로 나눌 때 쓴다. 아래쪽이 남는 높이를 가져간다. */
+.pf-workbench__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-card-workbench-panel-header-gap);
+  min-height: 0;
+}
+
+.pf-workbench__section--fixed {
+  flex: none;
+  padding-bottom: var(--pf-space-sm);
+  border-bottom: var(--pf-card-workbench-divider-border);
+}
+
+.pf-workbench__section--grow {
+  flex: 1;
+}
+
+.pf-workbench__section-title {
+  margin: 0;
+  font-size: var(--pf-text-panel-subtitle-size);
+  color: var(--pf-color-muted-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pf-workbench__empty {
+  margin: 0;
+  font-size: var(--pf-text-empty-size);
+  color: var(--pf-text-empty-color);
+}

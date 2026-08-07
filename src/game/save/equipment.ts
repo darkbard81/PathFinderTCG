@@ -189,7 +189,11 @@ function groupEquipmentByTarget(session: GameSession): Map<string, RuntimeCardIn
   return equipmentByTarget;
 }
 
-function listEquippedCardsForTarget(
+/**
+ * 지정한 덱 카드에 장착된 장비 카드를 순서대로 모은다.
+ * 장비 화면이 장착 목록과 슬롯 사용량을 검증과 같은 기준으로 보여주도록 공개한다.
+ */
+export function listEquippedCardsForTarget(
   session: GameSession,
   targetCardInstanceId: string,
 ): RuntimeCardInstance[] {
@@ -306,11 +310,13 @@ function cloneAbilities(abilities: readonly CardAbility[]): CardAbility[] {
   return abilities.map((ability) => structuredClone(ability));
 }
 
-function readSlotCapacity(card: RuntimeCardInstance): number {
+/** 카드가 제공하는 장비 슬롯 용량이다. */
+export function readSlotCapacity(card: RuntimeCardInstance): number {
   return Math.max(0, card.instance.slot ?? card.definition.slot ?? 0);
 }
 
-function readSlotUsage(card: RuntimeCardInstance): number {
+/** 장비 카드 1장이 차지하는 슬롯 수다. */
+export function readSlotUsage(card: RuntimeCardInstance): number {
   return Math.max(0, card.instance.slot ?? card.definition.slot ?? 0);
 }
 

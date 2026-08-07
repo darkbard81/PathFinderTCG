@@ -5,6 +5,8 @@ import type { GameSession } from './game/save/session';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
 import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
+import { EquipmentScene } from './pixi/scenes/EquipmentScene';
+import { GrowthScene } from './pixi/scenes/GrowthScene';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
 import { MainMenuScene } from './pixi/scenes/MainMenuScene';
 import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
@@ -124,6 +126,12 @@ void (async (): Promise<void> => {
         onDeck: (currentSession) => {
           void showDeckBuild(currentSession);
         },
+        onEquipment: (currentSession) => {
+          void showEquipment(currentSession);
+        },
+        onGrowth: (currentSession) => {
+          void showGrowth(currentSession);
+        },
         onLoggedOut: (message) => {
           void showTitle(message);
         },
@@ -142,6 +150,34 @@ void (async (): Promise<void> => {
         assetBaseUrl: ASSET_BASE_URL,
         session,
         // 저장했다면 갱신된 세션으로, 아니면 들어올 때 세션으로 Stage에 돌아간다.
+        onBack: (nextSession) => {
+          void showStage(nextSession);
+        },
+      }),
+    );
+  }
+
+  function showEquipment(session: GameSession): Promise<void> {
+    return router.goto(
+      new EquipmentScene({
+        services,
+        backgroundImageUrl,
+        assetBaseUrl: ASSET_BASE_URL,
+        session,
+        onBack: (nextSession) => {
+          void showStage(nextSession);
+        },
+      }),
+    );
+  }
+
+  function showGrowth(session: GameSession): Promise<void> {
+    return router.goto(
+      new GrowthScene({
+        services,
+        backgroundImageUrl,
+        assetBaseUrl: ASSET_BASE_URL,
+        session,
         onBack: (nextSession) => {
           void showStage(nextSession);
         },

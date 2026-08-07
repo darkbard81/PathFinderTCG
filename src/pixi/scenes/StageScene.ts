@@ -21,8 +21,10 @@ export type StageSceneOptions = {
   lastBattleResult?: StageBattleResult;
   /** Stage 선택은 전투 시작 시에만 저장한다. 뒤로 가기는 세션을 넘기지 않는다. */
   onBack: () => void;
-  /** 덱 구성 화면으로 넘긴다. 저장 여부와 무관하게 현재 세션을 그대로 전달한다. */
+  /** 덱 구성·장비·성장 화면으로 넘긴다. 저장 여부와 무관하게 현재 세션을 그대로 전달한다. */
   onDeck: (session: GameSession) => void;
+  onEquipment: (session: GameSession) => void;
+  onGrowth: (session: GameSession) => void;
   onLoggedOut: (statusMessage: string) => void;
   /** Battlefield 이식 전·후 모두 세션 저장 뒤 호출한다. */
   onStartBattle: (session: GameSession, stageId: string) => void;
@@ -76,15 +78,14 @@ export class StageScene implements Scene {
             this.options.onDeck(this.session);
           }
         },
-        // Equipment/Growth 화면 이식 전까지 허브에 남겨 두고 상태만 안내한다.
         onEquipment: () => {
           if (!this.isStartingBattle && !this.isLoggingOut) {
-            this.renderView('장비 화면은 아직 이식되지 않았습니다.');
+            this.options.onEquipment(this.session);
           }
         },
         onGrowth: () => {
           if (!this.isStartingBattle && !this.isLoggingOut) {
-            this.renderView('성장 화면은 아직 이식되지 않았습니다.');
+            this.options.onGrowth(this.session);
           }
         },
         onLogout: () => {

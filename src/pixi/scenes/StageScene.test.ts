@@ -40,6 +40,8 @@ function createHarness(session: GameSession, view = createMockView()) {
     session,
     onBack: vi.fn(),
     onDeck: vi.fn(),
+    onEquipment: vi.fn(),
+    onGrowth: vi.fn(),
     onLoggedOut: vi.fn(),
     onStartBattle,
     view,
