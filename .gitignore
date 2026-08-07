@@ -20,9 +20,9 @@ coverage/
 # OS junk
 .DS_Store
 
-# Generated asset outputs
-/assets/*
-!/assets/README.md
+# 로컬 런타임 자산. 실제 디렉터리일 수도, 외부 자산 트리로의 심볼릭 링크일 수도 있다.
+# 경로 자체를 무시해야 심볼릭 링크가 추적 대상으로 잡히지 않는다.
+/assets
 
 # 카드 도구의 임시 산출물 (원본 저장소 기준 약 72MB)
 /cards/temp/

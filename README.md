@@ -70,7 +70,18 @@ Node 20 이하에서는 `pixi.js`를 import 하는 테스트가 `navigator is no
 - `npm run test`: Vitest 실행
 - `npm run lint` / `npm run format` / `npm run format:check`
 - `npm run check`: typecheck, lint, format:check, test를 한 번에 실행하는 최종 gate
-- `npm run assets:build`: 로컬 자산을 스캔해 `assets/assets.json` 재생성
+
+`assets/assets.json` 생성기(`npm run assets:build`)는 아직 이식하지 않았다. `sharp` 의존이 필요하며, 현재는 기존 자산 트리의 `assets.json`을 그대로 사용한다.
+
+### 로컬 자산 준비
+
+`assets/`는 git 추적 대상이 아니다. 개발 시에는 실제 자산 트리를 그 경로에 두거나 심볼릭 링크를 건다.
+
+```bash
+ln -sfn /path/to/asset-tree assets
+```
+
+자산이 없으면 로딩 화면이 `assets.json` 요청 실패를 표시하고, PF2E 출처 검증 테스트 2개는 자동으로 skip된다.
 
 ## 목표 디렉터리 구조
 
@@ -89,7 +100,8 @@ src/
   config.ts          # 환경 변수와 서버·자산 기본 설정
   theme.ts           # semantic 색상·텍스트·surface 토큰
 cards/               # 카드·덱·스테이지 JSON과 schema
-assets/              # 로컬 런타임 자산 (git에는 README만 유지)
+assets/              # 로컬 런타임 자산. 전부 git 추적 대상이 아니다.
+                     # 실제 디렉터리이거나 외부 자산 트리로의 심볼릭 링크다.
 documents/           # 프로젝트 규칙 문서
 ```
 

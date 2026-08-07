@@ -3,6 +3,11 @@ import { Container, Graphics, Text } from 'pixi.js';
 import type { ViewportLayout } from '../app/viewport';
 import type { Scene } from './scene';
 
+export type ViewportProbeSceneOptions = {
+  /** 로딩 화면이 전달한 자산 프리로드 요약이다. 없으면 표시하지 않는다. */
+  preloadSummary?: string;
+};
+
 /**
  * 1단계의 반응형 논리 영역과 루트 배율을 눈으로 검증하는 임시 개발 화면이다.
  */
@@ -22,7 +27,7 @@ export class ViewportProbeScene implements Scene {
     label: 'viewport-metrics',
   });
 
-  public constructor() {
+  public constructor(private readonly options: ViewportProbeSceneOptions = {}) {
     this.view.addChild(this.guides, this.metrics);
   }
 
@@ -45,6 +50,7 @@ export class ViewportProbeScene implements Scene {
       `viewport ${formatMetric(layout.width * layout.scale)} x ${formatMetric(layout.height * layout.scale)}`,
       `logical ${formatMetric(layout.width)} x ${formatMetric(layout.height)}`,
       `scale ${layout.scale.toFixed(4)}`,
+      ...(this.options.preloadSummary ? [this.options.preloadSummary] : []),
     ].join('\n');
     this.metrics.position.set(centerX, layout.height / 4);
   }

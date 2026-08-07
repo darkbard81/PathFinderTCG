@@ -1,4 +1,7 @@
 import { createPixiApp } from './pixi/app/create-app';
+import { ASSET_BASE_URL } from './pixi/app/runtime-config';
+import { formatPreloadSummary } from './pixi/assets/asset-loader';
+import { LoaderScene } from './pixi/scenes/LoaderScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
 import { ViewportProbeScene } from './pixi/scenes/ViewportProbeScene';
 
@@ -20,7 +23,14 @@ void (async (): Promise<void> => {
 
   mount.replaceChildren(pixi.app.canvas);
   pixi.subscribeViewport((layout) => router.resize(layout));
-  await router.goto(new ViewportProbeScene());
+  await router.goto(
+    new LoaderScene({
+      assetBaseUrl: ASSET_BASE_URL,
+      onComplete: (result) => {
+        void router.goto(new ViewportProbeScene({ preloadSummary: formatPreloadSummary(result) }));
+      },
+    }),
+  );
 })().catch((error: unknown) => {
   console.error('PathfinderTCG bootstrap failed.', error);
 });

@@ -1,7 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import { appConfig } from './src/config';
+import { assetsPlugin } from './src/server/assets-plugin';
 
 export default defineConfig({
+  plugins: [assetsPlugin()],
+  define: {
+    // 브라우저 코드가 node 전용인 src/config.ts를 import하지 않도록 값만 주입한다.
+    __ASSET_BASE_URL__: JSON.stringify(appConfig.assets.assetBaseUrl),
+  },
   server: {
     allowedHosts: appConfig.server.allowedHosts,
     host: appConfig.server.host,

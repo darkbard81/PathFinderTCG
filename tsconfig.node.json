@@ -14,5 +14,10 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src/config.ts", "vite.config.ts"]
+  "include": [
+    "src/config.ts",
+    "src/server/**/*.ts",
+    "src/game/assets/manifest.ts",
+    "vite.config.ts"
+  ]
 }
