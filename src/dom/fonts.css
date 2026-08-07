@@ -1,0 +1,20 @@
+/*
+ * UI 폰트는 저장소에 포함해 번들한다.
+ * 자산 트리(/tcg)에 의존하면 자산이 없는 환경에서 첫 화면부터 폴백 글꼴로 뜬다.
+ * 굵기는 본문 400과 제목 700 두 종만 둔다.
+ */
+@font-face {
+  font-family: 'Pretendard GOV';
+  src: url('../assets/fonts/PretendardGOV-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pretendard GOV';
+  src: url('../assets/fonts/PretendardGOV-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

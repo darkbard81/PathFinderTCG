@@ -21,6 +21,13 @@ describe('buildThemeCssVariables', () => {
     expect(variables['--pf-text-loader-title-color']).toBe(UI_THEME.text.loaderTitle.color.css);
   });
 
+  it('DOM 전용 토큰을 그룹 이름과 함께 낸다', () => {
+    expect(variables['--pf-login-panel-background']).toBe(UI_THEME.dom.login.panelBackground);
+    expect(variables['--pf-license-dialog-panel-radius']).toBe(
+      UI_THEME.dom.licenseDialog.panelRadius,
+    );
+  });
+
   it('surface는 색과 불투명도를 rgba 한 값으로 합친다', () => {
     expect(variables['--pf-surface-progress-fill']).toBe('rgba(168, 230, 178, 0.95)');
   });

@@ -1,0 +1,145 @@
+.pf-title {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--pf-space-xl);
+  width: 100%;
+  height: 100%;
+  padding: var(--pf-space-xl);
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: var(--pf-color-background);
+  background-image: var(--pf-title-background-image);
+  background-size: cover;
+  background-position: center;
+}
+
+/* 배경 위 가독성을 위한 어둡게 깔기. 캔버스 시절 titleBackdrop/titleShade 두 겹을 대신한다. */
+.pf-title::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pf-surface-title-backdrop);
+}
+
+.pf-title > * {
+  position: relative;
+}
+
+.pf-title__heading {
+  margin: 0;
+  color: var(--pf-text-hero-title-color);
+  font-size: var(--pf-text-hero-title-size);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.pf-title__panel {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+  padding: 30px;
+  border: var(--pf-login-panel-border);
+  border-radius: 10px;
+  background: var(--pf-login-panel-background);
+  box-shadow: var(--pf-login-panel-shadow);
+  pointer-events: auto;
+}
+
+.pf-title__panel-heading {
+  margin: 0 0 8px;
+  font-size: 32px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.pf-title__helper {
+  margin: 0 0 24px;
+  color: var(--pf-color-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.pf-title__form {
+  display: grid;
+  gap: 18px;
+}
+
+.pf-title__field {
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.pf-title__field input {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: var(--pf-login-input-border);
+  border-radius: 6px;
+  outline: none;
+  background: var(--pf-login-input-background);
+  color: var(--pf-color-primary);
+  font: inherit;
+  font-size: 18px;
+}
+
+.pf-title__field input:focus-visible {
+  border-color: var(--pf-color-accent);
+  box-shadow: 0 0 0 3px var(--pf-login-focus-ring);
+}
+
+.pf-title__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pf-title__actions button {
+  min-height: 50px;
+  border: var(--pf-login-button-border);
+  border-radius: 6px;
+  background: var(--pf-surface-button);
+  color: var(--pf-color-primary);
+  font: inherit;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.pf-title__actions button:hover:not(:disabled),
+.pf-title__actions button:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-title__actions button:disabled,
+.pf-title__field input:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.pf-title__status {
+  min-height: 24px;
+  margin: 0;
+  color: var(--pf-color-secondary);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.pf-title__status[data-error='true'] {
+  color: var(--pf-color-danger);
+}
+
+@media (max-width: 520px) {
+  .pf-title__panel {
+    padding: 24px 20px;
+  }
+
+  .pf-title__actions {
+    grid-template-columns: 1fr;
+  }
+}

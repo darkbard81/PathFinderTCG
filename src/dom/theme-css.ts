@@ -24,6 +24,12 @@ export function buildThemeCssVariables(): Record<string, string> {
     variables[`${VARIABLE_PREFIX}-text-${toKebabCase(name)}-color`] = style.color.css;
   }
 
+  for (const [group, tokens] of Object.entries(UI_THEME.dom)) {
+    for (const [name, value] of Object.entries(tokens)) {
+      variables[`${VARIABLE_PREFIX}-${toKebabCase(group)}-${toKebabCase(name)}`] = value;
+    }
+  }
+
   for (const [name, surface] of Object.entries(UI_THEME.surfaces)) {
     variables[`${VARIABLE_PREFIX}-surface-${toKebabCase(name)}`] = toRgba(
       surface.fill.canvas,

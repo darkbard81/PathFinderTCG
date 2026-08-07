@@ -1,4 +1,4 @@
-export const DEFAULT_FONT_FAMILY = 'CookieRun';
+export const DEFAULT_FONT_FAMILY = 'Pretendard GOV';
 
 export type UiColorToken = Readonly<{
   canvas: number;

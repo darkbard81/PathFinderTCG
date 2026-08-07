@@ -11,6 +11,9 @@ type AppConfig = {
   assets: {
     assetBaseUrl: string;
   };
+  storage: {
+    dataRoot: string;
+  };
 };
 
 const defaultConfig: AppConfig = {
@@ -22,6 +25,9 @@ const defaultConfig: AppConfig = {
   },
   assets: {
     assetBaseUrl: '/tcg',
+  },
+  storage: {
+    dataRoot: '.data',
   },
 };
 
@@ -41,6 +47,11 @@ export const appConfig = {
   },
   assets: {
     assetBaseUrl: readString(env.PATHFINDER_TCG_ASSET_BASE_URL, defaultConfig.assets.assetBaseUrl),
+  },
+  storage: {
+    dataRoot: path.resolve(
+      readString(env.PATHFINDER_TCG_DATA_ROOT, defaultConfig.storage.dataRoot),
+    ),
   },
 } satisfies AppConfig;
 
