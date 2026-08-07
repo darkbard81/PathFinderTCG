@@ -1,14 +1,19 @@
-/* 배경은 캔버스 Sprite/Graphics가 그린다. DOM은 투명 크롬만 얹는다. */
+/*
+ * 배경은 캔버스. DOM은 투명 크롬만.
+ * 논리 영역은 항상 ≥1024x768 이므로 뷰포트 너비 @media 로 레이아웃을 꺾지 않는다.
+ * 최소 높이에서도 제목·버튼·상태가 한 화면에 들어오도록 여백을 clamp 한다.
+ */
 .pf-main-menu {
   position: relative;
   display: grid;
-  align-content: start;
+  align-content: center;
   justify-items: center;
   gap: 0;
   width: 100%;
   height: 100%;
-  padding: 88px var(--pf-space-xl) var(--pf-space-xl);
+  padding: clamp(32px, 6vh, 88px) var(--pf-space-xl) clamp(24px, 4vh, 48px);
   box-sizing: border-box;
+  overflow-x: hidden;
   overflow-y: auto;
   background: transparent;
 }
@@ -17,13 +22,14 @@
   display: grid;
   justify-items: center;
   gap: var(--pf-space-sm);
-  margin-bottom: 128px;
+  /* 원본 BUTTON_TOP_PADDING 128 — 768 높이에서는 줄여 버튼이 잘리지 않게 한다. */
+  margin-bottom: clamp(40px, 10vh, 128px);
 }
 
 .pf-main-menu__title {
   margin: 0;
   color: var(--pf-text-menu-title-color);
-  font-size: var(--pf-text-menu-title-size);
+  font-size: clamp(40px, 6vw, var(--pf-text-menu-title-size));
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.06em;
@@ -33,7 +39,7 @@
 .pf-main-menu__subtitle {
   margin: 0;
   color: var(--pf-text-menu-subtitle-color);
-  font-size: var(--pf-text-menu-subtitle-size);
+  font-size: clamp(18px, 2.4vw, var(--pf-text-menu-subtitle-size));
   line-height: 1.3;
   text-align: center;
   opacity: 0.88;
@@ -41,19 +47,19 @@
 
 .pf-main-menu__actions {
   display: grid;
-  gap: 22px;
+  gap: clamp(14px, 2.2vh, 22px);
   width: min(360px, 100%);
-  margin-bottom: 52px;
+  margin-bottom: clamp(28px, 5vh, 52px);
 }
 
 .pf-main-menu__button {
-  min-height: 72px;
+  min-height: clamp(56px, 8vh, 72px);
   border: var(--pf-login-button-border);
   border-radius: 6px;
   background: var(--pf-surface-button);
   color: var(--pf-color-primary);
   font: inherit;
-  font-size: var(--pf-text-button-label-size);
+  font-size: clamp(20px, 2.6vw, var(--pf-text-button-label-size));
   cursor: pointer;
 }
 
@@ -119,7 +125,8 @@
   display: flex;
   flex-direction: column;
   width: min(760px, 100%);
-  max-height: min(760px, 88%);
+  /* 논리 768 높이에서 패딩을 빼도 패널이 잘리지 않게 상한을 둔다. */
+  max-height: min(760px, calc(100% - 16px));
   overflow: hidden;
   border: var(--pf-license-dialog-panel-border);
   border-radius: var(--pf-license-dialog-panel-radius);

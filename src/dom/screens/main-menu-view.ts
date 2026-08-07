@@ -39,6 +39,8 @@ export type MainMenuView = {
 export function createMainMenuView(options: MainMenuViewOptions): MainMenuView {
   const element = document.createElement('section');
   element.className = 'pf-main-menu';
+  // 카드 텍스트 툴 등으로 세로가 넘칠 때 스크롤바 드래그용.
+  element.dataset.interactive = 'true';
 
   const titleGroup = document.createElement('div');
   titleGroup.className = 'pf-main-menu__title-group';
@@ -227,6 +229,7 @@ function createLicenseDialog(options: {
   // 헤더는 고정하고 본문만 스크롤한다. 닫기 버튼이 목록 아래로 밀려나지 않게 한다.
   const body = document.createElement('div');
   body.className = 'pf-main-menu__license-body';
+  body.dataset.interactive = 'true';
 
   const intro = document.createElement('p');
   intro.className = 'pf-main-menu__license-intro';

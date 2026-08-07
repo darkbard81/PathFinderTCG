@@ -56,6 +56,8 @@ export function createSaveSlotView(options: SaveSlotViewOptions): SaveSlotView {
 
   const body = document.createElement('div');
   body.className = 'pf-save-slot__body';
+  // 좁은 높이에서 본문만 스크롤. 스크롤바 드래그용 interactive 표시.
+  body.dataset.interactive = 'true';
 
   const status = document.createElement('p');
   status.className = 'pf-save-slot__status';

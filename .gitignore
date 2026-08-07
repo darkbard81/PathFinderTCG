@@ -8,6 +8,7 @@ coverage/
 *.tsbuildinfo
 /.codex/
 /.agents/
+/.grok/
 
 # Local state
 .data/

@@ -1,12 +1,17 @@
-/* 배경은 캔버스. DOM은 투명 크롬만. */
+/*
+ * 배경은 캔버스. DOM은 투명 크롬만.
+ * 논리 영역은 항상 ≥1024x768. 브라우저 뷰포트 @media 로 2열을 1열로 꺾지 않는다.
+ * (1024 논리 폭에서 1열이 되면 목록·상세·HUD가 세로로 밀려 겹치거나 잘린다.)
+ */
 .pf-stage {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto auto auto;
-  gap: var(--pf-space-md);
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  gap: clamp(8px, 1.2vh, var(--pf-space-md));
   width: 100%;
   height: 100%;
-  padding: 48px var(--pf-space-xl) var(--pf-space-lg);
+  padding: clamp(24px, 4vh, 48px) clamp(20px, 2.5vw, var(--pf-space-xl))
+    clamp(12px, 2vh, var(--pf-space-lg));
   box-sizing: border-box;
   overflow: hidden;
   background: transparent;
@@ -17,29 +22,34 @@
   grid-template-columns: 1fr auto;
   align-items: start;
   gap: var(--pf-space-md);
+  min-width: 0;
 }
 
 .pf-stage__title-group {
   display: grid;
   justify-items: center;
-  gap: var(--pf-space-sm);
+  gap: 4px;
   grid-column: 1 / -1;
+  min-width: 0;
+  padding-inline: 200px;
+  box-sizing: border-box;
 }
 
 .pf-stage__top > .pf-stage__hud-button[data-kind='logout'] {
   position: absolute;
-  top: 48px;
-  right: var(--pf-space-xl);
-  min-width: 180px;
-  min-height: 58px;
+  top: clamp(24px, 4vh, 48px);
+  right: clamp(20px, 2.5vw, var(--pf-space-xl));
+  z-index: 1;
+  min-width: 160px;
+  min-height: 52px;
 }
 
 .pf-stage__title {
   margin: 0;
   color: var(--pf-text-screen-title-color);
-  font-size: var(--pf-text-screen-title-size);
+  font-size: clamp(36px, 5vw, var(--pf-text-screen-title-size));
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.1;
   letter-spacing: 0.06em;
   text-align: center;
 }
@@ -47,16 +57,17 @@
 .pf-stage__subtitle {
   margin: 0;
   color: var(--pf-text-subtitle-color);
-  font-size: var(--pf-text-subtitle-size);
+  font-size: clamp(16px, 2.2vw, var(--pf-text-subtitle-size));
   line-height: 1.3;
   text-align: center;
   opacity: 0.9;
 }
 
+/* 원본과 같이 목록 | 상세 2열. 좁아지면 열 폭만 줄어든다. */
 .pf-stage__body {
   display: grid;
-  grid-template-columns: minmax(280px, 398px) minmax(320px, 1fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(16px, 2.5vw, 36px);
   min-height: 0;
   align-items: stretch;
 }
@@ -65,6 +76,7 @@
 .pf-stage__detail-panel {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
   border: 2px solid color-mix(in srgb, var(--pf-color-accent) 54%, transparent);
   border-radius: 10px;
@@ -75,25 +87,26 @@
 .pf-stage__detail-panel {
   background: var(--pf-surface-panel);
   border-color: color-mix(in srgb, var(--pf-color-accent) 64%, transparent);
-  padding: 28px 34px;
+  padding: clamp(16px, 2.5vh, 28px) clamp(16px, 2.5vw, 34px);
+  overflow: hidden;
 }
 
 .pf-stage__list-heading {
   flex: 0 0 auto;
   margin: 0;
-  padding: 24px 28px 16px;
+  padding: clamp(14px, 2vh, 24px) clamp(16px, 2vw, 28px) 12px;
   color: var(--pf-text-stage-list-title-color);
-  font-size: var(--pf-text-stage-list-title-size);
+  font-size: clamp(22px, 2.8vw, var(--pf-text-stage-list-title-size));
   font-weight: 700;
 }
 
 .pf-stage__list {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 24px 24px;
+  padding: 0 clamp(14px, 2vw, 24px) clamp(14px, 2vh, 24px);
   align-content: start;
 }
 
@@ -102,8 +115,9 @@
   gap: 4px;
   justify-items: start;
   width: 100%;
-  min-height: 104px;
-  padding: 12px 22px;
+  min-width: 0;
+  min-height: clamp(84px, 12vh, 104px);
+  padding: 10px clamp(12px, 1.5vw, 22px);
   box-sizing: border-box;
   border: 2px solid color-mix(in srgb, var(--pf-color-accent) 70%, transparent);
   border-radius: 8px;
@@ -158,7 +172,7 @@
 }
 
 .pf-stage__card-name {
-  font-size: var(--pf-text-stage-card-name-size);
+  font-size: clamp(16px, 2vw, var(--pf-text-stage-card-name-size));
   color: var(--pf-text-stage-card-name-color);
   font-weight: 700;
   overflow: hidden;
@@ -172,24 +186,33 @@
   font-weight: 400;
 }
 
+.pf-stage__detail-scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  gap: clamp(12px, 2vh, 24px);
+}
+
 .pf-stage__detail-title {
-  margin: 0 0 24px;
+  margin: 0;
   color: var(--pf-text-detail-title-color);
-  font-size: var(--pf-text-detail-title-size);
+  font-size: clamp(24px, 3.2vw, var(--pf-text-detail-title-size));
   font-weight: 700;
   line-height: 1.2;
 }
 
 .pf-stage__detail-rows {
   display: grid;
-  gap: 24px;
+  gap: clamp(12px, 2vh, 24px);
 }
 
 .pf-stage__detail-row {
   display: grid;
-  gap: 10px;
-  min-height: 126px;
-  padding: 18px 24px;
+  gap: 8px;
+  min-height: 0;
+  padding: clamp(12px, 1.8vh, 18px) clamp(14px, 1.8vw, 24px);
   box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--pf-color-accent-soft) 42%, transparent);
   border-radius: 8px;
@@ -205,16 +228,18 @@
 .pf-stage__detail-value {
   margin: 0;
   color: var(--pf-text-body-large-color);
-  font-size: var(--pf-text-body-large-size);
+  font-size: clamp(15px, 1.8vw, var(--pf-text-body-large-size));
   line-height: 1.4;
   white-space: pre-line;
 }
 
 .pf-stage__result {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   min-height: 0;
-  padding: 22px 28px;
+  max-height: min(160px, 22vh);
+  overflow-y: auto;
+  padding: clamp(12px, 1.8vh, 22px) clamp(16px, 2vw, 28px);
   border: 2px solid color-mix(in srgb, var(--pf-color-primary-warm) 82%, transparent);
   border-radius: 10px;
   background: var(--pf-surface-result-win);
@@ -233,7 +258,7 @@
 .pf-stage__result-title {
   margin: 0;
   color: var(--pf-text-stage-result-title-color);
-  font-size: var(--pf-text-stage-result-title-size);
+  font-size: clamp(18px, 2.4vw, var(--pf-text-stage-result-title-size));
   font-weight: 700;
 }
 
@@ -244,23 +269,23 @@
 .pf-stage__result-meta {
   margin: 0;
   color: var(--pf-color-secondary-soft);
-  font-size: var(--pf-text-body-large-size);
+  font-size: clamp(14px, 1.8vw, var(--pf-text-body-large-size));
 }
 
 .pf-stage__result-body {
   margin: 0;
   color: var(--pf-text-body-color);
-  font-size: var(--pf-text-body-size);
-  line-height: 1.45;
+  font-size: clamp(14px, 1.7vw, var(--pf-text-body-size));
+  line-height: 1.4;
   white-space: pre-line;
 }
 
 .pf-stage__status {
   margin: 0;
-  min-height: 1.4em;
+  min-height: 1.3em;
   color: var(--pf-text-status-color);
-  font-size: var(--pf-text-status-size);
-  line-height: 1.4;
+  font-size: clamp(15px, 1.8vw, var(--pf-text-status-size));
+  line-height: 1.35;
   text-align: center;
 }
 
@@ -272,29 +297,29 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 20px;
-  padding-bottom: var(--pf-space-sm);
+  gap: clamp(10px, 1.5vw, 20px);
+  padding-bottom: 2px;
 }
 
 .pf-stage__hud-button {
-  min-height: 64px;
-  min-width: 128px;
-  padding: 0 18px;
+  min-height: clamp(48px, 7vh, 64px);
+  min-width: 104px;
+  padding: 0 14px;
   border: var(--pf-login-button-border);
   border-radius: 6px;
   background: var(--pf-surface-button);
   color: var(--pf-color-primary);
   font: inherit;
-  font-size: 22px;
+  font-size: clamp(16px, 2vw, 22px);
   cursor: pointer;
 }
 
 .pf-stage__hud-button[data-kind='back'] {
-  min-width: 180px;
+  min-width: 140px;
 }
 
 .pf-stage__hud-button[data-kind='start'] {
-  min-width: 250px;
+  min-width: 180px;
 }
 
 .pf-stage__hud-button:hover:not(:disabled),
@@ -307,28 +332,4 @@
   opacity: 0.58;
   color: var(--pf-text-button-label-disabled-color);
   background: var(--pf-surface-button-disabled);
-}
-
-@media (max-width: 1100px) {
-  .pf-stage__body {
-    grid-template-columns: 1fr;
-  }
-
-  .pf-stage__top > .pf-stage__hud-button[data-kind='logout'] {
-    position: static;
-    justify-self: end;
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .pf-stage__title-group {
-    grid-column: 1;
-    grid-row: 1;
-    justify-items: start;
-  }
-
-  .pf-stage__title,
-  .pf-stage__subtitle {
-    text-align: left;
-  }
 }

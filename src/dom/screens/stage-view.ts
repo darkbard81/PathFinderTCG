@@ -88,18 +88,25 @@ export function createStageView(options: StageViewOptions): StageView {
   detailPanel.className = 'pf-stage__detail-panel';
   detailPanel.setAttribute('aria-live', 'polite');
 
+  const detailScroll = document.createElement('div');
+  detailScroll.className = 'pf-stage__detail-scroll';
+  // 상세 패널 스크롤바 드래그용.
+  detailScroll.dataset.interactive = 'true';
+
   const detailTitle = document.createElement('h2');
   detailTitle.className = 'pf-stage__detail-title';
 
   const detailRows = document.createElement('div');
   detailRows.className = 'pf-stage__detail-rows';
-  detailPanel.append(detailTitle, detailRows);
+  detailScroll.append(detailTitle, detailRows);
+  detailPanel.append(detailScroll);
 
   body.append(listPanel, detailPanel);
 
   const resultPanel = document.createElement('section');
   resultPanel.className = 'pf-stage__result';
   resultPanel.hidden = true;
+  resultPanel.dataset.interactive = 'true';
 
   const resultTitle = document.createElement('h3');
   resultTitle.className = 'pf-stage__result-title';
