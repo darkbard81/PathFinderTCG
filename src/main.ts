@@ -45,6 +45,7 @@ void (async (): Promise<void> => {
   await loadThemeFont();
 
   const backgroundImageUrl = joinAssetUrl(ASSET_BASE_URL, TITLE_BACKGROUND_PATH);
+  let preloadCounts = { loadedCount: 0, failedCount: 0 };
   const services = createGameServices({
     onSessionExpired: (message) => {
       void showTitle(message);
@@ -67,19 +68,21 @@ void (async (): Promise<void> => {
       new LoaderScene({
         assetBaseUrl: ASSET_BASE_URL,
         onComplete: (result) => {
-          void showMainMenu(result.loadedCount, result.failedCount);
+          // 프리로드는 세션당 한 번이다. 메뉴로 되돌아와도 같은 요약을 보여준다.
+          preloadCounts = { loadedCount: result.loadedCount, failedCount: result.failedCount };
+          void showMainMenu();
         },
       }),
     );
   }
 
-  function showMainMenu(loadedCount: number, failedCount: number): Promise<void> {
+  function showMainMenu(): Promise<void> {
     return router.goto(
       new MainMenuScene({
         services,
         backgroundImageUrl,
-        loadedCount,
-        failedCount,
+        loadedCount: preloadCounts.loadedCount,
+        failedCount: preloadCounts.failedCount,
         onStartGame: () => {
           void showSaveSlot();
         },
@@ -96,7 +99,7 @@ void (async (): Promise<void> => {
         services,
         backgroundImageUrl,
         onBack: () => {
-          void showMainMenu(0, 0);
+          void showMainMenu();
         },
         onLoggedOut: (message) => {
           void showTitle(message);

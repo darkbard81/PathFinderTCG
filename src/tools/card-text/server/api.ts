@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { appConfig } from '../../../config';
 import sharp from 'sharp';
 import { launchCaptureBrowser } from './playwright-browser';
 
@@ -182,17 +181,25 @@ const defaultNameTextArea: TextAreaRegion = {
     '카드 이름을 하단 중앙 영역에 배치하는 텍스트 영역. 브라우저 편집 도구에서 위치와 크기를 조정한다.',
 };
 
+export type CardTextApiOptions = {
+  /**
+   * 요청자가 카드 텍스트 도구를 쓸 수 있는지 확인한다.
+   * 거절할 때는 응답을 직접 마감하고 false를 돌려준다.
+   */
+  authorize: (request: IncomingMessage, response: ServerResponse) => boolean;
+  /** 캡처 브라우저가 접속할 origin이다. 실제 리스닝 주소에서 만든다. */
+  resolveCaptureOrigin: () => string;
+};
+
 /**
  * `/api/card-text-tool/...` 요청을 처리하는 전용 API 핸들러를 만든다.
  * 카드 메타 저장, PNG/WEBP 생성, capture용 합성까지 이 경로에서만 처리한다.
  */
-export function createCardTextApiHandler(): (
-  request: IncomingMessage,
-  response: ServerResponse,
-  next: () => void,
-) => Promise<void> {
+export function createCardTextApiHandler(
+  options: CardTextApiOptions,
+): (request: IncomingMessage, response: ServerResponse, next: () => void) => Promise<void> {
   return async (request, response, next) => {
-    await handleCardTextToolRequest(request, response, next);
+    await handleCardTextToolRequest(request, response, next, options);
   };
 }
 
@@ -204,11 +211,18 @@ async function handleCardTextToolRequest(
   request: IncomingMessage,
   response: ServerResponse,
   next: () => void,
+  options: CardTextApiOptions,
 ): Promise<void> {
   const url = new URL(request.url ?? '/', 'http://localhost');
 
   if (!url.pathname.startsWith('/api/card-text-tool/')) {
     next();
+    return;
+  }
+
+  // 캡처 브라우저는 새 컨텍스트라 세션 쿠키가 없다.
+  // 이미 인가된 generate가 발급해 둔 captureId만 데이터 조회를 대신 통과시킨다.
+  if (!isPendingCaptureRead(request, url) && !options.authorize(request, response)) {
     return;
   }
 
@@ -322,6 +336,7 @@ async function handleCardTextToolRequest(
         artImage,
         referenceImage,
         artOffsetY,
+        captureOrigin: options.resolveCaptureOrigin(),
       });
 
       const outputAssets = await finalizeCardAssets(card.id, outputCardPath);
@@ -442,6 +457,20 @@ function readNameTextArea(meta: FrameMeta, abilityArea: TextAreaRegion): TextAre
   };
 }
 
+/**
+ * 진행 중인 캡처가 자기 데이터를 읽는 요청인지 판별한다.
+ * captureId는 인가된 generate가 서버에서 발급한 UUID이고 캡처가 끝나면 즉시 폐기되므로,
+ * 이 조회만 세션 없이 통과시켜도 외부에서 재현할 수 없다. 쓰기 경로는 절대 통과시키지 않는다.
+ */
+function isPendingCaptureRead(request: IncomingMessage, url: URL): boolean {
+  if (request.method !== 'GET' || url.pathname !== '/api/card-text-tool/data') {
+    return false;
+  }
+
+  const captureId = url.searchParams.get('captureId');
+  return captureId !== null && pendingCaptures.has(captureId);
+}
+
 function readPendingCapture(captureId: string | null, deckId: string, cardId: string) {
   if (!captureId) {
     return null;
@@ -469,6 +498,7 @@ async function renderCardByScreenshot(input: {
   artImage: string;
   referenceImage: string;
   artOffsetY: number;
+  captureOrigin: string;
 }): Promise<void> {
   const captureId = crypto.randomUUID();
   pendingCaptures.set(captureId, {
@@ -481,10 +511,7 @@ async function renderCardByScreenshot(input: {
     artOffsetY: input.artOffsetY,
   });
 
-  const captureUrl = new URL(
-    '/tools/card-text/',
-    `http://${appConfig.capture.host}:${appConfig.server.port}`,
-  );
+  const captureUrl = new URL('/tools/card-text/', input.captureOrigin);
   captureUrl.searchParams.set('capture', '1');
   captureUrl.searchParams.set('captureId', captureId);
   captureUrl.searchParams.set('deckId', input.deckId);
@@ -505,6 +532,14 @@ async function renderCardByScreenshot(input: {
     });
 
     await page.goto(captureUrl.href, { waitUntil: 'networkidle' });
+    // 클라이언트가 데이터 조회·글꼴 등록·최초 렌더를 마치고 세우는 신호다.
+    // 글꼴은 /data 응답 뒤에 등록되므로 document.fonts만 보면 등록 전에 통과해 버린다.
+    await page.waitForFunction(
+      () =>
+        (window as unknown as { __CARD_TEXT_TOOL_READY?: boolean }).__CARD_TEXT_TOOL_READY === true,
+      undefined,
+      { timeout: 15000 },
+    );
     await page.waitForFunction(() => document.fonts.status === 'loaded');
     await page.locator('[data-stage] canvas').first().waitFor({ timeout: 10000 });
     await page.waitForFunction(() =>

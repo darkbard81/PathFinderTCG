@@ -25,7 +25,7 @@ const defaultConfig: AppConfig = {
     host: '0.0.0.0',
     port: 3011,
     strictPort: true,
-    allowedHosts: ['tcg.bakdp.ddns.net'],
+    allowedHosts: ['tcg.krdp.ddns.net'],
   },
   capture: {
     host: '127.0.0.1',

@@ -19,7 +19,8 @@ export type StageSceneOptions = {
   backgroundImageUrl: string;
   session: GameSession;
   lastBattleResult?: StageBattleResult;
-  onBack: (session: GameSession) => void;
+  /** Stage 선택은 전투 시작 시에만 저장한다. 뒤로 가기는 세션을 넘기지 않는다. */
+  onBack: () => void;
   onLoggedOut: (statusMessage: string) => void;
   /** Battlefield 이식 전·후 모두 세션 저장 뒤 호출한다. */
   onStartBattle: (session: GameSession, stageId: string) => void;
@@ -62,7 +63,7 @@ export class StageScene implements Scene {
         onSelectStage: (stageId) => this.selectStage(stageId),
         onBack: () => {
           if (!this.isStartingBattle) {
-            this.options.onBack(this.session);
+            this.options.onBack();
           }
         },
         onStartBattle: () => {

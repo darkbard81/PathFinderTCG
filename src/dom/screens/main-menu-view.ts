@@ -1,7 +1,8 @@
+import { CARD_TEXT_TOOL_ACCOUNT_ID } from '../../tools/card-text/access';
 import './main-menu.css';
 
-/** 원본과 동일: 이 계정에만 카드 텍스트 도구 진입을 연다. */
-export const CARD_TEXT_TOOL_ACCOUNT_ID = 'darkbard81';
+/** 원본과 동일: 이 계정에만 카드 텍스트 도구 진입을 연다. 서버 게이트와 같은 상수다. */
+export { CARD_TEXT_TOOL_ACCOUNT_ID };
 
 export type MainMenuLicenseLink = {
   label: string;
