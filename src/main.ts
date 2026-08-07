@@ -8,6 +8,7 @@ import { LoaderScene } from './pixi/scenes/LoaderScene';
 import { MainMenuScene } from './pixi/scenes/MainMenuScene';
 import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
+import { StageScene } from './pixi/scenes/StageScene';
 import { TitleScene } from './pixi/scenes/TitleScene';
 import { ViewportProbeScene } from './pixi/scenes/ViewportProbeScene';
 import { createGameServices } from './services/game-services';
@@ -94,7 +95,6 @@ void (async (): Promise<void> => {
       new SaveSlotScene({
         services,
         backgroundImageUrl,
-        // 원본과 같이 Back은 MainMenu로 돌아가며, 재진입 시 로딩 요약은 0으로 둔다.
         onBack: () => {
           void showMainMenu(0, 0);
         },
@@ -102,18 +102,38 @@ void (async (): Promise<void> => {
           void showTitle(message);
         },
         onSessionReady: (session) => {
-          void showSessionPending(session);
+          void showStage(session);
         },
       }),
     );
   }
 
-  // Stage 화면 이식 전 임시 착지점. 세션이 준비됐다는 것만 확인한다.
-  function showSessionPending(session: GameSession): Promise<void> {
+  function showStage(session: GameSession): Promise<void> {
+    return router.goto(
+      new StageScene({
+        services,
+        backgroundImageUrl,
+        session,
+        onBack: () => {
+          void showSaveSlot();
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
+        },
+        onStartBattle: (nextSession, stageId) => {
+          void showBattlePending(nextSession, stageId);
+        },
+      }),
+    );
+  }
+
+  // Battlefield 이식 전 임시 착지점.
+  function showBattlePending(session: GameSession, stageId: string): Promise<void> {
     return router.goto(
       new ViewportProbeScene({
         preloadSummary: [
-          `Save ready · Slot ${session.slotId} · ${session.saveName}`,
+          `Battle ready · Stage ${stageId}`,
+          `Slot ${session.slotId} · ${session.saveName}`,
           `Leader ${session.deck.leader.instance.name}`,
         ].join('\n'),
       }),
