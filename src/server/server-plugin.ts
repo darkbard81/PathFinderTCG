@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { Plugin, ViteDevServer } from 'vite';
 import { appConfig } from '../config';
+import { createCardTextApiHandler } from '../tools/card-text/server/api';
 import { createAssetsMiddleware } from './assets-middleware';
 import { createAuthApiHandler } from './auth-api';
 import { AuthService } from './auth-service';
@@ -9,8 +10,8 @@ import { createSaveSlotsApiHandler, migrateLegacySaveSlots } from './save-slots-
 type HttpServerLike = { once(event: 'close', listener: () => void): unknown } | null;
 
 /**
- * dev 서버와 preview 서버에 자산, 인증, 저장 슬롯 라우트를 등록한다.
- * 게임 클라이언트가 기대하는 서버 경계 전체를 한 곳에서 조립한다.
+ * dev 서버와 preview 서버에 자산, 인증, 저장 슬롯, 카드 텍스트 도구 라우트를 등록한다.
+ * 게임 클라이언트와 도구가 기대하는 서버 경계 전체를 한 곳에서 조립한다.
  */
 export function serverPlugin(): Plugin {
   return {
@@ -43,6 +44,7 @@ function registerMiddlewares(
 
   const handleAuthApi = createAuthApiHandler(authService);
   const handleSaveSlotsApi = createSaveSlotsApiHandler({ authService, dataRoot });
+  const handleCardTextApi = createCardTextApiHandler();
 
   middlewares.use((request, response, next) => {
     void (async () => {
@@ -58,7 +60,9 @@ function registerMiddlewares(
         return;
       }
 
-      next();
-    })();
+      await handleCardTextApi(request, response, next);
+    })().catch((error) => {
+      next(error as Error);
+    });
   });
 }

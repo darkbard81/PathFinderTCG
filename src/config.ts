@@ -8,6 +8,10 @@ type AppConfig = {
     strictPort: boolean;
     allowedHosts: string[];
   };
+  /** 카드 텍스트 도구 캡처가 자기 서버에 접속할 때 쓰는 호스트다. */
+  capture: {
+    host: string;
+  };
   assets: {
     assetBaseUrl: string;
   };
@@ -21,7 +25,10 @@ const defaultConfig: AppConfig = {
     host: '0.0.0.0',
     port: 3011,
     strictPort: true,
-    allowedHosts: ['tcg.krdp.ddns.net'],
+    allowedHosts: ['tcg.bakdp.ddns.net'],
+  },
+  capture: {
+    host: '127.0.0.1',
   },
   assets: {
     assetBaseUrl: '/tcg',
@@ -44,6 +51,9 @@ export const appConfig = {
     port: readNumber(env.PATHFINDER_TCG_PORT, defaultConfig.server.port),
     strictPort: readBoolean(env.PATHFINDER_TCG_STRICT_PORT, defaultConfig.server.strictPort),
     allowedHosts: readList(env.PATHFINDER_TCG_ALLOWED_HOSTS, defaultConfig.server.allowedHosts),
+  },
+  capture: {
+    host: readString(env.PATHFINDER_TCG_CAPTURE_HOST, defaultConfig.capture.host),
   },
   assets: {
     assetBaseUrl: readString(env.PATHFINDER_TCG_ASSET_BASE_URL, defaultConfig.assets.assetBaseUrl),
