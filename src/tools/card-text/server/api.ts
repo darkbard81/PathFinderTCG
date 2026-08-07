@@ -310,9 +310,9 @@ async function handleCardTextToolRequest(
       const artOffsetY = toInteger(payload.artOffsetY, readDefaultArtOffsetY(meta));
 
       const outputCardPath = path.join(projectRoot, `cards/temp/${card.id}_final.png`);
+      await fs.mkdir(path.dirname(outputCardPath), { recursive: true });
 
       await renderCardByScreenshot({
-        request,
         area,
         nameArea,
         deckId: selectedDeck.id,
@@ -460,7 +460,6 @@ function readPendingCapture(captureId: string | null, deckId: string, cardId: st
  * 렌더링 실패는 그대로 예외로 올려서 상위 요청이 중단되게 한다.
  */
 async function renderCardByScreenshot(input: {
-  request: IncomingMessage;
   area: TextAreaRegion;
   nameArea: TextAreaRegion;
   deckId: string;
@@ -482,8 +481,10 @@ async function renderCardByScreenshot(input: {
     artOffsetY: input.artOffsetY,
   });
 
-  const host = input.request.headers.host ?? `${appConfig.capture.host}:${appConfig.server.port}`;
-  const captureUrl = new URL('/tools/card-text/', `http://${host}`);
+  const captureUrl = new URL(
+    '/tools/card-text/',
+    `http://${appConfig.capture.host}:${appConfig.server.port}`,
+  );
   captureUrl.searchParams.set('capture', '1');
   captureUrl.searchParams.set('captureId', captureId);
   captureUrl.searchParams.set('deckId', input.deckId);
