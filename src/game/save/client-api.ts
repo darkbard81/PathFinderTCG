@@ -1,4 +1,10 @@
-import type { CardInstance, SaveSlotId, SaveSlotState, SaveSlotSummary } from './types';
+import {
+  SAVE_SLOT_SCHEMA_VERSION,
+  type CardInstance,
+  type SaveSlotId,
+  type SaveSlotState,
+  type SaveSlotSummary,
+} from './types';
 import type { StageProgressState } from '../stage/types';
 import type { ApiFetch } from '../auth/client';
 
@@ -42,9 +48,9 @@ function isCardInstance(value: unknown, zone: CardInstance['zone']): boolean {
     typeof value.instanceId === 'string' &&
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
-    typeof value.rarity === 'string' &&
     typeof value.type === 'string' &&
     Array.isArray(value.traits) &&
+    value.traits.every((trait) => typeof trait === 'string') &&
     Array.isArray(value.abilities) &&
     typeof value.description === 'string' &&
     typeof value.note === 'string' &&
@@ -80,7 +86,7 @@ function isSaveSlotsResponse(value: unknown): value is { slots: SaveSlotSummary[
 function isSaveSlotState(value: unknown): value is SaveSlotState {
   return (
     isRecord(value) &&
-    value.schemaVersion === 3 &&
+    value.schemaVersion === SAVE_SLOT_SCHEMA_VERSION &&
     (value.slotId === 1 || value.slotId === 2 || value.slotId === 3) &&
     typeof value.createdAt === 'string' &&
     typeof value.updatedAt === 'string' &&

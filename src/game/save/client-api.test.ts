@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SaveSlotsClient } from './client-api';
-import type { CardInstance, SaveSlotState } from './types';
+import { SAVE_SLOT_SCHEMA_VERSION, type CardInstance, type SaveSlotState } from './types';
 
 type FakeResponseInit = {
   ok: boolean;
@@ -21,7 +21,7 @@ function createFakeResponse(init: FakeResponseInit): Response {
 
 function createValidSaveSlotState(): SaveSlotState {
   return {
-    schemaVersion: 3,
+    schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
     slotId: 1,
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-02T00:00:00.000Z',
@@ -48,9 +48,8 @@ function createValidCardInstance(overrides: Partial<CardInstance> = {}): CardIns
   return {
     id: overrides.zone === 'COLLECTION' ? 'unit_collection_test' : 'leader_minerva',
     name: overrides.zone === 'COLLECTION' ? '컬렉션 테스트 카드' : '미네르바',
-    rarity: 'R',
     type: overrides.zone === 'COLLECTION' ? 'UNIT' : 'LEADER',
-    traits: [{ key: 'race', text: '엘프' }],
+    traits: ['rare', 'elf'],
     slot: 0,
     cost: 1,
     dominance: 1,
@@ -180,7 +179,7 @@ describe('save slot client api', () => {
           statusText: 'OK',
           body: {
             state: {
-              schemaVersion: 3,
+              schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
               slotId: 1,
               createdAt: '2024-01-01T00:00:00.000Z',
               updatedAt: '2024-01-01T00:00:00.000Z',

@@ -111,7 +111,6 @@ describe('deck_level03 through deck_level07 design', () => {
         for (const card of deck.cards) {
           const monster = monsterById.get(card.id);
           expect(monster?.details.level.value).toBe(expectedLevel);
-          expect(card.traits).toContainEqual({ key: 'sourceLevel', text: String(expectedLevel) });
           expect(card.note.startsWith(monster?.details.safeNotes.split(/\n\n/)[0] ?? '')).toBe(
             true,
           );

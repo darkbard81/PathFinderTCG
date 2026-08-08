@@ -1,0 +1,597 @@
+{
+  "$schema": "./trait.schema.json",
+  "version": "trait-catalog-v1",
+  "categories": [
+    {
+      "id": "SIZE",
+      "title": "Size",
+      "sortOrder": 1,
+      "description": "전장에서 차지하는 공간과 도달거리를 결정하는 크기 분류"
+    },
+    {
+      "id": "RARITY",
+      "title": "Rarity",
+      "sortOrder": 2,
+      "description": "카드 입수 난이도와 등장 빈도를 나타내는 희귀도 분류"
+    },
+    {
+      "id": "TYPE",
+      "title": "Type",
+      "sortOrder": 3,
+      "description": "생물의 근본 성질을 나타내는 PF2e 생물 유형 분류"
+    },
+    {
+      "id": "ANCESTRY / FAMILY",
+      "title": "Ancestry / Family",
+      "sortOrder": 4,
+      "description": "혈통, 종족, 계열을 나타내는 분류"
+    },
+    {
+      "id": "ELEMENT",
+      "title": "Element",
+      "sortOrder": 5,
+      "description": "연결된 원소를 나타내는 분류"
+    },
+    {
+      "id": "SPECIAL",
+      "title": "Special",
+      "sortOrder": 6,
+      "description": "위 분류에 속하지 않는 특수 성질과 상태 분류"
+    }
+  ],
+  "traits": [
+    {
+      "id": "tiny",
+      "category": "SIZE",
+      "label": "Tiny",
+      "sortOrder": 1,
+      "description": "5피트보다 작은 크기. 보통 도달거리가 0피트이며, 더 큰 생물과 공간을 공유할 수 있다."
+    },
+    {
+      "id": "small",
+      "category": "SIZE",
+      "label": "Small",
+      "sortOrder": 2,
+      "description": "5피트 공간을 차지하는 소형 크기. 일반적인 도달거리는 5피트다."
+    },
+    {
+      "id": "medium",
+      "category": "SIZE",
+      "label": "Medium",
+      "sortOrder": 3,
+      "description": "5피트 공간을 차지하는 중형 크기. 대부분의 인간형 생물의 기준 크기다."
+    },
+    {
+      "id": "large",
+      "category": "SIZE",
+      "label": "Large",
+      "sortOrder": 4,
+      "description": "10피트×10피트 공간을 차지하는 대형 크기. 키 큰 체형의 일반 도달거리는 10피트다."
+    },
+    {
+      "id": "huge",
+      "category": "SIZE",
+      "label": "Huge",
+      "sortOrder": 5,
+      "description": "15피트×15피트 공간을 차지하는 초대형 크기. 키 큰 체형의 일반 도달거리는 15피트다."
+    },
+    {
+      "id": "gargantuan",
+      "category": "SIZE",
+      "label": "Gargantuan",
+      "sortOrder": 6,
+      "description": "최소 20피트×20피트 공간을 차지하는 거대 크기. 실제 크기와 도달거리는 더 클 수 있다."
+    },
+    {
+      "id": "common",
+      "category": "RARITY",
+      "label": "Common",
+      "sortOrder": 1,
+      "description": "별도 희귀도 표기가 없는 일반적인 선택지. 기본적으로 특별한 접근 조건이 없다."
+    },
+    {
+      "id": "uncommon",
+      "category": "RARITY",
+      "label": "Uncommon",
+      "sortOrder": 2,
+      "description": "특정 문화·지역·훈련 또는 Access 조건이 필요한 선택지. 사용 가능 여부는 GM이 결정할 수 있다."
+    },
+    {
+      "id": "rare",
+      "category": "RARITY",
+      "label": "Rare",
+      "sortOrder": 3,
+      "description": "매우 보기 힘든 선택지로 보통 GM의 명시적 허가가 필요하다."
+    },
+    {
+      "id": "unique",
+      "category": "RARITY",
+      "label": "Unique",
+      "sortOrder": 4,
+      "description": "말 그대로 세상에 단 하나뿐인"
+    },
+    {
+      "id": "humanoid",
+      "category": "TYPE",
+      "label": "Humanoid",
+      "sortOrder": 1,
+      "description": "인간처럼 사고하고 행동하는 생물 유형. 보통 직립하며 두 팔과 두 다리를 가진다."
+    },
+    {
+      "id": "beast",
+      "category": "TYPE",
+      "label": "Beast",
+      "sortOrder": 2,
+      "description": "동물과 비슷하지만 지능 수정치가 보통 –3 이상이며, 말하거나 추론할 수 있는 생물이다."
+    },
+    {
+      "id": "undead",
+      "category": "TYPE",
+      "label": "Undead",
+      "sortOrder": 3,
+      "description": "죽은 뒤 공허(Void) 에너지와 불경한 마법으로 움직이는 생물. 활력에 피해를 받고 공허로 회복한다."
+    },
+    {
+      "id": "dragon",
+      "category": "TYPE",
+      "label": "Dragon",
+      "sortOrder": 4,
+      "description": "대개 파충류형이며 비행 능력이나 마법적 숨결을 지닌 생물. 보통 수면과 마비에 면역이다."
+    },
+    {
+      "id": "giant",
+      "category": "TYPE",
+      "label": "Giant",
+      "sortOrder": 5,
+      "description": "거대한 인간형 생물을 나타내는 유형이다."
+    },
+    {
+      "id": "construct",
+      "category": "TYPE",
+      "label": "Construct",
+      "sortOrder": 6,
+      "description": "활력이나 공허가 아닌 힘으로 작동하는 인공 생물. 생물이 아니며 0 HP가 되면 파괴된다."
+    },
+    {
+      "id": "elemental",
+      "category": "TYPE",
+      "label": "Elemental",
+      "sortOrder": 7,
+      "description": "특정 원소와 직접 연결되고 원소 차원에서 기원한 생물. 호흡할 필요가 없다."
+    },
+    {
+      "id": "fey",
+      "category": "TYPE",
+      "label": "Fey",
+      "sortOrder": 8,
+      "description": "퍼스트 월드(First World)에서 기원하거나 그와 강하게 연결된 생물이다."
+    },
+    {
+      "id": "fiend",
+      "category": "TYPE",
+      "label": "Fiend",
+      "sortOrder": 9,
+      "description": "불경한 외차원과 기원 또는 강한 연관이 있는 생물. 외부 구체의 기본 환경 효과를 견딜 수 있다."
+    },
+    {
+      "id": "ooze",
+      "category": "TYPE",
+      "label": "Ooze",
+      "sortOrder": 10,
+      "description": "단순한 신체 구조를 가진 점액형 생물. 대개 정신 능력이 낮고 정신 효과와 정밀 피해에 면역이다."
+    },
+    {
+      "id": "aberration",
+      "category": "TYPE",
+      "label": "Aberration",
+      "sortOrder": 11,
+      "description": "일반적인 생태에서 벗어난 기괴하고 이질적인 생물. 대개 미지의 근원이나 먼 차원에서 비롯된다."
+    },
+    {
+      "id": "animal",
+      "category": "TYPE",
+      "label": "Animal",
+      "sortOrder": 12,
+      "description": "자연에서 살아가는 평범한 짐승. 지능 수정치가 보통 –4 이하이며 말하거나 추론하지 못한다."
+    },
+    {
+      "id": "astral",
+      "category": "TYPE",
+      "label": "Astral",
+      "sortOrder": 13,
+      "description": "아스트랄계에서 기원하거나 그와 강하게 연결된 생물이다."
+    },
+    {
+      "id": "celestial",
+      "category": "TYPE",
+      "label": "Celestial",
+      "sortOrder": 14,
+      "description": "신성한 외차원과 기원 또는 강한 연관이 있는 생물. 외부 구체의 기본 환경 효과를 견딜 수 있다."
+    },
+    {
+      "id": "dream",
+      "category": "TYPE",
+      "label": "Dream",
+      "sortOrder": 15,
+      "description": "꿈의 영역에서 기원하거나 그와 강하게 연결된 생물이다."
+    },
+    {
+      "id": "ethereal",
+      "category": "TYPE",
+      "label": "Ethereal",
+      "sortOrder": 16,
+      "description": "에테르계에서 기원하거나 그와 강하게 연결된 생물이다."
+    },
+    {
+      "id": "fungus",
+      "category": "TYPE",
+      "label": "Fungus",
+      "sortOrder": 17,
+      "description": "균류로 이루어진 생물. 식물과 달리 광합성에 의존하지 않는다."
+    },
+    {
+      "id": "monitor",
+      "category": "TYPE",
+      "label": "Monitor",
+      "sortOrder": 18,
+      "description": "선악보다 우주의 균형과 규칙을 지키기 위해 활동하는 외차원 생물이다."
+    },
+    {
+      "id": "plant",
+      "category": "TYPE",
+      "label": "Plant",
+      "sortOrder": 19,
+      "description": "식물성 조직으로 이루어진 생물. 대개 광합성이나 그와 비슷한 방식으로 양분을 얻는다."
+    },
+    {
+      "id": "spirit",
+      "category": "TYPE",
+      "label": "Spirit",
+      "sortOrder": 20,
+      "description": "물질이 아닌 영적 본질로 이루어진 생물. 보통 에테르계나 사후 세계와 연결된다."
+    },
+    {
+      "id": "time",
+      "category": "TYPE",
+      "label": "Time",
+      "sortOrder": 21,
+      "description": "시간의 흐름 자체와 연결되거나 시간 차원에서 기원한 생물이다."
+    },
+    {
+      "id": "human",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Human",
+      "sortOrder": 1,
+      "description": "인간 혈통의 구성원. 인간은 다양성과 적응력으로 알려지며, Human 특성 능력은 인간만 선택한다."
+    },
+    {
+      "id": "elf",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Elf",
+      "sortOrder": 2,
+      "description": "엘프 혈통의 구성원. 장수하며 환경에 적응하는 민족으로, Elf 특성 능력은 엘프만 선택한다."
+    },
+    {
+      "id": "dwarf",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Dwarf",
+      "sortOrder": 3,
+      "description": "드워프 혈통의 구성원. 강인함과 전통으로 알려지며, Dwarf 특성 능력은 드워프만 선택한다."
+    },
+    {
+      "id": "goblin",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Goblin",
+      "sortOrder": 4,
+      "description": "고블린 혈통의 구성원. 기민하고 열정적인 소형 인간형이며, Goblin 특성 능력은 고블린만 선택한다."
+    },
+    {
+      "id": "orc",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Orc",
+      "sortOrder": 5,
+      "description": "오크 혈통의 구성원. 강인하고 생존력이 뛰어난 인간형이며, Orc 특성 능력은 오크만 선택한다."
+    },
+    {
+      "id": "demon",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Demon",
+      "sortOrder": 6,
+      "description": "아우터 리프트(Outer Rifts)에서 온 죄악과 혼돈의 피엔드 계열이다."
+    },
+    {
+      "id": "devil",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Devil",
+      "sortOrder": 7,
+      "description": "헬(Hell)에서 온 규율과 위계 중심의 피엔드 계열이다."
+    },
+    {
+      "id": "aeon",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Aeon",
+      "sortOrder": 8,
+      "description": "우주의 균형을 감시하고 집행하는 모니터 계열이다."
+    },
+    {
+      "id": "aiuvarin",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Aiuvarin",
+      "sortOrder": 9,
+      "description": "인간과 엘프의 피를 함께 이어받은 혈통이다."
+    },
+    {
+      "id": "boggard",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Boggard",
+      "sortOrder": 10,
+      "description": "늪지에 사는 개구리형 인간형 계열이다."
+    },
+    {
+      "id": "bugbear",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Bugbear",
+      "sortOrder": 11,
+      "description": "고블린과 같은 뿌리를 가진 대형 인간형 계열이다."
+    },
+    {
+      "id": "caligni",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Caligni",
+      "sortOrder": 12,
+      "description": "지하의 어둠에 적응해 빛을 피하는 인간형 계열이다."
+    },
+    {
+      "id": "catfolk",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Catfolk",
+      "sortOrder": 13,
+      "description": "고양잇과의 특징을 지닌 인간형 계열이다."
+    },
+    {
+      "id": "centaur",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Centaur",
+      "sortOrder": 14,
+      "description": "인간형 상반신과 말의 하반신을 가진 계열이다."
+    },
+    {
+      "id": "dinosaur",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Dinosaur",
+      "sortOrder": 15,
+      "description": "고대에서 살아남은 대형 파충류 동물 계열이다."
+    },
+    {
+      "id": "duergar",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Duergar",
+      "sortOrder": 16,
+      "description": "지하 깊은 곳에 자리 잡은 드워프 계열이다."
+    },
+    {
+      "id": "gnome",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Gnome",
+      "sortOrder": 17,
+      "description": "퍼스트 월드에 뿌리를 둔 소형 인간형 혈통이다."
+    },
+    {
+      "id": "hag",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Hag",
+      "sortOrder": 18,
+      "description": "저주와 사악한 마법을 다루는 노파 형태의 계열이다."
+    },
+    {
+      "id": "hobgoblin",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Hobgoblin",
+      "sortOrder": 19,
+      "description": "규율과 군사 문화를 중시하는 고블린 계열이다."
+    },
+    {
+      "id": "kholo",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Kholo",
+      "sortOrder": 20,
+      "description": "하이에나를 닮은 인간형 계열이다."
+    },
+    {
+      "id": "leshy",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Leshy",
+      "sortOrder": 21,
+      "description": "자연의 정령이 식물 몸에 깃들어 태어난 소형 계열이다."
+    },
+    {
+      "id": "locathah",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Locathah",
+      "sortOrder": 22,
+      "description": "물고기를 닮은 수생 인간형 계열이다."
+    },
+    {
+      "id": "mummy",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Mummy",
+      "sortOrder": 23,
+      "description": "방부 처리된 시신이 되살아난 언데드 계열이다."
+    },
+    {
+      "id": "mutant",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Mutant",
+      "sortOrder": 24,
+      "description": "마법이나 이변으로 신체가 크게 변형된 계열이다."
+    },
+    {
+      "id": "nymph",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Nymph",
+      "sortOrder": 25,
+      "description": "특정 자연물과 운명을 함께하는 페이 계열이다."
+    },
+    {
+      "id": "phantom",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Phantom",
+      "sortOrder": 26,
+      "description": "사후에도 물질계에 남아 머무는 영혼 계열이다."
+    },
+    {
+      "id": "ratfolk",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Ratfolk",
+      "sortOrder": 27,
+      "description": "쥐를 닮은 소형 인간형 계열이다."
+    },
+    {
+      "id": "serpentfolk",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Serpentfolk",
+      "sortOrder": 28,
+      "description": "뱀의 특징을 지닌 고대 인간형 계열이다."
+    },
+    {
+      "id": "skeleton",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Skeleton",
+      "sortOrder": 29,
+      "description": "살이 사라지고 뼈만 남아 움직이는 언데드 계열이다."
+    },
+    {
+      "id": "sprite",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Sprite",
+      "sortOrder": 30,
+      "description": "아주 작은 몸집을 가진 페이 계열이다."
+    },
+    {
+      "id": "troll",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Troll",
+      "sortOrder": 31,
+      "description": "강한 재생 능력을 지닌 거인 계열이다."
+    },
+    {
+      "id": "werecreature",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Werecreature",
+      "sortOrder": 32,
+      "description": "인간형과 짐승 형태를 오갈 수 있는 계열이다."
+    },
+    {
+      "id": "xulgath",
+      "category": "ANCESTRY / FAMILY",
+      "label": "Xulgath",
+      "sortOrder": 33,
+      "description": "지하에 사는 파충류형 인간형 계열이다."
+    },
+    {
+      "id": "fire",
+      "category": "ELEMENT",
+      "label": "Fire",
+      "sortOrder": 1,
+      "description": "불 피해를 주거나 불을 생성·조작하는 효과, 또는 마법적 불과 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "water",
+      "category": "ELEMENT",
+      "label": "Water",
+      "sortOrder": 2,
+      "description": "물속에서 기능하거나 물을 생성·조작하는 효과, 또는 마법적 물과 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "earth",
+      "category": "ELEMENT",
+      "label": "Earth",
+      "sortOrder": 3,
+      "description": "흙과 돌을 생성하거나 조작하는 효과, 또는 마법적 대지와 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "air",
+      "category": "ELEMENT",
+      "label": "Air",
+      "sortOrder": 4,
+      "description": "공기를 생성하거나 조작하는 효과, 또는 마법적 공기와 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "metal",
+      "category": "ELEMENT",
+      "label": "Metal",
+      "sortOrder": 5,
+      "description": "금속을 생성하거나 조작하는 효과, 또는 마법적 금속과 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "wood",
+      "category": "ELEMENT",
+      "label": "Wood",
+      "sortOrder": 6,
+      "description": "나무와 식물성 물질을 생성하거나 조작하는 효과, 또는 마법적 목(木) 원소와 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "holy",
+      "category": "SPECIAL",
+      "label": "Holy",
+      "sortOrder": 1,
+      "description": "자비와 덕의 강력한 마법적 힘과 연결된다. 불경(Unholy) 생물에게 더 강하게 작용하는 경우가 많다."
+    },
+    {
+      "id": "unholy",
+      "category": "SPECIAL",
+      "label": "Unholy",
+      "sortOrder": 2,
+      "description": "잔혹함과 죄악의 강력한 마법적 힘과 연결된다. 신성(Holy) 생물에게 더 강하게 작용하는 경우가 많다."
+    },
+    {
+      "id": "aquatic",
+      "category": "SPECIAL",
+      "label": "Aquatic",
+      "sortOrder": 3,
+      "description": "물속 생활에 적응한 생물. 물에서는 호흡하지만 공기는 호흡하지 못하며 수중 비무장 공격 불이익을 무시한다."
+    },
+    {
+      "id": "incorporeal",
+      "category": "SPECIAL",
+      "label": "Incorporeal",
+      "sortOrder": 4,
+      "description": "물리적 신체가 없는 비물질 생물. 여러 물리적 효과에 강하며 force·ghost touch·spirit 등에 영향을 받는다."
+    },
+    {
+      "id": "mindless",
+      "category": "SPECIAL",
+      "label": "Mindless",
+      "sortOrder": 5,
+      "description": "정신 능력이 프로그램되었거나 매우 원시적인 생물. 대부분의 정신 수정치가 –5이며 모든 정신 효과에 면역이다."
+    },
+    {
+      "id": "swarm",
+      "category": "SPECIAL",
+      "label": "Swarm",
+      "sortOrder": 6,
+      "description": "다수의 작은 생물이 하나의 생물처럼 행동하는 군집. 다른 생물의 공간에 들어갈 수 있고 범위·스플래시 피해에 취약한 경우가 많다."
+    },
+    {
+      "id": "amphibious",
+      "category": "SPECIAL",
+      "label": "Amphibious",
+      "sortOrder": 7,
+      "description": "물과 공기 양쪽에서 호흡할 수 있어 수중과 지상 모두에서 활동한다."
+    },
+    {
+      "id": "cold",
+      "category": "SPECIAL",
+      "label": "Cold",
+      "sortOrder": 8,
+      "description": "냉기 피해를 주거나 냉기를 다루는 효과, 또는 한기와 연결된 생물을 나타낸다."
+    },
+    {
+      "id": "occult",
+      "category": "SPECIAL",
+      "label": "Occult",
+      "sortOrder": 9,
+      "description": "신비(Occult) 전승의 마법과 연결된다. 정신, 영혼, 미지의 영역을 다루는 힘이다."
+    }
+  ]
+}

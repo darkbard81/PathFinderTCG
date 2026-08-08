@@ -169,9 +169,8 @@ function createEquipmentDefinition(
   return {
     id,
     name: '테스트 장비',
-    rarity: 'C',
     type: 'EQUIPMENT',
-    traits: [{ key: 'role', text: '테스트' }],
+    traits: ['common'],
     slot: 0,
     cost: 0,
     dominance: 0,

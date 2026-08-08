@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "oZVeE7D70bHOrs1d",
       "name": "Cyclops",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "giant, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "예지 지휘관"
-        }
-      ],
+      "traits": ["large", "rare", "humanoid", "giant"],
       "slot": 0,
       "cost": 1,
       "dominance": 2,
@@ -88,26 +70,8 @@
     {
       "id": "mX47c0W9rizbmMBM",
       "name": "Basilisk",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast"
-        },
-        {
-          "key": "role",
-          "text": "석화 수호수"
-        }
-      ],
+      "traits": ["medium", "common", "beast"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -179,26 +143,8 @@
     {
       "id": "6UrgCT8MwC8CeGbu",
       "name": "Brimorak",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "demon, fiend, unholy"
-        },
-        {
-          "key": "role",
-          "text": "화염 돌격수"
-        }
-      ],
+      "traits": ["medium", "common", "fiend", "demon", "unholy"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -270,26 +216,8 @@
     {
       "id": "qlxVPpwVFw5qIVQM",
       "name": "Flame Drake",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "dragon, fire"
-        },
-        {
-          "key": "role",
-          "text": "화산 드레이크"
-        }
-      ],
+      "traits": ["large", "common", "dragon", "fire"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -361,26 +289,8 @@
     {
       "id": "htK4dElL6YvFCLkz",
       "name": "Forest Troll",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "giant, humanoid, troll, wood"
-        },
-        {
-          "key": "role",
-          "text": "재생 거인"
-        }
-      ],
+      "traits": ["large", "common", "humanoid", "giant", "troll", "wood"],
       "slot": 0,
       "cost": 3,
       "dominance": 1,
@@ -452,26 +362,8 @@
     {
       "id": "uBNm3R9wbLTPrM9i",
       "name": "Harpy",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "air, beast, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "공중 사냥꾼"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "beast", "air"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -543,26 +435,8 @@
     {
       "id": "4Ejgj6p1LAu1RAN3",
       "name": "Living Landslide",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "earth, elemental"
-        },
-        {
-          "key": "role",
-          "text": "대지 방벽"
-        }
-      ],
+      "traits": ["medium", "common", "elemental", "earth"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -634,26 +508,8 @@
     {
       "id": "zpd6b6UPP72ZELCj",
       "name": "Poltergeist",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "incorporeal, spirit, undead, unholy"
-        },
-        {
-          "key": "role",
-          "text": "염동 전위"
-        }
-      ],
+      "traits": ["medium", "common", "undead", "spirit", "unholy", "incorporeal"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -725,26 +581,8 @@
     {
       "id": "fWAjkhQ0y50Eh2BT",
       "name": "Redcap",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "fey"
-        },
-        {
-          "key": "role",
-          "text": "비겁한 선동자"
-        }
-      ],
+      "traits": ["small", "common", "fey"],
       "slot": 0,
       "cost": 2,
       "dominance": 2,
@@ -816,26 +654,8 @@
     {
       "id": "diU0V2M3LiMDMsS0",
       "name": "Witchwarg",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, cold"
-        },
-        {
-          "key": "role",
-          "text": "한기 포식자"
-        }
-      ],
+      "traits": ["large", "common", "beast", "cold"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -907,26 +727,8 @@
     {
       "id": "alPZcKVrHTcMdtIU",
       "name": "Yeti",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "5"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid"
-        },
-        {
-          "key": "role",
-          "text": "설산 거인"
-        }
-      ],
+      "traits": ["large", "uncommon", "humanoid"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,

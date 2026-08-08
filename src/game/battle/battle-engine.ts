@@ -1,3 +1,4 @@
+import { hasAnyTrait as hasAnyCardTrait, hasTrait as hasCardTrait } from '../cards/trait-catalog';
 import type { AbilityCategory, CardAbility } from '../save/card-catalog';
 import {
   ACTIVE_SKILL_DEFINITIONS,
@@ -1071,7 +1072,7 @@ function getPassiveStatBonus(
       isFrontRowCard,
       isBackRowCard,
       hasTrait,
-      hasTraitToken,
+      hasAnyTrait,
     });
     if (modifier?.stat === stat) {
       total += modifier.value;
@@ -1092,7 +1093,7 @@ function getPassiveStatBonus(
         isFrontRowCard,
         isBackRowCard,
         hasTrait,
-        hasTraitToken,
+        hasAnyTrait,
       });
       if (modifier?.stat === stat) {
         total += modifier.value;
@@ -1108,7 +1109,7 @@ function getPassiveStatBonus(
         isFrontRowCard,
         isBackRowCard,
         hasTrait,
-        hasTraitToken,
+        hasAnyTrait,
       });
       if (modifier?.stat === stat) {
         total += modifier.value;
@@ -1413,19 +1414,12 @@ function clearBattlefieldLeaveEffects(
   }
 }
 
-function hasTrait(card: BattleCardRuntimeState, key: string, text: string): boolean {
-  return card.card.definition.traits.some((trait) => trait.key === key && trait.text === text);
+function hasTrait(card: BattleCardRuntimeState, traitId: string): boolean {
+  return hasCardTrait(card.card.definition.traits, traitId);
 }
 
-function hasTraitToken(card: BattleCardRuntimeState, key: string, text: string): boolean {
-  return card.card.definition.traits.some(
-    (trait) =>
-      trait.key === key &&
-      trait.text
-        .split(',')
-        .map((token) => token.trim())
-        .includes(text),
-  );
+function hasAnyTrait(card: BattleCardRuntimeState, traitIds: readonly string[]): boolean {
+  return hasAnyCardTrait(card.card.definition.traits, traitIds);
 }
 
 function applyHealingToBattlefieldCard(target: BattleCardRuntimeState, value: number): void {

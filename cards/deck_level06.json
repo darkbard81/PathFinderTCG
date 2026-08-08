@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "xgKDQB6ZYmAutwAm",
       "name": "Hobgoblin General",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "hobgoblin, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "군단 지휘관"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "hobgoblin"],
       "slot": 0,
       "cost": 1,
       "dominance": 3,
@@ -88,26 +70,8 @@
     {
       "id": "MXSKccQqbQqQ77Ii",
       "name": "Aapoph Granitescale",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid, mutant, serpentfolk"
-        },
-        {
-          "key": "role",
-          "text": "화강암 수호자"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "mutant", "serpentfolk"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -179,26 +143,8 @@
     {
       "id": "CYt04IKRQeiC9Ly9",
       "name": "Ankylosaurus",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "huge"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal, dinosaur"
-        },
-        {
-          "key": "role",
-          "text": "중장 돌격수"
-        }
-      ],
+      "traits": ["huge", "common", "animal", "dinosaur"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -270,26 +216,8 @@
     {
       "id": "Bkr0soTDhQq1qjWx",
       "name": "Hydra",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "huge"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast"
-        },
-        {
-          "key": "role",
-          "text": "다두 포식자"
-        }
-      ],
+      "traits": ["huge", "common", "beast"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -361,26 +289,8 @@
     {
       "id": "lfUUnFazGLAtqRsP",
       "name": "Iron Hag",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "hag, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "감금 마녀"
-        }
-      ],
+      "traits": ["large", "common", "humanoid", "hag"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -452,26 +362,8 @@
     {
       "id": "vqYrJ33XgoeQUUle",
       "name": "Lamia",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "저주 포식자"
-        }
-      ],
+      "traits": ["large", "common", "humanoid", "beast"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -543,26 +435,8 @@
     {
       "id": "XZWUQklzWF6YFPmG",
       "name": "Mummy Guardian",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "mummy, undead, unholy"
-        },
-        {
-          "key": "role",
-          "text": "무덤 수호자"
-        }
-      ],
+      "traits": ["medium", "common", "undead", "mummy", "unholy"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -634,26 +508,8 @@
     {
       "id": "qRUqoezeEnQ2KdyT",
       "name": "Nightmare",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, fiend, unholy"
-        },
-        {
-          "key": "role",
-          "text": "화염 기병"
-        }
-      ],
+      "traits": ["large", "common", "beast", "fiend", "unholy"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -725,26 +581,8 @@
     {
       "id": "bsrQp0pLgvjJr6mC",
       "name": "Revenant",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "undead"
-        },
-        {
-          "key": "role",
-          "text": "복수 지원자"
-        }
-      ],
+      "traits": ["medium", "common", "undead"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -816,26 +654,8 @@
     {
       "id": "KgJq51AeYrENo3Db",
       "name": "Will-o'-Wisp",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "aberration, air"
-        },
-        {
-          "key": "role",
-          "text": "공포 유인자"
-        }
-      ],
+      "traits": ["small", "common", "aberration", "air"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -907,26 +727,8 @@
     {
       "id": "5iqkL9Me5164H7NY",
       "name": "Wyvern",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "6"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "dragon"
-        },
-        {
-          "key": "role",
-          "text": "독성 비룡"
-        }
-      ],
+      "traits": ["large", "common", "dragon"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,

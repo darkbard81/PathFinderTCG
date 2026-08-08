@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "7w1w7VTnIWMBdFux",
       "name": "Xulgath Leader",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid, xulgath"
-        },
-        {
-          "key": "role",
-          "text": "전투 지휘관"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "xulgath"],
       "slot": 0,
       "cost": 1,
       "dominance": 2,
@@ -88,26 +70,8 @@
     {
       "id": "yQ2mosomuAPiLMkU",
       "name": "Animated Statue",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "construct, mindless"
-        },
-        {
-          "key": "role",
-          "text": "석상 수호자"
-        }
-      ],
+      "traits": ["medium", "common", "construct", "mindless"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -179,26 +143,8 @@
     {
       "id": "V1Kr5aiPaTM0mDFu",
       "name": "Ankhrav",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "굴착 돌격수"
-        }
-      ],
+      "traits": ["large", "common", "animal"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -270,26 +216,8 @@
     {
       "id": "pzQhR0mc8HEhXLOZ",
       "name": "Athamaru Hunter",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "amphibious, humanoid, locathah"
-        },
-        {
-          "key": "role",
-          "text": "작살 사냥꾼"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "locathah", "amphibious"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -361,26 +289,8 @@
     {
       "id": "F2Xhn4rqPAj55w3O",
       "name": "Boggard Swampseer",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "amphibious, boggard, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "늪지 주술사"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "boggard", "amphibious"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -452,26 +362,8 @@
     {
       "id": "Q1qjdG3i8TZuEOq6",
       "name": "Centaur Herbalist",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, centaur, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "약초 전사"
-        }
-      ],
+      "traits": ["large", "common", "humanoid", "beast", "centaur"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -543,26 +435,8 @@
     {
       "id": "xN5J9S485LxFZMkL",
       "name": "Cinder Rat",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "elemental, fire"
-        },
-        {
-          "key": "role",
-          "text": "연기 원소"
-        }
-      ],
+      "traits": ["small", "common", "elemental", "fire"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -634,26 +508,8 @@
     {
       "id": "MrzlaE7k1PEsd3iQ",
       "name": "Cockatrice",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast"
-        },
-        {
-          "key": "role",
-          "text": "석화 파수꾼"
-        }
-      ],
+      "traits": ["small", "common", "beast"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -725,26 +581,8 @@
     {
       "id": "4MoqBCDQA6FR1sPw",
       "name": "Dryad",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "fey, nymph, plant, wood"
-        },
-        {
-          "key": "role",
-          "text": "숲의 치유자"
-        }
-      ],
+      "traits": ["medium", "common", "fey", "plant", "nymph", "wood"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -816,26 +654,8 @@
     {
       "id": "RTviEfjYnsXa0wkT",
       "name": "Hell Hound",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, fiend, fire, unholy"
-        },
-        {
-          "key": "role",
-          "text": "지옥 추적자"
-        }
-      ],
+      "traits": ["medium", "common", "beast", "fiend", "fire", "unholy"],
       "slot": 0,
       "cost": 2,
       "dominance": 2,
@@ -907,26 +727,8 @@
     {
       "id": "lYoAwofYGbhWL75Q",
       "name": "Unicorn",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "3"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, fey, holy"
-        },
-        {
-          "key": "role",
-          "text": "성역 수호자"
-        }
-      ],
+      "traits": ["large", "common", "beast", "fey", "holy"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,

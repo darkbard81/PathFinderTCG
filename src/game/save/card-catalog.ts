@@ -6,17 +6,10 @@ export type CardDefinitionFile = {
   cards: CardDefinition[];
 };
 
-export type CardRarity = 'C' | 'UC' | 'R' | 'SR' | 'EU';
-
 export type CardType = 'UNIT' | 'LEADER' | 'EQUIPMENT' | 'ITEM';
 
 export type AbilityCategory =
   'SPECIAL' | 'MOVE' | 'SUMMON' | 'ACTION' | 'ATTACK' | 'RETREAT' | 'FRONT' | 'BACK' | 'GLOBAL';
-
-export type CardTrait = {
-  key: string;
-  text: string;
-};
 
 export type CardAbility = {
   id: string;
@@ -44,9 +37,9 @@ export type CardGrowth = {
 export type CardDefinition = {
   id: string;
   name: string;
-  rarity: CardRarity;
   type: CardType;
-  traits: CardTrait[];
+  /** canonical trait ID 목록. 희귀도도 RARITY 특성으로 이 안에 들어간다. */
+  traits: string[];
   slot?: number;
   cost?: number;
   dominance?: number;

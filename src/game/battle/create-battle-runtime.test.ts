@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import level01DeckData from '../../../cards/deck_level01.json';
 import { requireCardDefinition } from '../save/card-catalog';
 import { createInitialSaveState } from '../save/create-initial-save';
 import { createCardInstanceFromDefinition } from '../save/deck-instancing';
@@ -14,6 +15,7 @@ import { ENEMY_INITIAL_LEADER_SLOT, INITIAL_HAND_SIZE, PLAYER_INITIAL_LEADER_SLO
 
 const TEST_STAGE_DEFINITION = requireStageDefinition('test-stage-dark');
 const LEVEL01_STAGE_DEFINITION = requireStageDefinition('level01');
+const LEVEL01_CARD_IDS = new Set(level01DeckData.cards.map((card) => card.id));
 
 describe('createInitialBattleRuntime', () => {
   it('places both leaders on their center back battlefield slots', async () => {
@@ -260,7 +262,7 @@ describe('createInitialBattleRuntime', () => {
     expect(runtime.enemy.deck).toHaveLength(24);
     expect(
       [...runtime.enemy.hand, ...runtime.enemy.deck].every((card) =>
-        card.card.definition.traits.some((trait) => trait.key === 'sourceLevel'),
+        LEVEL01_CARD_IDS.has(card.card.definition.id),
       ),
     ).toBe(true);
   });

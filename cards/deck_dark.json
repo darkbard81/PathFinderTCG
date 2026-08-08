@@ -1,25 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "leader_dark_empress",
       "name": "심연여왕",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "지배자"
-        }
-      ],
+      "traits": ["medium", "rare", "fiend", "demon", "unholy"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -116,22 +102,8 @@
     {
       "id": "unit_dark_guardian_001",
       "name": "흑석 수문수",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "수문수"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "dragon"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -233,22 +205,8 @@
     {
       "id": "unit_dark_archer_001",
       "name": "월식 궁수",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "궁수"
-        }
-      ],
+      "traits": ["medium", "common", "beast"],
       "slot": 1,
       "cost": 1,
       "dominance": 1,
@@ -348,22 +306,8 @@
     {
       "id": "unit_dark_scout_001",
       "name": "안개잠입자",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "정찰자"
-        }
-      ],
+      "traits": ["medium", "common", "beast"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -463,22 +407,8 @@
     {
       "id": "unit_dark_healer_001",
       "name": "저주치유사",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "치유사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "beast"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -574,22 +504,8 @@
     {
       "id": "unit_dark_mage_001",
       "name": "흑염 마도사",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "마도사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "beast"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -689,22 +605,8 @@
     {
       "id": "unit_dark_bladedancer_001",
       "name": "그림자 검무희",
-      "rarity": "R",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "검무희"
-        }
-      ],
+      "traits": ["medium", "rare", "beast"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -800,22 +702,8 @@
     {
       "id": "unit_dark_lancer_001",
       "name": "흑철 창병",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "창병"
-        }
-      ],
+      "traits": ["medium", "common", "beast"],
       "slot": 1,
       "cost": 1,
       "dominance": 1,
@@ -911,22 +799,8 @@
     {
       "id": "unit_dark_bard_001",
       "name": "저주음유시인",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "음유시인"
-        }
-      ],
+      "traits": ["medium", "uncommon", "undead", "spirit", "unholy", "incorporeal"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -1022,22 +896,8 @@
     {
       "id": "unit_dark_runesmith_001",
       "name": "흑문 룬대장장이",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "룬대장장이"
-        }
-      ],
+      "traits": ["large", "uncommon", "beast"],
       "slot": 2,
       "cost": 2,
       "dominance": 1,
@@ -1133,22 +993,8 @@
     {
       "id": "unit_dark_assassin_001",
       "name": "심야 암살자",
-      "rarity": "R",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "몬스터"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "암살자"
-        }
-      ],
+      "traits": ["large", "rare", "beast"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,

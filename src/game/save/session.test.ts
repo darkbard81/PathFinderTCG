@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CARD_DEFINITIONS } from './card-catalog';
 import { createInitialSaveState } from './create-initial-save';
 import { createGameSession, createSaveSlotStateFromGameSession } from './session';
+import { SAVE_SLOT_SCHEMA_VERSION } from './types';
 
 describe('createGameSession', () => {
   it('attaches card definitions to save instances', async () => {
@@ -82,7 +83,7 @@ describe('createGameSession', () => {
     const savedState = createSaveSlotStateFromGameSession(session, { now: updatedAt });
 
     expect(savedState).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
       slotId: 1,
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),

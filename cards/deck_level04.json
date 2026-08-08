@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "SipdgBCL7XuuEjn6",
       "name": "Kholo Sergeant",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid, kholo"
-        },
-        {
-          "key": "role",
-          "text": "용병 지휘관"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "kholo"],
       "slot": 0,
       "cost": 1,
       "dominance": 2,
@@ -88,26 +70,8 @@
     {
       "id": "0rm0UDbXvwg4sSxQ",
       "name": "Arboreal Warden",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "plant, wood"
-        },
-        {
-          "key": "role",
-          "text": "삼림 수호자"
-        }
-      ],
+      "traits": ["large", "common", "plant", "wood"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -179,26 +143,8 @@
     {
       "id": "nEB0UekUmP5L8Tj8",
       "name": "Dwarf Stonecaster",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "dwarf, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "대지술사"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "dwarf"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -270,26 +216,8 @@
     {
       "id": "cvfIkEF6xmWn2soN",
       "name": "Gargoyle",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, earth"
-        },
-        {
-          "key": "role",
-          "text": "매복 석상"
-        }
-      ],
+      "traits": ["medium", "common", "beast", "earth"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -361,26 +289,8 @@
     {
       "id": "gWgMg7cARqOe82O6",
       "name": "Griffon",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "비행 지원수"
-        }
-      ],
+      "traits": ["large", "common", "animal"],
       "slot": 0,
       "cost": 2,
       "dominance": 2,
@@ -452,26 +362,8 @@
     {
       "id": "vN2alMciNlKpBpKN",
       "name": "Minotaur Hunter",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "미궁 사냥꾼"
-        }
-      ],
+      "traits": ["large", "common", "humanoid", "beast"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -543,26 +435,8 @@
     {
       "id": "9VMoTqyVaKc4ZR4H",
       "name": "Phantom Knight",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "ethereal, incorporeal, phantom, spirit"
-        },
-        {
-          "key": "role",
-          "text": "영체 기사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "ethereal", "spirit", "phantom", "incorporeal"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -634,26 +508,8 @@
     {
       "id": "Ehtm5k9iBYTvSUcZ",
       "name": "Pixie",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "fey, sprite"
-        },
-        {
-          "key": "role",
-          "text": "요정 궁수"
-        }
-      ],
+      "traits": ["small", "common", "fey", "sprite"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -725,26 +581,8 @@
     {
       "id": "C1gYuDSwTkTIkAcC",
       "name": "Ratfolk Grenadier",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid, ratfolk"
-        },
-        {
-          "key": "role",
-          "text": "연금 지원병"
-        }
-      ],
+      "traits": ["small", "common", "humanoid", "ratfolk"],
       "slot": 0,
       "cost": 2,
       "dominance": 2,
@@ -816,26 +654,8 @@
     {
       "id": "VotlWUsFKdOrHWF6",
       "name": "Shadow",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "incorporeal, undead, unholy"
-        },
-        {
-          "key": "role",
-          "text": "그림자 교란자"
-        }
-      ],
+      "traits": ["medium", "common", "undead", "unholy", "incorporeal"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -907,26 +727,8 @@
     {
       "id": "h3JksV9Idr9eZLkE",
       "name": "Werebear",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "4"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "beast, human, humanoid, werecreature"
-        },
-        {
-          "key": "role",
-          "text": "격노 수호자"
-        }
-      ],
+      "traits": ["large", "uncommon", "humanoid", "beast", "human", "werecreature"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,

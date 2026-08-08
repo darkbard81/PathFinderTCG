@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "PLZk6zY5iwccPTPS",
       "name": "Orc Commander",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "2"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid, orc"
-        },
-        {
-          "key": "role",
-          "text": "지휘관"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "orc"],
       "slot": 0,
       "cost": 1,
       "dominance": 2,
@@ -88,26 +70,8 @@
     {
       "id": "CFlx1tkRxKC9qAC7",
       "name": "Animated Armor",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "2"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "construct, mindless"
-        },
-        {
-          "key": "role",
-          "text": "중장 수호자"
-        }
-      ],
+      "traits": ["medium", "uncommon", "construct", "mindless"],
       "slot": 0,
       "cost": 2,
       "dominance": 2,
@@ -179,26 +143,8 @@
     {
       "id": "PvYl5kItb7xoE8Is",
       "name": "Catfolk Pouncer",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "catfolk, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "돌격대"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "catfolk"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -270,26 +216,8 @@
     {
       "id": "Ky5eNRvN71O0tY9l",
       "name": "Goblin Pyro",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "goblin, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "방화병"
-        }
-      ],
+      "traits": ["small", "uncommon", "humanoid", "goblin"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -361,26 +289,8 @@
     {
       "id": "C9a1JvKRo43I1nx3",
       "name": "Aiuvarin Elementalist",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "2"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "aiuvarin, elf, human, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "원소술사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "human", "elf", "aiuvarin"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -452,26 +362,8 @@
     {
       "id": "9cBuzDV8seJqhNKJ",
       "name": "Bugbear Prowler",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "2"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "bugbear, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "매복자"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "bugbear"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -543,26 +435,8 @@
     {
       "id": "SZCf0IZkf36plwVd",
       "name": "Caligni Dancer",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "caligni, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "섬광 전령"
-        }
-      ],
+      "traits": ["small", "common", "humanoid", "caligni"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -634,26 +508,8 @@
     {
       "id": "NW68bxCLC6oDHxL9",
       "name": "Hobgoblin Soldier",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "hobgoblin, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "전열 병사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "hobgoblin"],
       "slot": 0,
       "cost": 2,
       "dominance": 2,
@@ -725,26 +581,8 @@
     {
       "id": "wepiUEi2Lxl8j1BH",
       "name": "Goblin War Chanter",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "goblin, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "전쟁가"
-        }
-      ],
+      "traits": ["small", "common", "humanoid", "goblin"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -816,26 +654,8 @@
     {
       "id": "6wPW2dvpt86Ou6bL",
       "name": "Rat Swarm",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal, swarm"
-        },
-        {
-          "key": "role",
-          "text": "전열 교란"
-        }
-      ],
+      "traits": ["large", "common", "animal", "swarm"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -907,26 +727,8 @@
     {
       "id": "ECe2DkOgSSqXHBqv",
       "name": "Riding Dog",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "기동 전투"
-        }
-      ],
+      "traits": ["medium", "common", "animal"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,

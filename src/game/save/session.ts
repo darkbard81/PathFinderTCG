@@ -129,7 +129,6 @@ function createSavedCardInstance(instance: CardInstance, zone: CardInstance['zon
   const saved: CardInstance = {
     id: instance.id,
     name: instance.name,
-    rarity: instance.rarity,
     type: instance.type,
     traits: structuredClone(instance.traits),
     abilities: structuredClone(instance.abilities),
@@ -172,7 +171,6 @@ function createCardDefinitionFromInstance(instance: CardInstance): CardDefinitio
   const definition: CardDefinition = {
     id: instance.id,
     name: instance.name,
-    rarity: instance.rarity,
     type: instance.type,
     traits: structuredClone(instance.traits),
     abilities: structuredClone(instance.abilities),

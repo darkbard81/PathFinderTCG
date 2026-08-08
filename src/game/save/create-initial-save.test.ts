@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_DEFINITIONS } from './card-catalog';
 import { createInitialSaveState } from './create-initial-save';
+import { SAVE_SLOT_SCHEMA_VERSION } from './types';
 
 describe('createInitialSaveState', () => {
   it('creates a leader, 29 repeated unit cards, and starter equipment', async () => {
@@ -9,13 +10,13 @@ describe('createInitialSaveState', () => {
       (definition) => definition.type === 'EQUIPMENT',
     ).map((definition) => definition.id);
 
-    expect(state.schemaVersion).toBe(3);
+    expect(state.schemaVersion).toBe(SAVE_SLOT_SCHEMA_VERSION);
     expect(state.slotId).toBe(1);
     expect(state.deck.leader.zone).toBe('LEADER');
     expect(state.deck.leader.id).toBe('leader_minerva');
     expect(state.deck.leader.name).toBe('미네르바');
     expect(state.deck.leader.traits).toEqual(
-      expect.arrayContaining([expect.objectContaining({ key: 'race', text: '엘프' })]),
+      expect.arrayContaining(['elf', 'humanoid', 'medium', 'rare']),
     );
     expect(state.deck.leader.abilities).toEqual([]);
     expect(state.deck.cards).toHaveLength(29);

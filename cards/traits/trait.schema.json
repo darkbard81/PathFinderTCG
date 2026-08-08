@@ -1,0 +1,353 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pathfindertcg.local/schemas/traits/trait.schema.json",
+  "title": "PathfinderTCG Trait Catalog Schema",
+  "description": "PF2e Remaster 기반 카드 특성 카탈로그(trait-catalog.json) 스키마",
+  "type": "object",
+  "required": ["version", "categories", "traits"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "const": "trait-catalog-v1",
+      "description": "특성 카탈로그 데이터 버전"
+    },
+    "categories": {
+      "type": "array",
+      "description": "특성 분류 목록",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/categoryEntry"
+      }
+    },
+    "traits": {
+      "type": "array",
+      "description": "canonical 특성 목록",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/traitEntry"
+      }
+    }
+  },
+  "$defs": {
+    "category": {
+      "description": "특성 분류 ID",
+      "enum": ["SIZE", "RARITY", "TYPE", "ANCESTRY / FAMILY", "ELEMENT", "SPECIAL"]
+    },
+    "traitId": {
+      "description": "canonical 특성 ID. 카드의 traits 배열과 카탈로그가 공유하는 단일 출처다.",
+      "type": "string",
+      "enum": [
+        "tiny",
+        "small",
+        "medium",
+        "large",
+        "huge",
+        "gargantuan",
+        "common",
+        "uncommon",
+        "rare",
+        "unique",
+        "humanoid",
+        "beast",
+        "undead",
+        "dragon",
+        "giant",
+        "construct",
+        "elemental",
+        "fey",
+        "fiend",
+        "ooze",
+        "aberration",
+        "animal",
+        "astral",
+        "celestial",
+        "dream",
+        "ethereal",
+        "fungus",
+        "monitor",
+        "plant",
+        "spirit",
+        "time",
+        "human",
+        "elf",
+        "dwarf",
+        "goblin",
+        "orc",
+        "demon",
+        "devil",
+        "aeon",
+        "aiuvarin",
+        "boggard",
+        "bugbear",
+        "caligni",
+        "catfolk",
+        "centaur",
+        "dinosaur",
+        "duergar",
+        "gnome",
+        "hag",
+        "hobgoblin",
+        "kholo",
+        "leshy",
+        "locathah",
+        "mummy",
+        "mutant",
+        "nymph",
+        "phantom",
+        "ratfolk",
+        "serpentfolk",
+        "skeleton",
+        "sprite",
+        "troll",
+        "werecreature",
+        "xulgath",
+        "fire",
+        "water",
+        "earth",
+        "air",
+        "metal",
+        "wood",
+        "holy",
+        "unholy",
+        "aquatic",
+        "incorporeal",
+        "mindless",
+        "swarm",
+        "amphibious",
+        "cold",
+        "occult"
+      ]
+    },
+    "categoryEntry": {
+      "type": "object",
+      "description": "특성 분류 1건의 정의",
+      "required": ["id", "title", "sortOrder", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/category"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "분류의 표시 이름"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "분류 표시 순서"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "분류 설명"
+        }
+      }
+    },
+    "traitEntry": {
+      "type": "object",
+      "description": "특성 1건의 정의",
+      "required": ["id", "category", "label", "sortOrder", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/traitId"
+        },
+        "category": {
+          "$ref": "#/$defs/category"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "특성의 표시 이름"
+        },
+        "sortOrder": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "같은 분류 안에서의 표시 순서"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "특성 설명"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "SIZE"
+              }
+            },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "enum": ["tiny", "small", "medium", "large", "huge", "gargantuan"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "RARITY"
+              }
+            },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "enum": ["common", "uncommon", "rare", "unique"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "TYPE"
+              }
+            },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "enum": [
+                  "humanoid",
+                  "beast",
+                  "undead",
+                  "dragon",
+                  "giant",
+                  "construct",
+                  "elemental",
+                  "fey",
+                  "fiend",
+                  "ooze",
+                  "aberration",
+                  "animal",
+                  "astral",
+                  "celestial",
+                  "dream",
+                  "ethereal",
+                  "fungus",
+                  "monitor",
+                  "plant",
+                  "spirit",
+                  "time"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "ANCESTRY / FAMILY"
+              }
+            },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "enum": [
+                  "human",
+                  "elf",
+                  "dwarf",
+                  "goblin",
+                  "orc",
+                  "demon",
+                  "devil",
+                  "aeon",
+                  "aiuvarin",
+                  "boggard",
+                  "bugbear",
+                  "caligni",
+                  "catfolk",
+                  "centaur",
+                  "dinosaur",
+                  "duergar",
+                  "gnome",
+                  "hag",
+                  "hobgoblin",
+                  "kholo",
+                  "leshy",
+                  "locathah",
+                  "mummy",
+                  "mutant",
+                  "nymph",
+                  "phantom",
+                  "ratfolk",
+                  "serpentfolk",
+                  "skeleton",
+                  "sprite",
+                  "troll",
+                  "werecreature",
+                  "xulgath"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "ELEMENT"
+              }
+            },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "enum": ["fire", "water", "earth", "air", "metal", "wood"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "SPECIAL"
+              }
+            },
+            "required": ["category"]
+          },
+          "then": {
+            "properties": {
+              "id": {
+                "enum": [
+                  "holy",
+                  "unholy",
+                  "aquatic",
+                  "incorporeal",
+                  "mindless",
+                  "swarm",
+                  "amphibious",
+                  "cold",
+                  "occult"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -6,7 +6,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, expect, it } from 'vitest';
 import { CARD_DEFINITIONS } from '../game/save/card-catalog';
 import { createInitialSaveState } from '../game/save/create-initial-save';
-import type { SaveSlotState } from '../game/save/types';
+import { SAVE_SLOT_SCHEMA_VERSION, type SaveSlotState } from '../game/save/types';
 import { AUTH_SESSION_COOKIE_NAME } from './auth-api';
 import { AuthService } from './auth-service';
 import {
@@ -279,7 +279,7 @@ describe('save slots api', () => {
       hp: 17,
       attack: 2,
     });
-    expect(body.schemaVersion).toBe(3);
+    expect(body.schemaVersion).toBe(SAVE_SLOT_SCHEMA_VERSION);
     expect(body.collection.cards).toEqual([]);
     expect(body.equipment).toEqual({ equipped: [] });
     expect(body.deck.leader).not.toHaveProperty('definitionId');
@@ -464,6 +464,6 @@ describe('save slots api', () => {
       slotId: number;
       schemaVersion: number;
     };
-    expect(copied).toMatchObject({ slotId: 1, schemaVersion: 3 });
+    expect(copied).toMatchObject({ slotId: 1, schemaVersion: SAVE_SLOT_SCHEMA_VERSION });
   });
 });

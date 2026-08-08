@@ -8,6 +8,7 @@ import {
   requireCardDefinition,
   type CardDefinition,
 } from '../game/save/card-catalog';
+import { migrateLegacyCardTraits, needsCardTraitMigration } from '../game/save/migrate-card-traits';
 import {
   SAVE_SLOT_IDS,
   SAVE_SLOT_SCHEMA_VERSION,
@@ -250,7 +251,8 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
   if (
     value.schemaVersion !== SAVE_SLOT_SCHEMA_VERSION &&
     value.schemaVersion !== 1 &&
-    value.schemaVersion !== 2
+    value.schemaVersion !== 2 &&
+    value.schemaVersion !== 3
   ) {
     throw new Error(`Invalid schemaVersion: ${String(value.schemaVersion)}`);
   }
@@ -452,7 +454,7 @@ function validateEquipmentCardsForTarget(
 
 function normalizeCardInstance(instance: CardInstance, zone: CardInstance['zone']): CardInstance {
   if (isSchemaCardInstance(instance, zone)) {
-    return instance;
+    return migrateCardInstanceTraits(instance);
   }
 
   const legacy = instance as unknown as JsonRecord;
@@ -467,6 +469,17 @@ function normalizeCardInstance(instance: CardInstance, zone: CardInstance['zone'
     owner: legacy.owner as CardInstance['owner'],
     zone,
   };
+}
+
+/** schemaVersion 3 이하로 저장된 카드의 rarity 필드와 구 특성 표현을 canonical ID로 옮긴다. */
+function migrateCardInstanceTraits(instance: CardInstance): CardInstance {
+  const record = instance as unknown as JsonRecord;
+  if (!needsCardTraitMigration(record)) {
+    return instance;
+  }
+
+  const { rarity, traits, ...rest } = record;
+  return { ...rest, traits: migrateLegacyCardTraits(traits, rarity) } as unknown as CardInstance;
 }
 
 function isCardInstance(value: unknown, zone: CardInstance['zone']): value is CardInstance {
@@ -512,8 +525,8 @@ function isCardDefinition(value: JsonRecord): value is CardDefinition {
   return (
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
-    typeof value.rarity === 'string' &&
     typeof value.type === 'string' &&
+    // 구 저장본은 `{key, text}` 배열, 현행은 canonical ID 배열이다. 둘 다 받아 마이그레이션한다.
     Array.isArray(value.traits) &&
     Array.isArray(value.abilities) &&
     typeof value.description === 'string' &&

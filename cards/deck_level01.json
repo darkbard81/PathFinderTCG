@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "oaxKg1yQDmK2PWXG",
       "name": "Arbiter",
-      "rarity": "C",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "tiny"
-        },
-        {
-          "key": "creatureType",
-          "text": "aeon, monitor"
-        },
-        {
-          "key": "role",
-          "text": "중재자"
-        }
-      ],
+      "traits": ["tiny", "common", "monitor", "aeon"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -88,26 +70,8 @@
     {
       "id": "ybkelAOtSIA06fnj",
       "name": "Animated Broom",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "-1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "construct, mindless"
-        },
-        {
-          "key": "role",
-          "text": "수호자"
-        }
-      ],
+      "traits": ["small", "common", "construct", "mindless"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -179,26 +143,8 @@
     {
       "id": "uzH85ifDz5GU525p",
       "name": "Compsognathus",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "-1"
-        },
-        {
-          "key": "size",
-          "text": "tiny"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal, dinosaur"
-        },
-        {
-          "key": "role",
-          "text": "척후"
-        }
-      ],
+      "traits": ["tiny", "common", "animal", "dinosaur"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -263,26 +209,8 @@
     {
       "id": "WBPEvEqIGvxeQKlp",
       "name": "Eagle",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "-1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "기동 공격"
-        }
-      ],
+      "traits": ["small", "common", "animal"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -354,26 +282,8 @@
     {
       "id": "E2XL2egIA3QaSDBM",
       "name": "Flash Beetle",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "-1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "교란"
-        }
-      ],
+      "traits": ["small", "common", "animal"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -445,26 +355,8 @@
     {
       "id": "v1UK3IwCB8wCbL3L",
       "name": "Leaf Leshy",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "0"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "leshy, plant"
-        },
-        {
-          "key": "role",
-          "text": "지원"
-        }
-      ],
+      "traits": ["small", "common", "plant", "leshy"],
       "slot": 1,
       "cost": 1,
       "dominance": 1,
@@ -536,26 +428,8 @@
     {
       "id": "Ytp0kRaG8iexmPfN",
       "name": "Hryngar Sharpshooter",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "0"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "duergar, dwarf, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "명사수"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "dwarf", "duergar"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -627,26 +501,8 @@
     {
       "id": "9wNjq9BirBoxyJVH",
       "name": "Homunculus",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "0"
-        },
-        {
-          "key": "size",
-          "text": "tiny"
-        },
-        {
-          "key": "creatureType",
-          "text": "construct"
-        },
-        {
-          "key": "role",
-          "text": "조수"
-        }
-      ],
+      "traits": ["tiny", "common", "construct"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -718,26 +574,8 @@
     {
       "id": "IjFlp5eVVTEg902W",
       "name": "Dwarf Warrior",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "dwarf, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "전위 전사"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "dwarf"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -809,26 +647,8 @@
     {
       "id": "9XccneFB5DmMHig0",
       "name": "Gnome Bard",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "sm"
-        },
-        {
-          "key": "creatureType",
-          "text": "gnome, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "음유시인"
-        }
-      ],
+      "traits": ["small", "common", "humanoid", "gnome"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -900,26 +720,8 @@
     {
       "id": "BN5Lb6IsQ9Wyu3rL",
       "name": "Wolf",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "1"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "무리 사냥꾼"
-        }
-      ],
+      "traits": ["medium", "common", "animal"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,

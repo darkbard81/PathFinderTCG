@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://elvenbattle.local/schemas/card.schema.json",
-  "title": "ElvenBattle Card Schema",
-  "description": "ElvenBattle card data schema v0.3",
+  "$id": "https://pathfindertcg.local/schemas/card.schema.json",
+  "title": "PathfinderTCG Card Schema",
+  "description": "PathfinderTCG card data schema v0.4",
   "type": "object",
   "required": ["version", "cards"],
   "additionalProperties": false,
   "properties": {
     "version": {
       "type": "string",
-      "const": "card-json-v0.3",
+      "const": "card-json-v0.4",
       "description": "카드 JSON 데이터 버전"
     },
     "cards": {
@@ -21,35 +21,6 @@
     }
   },
   "$defs": {
-    "rarity": {
-      "oneOf": [
-        {
-          "const": "C",
-          "title": "Common",
-          "description": "일반 등급 카드"
-        },
-        {
-          "const": "UC",
-          "title": "Uncommon",
-          "description": "언커먼 등급 카드"
-        },
-        {
-          "const": "R",
-          "title": "Rare",
-          "description": "레어 등급 카드"
-        },
-        {
-          "const": "SR",
-          "title": "Super Rare",
-          "description": "슈퍼 레어 등급 카드"
-        },
-        {
-          "const": "EU",
-          "title": "Eushully",
-          "description": "특수/최상위 등급 카드"
-        }
-      ]
-    },
     "cardType": {
       "oneOf": [
         {
@@ -122,22 +93,6 @@
           "description": "카드가 전장에 존재하는 동안 전체 영역이나 조건 대상에게 계속 적용되는 지속 능력이다."
         }
       ]
-    },
-    "trait": {
-      "type": "object",
-      "description": "필터와 분류에 사용하는 카드 특성",
-      "required": ["key", "text"],
-      "additionalProperties": false,
-      "properties": {
-        "key": {
-          "type": "string",
-          "description": "특성 분류. 예: race, role, attribute"
-        },
-        "text": {
-          "type": "string",
-          "description": "특성 값. 예: 괴물, 기계, 어택커"
-        }
-      }
     },
     "ability": {
       "type": "object",
@@ -238,7 +193,7 @@
     "card": {
       "type": "object",
       "description": "카드 1장의 정의",
-      "required": ["id", "name", "rarity", "type", "traits", "abilities", "description", "note"],
+      "required": ["id", "name", "type", "traits", "abilities", "description", "note"],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -249,17 +204,15 @@
           "type": "string",
           "description": "카드 이름"
         },
-        "rarity": {
-          "$ref": "#/$defs/rarity"
-        },
         "type": {
           "$ref": "#/$defs/cardType"
         },
         "traits": {
           "type": "array",
-          "description": "카드의 필터용 특성 목록",
+          "description": "카드가 가진 canonical 특성 ID 목록. 희귀도도 RARITY 특성으로 여기에 담는다.",
+          "uniqueItems": true,
           "items": {
-            "$ref": "#/$defs/trait"
+            "$ref": "./traits/trait.schema.json#/$defs/traitId"
           }
         },
         "slot": {

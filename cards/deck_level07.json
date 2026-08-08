@@ -1,29 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "oopxVowT2jnUQJiS",
       "name": "Ogre Boss",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "giant, humanoid"
-        },
-        {
-          "key": "role",
-          "text": "폭군 지휘관"
-        }
-      ],
+      "traits": ["large", "rare", "humanoid", "giant"],
       "slot": 0,
       "cost": 1,
       "dominance": 3,
@@ -88,26 +70,8 @@
     {
       "id": "GNwLVbfFx8EPz7xO",
       "name": "Dullahan",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "undead, unholy"
-        },
-        {
-          "key": "role",
-          "text": "머리 없는 기사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "undead", "unholy"],
       "slot": 0,
       "cost": 4,
       "dominance": 2,
@@ -179,26 +143,8 @@
     {
       "id": "2SixuEUfKpEyfOEY",
       "name": "Frost Drake",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "cold, dragon"
-        },
-        {
-          "key": "role",
-          "text": "빙설 드레이크"
-        }
-      ],
+      "traits": ["large", "common", "dragon", "cold"],
       "slot": 0,
       "cost": 4,
       "dominance": 2,
@@ -270,26 +216,8 @@
     {
       "id": "I00S3LWnDJfCn4zv",
       "name": "Giant Animated Statue",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "huge"
-        },
-        {
-          "key": "creatureType",
-          "text": "construct, mindless"
-        },
-        {
-          "key": "role",
-          "text": "거대 석상"
-        }
-      ],
+      "traits": ["huge", "common", "construct", "mindless"],
       "slot": 0,
       "cost": 4,
       "dominance": 2,
@@ -361,26 +289,8 @@
     {
       "id": "5meW7DytYnF7Iq2V",
       "name": "Greater Shadow",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "incorporeal, undead, unholy"
-        },
-        {
-          "key": "role",
-          "text": "암흑 영체"
-        }
-      ],
+      "traits": ["medium", "common", "undead", "unholy", "incorporeal"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -452,26 +362,8 @@
     {
       "id": "QCPpQya5TEUuIxQn",
       "name": "Medusa",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "humanoid"
-        },
-        {
-          "key": "role",
-          "text": "석화 궁수"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid"],
       "slot": 0,
       "cost": 4,
       "dominance": 2,
@@ -543,26 +435,8 @@
     {
       "id": "H8lGFF3PKUv2yRL2",
       "name": "Naiad Queen",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "med"
-        },
-        {
-          "key": "creatureType",
-          "text": "amphibious, fey, nymph, water"
-        },
-        {
-          "key": "role",
-          "text": "수역의 여왕"
-        }
-      ],
+      "traits": ["medium", "uncommon", "fey", "nymph", "water", "amphibious"],
       "slot": 0,
       "cost": 3,
       "dominance": 2,
@@ -634,26 +508,8 @@
     {
       "id": "7Uf4Q9w3dCDEV30e",
       "name": "Omen Dragon (Young)",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "lg"
-        },
-        {
-          "key": "creatureType",
-          "text": "dragon, occult"
-        },
-        {
-          "key": "role",
-          "text": "운명 수호룡"
-        }
-      ],
+      "traits": ["large", "common", "dragon", "occult"],
       "slot": 0,
       "cost": 4,
       "dominance": 2,
@@ -725,26 +581,8 @@
     {
       "id": "a4LgD3NrgkiINvru",
       "name": "Quetzalcoatlus",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "huge"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal"
-        },
-        {
-          "key": "role",
-          "text": "거대 비행수"
-        }
-      ],
+      "traits": ["huge", "common", "animal"],
       "slot": 0,
       "cost": 4,
       "dominance": 3,
@@ -816,26 +654,8 @@
     {
       "id": "V4rVnbjJbcOIdC4Z",
       "name": "Skeletal Hulk",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "huge"
-        },
-        {
-          "key": "creatureType",
-          "text": "mindless, skeleton, undead, unholy"
-        },
-        {
-          "key": "role",
-          "text": "해골 거인"
-        }
-      ],
+      "traits": ["huge", "common", "undead", "skeleton", "unholy", "mindless"],
       "slot": 0,
       "cost": 4,
       "dominance": 2,
@@ -907,26 +727,8 @@
     {
       "id": "qtJ36jlcRQw5sBnr",
       "name": "Stegosaurus",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "sourceLevel",
-          "text": "7"
-        },
-        {
-          "key": "size",
-          "text": "huge"
-        },
-        {
-          "key": "creatureType",
-          "text": "animal, dinosaur"
-        },
-        {
-          "key": "role",
-          "text": "갑판 공룡"
-        }
-      ],
+      "traits": ["huge", "common", "animal", "dinosaur"],
       "slot": 0,
       "cost": 4,
       "dominance": 3,

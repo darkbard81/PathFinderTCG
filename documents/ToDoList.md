@@ -28,11 +28,14 @@
 `CardDefinition`에서 타일이 쓰지 않는 필드다.
 
 ```
-name · rarity · type
-traits[]        sourceLevel, size, creatureType, role
+name · type
+traits[]        canonical trait ID 배열 (SIZE / RARITY / TYPE / ANCESTRY / ELEMENT / SPECIAL)
 abilities[]     name + text (category: ACTION / GLOBAL / …)
 description, note
 ```
+
+특성 표시 이름과 설명은 `cards/traits/trait-catalog.json`에 있다.
+`src/game/cards/trait-catalog.ts`의 `readTraitsByCategory`로 분류별로 묶어 보여준다.
 
 ### 준비돼 있는 것
 

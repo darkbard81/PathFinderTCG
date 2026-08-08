@@ -228,7 +228,6 @@ function createItemDefinition(): CardDefinition {
   return {
     id: 'item-test',
     name: '테스트 아이템',
-    rarity: 'C',
     type: 'ITEM',
     traits: [],
     hp: 0,

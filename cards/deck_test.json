@@ -1,25 +1,11 @@
 {
-  "version": "card-json-v0.3",
+  "version": "card-json-v0.4",
   "cards": [
     {
       "id": "leader_minerva",
       "name": "미네르바",
-      "rarity": "R",
       "type": "LEADER",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "리더"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "elf"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -116,22 +102,8 @@
     {
       "id": "unit_elf_guardian_001",
       "name": "실바니아 수호기사",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "수호기사"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "elf"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -233,22 +205,8 @@
     {
       "id": "unit_elf_archer_001",
       "name": "달그늘 궁수",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "궁수"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "elf"],
       "slot": 1,
       "cost": 1,
       "dominance": 1,
@@ -348,22 +306,8 @@
     {
       "id": "unit_elf_scout_001",
       "name": "새벽숲 정찰병",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "정찰병"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "elf"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -463,22 +407,8 @@
     {
       "id": "unit_elf_healer_001",
       "name": "별샘 치유사",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "치유사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "elf"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -574,22 +504,8 @@
     {
       "id": "unit_elf_mage_001",
       "name": "녹옥 마법사",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "마법사"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "elf"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -689,22 +605,8 @@
     {
       "id": "unit_elf_bladedancer_001",
       "name": "잎바람 검무희",
-      "rarity": "R",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "검무희"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "elf"],
       "slot": 1,
       "cost": 2,
       "dominance": 1,
@@ -800,22 +702,8 @@
     {
       "id": "unit_elf_lancer_001",
       "name": "청목 창병",
-      "rarity": "C",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "창병"
-        }
-      ],
+      "traits": ["medium", "common", "humanoid", "elf"],
       "slot": 1,
       "cost": 1,
       "dominance": 1,
@@ -911,22 +799,8 @@
     {
       "id": "unit_elf_bard_001",
       "name": "은현 음유시인",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "음유시인"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "elf"],
       "slot": 0,
       "cost": 1,
       "dominance": 1,
@@ -1022,22 +896,8 @@
     {
       "id": "unit_elf_runesmith_001",
       "name": "나무룬 대장장이",
-      "rarity": "UC",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "룬대장장이"
-        }
-      ],
+      "traits": ["medium", "uncommon", "humanoid", "elf"],
       "slot": 2,
       "cost": 2,
       "dominance": 1,
@@ -1133,22 +993,8 @@
     {
       "id": "unit_elf_assassin_001",
       "name": "그늘잎 암살자",
-      "rarity": "R",
       "type": "UNIT",
-      "traits": [
-        {
-          "key": "race",
-          "text": "엘프"
-        },
-        {
-          "key": "gender",
-          "text": "여성"
-        },
-        {
-          "key": "role",
-          "text": "암살자"
-        }
-      ],
+      "traits": ["medium", "rare", "humanoid", "elf"],
       "slot": 0,
       "cost": 2,
       "dominance": 1,
@@ -1248,14 +1094,8 @@
     {
       "id": "equipment_rapier_001",
       "name": "레이피어",
-      "rarity": "C",
       "type": "EQUIPMENT",
-      "traits": [
-        {
-          "key": "role",
-          "text": "무기"
-        }
-      ],
+      "traits": ["common"],
       "slot": 1,
       "cost": 0,
       "dominance": 0,

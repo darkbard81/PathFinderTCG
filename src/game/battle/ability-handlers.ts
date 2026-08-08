@@ -1,3 +1,4 @@
+import { readSizeRank as readTraitSizeRank } from '../cards/trait-catalog';
 import type { CardAbility } from '../save/card-catalog';
 import type { ActiveSkillBattleEffect, BattleCardRuntimeState, BattleRuntimeState } from './types';
 
@@ -15,8 +16,8 @@ export type PassiveAbilityContext = {
   ability: CardAbility;
   isFrontRowCard: (card: BattleCardRuntimeState) => boolean;
   isBackRowCard: (card: BattleCardRuntimeState) => boolean;
-  hasTrait: (card: BattleCardRuntimeState, key: string, text: string) => boolean;
-  hasTraitToken: (card: BattleCardRuntimeState, key: string, text: string) => boolean;
+  hasTrait: (card: BattleCardRuntimeState, traitId: string) => boolean;
+  hasAnyTrait: (card: BattleCardRuntimeState, traitIds: readonly string[]) => boolean;
 };
 
 export type AttackDamageAbilityContext = {
@@ -73,12 +74,11 @@ export const BACK_PASSIVE_ABILITY_HANDLERS: Partial<Record<string, PassiveAbilit
     source !== target && source.side === target.side && isBackRowCard(source)
       ? { stat: 'attack', value: 1 }
       : null,
-  goblin_war_chant: ({ source, target, isBackRowCard, hasTraitToken }) =>
+  goblin_war_chant: ({ source, target, isBackRowCard, hasAnyTrait }) =>
     source !== target &&
     source.side === target.side &&
     isBackRowCard(source) &&
-    (hasTraitToken(target, 'creatureType', 'goblin') ||
-      hasTraitToken(target, 'creatureType', 'hobgoblin'))
+    hasAnyTrait(target, ['goblin', 'hobgoblin'])
       ? { stat: 'attack', value: 1 }
       : null,
   dryad_wounded_grove: ({ source, target, isBackRowCard }) =>
@@ -105,12 +105,12 @@ export const BACK_PASSIVE_ABILITY_HANDLERS: Partial<Record<string, PassiveAbilit
     (target.card.definition.attack ?? 0) > (source.card.definition.attack ?? 0)
       ? { stat: 'attack', value: 1 }
       : null,
-  revenant_wounded_vengeance: ({ source, target, isBackRowCard, hasTraitToken }) =>
+  revenant_wounded_vengeance: ({ source, target, isBackRowCard, hasTrait }) =>
     source !== target &&
     source.side === target.side &&
     target.card.definition.type === 'UNIT' &&
     isBackRowCard(source) &&
-    hasTraitToken(target, 'creatureType', 'undead') &&
+    hasTrait(target, 'undead') &&
     (target.card.instance.hp ?? 0) < (target.card.definition.hp ?? 0)
       ? { stat: 'attack', value: 2 }
       : null,
@@ -128,17 +128,15 @@ export const GLOBAL_PASSIVE_ABILITY_HANDLERS: Partial<Record<string, PassiveAbil
   guardian_block: () => null,
   stonewall_guard: () => null,
   silver_chord: ({ source, target, hasTrait }) =>
-    source !== target && source.side === target.side && hasTrait(target, 'race', '엘프')
+    source !== target && source.side === target.side && hasTrait(target, 'elf')
       ? { stat: 'attack', value: 1 }
       : null,
   hollow_chorus: ({ source, target, hasTrait }) =>
-    source !== target && source.side === target.side && hasTrait(target, 'race', '몬스터')
+    source !== target && source.side === target.side && hasTrait(target, 'beast')
       ? { stat: 'attack', value: 1 }
       : null,
-  wolf_pack_hunt: ({ source, target, hasTraitToken }) =>
-    source !== target &&
-    source.side === target.side &&
-    hasTraitToken(target, 'creatureType', 'animal')
+  wolf_pack_hunt: ({ source, target, hasTrait }) =>
+    source !== target && source.side === target.side && hasTrait(target, 'animal')
       ? { stat: 'attack', value: 1 }
       : null,
   rat_swarm_distraction: ({ source, target, isFrontRowCard }) =>
@@ -293,8 +291,7 @@ export const ACTIVE_SKILL_DEFINITIONS: Partial<Record<string, ActiveSkillDefinit
 };
 
 function readSizeRank(card: BattleCardRuntimeState): number {
-  const size = card.card.definition.traits.find((trait) => trait.key === 'size')?.text;
-  return { tiny: 0, sm: 1, med: 2, lg: 3, huge: 4, grg: 5 }[size ?? ''] ?? -1;
+  return readTraitSizeRank(card.card.definition.traits);
 }
 
 function readBattlefieldColumn(card: BattleCardRuntimeState): string | null {

@@ -10,7 +10,6 @@ function runtimeCard(
   const base: CardDefinition = {
     id: 'card-1',
     name: 'Card One',
-    rarity: 'C',
     type: 'UNIT',
     traits: [],
     abilities: [],
