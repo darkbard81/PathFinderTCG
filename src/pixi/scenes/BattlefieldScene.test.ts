@@ -6,6 +6,7 @@ import type {
   BattlefieldViewModel,
 } from '../../dom/screens/battlefield-view';
 import { applyTurnEnd, listAttackActions, listBlockActions } from '../../game/battle/battle-engine';
+import type { StageBattleResult } from '../../game/stage/types';
 import type { BattleEffects } from '../battle/battle-effects';
 import {
   INITIAL_HAND_SIZE,
@@ -37,6 +38,8 @@ type BattlefieldHarness = Pick<BattlefieldScene, 'resize' | 'update' | 'enter'> 
   endTurn: () => void;
   resolveBlock: (blockerInstanceId: string | null) => void;
   pendingBlock: { decision: BattleBlockDecision; actionCount: number } | null;
+  leave: () => void;
+  battleResult: StageBattleResult | null;
 };
 
 function createHarness(session: GameSession) {
@@ -53,7 +56,9 @@ function createHarness(session: GameSession) {
     destroy: vi.fn(),
   };
   const onLeave = vi.fn();
+  const save = vi.fn((state: unknown) => Promise.resolve(state));
   const scene = new BattlefieldScene({
+    services: { auth: {} as never, saveSlots: { save } as never },
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     assetBaseUrl: '/tcg',
     session,
@@ -66,7 +71,7 @@ function createHarness(session: GameSession) {
 
   scene.resize({ width: 1024, height: 768, scale: 1 });
 
-  return { scene: scene as unknown as BattlefieldHarness, view, effects, onLeave };
+  return { scene: scene as unknown as BattlefieldHarness, view, effects, onLeave, save };
 }
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -747,5 +752,96 @@ describe('BattlefieldScene 자동 턴 종료', () => {
     expect(lastModel(view).currentSide).toBe('player');
     expect(lastModel(view).turnNumber).toBe(1);
     expect(lastModel(view).log).not.toContain('나: 할 수 있는 행동이 없어 턴이 넘어갔다');
+  });
+});
+
+describe('BattlefieldScene 전투 결과', () => {
+  /** 아무것도 하지 않고 턴만 넘기면 리더가 맞아 죽어 반드시 패배로 끝난다. */
+  async function playUntilResult(
+    scene: BattlefieldHarness,
+    view: { render: ReturnType<typeof vi.fn> },
+  ) {
+    for (let turn = 0; turn < 60 && !lastModel(view).result; turn += 1) {
+      if (lastModel(view).blockPrompt) {
+        scene.resolveBlock(null);
+      } else {
+        scene.endTurn();
+      }
+      await settle(scene);
+    }
+
+    return lastModel(view);
+  }
+
+  it('승패가 나면 결과를 한 번만 만든다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    await playUntilResult(scene, view);
+    const first = scene.battleResult;
+
+    // 결과가 난 뒤 화면을 다시 그려도 보상 추첨이 다시 돌면 안 된다.
+    scene.resize({ width: 1024, height: 768, scale: 1 });
+
+    expect(first).not.toBeNull();
+    expect(scene.battleResult).toBe(first);
+  });
+
+  it('결과에 보상과 성장 요약을 함께 적는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const model = await playUntilResult(scene, view);
+
+    expect(model.result?.title).toBe('패배');
+    expect(model.result?.body).toContain('보상:');
+    expect(model.result?.body).toContain('성장:');
+  });
+
+  it('결과가 나면 보상을 반영한 세션을 저장한다', async () => {
+    const { scene, view, save } = createHarness(await createSession());
+
+    await playUntilResult(scene, view);
+    await flush();
+
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('저장이 끝나면 저장된 세션과 결과를 함께 넘긴다', async () => {
+    const { scene, view, onLeave } = createHarness(await createSession());
+    const stageId = listStageDefinitions()[0]!.id;
+
+    const model = await playUntilResult(scene, view);
+    await flush();
+    scene.leave();
+
+    expect(onLeave).toHaveBeenCalledTimes(1);
+    expect(onLeave.mock.calls[0]?.[1]).toBe(scene.battleResult);
+    // 저장 결과를 다시 세션으로 읽어 넘겼는지 본다. 들어올 때 세션 그대로면 보상이 날아간 것이다.
+    const leftSession = onLeave.mock.calls[0]?.[0] as GameSession;
+    expect(leftSession.stageProgress.lastSelectedStageId).toBe(stageId);
+    expect(model.result?.body).not.toContain('저장에 실패');
+  });
+
+  it('저장에 실패하면 결과에 알리고 돌아갈 수는 있게 둔다', async () => {
+    const { scene, view, save, onLeave } = createHarness(await createSession());
+    save.mockImplementation(() => Promise.reject(new Error('디스크가 가득 찼습니다')));
+
+    await playUntilResult(scene, view);
+    await flush();
+
+    const model = lastModel(view);
+    expect(model.result?.body).toContain('디스크가 가득 찼습니다');
+    expect(model.result?.busy).toBe(false);
+
+    scene.leave();
+    expect(onLeave).toHaveBeenCalledTimes(1);
+  });
+
+  it('전투 중에 나가면 결과 없이 들어올 때 세션을 그대로 넘긴다', async () => {
+    const session = await createSession();
+    const { scene, onLeave, save } = createHarness(session);
+
+    scene.leave();
+
+    expect(save).not.toHaveBeenCalled();
+    expect(onLeave).toHaveBeenCalledWith(session, null);
   });
 });

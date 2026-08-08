@@ -2,6 +2,7 @@ import { DomLayer } from './dom/DomLayer';
 import { loadThemeFont } from './dom/theme-font';
 import { joinAssetUrl } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
+import type { StageBattleResult } from './game/stage/types';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
 import { BattlefieldScene } from './pixi/scenes/BattlefieldScene';
@@ -114,12 +115,13 @@ void (async (): Promise<void> => {
     );
   }
 
-  function showStage(session: GameSession): Promise<void> {
+  function showStage(session: GameSession, lastBattleResult?: StageBattleResult): Promise<void> {
     return router.goto(
       new StageScene({
         services,
         backgroundImageUrl,
         session,
+        ...(lastBattleResult ? { lastBattleResult } : {}),
         onBack: () => {
           void showSaveSlot();
         },
@@ -188,12 +190,14 @@ void (async (): Promise<void> => {
   function showBattlefield(session: GameSession, stageId: string): Promise<void> {
     return router.goto(
       new BattlefieldScene({
+        services,
         backgroundImageUrl,
         assetBaseUrl: ASSET_BASE_URL,
         session,
         stageId,
-        onLeave: (nextSession) => {
-          void showStage(nextSession);
+        // 전투가 끝났으면 보상까지 반영해 저장한 세션이 돌아온다. 결과는 Stage가 요약으로 보여준다.
+        onLeave: (nextSession, result) => {
+          void showStage(nextSession, result ?? undefined);
         },
       }),
     );

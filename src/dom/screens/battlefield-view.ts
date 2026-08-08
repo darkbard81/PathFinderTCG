@@ -78,6 +78,8 @@ export type BattleResultModel = {
   title: string;
   body: string;
   isWin: boolean;
+  /** 결과 저장이 끝나기 전이면 true다. 이때 돌아가면 보상이 반영되지 않은 세션으로 나간다. */
+  busy: boolean;
 };
 
 export type BattlefieldViewOptions = {
@@ -237,6 +239,7 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
       dialog.classList.add('is-open');
       dialogPanel.classList.toggle('is-win', model.result.isWin);
       const leave = createButton('스테이지로 돌아가기');
+      leave.disabled = model.result.busy;
       leave.addEventListener('click', () => options.onLeave());
       dialogPanel.replaceChildren(
         createDialogTitle(model.result.title),

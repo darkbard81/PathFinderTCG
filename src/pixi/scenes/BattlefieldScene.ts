@@ -47,8 +47,15 @@ import type {
   BattleSlotId,
   BattleTurnEvent,
 } from '../../game/battle/types';
-import type { GameSession } from '../../game/save/session';
+import {
+  createGameSession,
+  createSaveSlotStateFromGameSession,
+  type GameSession,
+} from '../../game/save/session';
+import { applyStageBattleResultToSession, createStageBattleResult } from '../../game/stage/result';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
+import type { StageBattleResult, StageDefinition } from '../../game/stage/types';
+import type { GameServices } from '../../services/game-services';
 import {
   createBattleEffectsLayer,
   readBattleEffectRequest,
@@ -93,11 +100,13 @@ const SKILL_EFFECT_LABELS: Record<ActiveSkillBattleEffect, string> = {
 };
 
 export type BattlefieldSceneOptions = {
+  services: GameServices;
   backgroundImageUrl: string;
   assetBaseUrl: string;
   session: GameSession;
   stageId: string;
-  onLeave: (session: GameSession) => void;
+  /** 전투가 끝났으면 보상까지 반영해 저장한 세션과 결과를 함께 넘긴다. */
+  onLeave: (session: GameSession, result: StageBattleResult | null) => void;
   view?: BattlefieldView;
   effects?: BattleEffects;
   random?: () => number;
@@ -118,8 +127,13 @@ export class BattlefieldScene implements Scene {
 
   private readonly battlefieldView: BattlefieldView;
   private readonly backdrop = new Graphics({ label: 'battlefield-backdrop', eventMode: 'none' });
-  private readonly stageName: string;
+  private readonly stageDefinition: StageDefinition;
   private readonly runtime: BattleRuntimeState;
+  /** 전투가 끝나면 한 번만 만든다. 두 번 만들면 보상 추첨이 다시 돌아 결과가 바뀐다. */
+  private battleResult: StageBattleResult | null = null;
+  private savedSession: GameSession;
+  private savingResult = false;
+  private saveError: string | null = null;
   private background: Sprite | null = null;
   private layout: ViewportLayout | null = null;
   private active = true;
@@ -148,11 +162,11 @@ export class BattlefieldScene implements Scene {
 
   public constructor(private readonly options: BattlefieldSceneOptions) {
     this.effects = options.effects ?? null;
-    const stageDefinition = requireStageDefinition(options.stageId);
-    this.stageName = stageDefinition.name;
+    this.stageDefinition = requireStageDefinition(options.stageId);
+    this.savedSession = options.session;
     this.runtime = createInitialBattleRuntime(
       options.session,
-      stageDefinition,
+      this.stageDefinition,
       options.random ?? Math.random,
     );
 
@@ -160,7 +174,7 @@ export class BattlefieldScene implements Scene {
       options.view ??
       createBattlefieldView({
         onEndTurn: () => this.endTurn(),
-        onLeave: () => this.options.onLeave(this.options.session),
+        onLeave: () => this.leave(),
         onBlock: (blockerInstanceId) => this.resolveBlock(blockerInstanceId),
         resolveTargets: (source) => this.resolveTargets(source),
         onDrop: (source, slotId) => this.applyDrop(source, slotId),
@@ -275,6 +289,68 @@ export class BattlefieldScene implements Scene {
     this.renderView('양측 모두 둘 수 있는 수가 없습니다.', true);
   }
 
+  /**
+   * 런타임을 건드린 뒤 화면을 갱신한다.
+   * 승패가 났는지 확인하는 유일한 지점이라, 어떤 경로로 끝나든 결과 처리가 한 번은 지나간다.
+   */
+  private commit(status = '', statusIsError = false): void {
+    this.finishBattleIfOver();
+    this.renderView(status, statusIsError);
+  }
+
+  /** 승패가 났으면 결과를 만들고 저장을 시작한다. 이미 만들었으면 아무것도 하지 않는다. */
+  private finishBattleIfOver(): void {
+    if (this.battleResult || !this.runtime.outcome) {
+      return;
+    }
+
+    this.battleResult = createStageBattleResult(this.runtime, this.stageDefinition);
+    void this.persistResult(this.battleResult);
+  }
+
+  /**
+   * 보상과 참여 EXP를 세션에 반영해 저장한다.
+   * 저장이 끝나기 전에는 돌아가기를 막는다. 저장 전 세션으로 Stage에 돌아가면 보상이 사라진다.
+   */
+  private async persistResult(result: StageBattleResult): Promise<void> {
+    this.savingResult = true;
+    this.saveError = null;
+    this.renderView();
+
+    try {
+      const savedState = await this.options.services.saveSlots.save(
+        createSaveSlotStateFromGameSession(
+          applyStageBattleResultToSession(this.options.session, result),
+        ),
+      );
+
+      if (!this.active) {
+        return;
+      }
+
+      this.savedSession = createGameSession(savedState);
+      this.savingResult = false;
+    } catch (error: unknown) {
+      if (!this.active) {
+        return;
+      }
+
+      this.savingResult = false;
+      this.saveError = error instanceof Error ? error.message : String(error);
+    }
+
+    this.renderView();
+  }
+
+  /** Stage로 돌아간다. 결과 저장 중에는 막는다. */
+  private leave(): void {
+    if (this.savingResult) {
+      return;
+    }
+
+    this.options.onLeave(this.savedSession, this.battleResult);
+  }
+
   /** 내 차례에 둘 수 있는 수가 없으면 턴을 넘긴다. 넘겼으면 true다. */
   private autoEndStalledPlayerTurn(): boolean {
     if (this.runtime.currentSide !== 'player' || this.runtime.phase === 'GAME_OVER') {
@@ -320,7 +396,7 @@ export class BattlefieldScene implements Scene {
         return;
       }
 
-      this.renderView('적이 움직입니다...');
+      this.commit('적이 움직입니다...');
       if (step.finished) {
         break;
       }
@@ -332,7 +408,7 @@ export class BattlefieldScene implements Scene {
     }
 
     this.playingEnemyTurn = false;
-    this.renderView(this.runtime.outcome ? '' : '내 차례입니다.');
+    this.commit(this.runtime.outcome ? '' : '내 차례입니다.');
   }
 
   /**
@@ -395,7 +471,7 @@ export class BattlefieldScene implements Scene {
     }
 
     this.appendLog([{ type: 'ACTION', side: 'enemy', action: pending.decision.attackAction }]);
-    this.renderView(blockAction ? '공격을 막았습니다.' : '공격을 그대로 받았습니다.');
+    this.commit(blockAction ? '공격을 막았습니다.' : '공격을 그대로 받았습니다.');
     // 막았다면 피해는 원래 대상이 아니라 막은 유닛이 받는다. 연출도 그 칸에서 나야 한다.
     this.playEffect(
       'damage',
@@ -470,7 +546,7 @@ export class BattlefieldScene implements Scene {
       }
 
       this.log = [...this.log, `나: ${message}`];
-      this.renderView(message);
+      this.commit(message);
       // 방금 수로 둘 것이 다 떨어졌을 수 있다. 그러면 여기서 바로 턴이 넘어간다.
       void this.advanceTurns(0);
     } catch (error: unknown) {
@@ -548,7 +624,7 @@ export class BattlefieldScene implements Scene {
 
     this.battlefieldView.render({
       metrics: resolveBattleBoardMetrics(layout),
-      stageName: this.stageName,
+      stageName: this.stageDefinition.name,
       turnNumber: this.runtime.turnNumber,
       currentSide: this.runtime.currentSide,
       phaseLabel: PHASE_LABELS[this.runtime.phase],
@@ -587,18 +663,31 @@ export class BattlefieldScene implements Scene {
   }
 
   private buildResult(): BattleResultModel | null {
-    const { outcome } = this.runtime;
-    if (!outcome) {
+    const result = this.battleResult;
+    if (!result) {
       return null;
     }
 
-    const isWin = outcome.winner === 'player';
+    const isWin = result.outcome === 'WIN';
+    const lines = [
+      isWin
+        ? `${this.stageDefinition.name}을(를) ${result.turnNumber}라운드에 돌파했습니다.`
+        : `${this.stageDefinition.name}에서 리더를 잃었습니다.`,
+      `보상: ${result.rewardCardNames.length === 0 ? '없음' : result.rewardCardNames.join(', ')}`,
+      `성장: ${
+        result.growth.cardInstanceIds.length === 0 || result.growth.expPerCard <= 0
+          ? '없음'
+          : `참여한 ${result.growth.cardInstanceIds.length}장에 +${result.growth.expPerCard} EXP`
+      }`,
+      this.savingResult ? '결과를 저장하는 중입니다...' : null,
+      this.saveError === null ? null : `저장에 실패했습니다: ${this.saveError}`,
+    ];
+
     return {
       title: isWin ? '승리' : '패배',
-      body: isWin
-        ? `${this.stageName}을(를) 돌파했습니다.\n보상과 성장 적용은 다음 단계에서 붙습니다.`
-        : `${this.stageName}에서 리더를 잃었습니다.`,
+      body: lines.filter((line): line is string => line !== null).join('\n'),
       isWin,
+      busy: this.savingResult,
     };
   }
 
