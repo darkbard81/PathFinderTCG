@@ -9,7 +9,7 @@ import {
   type CostFilter,
 } from './card-workbench';
 
-/** 원본과 동일: UNIT 모드는 덱 유닛을, LEADER 모드는 리더 슬롯을 편집한다. */
+/** UNIT 모드는 덱 유닛을, LEADER 모드는 리더 슬롯을 편집한다. */
 export type DeckBuildMode = 'UNIT' | 'LEADER';
 
 export type DeckBuildPanelModel = {

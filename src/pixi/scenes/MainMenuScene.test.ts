@@ -120,11 +120,18 @@ describe('main menu helpers', () => {
     expect(formatMainMenuLoadSummary(12, 3)).toBe('Loaded 12 assets, skipped 3');
   });
 
-  it('lists PixiJS instead of Phaser and rexUI in license links', () => {
+  it('lists the licenses of what the game actually ships with', () => {
     const labels = createDefaultLicenseLinks().map((link) => link.label);
 
-    expect(labels).toContain('PixiJS License');
-    expect(labels).not.toContain('Phaser License');
-    expect(labels).not.toContain('rexUI License');
+    // 렌더러와 런타임, 그리고 카드 규칙의 출처는 반드시 고지 대상이다.
+    expect(labels).toEqual(
+      expect.arrayContaining(['PixiJS License', 'Node.js License', 'ORC License']),
+    );
+  });
+
+  it('gives every license link a purpose', () => {
+    for (const link of createDefaultLicenseLinks()) {
+      expect(link.purpose.length).toBeGreaterThan(0);
+    }
   });
 });

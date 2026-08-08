@@ -11,13 +11,13 @@ import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
 import type { Scene } from './scene';
 
-/** 원본 Phaser 키 `title-background`에 대응하는 manifest alias다. */
+/** 타이틀 배경 manifest alias다. 여러 화면이 같은 그림을 공유한다. */
 const TITLE_BACKGROUND_ALIAS = 'ui.title-screen';
 
 export type SaveSlotSceneOptions = {
   services: GameServices;
   backgroundImageUrl: string;
-  /** 뒤로 가기. 원본은 MainMenu로 돌아간다. */
+  /** 뒤로 가기. 메인 메뉴로 돌아간다. */
   onBack: () => void;
   /** 로그아웃이 끝난 뒤 타이틀로 넘기기 위한 신호다. */
   onLoggedOut: (statusMessage: string) => void;
@@ -140,7 +140,6 @@ export class SaveSlotScene implements Scene {
 
   private layoutBackground(layout: ViewportLayout): void {
     if (this.background) {
-      // 원본은 고정 해상도에 스트레치했다. 반응형 논리 영역에 동일하게 맞춘다.
       this.background.width = layout.width;
       this.background.height = layout.height;
     }

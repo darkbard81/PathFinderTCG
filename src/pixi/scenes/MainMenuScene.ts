@@ -13,7 +13,7 @@ import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
 import type { Scene } from './scene';
 
-/** 원본 Phaser 키 `title-background`에 대응하는 manifest alias다. */
+/** 타이틀 배경 manifest alias다. 여러 화면이 같은 그림을 공유한다. */
 const TITLE_BACKGROUND_ALIAS = 'ui.title-screen';
 
 export type MainMenuSceneOptions = {

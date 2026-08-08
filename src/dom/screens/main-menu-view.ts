@@ -1,7 +1,7 @@
 import { CARD_TEXT_TOOL_ACCOUNT_ID } from '../../tools/card-text/access';
 import './main-menu.css';
 
-/** 원본과 동일: 이 계정에만 카드 텍스트 도구 진입을 연다. 서버 게이트와 같은 상수다. */
+/** 이 계정에만 카드 텍스트 도구 진입을 연다. 서버 게이트와 같은 상수를 쓴다. */
 export { CARD_TEXT_TOOL_ACCOUNT_ID };
 
 export type MainMenuLicenseLink = {
@@ -182,7 +182,7 @@ export function createDefaultLicenseLinks(): MainMenuLicenseLink[] {
 export const LICENSE_INTRO_TEXT =
   '이 프로그램은 생성형 AI를 사용하여 만들어졌습니다. 상업적 이용을 목적으로 하지 않으며, 관련 라이선스와 서비스 약관을 지키기 위해 노력했습니다.';
 
-/** 로딩 결과 숫자를 원본과 같은 상태 문구로 만든다. */
+/** 로딩 결과 숫자를 상태 문구로 만든다. */
 export function formatMainMenuLoadSummary(loadedCount: number, failedCount: number): string {
   if (failedCount > 0) {
     return `Loaded ${loadedCount} assets, skipped ${failedCount}`;

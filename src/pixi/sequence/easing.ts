@@ -1,5 +1,6 @@
 /**
- * 원본 step이 넘기는 Phaser 이징 이름을 함수로 바꾼다.
+ * step이 넘기는 이징 이름을 함수로 바꾼다.
+ * 이름은 `Sine.easeInOut` 형식이며 대소문자를 가리지 않는다.
  * PixiJS에는 tween 시스템이 없어 필요한 곡선만 직접 갖는다.
  */
 export type EasingFunction = (progress: number) => number;

@@ -30,7 +30,7 @@ export type StageSceneOptions = {
   onEquipment: (session: GameSession) => void;
   onGrowth: (session: GameSession) => void;
   onLoggedOut: (statusMessage: string) => void;
-  /** Battlefield 이식 전·후 모두 세션 저장 뒤 호출한다. */
+  /** 세션을 먼저 저장한 뒤 호출한다. 전투 중 이탈해도 스테이지 선택이 남는다. */
   onStartBattle: (session: GameSession, stageId: string) => void;
   view?: StageView;
 };

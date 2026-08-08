@@ -69,7 +69,7 @@ export type SequenceStep = {
   /** 흔들림 반복 횟수다. shake action에서 사용한다. */
   repeat?: number;
 
-  /** 이징 이름이다. 원본 Phaser 이름을 그대로 받는다. */
+  /** 이징 이름이다. `Sine.easeInOut` 형식을 쓰며 대소문자를 가리지 않는다. */
   ease?: string;
 
   action: SequenceStepAction;

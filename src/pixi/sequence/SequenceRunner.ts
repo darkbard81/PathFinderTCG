@@ -33,7 +33,7 @@ export type SequenceRunnerOptions = {
  * Ticker 위에서 연출 step을 시간표대로 재생하는 범용 헬퍼다.
  *
  * 전투 규칙이나 저장 상태를 알지 않고, 화면이 전달한 대상과 좌표 기반 step만 재생한다.
- * 원본 Phaser SequencePlugin의 step 계약(timer·duration·mode·playback·action)을 그대로 지킨다.
+ * step은 timer·duration·mode·playback·action으로 시간표를 표현한다.
  */
 export class SequenceRunner {
   private readonly frameCallbacks = new Set<(ticker: SequenceTickerFrame) => void>();
@@ -245,7 +245,7 @@ export class SequenceRunner {
     });
   }
 
-  /** 원본과 같은 사인/코사인 흔들림이다. 끝나면 대상을 원래 좌표로 되돌린다. */
+  /** 사인/코사인 흔들림이다. 끝나면 대상을 원래 좌표로 되돌린다. */
   private playShake(step: SequenceStep, playbackRate: number): Promise<void> {
     const target = step.target;
     if (!target || !this.canUseTarget(target)) {
