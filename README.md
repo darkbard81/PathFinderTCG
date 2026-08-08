@@ -34,10 +34,9 @@
 
 ### 아직 없는 것
 
-- **카드 정보 패널** — 지금은 전장에서 카드 능력 텍스트를 읽을 방법이 없다. `src/theme.ts`의 `cardInfo*` 토큰이 이 화면을 위해 남아 있다. 레이아웃 확정 후에 만든다.
-- **행동 팝업 일부** — 피해·회복·강화만 연출한다. 배치·이동·방어에는 연출이 없다. `colors.popup*` 토큰 5개가 미사용이다.
-- **영상 연출** — `SequenceRunner`의 `video` step은 재생기를 주입하지 않으면 건너뛴다. 현재 주입하지 않는다.
-- **`assets.json` 생성기** — `sharp` 의존이 필요하다. 현재는 준비된 자산 트리의 `assets.json`을 그대로 쓴다.
+가장 큰 공백은 **카드 정보 패널**이다. 카드 100장 중 89장이 능력을 갖고 있는데 그 텍스트를 읽을 화면이 없다.
+
+전체 목록과 상세는 [documents/ToDoList.md](documents/ToDoList.md)에 있다.
 
 ## 설계 결정
 
@@ -135,15 +134,12 @@ assets/              # 로컬 런타임 자산. git 추적 대상이 아니다
 documents/           # 프로젝트 규칙 문서
 ```
 
-## 알려진 부채
-
-1. **방어 선택 UI가 실제 덱에서 발동하지 않는다.** `guardian_block` 능력을 가진 카드가 `cards/deck_test.json`에만 있다. 엔진과 UI는 준비돼 있고 카드 데이터 문제다.
-
 ## 참고
 
 - 카드 정의는 `cards/card.schema.json`, 스테이지는 `cards/stage.schema.json`을 따른다.
 - 저장 슬롯은 로컬 상태로 취급한다.
 - 주석 규칙은 [documents/Comment_Rule.md](documents/Comment_Rule.md)를 따른다.
+- 남은 작업은 [documents/ToDoList.md](documents/ToDoList.md)에 모은다.
 - PixiJS API는 [PixiJS v8 문서](https://pixijs.download/release/docs/llms.txt)와 `pixijs-skills` 스킬을 source of truth로 삼는다.
 
 ## 권리 고지
