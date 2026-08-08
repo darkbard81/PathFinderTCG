@@ -3,7 +3,7 @@ import type {
   BattleTurnEndReason,
   BattleTurnEvent,
 } from '../../game/battle/types';
-import { formatSlotLabel } from './battlefield-layout';
+import { formatSlotLabel } from '../../dom/screens/battlefield-layout';
 
 const SIDE_LABELS = { player: '나', enemy: '적' } as const;
 

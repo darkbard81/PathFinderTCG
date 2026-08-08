@@ -228,8 +228,6 @@ onDrop(source, slotId)                    // 드래그가 끝난 뒤에야 rende
 
 1. **뷰 계약이 두 종류다.** Stage·DeckBuild·Equipment·Growth·Battlefield는 `render(model)` 단방향이다. Title·MainMenu·SaveSlot·Loader는 `setStatus` / `setBusy` / `renderSlots` 같은 명령형 setter를 노출하며, Presenter가 뷰 내부 상태를 직접 조작한다. Passive View 규칙이 서기 전에 만든 화면이다.
 2. **`src/dom/screens/stage-view.ts`가 도메인 함수를 호출한다.** `isStageUnlocked`를 뷰에서 부른다. 잠금 여부는 뷰 모델 필드로 받아야 한다. **§1의 "타입으로만 참조" 규칙을 어기는 유일한 뷰다.**
-3. **Presenter 코드가 View 폴더에 있다.** `src/dom/screens/battle-card-tile.ts`(전투 유효 수치 계산)와 `battle-log.ts`(이벤트 → 문장)는 `BattleRuntimeState`를 읽는다. 하는 일은 Presenter이므로 위치는 `src/pixi/` 쪽이 맞다.
-4. **`AGENTS.md`의 UI 경계 규칙이 낡았다.** "손패와 필드 카드는 캔버스"라고 적혀 있으나 전부 DOM이다. `npm run assets:build` 언급도 현재 `package.json`에 없다.
 
 ## 7. 테스트 경계
 

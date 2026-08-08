@@ -138,9 +138,7 @@ documents/           # 프로젝트 규칙 문서
 
 1. **뷰 계약이 두 종류다.** Stage·DeckBuild·Equipment·Growth·Battlefield는 `render(model)` 단방향이고, Title·MainMenu·SaveSlot·Loader는 `setStatus` / `setBusy` 같은 명령형 setter를 노출한다. 뒤쪽 넷은 Passive View 규칙이 서기 전에 만든 화면이다.
 2. **`stage-view.ts`가 도메인 함수를 직접 호출한다.** `isStageUnlocked`를 뷰에서 부른다. 잠금 여부는 뷰 모델로 받아야 한다.
-3. **프레젠터 코드가 `src/dom/`에 있다.** `battle-card-tile.ts`와 `battle-log.ts`는 `BattleRuntimeState`를 읽어 표시값으로 바꾼다. 하는 일은 Presenter인데 위치가 View 폴더다.
-4. **`AGENTS.md`의 UI 경계 규칙이 낡았다.** "손패와 필드 카드는 캔버스"라고 적혀 있으나 실제로는 전부 DOM이다. `npm run assets:build` 스크립트 언급도 현재 `package.json`에 없다.
-5. **방어 선택 UI가 실제 덱에서 발동하지 않는다.** `guardian_block` 능력을 가진 카드가 `cards/deck_test.json`에만 있다. 엔진과 UI는 준비돼 있고 카드 데이터 문제다.
+3. **방어 선택 UI가 실제 덱에서 발동하지 않는다.** `guardian_block` 능력을 가진 카드가 `cards/deck_test.json`에만 있다. 엔진과 UI는 준비돼 있고 카드 데이터 문제다.
 
 ## 참고
 

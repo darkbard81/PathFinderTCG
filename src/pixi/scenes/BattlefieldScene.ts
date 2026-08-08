@@ -1,12 +1,12 @@
 import { Assets, Container, Graphics, Sprite, type Texture, type Ticker } from 'pixi.js';
-import { toBattleCardTile } from '../../dom/screens/battle-card-tile';
+import { toBattleCardTile } from '../battle/battle-card-tile';
 import {
   BATTLE_ROW_IDS,
   listRowSlotIds,
   resolveBattleBoardMetrics,
   type BattleRowId,
 } from '../../dom/screens/battlefield-layout';
-import { formatBattleTurnEvents, readCardName } from '../../dom/screens/battle-log';
+import { formatBattleTurnEvents, readCardName } from '../battle/battle-log';
 import {
   createBattlefieldView,
   type BattlefieldView,

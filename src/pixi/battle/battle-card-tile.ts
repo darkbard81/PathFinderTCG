@@ -4,7 +4,7 @@ import {
   getEffectiveHp,
 } from '../../game/battle/battle-engine';
 import type { BattleCardRuntimeState, BattleRuntimeState } from '../../game/battle/types';
-import { toCardTile, type CardTile } from './card-tile';
+import { toCardTile, type CardTile } from '../../dom/screens/card-tile';
 
 /**
  * 전투 중인 카드 한 장을 타일 값으로 바꾼다.

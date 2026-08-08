@@ -9,7 +9,7 @@
 
 1. 사용자의 현재 요청과 이슈의 명시적 범위
 2. 저장소의 실제 설정과 스키마: `package.json`, `vite.config.ts`, `tsconfig*.json`, `eslint.config.js`, `cards/*.schema.json`
-3. 이 문서와 `README.md`, `documents/Comment_Rule.md`
+3. 이 문서와 `README.md`, `Architecture.md`, `documents/Comment_Rule.md`
 4. 이식 원본 `/home/deck/Documents/ElvenBattle` — 게임 규칙·데이터·화면 흐름의 기준
 5. `pixijs-skills` 스킬과 [PixiJS v8 공식 문서](https://pixijs.download/release/docs/llms.txt)
 6. 일반적인 프레임워크 관례
@@ -28,16 +28,17 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 - `src/game/`: PixiJS에 의존하지 않는 전투 규칙, 카드·덱·장비·성장, 저장 상태, 스테이지 진행, 자산 manifest 해석. 원본에서 **로직 변경 없이** 이식한다.
 - `src/pixi/app/`: `Application` 생성, 반응형 viewport 정책(`viewport.ts`), 부트스트랩
-- `src/pixi/scenes/`: `Container` 기반 화면과 `SceneRouter`. 화면 전환, 입력 전달, 월드 렌더링
-- `src/dom/`: DOM UI 오버레이. 화면 크롬 전체와 스케일 동기화를 담당한다 (원본 rexUI 대체)
+- `src/pixi/scenes/`: 화면(Presenter)과 `SceneRouter`. 도메인 호출, 뷰 모델 조립, 화면 전환
+- `src/pixi/battle/`: 전장 Presenter 보조 — 연출 캔버스, 카드 표시값 변환, 전투 로그 문장
 - `src/pixi/sequence/`: `Ticker` 기반 연출 시퀀스. 원본 `SequencePlugin` / `AnimationSequence` 대체
 - `src/pixi/assets/`: `assets.json` manifest를 Pixi `Assets` 번들로 등록하는 경계
+- `src/dom/`: DOM UI 오버레이(View). 전장 보드와 카드를 포함한 화면 전체와 스케일 동기화를 담당한다 (원본 rexUI 대체)
 - `src/theme.ts`: Canvas UI와 DOM UI가 공유하는 semantic 색상·텍스트·surface 토큰
 - `src/server/`: `/tcg` 자산과 `/api/save-slots` 서버 미들웨어
 - `src/tools/card-text/`, `tools/card-text/`: 카드 텍스트 도구의 서버·클라이언트와 별도 HTML 진입점
 - `src/config.ts`: `PATHFINDER_TCG_*` 환경 변수와 서버·캡처·자산 기본 설정. 원본의 `ELVEN_BATTLE_*` 접두사는 이 저장소에서 사용하지 않는다
 - `cards/`: 카드·덱 정의, 스테이지 JSON, `card.schema.json`, `stage.schema.json`
-- `assets/`: 로컬 런타임 자산. Git에는 `assets/README.md`만 유지하며 `assets/assets.json`은 생성물이다
+- `assets/`: 로컬 런타임 자산. 디렉터리 전체가 Git 추적 대상이 아니다. 실제 디렉터리이거나 외부 자산 트리로의 심볼릭 링크다
 - `.data/save-slots/`: 로컬 저장 슬롯 상태. 소스나 테스트 fixture로 간주하지 않는다
 - `index.html`, `tools/card-text/index.html`: Vite가 함께 빌드하는 두 진입점
 
@@ -50,7 +51,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - `npm run test` / `npx vitest run <test-file...>`: 전체 또는 변경 범위 테스트
 - `npm run lint`, `npm run format`, `npm run format:check`
 - `npm run check`: typecheck, lint, format:check, test 최종 gate
-- `npm run assets:build`: 자산을 변경했을 때만 실행
+- `npm run assets:build`: **아직 이식하지 않았다.** `sharp` 의존이 필요하며, 현재는 기존 자산 트리의 `assets.json`을 그대로 쓴다
 
 무관한 파일까지 바꾸는 전체 포맷은 피한다. 필요하면 수정 파일만 Prettier로 정리하고 최종 gate에서 `npm run format:check`를 실행한다.
 
@@ -114,6 +115,18 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 전투 판정과 저장 상태는 프레임 콜백에서 갱신하지 않는다.
 - `updateTransform` 오버라이드는 없다. 오브젝트 단위 프레임 로직은 `onRender`를 쓴다.
 
+## 계층 규칙 (MVP)
+
+이 저장소는 **MVP(Model–View–Presenter)의 Passive View**다. 뷰가 모델을 읽지 않는다. 상세는 [Architecture.md](Architecture.md).
+
+- **Model** `src/game/` — 규칙과 저장 상태. `src/pixi`·`src/dom`을 import 하지 않는다.
+- **View** `src/dom/` — DOM 크롬. `src/pixi`를 import 하지 않고, 도메인은 **타입으로만** 참조한다. 규칙 함수를 호출하지 않는다.
+- **Presenter** `src/pixi/scenes/` — 도메인 호출과 뷰 모델 조립이 일어나는 유일한 곳.
+
+뷰는 `render(model)` 한 방향으로만 갱신되고 입력은 콜백으로만 되돌린다. 도메인 객체를 뷰에 그대로 넘기지 않는다. 표시에 필요한 값만 담은 뷰 모델로 바꿔서 넘긴다.
+
+`src/dom/`에서 도메인 함수를 호출하고 싶어지면 그 계산은 Presenter 몫이다. 뷰 모델 필드로 옮긴다.
+
 ## Shared Helper First
 
 저장소 공용 Helper가 책임지는 기능을 화면이나 기능 파일에서 다시 구현하지 않는다. 먼저 기존 API를 사용하고, 현재 API가 재사용 가능한 요구를 표현하지 못할 때는 소유 모듈의 타입·구현·테스트를 함께 확장한다. 한 화면에만 필요한 도메인 규칙을 억지로 전역화하지 않으며 mutable singleton도 만들지 않는다.
@@ -122,9 +135,10 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 **화면 크롬은 DOM으로 만든다. 캔버스 위젯 툴킷을 다시 만들지 않는다.**
 
-- **DOM**(`src/dom/`): 타이틀, 저장 슬롯, 메인 메뉴, 스테이지 선택, 덱 편집, 장비, 성장, 로딩, 설정, HUD 크롬.
-- **캔버스**(`src/pixi/`): 전장 월드 — 보드, 필드 위 카드, **손패**, 드래그 프리뷰, 이펙트, 카메라.
-- 경계 기준은 하나다: **월드 좌표계에 속하고 드래그·애니메이션 대상이면 캔버스, 나머지는 DOM.** 손패는 보드로 끌어다 놓는 대상이라 캔버스에 둔다. 제스처가 DOM/캔버스 경계를 넘게 만들지 않는다.
+- **DOM**(`src/dom/`): 화면 전체. 타이틀, 저장 슬롯, 메인 메뉴, 스테이지 선택, 덱 편집, 장비, 성장, 로딩, 설정, 그리고 **전장의 보드·필드 카드·손패·드래그**까지 포함한다.
+- **캔버스**(`src/pixi/`): 배경 이미지와 디밍(본 캔버스), 그리고 카드 위에 얹는 타격 연출(전장 전용 두 번째 캔버스).
+- 경계 기준은 하나다: **카드로 보여야 하면 DOM, 카드 위나 아래에 깔리는 그림이면 캔버스.** 전장 카드도 덱 구성·장비·성장과 같은 `src/dom/screens/card-tile.ts`를 쓴다. 카드 표현을 두 벌 유지하지 않기 위해서다.
+- DOM 오버레이는 항상 본 캔버스 위에 있다. 카드 **위에** 그려야 하면 오버레이 안쪽에 캔버스를 한 장 더 둔다(`.pf-battlefield__effects`).
 - 레이아웃은 CSS로 한다. flexbox, grid, `overflow`, `position`을 캔버스 좌표 계산으로 대체하지 않는다.
 - 색·폰트·surface 값은 `src/theme.ts`가 유일한 원본이다. DOM에는 CSS 커스텀 속성으로 주입된 토큰을 쓰고, 캔버스에는 같은 토큰의 `canvas` 표현을 쓴다. CSS나 화면 코드에 raw hex를 직접 적지 않는다.
 - 오버레이 루트는 `pointer-events: none`이고 개별 위젯만 `auto`로 되돌린다. 이 규칙을 어기면 캔버스 입력이 죽는다.
@@ -163,7 +177,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 - 카드 변경은 `cards/card.schema.json`, 스테이지 변경은 `cards/stage.schema.json`과 기존 loader를 따른다. 포팅 과정에서 schema를 바꾸지 않는다.
 - 저장 데이터는 schema version과 validation을 유지한다. 전투 중 mutation을 위해 저장 세션의 카드 인스턴스 참조를 공유하지 않는다.
-- 자산 변경 후에만 `npm run assets:build`를 실행한다. `assets/assets.json`, 로컬 이미지·폰트·영상은 커밋 대상이 아니다.
+- `assets/assets.json` 생성기는 아직 이식하지 않았다. 자산을 바꿔야 하면 원본 저장소에서 생성한 결과를 가져온다. `assets/assets.json`, 로컬 이미지·폰트·영상은 커밋 대상이 아니다.
 - fresh clone에는 런타임 `assets/`와 `.data/`가 없을 수 있다. 존재한다고 가정하거나 임의 fixture로 커밋하지 않는다.
 - `/tcg`, `/api/save-slots`, `/api/card-text-tool` 또는 Vite middleware 순서를 바꾸면 해당 서버 테스트와 두 HTML build input을 모두 확인한다.
 - 경로, URL, JSON 입출력에는 Node·Web 표준 API를 사용하고 traversal, malformed input, 네트워크 실패를 명시적으로 처리한다.
@@ -180,6 +194,8 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - `.env`, credential, `.data/`, `dist/`, coverage, 임시 캡처, 로컬 runtime asset을 커밋하지 않는다.
 - 의존성 변경 없이 `package-lock.json`을 갱신하지 않는다. 새 런타임 의존성(UI·트윈·사운드 라이브러리 포함)은 먼저 사용자에게 확인한다.
 - 화면 크롬을 캔버스에 그리지 않는다. 버튼·목록·패널·폼은 DOM으로 만든다.
+- `src/dom/`에서 도메인 함수를 호출하지 않는다. 도메인 참조는 타입 전용이다.
+- `src/game/`이나 `src/dom/`에서 `src/pixi`를 import 하지 않는다.
 - CSS나 화면 코드에 raw hex 색상을 적지 않는다. `src/theme.ts`의 토큰을 쓴다.
 - DOM 오버레이에서 스케일이나 논리 크기를 다시 계산하지 않는다.
 - 화면 로컬 타이머 조합으로 이미 `SequenceRunner`가 소유하는 연출 정책을 중복 구현하지 않는다.
@@ -218,7 +234,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 시각적 변경이 있으면 사용자가 브라우저에서 확인할 항목을 제시했고, 그 결과를 받았다. 받기 전에는 완료가 아니다.
 - 새 동작과 회귀 위험을 검증하는 관련 Vitest가 통과한다.
 - `npm run check`(또는 lint, build, format:check, test 개별 실행)가 통과한다.
-- 자산 변경 시 `npm run assets:build`, schema·서버·UI·연출 변경 시 위의 전용 검증을 수행했다.
+- schema·서버·UI·연출 변경 시 위의 전용 검증을 수행했다.
 - public API, schema, manifest key, 저장 형식의 호환 영향과 migration 필요 여부를 검토했다.
 - 최종 diff에 dead code, 우회 Helper, 무관한 포맷 변경, generated/local 파일, 비밀정보가 없다.
 - 사용자에게 변경 요약, 실행한 검증, 남은 수동 확인이나 알려진 제한을 정확히 전달한다.

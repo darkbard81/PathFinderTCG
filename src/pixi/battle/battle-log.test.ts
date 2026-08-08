@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BattleRuntimeState, BattleTurnEvent } from '../../game/battle/types';
 import { formatBattleTurnEvents } from './battle-log';
-import { formatSlotLabel } from './battlefield-layout';
+import { formatSlotLabel } from '../../dom/screens/battlefield-layout';
 
 /** 이름 조회만 하면 되므로 필요한 Zone 배열만 갖춘 최소 런타임을 만든다. */
 function createRuntime(cards: Record<string, string>): BattleRuntimeState {
