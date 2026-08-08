@@ -531,11 +531,16 @@ export const UI_THEME = {
       chipPadding: '1px 5px',
       chipRadius: '3px',
       /**
-       * 수치는 카드 이미지에 이미 그려진 orb 위에 얹는다.
+       * 수치는 카드 네 모서리의 orb 자리에 얹는다.
        * 좌표는 cards/card_frame_meta.json의 orb center를 1024x1536 캔버스 비율로 환산한 값이다.
        */
       orbInsetX: '13.281%',
       orbInsetY: '8.854%',
+      /**
+       * 배지 크기다. 카드 이미지에 그려진 orb 홀더는 지름 234로 카드 너비의 22.9%이고,
+       * 배지 아트는 자기 캔버스의 96% 남짓을 채운다. 24%면 그려진 홀더를 덮는다.
+       */
+      orbSize: '24%',
       orbFontScale: '0.115',
       orbColor: '#ffffff',
       orbTextShadow:

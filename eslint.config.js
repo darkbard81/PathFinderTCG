@@ -14,4 +14,17 @@ export default tseslint.config(
       sourceType: 'module',
     },
   },
+  {
+    // tools/ 아래 자산 생성 스크립트는 브라우저가 아니라 Node에서만 돈다.
+    files: ['tools/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        Buffer: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
 );

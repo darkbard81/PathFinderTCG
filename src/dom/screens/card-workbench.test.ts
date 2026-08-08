@@ -18,6 +18,7 @@ function tile(instanceId: string, cost: number | null): CardTile {
     hp: null,
     level: null,
     artUrl: '',
+    badgeBaseUrl: '',
   };
 }
 

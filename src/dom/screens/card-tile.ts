@@ -15,7 +15,22 @@ export type CardTile = {
   hp: number | null;
   level: number | null;
   artUrl: string;
+  /** 수치 배지 webp가 놓인 디렉터리 URL이다. 뒤에 `<수치 이름>.webp`가 붙는다. */
+  badgeBaseUrl: string;
 };
+
+/**
+ * 수치 배지를 놓는 순서다. 좌상 지배력, 우상 코스트, 좌하 체력, 우하 공격력이며
+ * 배지 webp 파일 이름과 CSS 수식어도 이 값을 그대로 쓴다.
+ */
+export const ORB_STATS = ['dominance', 'cost', 'hp', 'attack'] as const;
+
+export type OrbStat = (typeof ORB_STATS)[number];
+
+/** 수치 배지 하나의 이미지 URL을 만든다. */
+export function buildOrbBadgeUrl(badgeBaseUrl: string, stat: OrbStat): string {
+  return `${badgeBaseUrl}/${stat}.webp`;
+}
 
 export type CardTileOptions = {
   disabled?: boolean;
@@ -64,12 +79,7 @@ export function createCardTileElement(
     element.append(chip);
   }
 
-  element.append(
-    createOrbValue('cost', tile.cost),
-    createOrbValue('dominance', tile.dominance),
-    createOrbValue('attack', tile.attack),
-    createOrbValue('hp', tile.hp),
-  );
+  element.append(...ORB_STATS.map((stat) => createOrbValue(tile, stat)));
 
   const { onClick } = options;
   if (onClick) {
@@ -79,11 +89,25 @@ export function createCardTileElement(
   return element;
 }
 
-/** 카드 이미지에 그려진 수정구슬 위에 수치 하나를 얹는다. */
-function createOrbValue(kind: string, value: number | null): HTMLElement {
+/** 카드 모서리에 수치 배지 하나를 얹고 그 가운데에 값을 적는다. */
+function createOrbValue(tile: CardTile, stat: OrbStat): HTMLElement {
   const orb = document.createElement('span');
-  orb.className = `pf-card-tile__orb pf-card-tile__orb--${kind}`;
-  orb.textContent = value === null ? '' : String(value);
+  orb.className = `pf-card-tile__orb pf-card-tile__orb--${stat}`;
+
+  const badge = document.createElement('img');
+  badge.className = 'pf-card-tile__orb-badge';
+  badge.src = buildOrbBadgeUrl(tile.badgeBaseUrl, stat);
+  badge.alt = '';
+  badge.draggable = false;
+  // 배지가 없으면 카드 이미지에 그려진 수정구슬이 그대로 보인다. 수치는 그 위에 남는다.
+  badge.addEventListener('error', () => badge.remove());
+  orb.append(badge);
+
+  const value = document.createElement('span');
+  value.className = 'pf-card-tile__orb-value';
+  value.textContent = tile[stat] === null ? '' : String(tile[stat]);
+  orb.append(value);
+
   return orb;
 }
 
@@ -109,6 +133,7 @@ function formatStat(value: number | null): string {
  */
 export function toCardTile(card: RuntimeCardInstance, assetBaseUrl: string): CardTile {
   const { definition, instance } = card;
+  const assetRoot = assetBaseUrl.replace(/\/+$/, '');
 
   return {
     instanceId: instance.instanceId,
@@ -119,7 +144,8 @@ export function toCardTile(card: RuntimeCardInstance, assetBaseUrl: string): Car
     attack: readStat(instance.attack, definition.attack),
     hp: readStat(instance.hp, definition.hp),
     level: readStat(instance.level, definition.level),
-    artUrl: `${assetBaseUrl.replace(/\/+$/, '')}/cards/webp/${definition.id}.webp`,
+    artUrl: `${assetRoot}/cards/webp/${definition.id}.webp`,
+    badgeBaseUrl: `${assetRoot}/cards/badge`,
   };
 }
 

@@ -59,38 +59,59 @@
 }
 
 /*
- * 수치는 카드 이미지에 이미 그려진 수정구슬 위에 얹는다.
+ * 수치 배지는 카드 네 모서리의 수정구슬 자리에 얹는다.
  * 좌표는 card_frame_meta.json의 orb center 비율이라 타일 크기가 바뀌어도 따라간다.
+ * 자리는 좌상 지배력, 우상 코스트, 좌하 체력, 우하 공격력이다.
  */
 .pf-card-tile__orb {
   position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--pf-card-tile-orb-size);
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+/* 배지 그림은 카드 이미지에 그려진 수정구슬을 덮는다. */
+.pf-card-tile__orb-badge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 수치는 배지 가운데에 얹는다. */
+.pf-card-tile__orb-value {
+  position: relative;
   font-weight: 800;
   line-height: 1;
   font-size: calc(var(--pf-card-tile-width) * var(--pf-card-tile-orb-font-scale));
   color: var(--pf-card-tile-orb-color);
   text-shadow: var(--pf-card-tile-orb-text-shadow);
-  pointer-events: none;
 }
 
-.pf-card-tile__orb--cost {
+.pf-card-tile__orb--dominance {
   left: var(--pf-card-tile-orb-inset-x);
   top: var(--pf-card-tile-orb-inset-y);
   transform: translate(-50%, -50%);
 }
 
-.pf-card-tile__orb--dominance {
+.pf-card-tile__orb--cost {
   right: var(--pf-card-tile-orb-inset-x);
   top: var(--pf-card-tile-orb-inset-y);
   transform: translate(50%, -50%);
 }
 
-.pf-card-tile__orb--attack {
+.pf-card-tile__orb--hp {
   left: var(--pf-card-tile-orb-inset-x);
   bottom: var(--pf-card-tile-orb-inset-y);
   transform: translate(-50%, 50%);
 }
 
-.pf-card-tile__orb--hp {
+.pf-card-tile__orb--attack {
   right: var(--pf-card-tile-orb-inset-x);
   bottom: var(--pf-card-tile-orb-inset-y);
   transform: translate(50%, 50%);
