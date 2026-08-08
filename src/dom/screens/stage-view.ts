@@ -1,18 +1,25 @@
-import { isStageUnlocked } from '../../game/stage/stage-definitions';
 import type {
   StageBattleResult,
   StageDefeatCondition,
   StageDefinition,
-  StageProgressState,
   StageVictoryCondition,
 } from '../../game/stage/types';
 import './stage.css';
 
 export type StageCardState = 'selected' | 'cleared' | 'unlocked' | 'locked';
 
+/**
+ * 목록에 그릴 Stage 하나다.
+ * 잠금·클리어 판정은 도메인 규칙이므로 뷰가 계산하지 않고 이미 정해진 값을 받는다.
+ */
+export type StageEntryModel = {
+  definition: StageDefinition;
+  unlocked: boolean;
+  cleared: boolean;
+};
+
 export type StageViewModel = {
-  stages: StageDefinition[];
-  progress: StageProgressState;
+  stages: StageEntryModel[];
   selectedStageId: string;
   lastBattleResult: StageBattleResult | null;
   status: string;
@@ -187,24 +194,29 @@ export function createStageView(options: StageViewOptions): StageView {
       status.dataset.error = String(model.statusIsError);
 
       const selected =
-        model.stages.find((stage) => stage.id === model.selectedStageId) ?? model.stages[0];
+        model.stages.find((entry) => entry.definition.id === model.selectedStageId) ??
+        model.stages[0];
       if (!selected) {
         return;
       }
 
-      startEnabled = isStageUnlocked(selected, model.progress);
+      startEnabled = selected.unlocked;
       renderStageList(list, model, options.onSelectStage);
-      detailTitle.textContent = selected.name;
+      detailTitle.textContent = selected.definition.name;
       detailRows.replaceChildren(
-        createDetailRow('Victory', formatVictoryCondition(selected.victoryCondition)),
-        createDetailRow('Defeat', selected.defeatConditions.map(formatDefeatCondition).join('\n')),
+        createDetailRow('Victory', formatVictoryCondition(selected.definition.victoryCondition)),
+        createDetailRow(
+          'Defeat',
+          selected.definition.defeatConditions.map(formatDefeatCondition).join('\n'),
+        ),
       );
 
       if (model.lastBattleResult) {
         resultPanel.hidden = false;
         const result = model.lastBattleResult;
         const stageName =
-          model.stages.find((stage) => stage.id === result.stageId)?.name ?? result.stageId;
+          model.stages.find((entry) => entry.definition.id === result.stageId)?.definition.name ??
+          result.stageId;
         resultPanel.dataset.outcome = result.outcome;
         resultTitle.textContent =
           result.outcome === 'WIN' ? 'Recent Result: VICTORY' : 'Recent Result: DEFEAT';
@@ -227,9 +239,7 @@ function renderStageList(
 ): void {
   list.replaceChildren();
 
-  for (const stage of model.stages) {
-    const unlocked = isStageUnlocked(stage, model.progress);
-    const cleared = model.progress.clearedStageIds.includes(stage.id);
+  for (const { definition: stage, unlocked, cleared } of model.stages) {
     const selected = stage.id === model.selectedStageId;
 
     const card = document.createElement('button');

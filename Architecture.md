@@ -32,8 +32,26 @@
 | --- | --- |
 | `src/game/`은 `src/pixi`·`src/dom`을 import 하지 않는다 | `grep -rn "from '\.\./\.\./pixi\|from '\.\./\.\./dom" src/game` → 0건 |
 | `src/dom/`은 `src/pixi`를 import 하지 않는다 | `grep -rn "from '\.\./\.\./pixi" src/dom` → 0건 |
-| `src/dom/`은 도메인을 **타입으로만** 참조한다 | 아래 §6 부채 2·3 참조 (현재 2건 위반) |
+| `src/dom/`은 도메인을 **타입으로만** 참조한다 | 위반 0건. 아래 검사 스크립트로 확인한다 |
 | Presenter는 `src/pixi/scenes/`에만 있다 | 도메인 호출과 뷰 모델 조립이 일어나는 유일한 곳 |
+
+세 번째 규칙은 `grep`으로 잡히지 않는다. 멀티라인 import와 `import type` / 인라인 `type` 두 표기를 모두 봐야 한다.
+
+```bash
+node -e "
+const fs=require('fs');
+let bad=0;
+for (const f of fs.readdirSync('src/dom/screens').filter(f=>f.endsWith('.ts')&&!f.endsWith('.test.ts'))) {
+  const s=fs.readFileSync('src/dom/screens/'+f,'utf8');
+  for (const [,isType,clause,spec] of s.matchAll(/import(\s+type)?\s+([\s\S]*?)from\s+'([^']+)'/g)) {
+    if(!spec.includes('/game/')) continue;
+    const typeOnly = !!isType || clause.replace(/[{}\s]/g,'').split(',').filter(Boolean).every(x=>x.startsWith('type'));
+    if(!typeOnly){ console.log('VALUE import:', f, spec, clause.replace(/\s+/g,' ').trim()); bad++; }
+  }
+}
+console.log(bad===0 ? 'OK' : bad+' violations');
+"
+```
 
 ### 각 계층의 책임
 
@@ -227,7 +245,6 @@ onDrop(source, slotId)                    // 드래그가 끝난 뒤에야 rende
 이 문서가 서술하는 규칙과 실제 코드가 어긋나는 지점이다.
 
 1. **뷰 계약이 두 종류다.** Stage·DeckBuild·Equipment·Growth·Battlefield는 `render(model)` 단방향이다. Title·MainMenu·SaveSlot·Loader는 `setStatus` / `setBusy` / `renderSlots` 같은 명령형 setter를 노출하며, Presenter가 뷰 내부 상태를 직접 조작한다. Passive View 규칙이 서기 전에 만든 화면이다.
-2. **`src/dom/screens/stage-view.ts`가 도메인 함수를 호출한다.** `isStageUnlocked`를 뷰에서 부른다. 잠금 여부는 뷰 모델 필드로 받아야 한다. **§1의 "타입으로만 참조" 규칙을 어기는 유일한 뷰다.**
 
 ## 7. 테스트 경계
 

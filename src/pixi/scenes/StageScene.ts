@@ -1,5 +1,9 @@
 import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
-import { createStageView, type StageView } from '../../dom/screens/stage-view';
+import {
+  createStageView,
+  type StageEntryModel,
+  type StageView,
+} from '../../dom/screens/stage-view';
 import {
   createGameSession,
   createSaveSlotStateFromGameSession,
@@ -119,14 +123,22 @@ export class StageScene implements Scene {
 
   private renderView(status: string, statusIsError = false): void {
     this.stageView.render({
-      stages: this.stageDefinitions,
-      progress: this.session.stageProgress,
+      stages: this.buildStageEntries(),
       selectedStageId: this.selectedStageId,
       lastBattleResult: this.lastBattleResult,
       status,
       statusIsError,
       busy: this.isStartingBattle || this.isLoggingOut,
     });
+  }
+
+  /** 잠금·클리어 판정을 여기서 끝내 뷰가 도메인 규칙을 부르지 않게 한다. */
+  private buildStageEntries(): StageEntryModel[] {
+    return this.stageDefinitions.map((definition) => ({
+      definition,
+      unlocked: isStageUnlocked(definition, this.session.stageProgress),
+      cleared: this.session.stageProgress.clearedStageIds.includes(definition.id),
+    }));
   }
 
   private selectStage(stageId: string): void {
