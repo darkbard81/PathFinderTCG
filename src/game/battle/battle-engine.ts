@@ -25,6 +25,7 @@ import type {
   ActiveSkillBattleAction,
   AttackBattleAction,
   BattleAutomatedTurnResult,
+  BattleAutomatedTurnStep,
   BattleAutomationAction,
   BattleAvailableActions,
   BattleAbilityEffectExpiration,
@@ -630,61 +631,71 @@ export function runAutomatedTurnUntilBlockDecision(
 ): BattleAutomatedTurnResult {
   const events: BattleTurnEvent[] = [];
   let actionCount = Math.max(0, options.initialActionCount ?? 0);
-  if (runtime.currentSide !== side) {
-    return {
-      events,
-      blockDecision: null,
-      actionCount,
-    };
-  }
 
-  while (runtime.currentSide === side) {
-    if (runtime.phase === 'GAME_OVER') {
-      break;
-    }
+  for (;;) {
+    const step = stepAutomatedTurn(runtime, side, { ...options, initialActionCount: actionCount });
+    events.push(...step.events);
+    actionCount = step.actionCount;
 
-    if (actionCount >= MAX_AUTOMATED_ACTIONS_PER_TURN) {
-      events.push({
-        type: 'ACTION_LIMIT',
-        side,
-        actionCount,
-      });
-      events.push(...applyTurnEnd(runtime, 'ACTION_LIMIT'));
-      break;
-    }
-
-    const action = chooseAutomatedBattleAction(runtime, side);
-    if (!action) {
-      events.push(...applyTurnEnd(runtime, 'NO_ACTION'));
-      break;
-    }
-
-    const blockDecision = createBlockDecisionForAutomatedAction(runtime, action, options);
-    if (blockDecision) {
+    if (step.blockDecision || step.finished) {
       return {
         events,
-        blockDecision,
+        blockDecision: step.blockDecision,
         actionCount,
       };
     }
-
-    applyAutomationAction(runtime, action);
-    actionCount += 1;
-    events.push({
-      type: 'ACTION',
-      side,
-      action,
-    });
-
-    if (applyAutoTurnEndIfStalled(runtime, events)) {
-      break;
-    }
   }
+}
+
+/**
+ * 자동 턴을 한 행동만 진행한다.
+ * 연출이 한 수씩 보여줄 수 있도록 진행을 쪼갠 것이며, 판정은 전부 기존 액션 함수가 그대로 수행한다.
+ * `finished`가 true이면 이 진영의 턴은 더 진행할 것이 없다.
+ */
+export function stepAutomatedTurn(
+  runtime: BattleRuntimeState,
+  side: BattleSide,
+  options: RunAutomatedTurnUntilBlockDecisionOptions = {},
+): BattleAutomatedTurnStep {
+  const events: BattleTurnEvent[] = [];
+  const actionCount = Math.max(0, options.initialActionCount ?? 0);
+  const stop = (finished: boolean): BattleAutomatedTurnStep => ({
+    events,
+    blockDecision: null,
+    actionCount,
+    finished,
+  });
+
+  if (runtime.currentSide !== side || runtime.phase === 'GAME_OVER') {
+    return stop(true);
+  }
+
+  if (actionCount >= MAX_AUTOMATED_ACTIONS_PER_TURN) {
+    events.push({ type: 'ACTION_LIMIT', side, actionCount });
+    events.push(...applyTurnEnd(runtime, 'ACTION_LIMIT'));
+    return stop(true);
+  }
+
+  const action = chooseAutomatedBattleAction(runtime, side);
+  if (!action) {
+    events.push(...applyTurnEnd(runtime, 'NO_ACTION'));
+    return stop(true);
+  }
+
+  const blockDecision = createBlockDecisionForAutomatedAction(runtime, action, options);
+  if (blockDecision) {
+    // 멈춘 공격은 아직 적용하지 않았다. 호출자가 방어 선택을 받아 직접 적용하고 이어서 부른다.
+    return { events, blockDecision, actionCount, finished: false };
+  }
+
+  applyAutomationAction(runtime, action);
+  events.push({ type: 'ACTION', side, action });
 
   return {
     events,
     blockDecision: null,
-    actionCount,
+    actionCount: actionCount + 1,
+    finished: applyAutoTurnEndIfStalled(runtime, events) || runtime.currentSide !== side,
   };
 }
 

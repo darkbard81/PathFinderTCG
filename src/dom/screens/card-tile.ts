@@ -51,6 +51,8 @@ export function createCardTileElement(
   image.src = tile.artUrl;
   image.alt = '';
   image.loading = 'lazy';
+  // 이미지는 브라우저 기본 드래그 대상이다. 켜 두면 전장에서 우리 포인터 드래그가 pointercancel로 끊긴다.
+  image.draggable = false;
   // 이미지가 없으면 배경 그라디언트만 남긴다. 수치는 그대로 읽을 수 있다.
   image.addEventListener('error', () => image.remove());
   element.append(image);

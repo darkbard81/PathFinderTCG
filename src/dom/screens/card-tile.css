@@ -13,6 +13,8 @@
   box-shadow: var(--pf-card-tile-shadow);
   overflow: hidden;
   cursor: pointer;
+  /* 전장에서 카드를 끌 때 수치 글자가 선택되어 드래그를 가로채지 않게 한다. */
+  user-select: none;
 }
 
 .pf-card-tile:hover:not(:disabled) {

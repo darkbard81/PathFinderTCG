@@ -1,0 +1,458 @@
+/*
+ * 전장 화면.
+ * 카드 크기·간격·레일 폭은 뷰포트마다 달라지므로 battlefield-view가 루트에 인라인 변수로 넣는다.
+ * 이 파일은 그 변수를 배치에만 쓰고 스스로 계산하지 않는다.
+ */
+.pf-battlefield {
+  position: absolute;
+  inset: 0;
+  font-family: inherit;
+  overflow: hidden;
+}
+
+/* 보드는 가로 가운데, 세로는 위 여백부터 쌓는다. 손패는 이 아래에 겹쳐 올라온다. */
+.pf-battlefield__board {
+  position: absolute;
+  top: var(--pf-battle-padding-y);
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--pf-battle-board-width);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pf-battlefield__half {
+  display: grid;
+  grid-template-columns: repeat(5, var(--pf-battle-card-width));
+  grid-template-rows: repeat(2, var(--pf-battle-card-height));
+  gap: var(--pf-battle-gap);
+}
+
+.pf-battlefield__divider {
+  height: var(--pf-battle-divider-height);
+  align-self: stretch;
+  background: var(--pf-battlefield-divider-background);
+  margin: 0 12px;
+}
+
+/* 격자 3열은 더미 열 사이에 놓인다. 행 순서는 뷰가 넣는 순서를 그대로 따른다. */
+.pf-battlefield__slot {
+  grid-column: span 1;
+  position: relative;
+  box-sizing: border-box;
+  border: var(--pf-battlefield-slot-empty-border);
+  border-radius: var(--pf-battlefield-slot-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf-battlefield__slot.has-card {
+  border-color: transparent;
+}
+
+/*
+ * 칸 강조 오버레이다.
+ * 카드 이미지가 칸을 꽉 채우므로 칸 자체의 배경과 테두리로는 카드가 선 칸을 강조할 수 없다.
+ * 카드보다 위에 덮는 레이어를 하나 두고 여기에만 강조를 그린다.
+ */
+.pf-battlefield__slot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: 5;
+  display: none;
+  border-radius: calc(var(--pf-battlefield-slot-radius) + 2px);
+  pointer-events: none;
+}
+
+.pf-battlefield__slot.is-legal::after,
+.pf-battlefield__slot.is-drop-target::after {
+  display: block;
+}
+
+/*
+ * 행동이 남은 카드에는 아무 표시도 하지 않는다.
+ * 소진한 카드가 이미 회색이라 "회색이 아니면 아직 쓸 수 있다"로 읽힌다.
+ * 여기에 링을 하나 더 얹으면 판이 표시로 뒤덮여 오히려 무슨 뜻인지 읽히지 않는다.
+ *
+ * 아래 둘은 드래그 중에만 켠다. render를 거치지 않고 battle-drag가 직접 class를 켜고 끈다.
+ */
+.pf-battlefield__slot.is-legal::after {
+  background: var(--pf-battlefield-slot-legal-background);
+  box-shadow: var(--pf-battlefield-slot-legal-ring);
+}
+
+/* 커서 아래 칸이다. 드래그 중 강조가 겹치면 이쪽이 이겨야 하므로 마지막에 둔다. */
+.pf-battlefield__slot.is-drop-target::after {
+  background: var(--pf-battlefield-slot-drop-background);
+  box-shadow: var(--pf-battlefield-slot-drop-ring);
+}
+
+/* 이번 턴에 할 일을 끝낸 내 카드다. 집히지 않으므로 그렇게 보이게 한다. */
+.pf-battlefield__slot.is-spent .pf-battlefield__board-card {
+  filter: grayscale(0.55);
+  opacity: 0.62;
+  cursor: default;
+}
+
+.pf-battlefield__board-card.is-dragging {
+  opacity: 0.3;
+}
+
+/*
+ * 활성 스킬 배지다.
+ * 카드 몸통과 잡는 곳을 나눠서, 같은 적 카드에 놓아도 공격인지 스킬인지 되묻지 않는다.
+ * 네 모서리 수정구슬을 피해 왼쪽 가운데에 둔다.
+ */
+.pf-battlefield__skill {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  /* 칸 강조 오버레이(5)보다 위여야 강조가 켜져도 배지 색이 흐려지지 않는다. */
+  z-index: 6;
+  min-width: var(--pf-battlefield-skill-size);
+  height: var(--pf-battlefield-skill-size);
+  padding: 0 4px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: var(--pf-battlefield-skill-font-size);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--pf-battlefield-skill-color);
+  border: var(--pf-battlefield-skill-border);
+  border-radius: calc(var(--pf-battlefield-skill-size) / 2);
+  box-shadow: var(--pf-battlefield-skill-shadow);
+  cursor: grab;
+}
+
+.pf-battlefield__skill--heal {
+  background: var(--pf-battlefield-skill-heal-background);
+}
+
+.pf-battlefield__skill--damage {
+  background: var(--pf-battlefield-skill-damage-background);
+}
+
+.pf-battlefield__skill--buff_attack {
+  background: var(--pf-battlefield-skill-buff-background);
+}
+
+.pf-battlefield__skill.is-dragging {
+  opacity: 0.4;
+}
+
+/* 빈 슬롯의 인접 지배력 합계다. 손패를 집기 전에 무엇을 놓을 수 있는지 미리 읽게 한다. */
+.pf-battlefield__dominance {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 11px;
+  font-size: var(--pf-battlefield-slot-dominance-font-size);
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--pf-battlefield-slot-dominance-color);
+  background: var(--pf-battlefield-slot-dominance-background);
+}
+
+.pf-battlefield__piles {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-battle-gap);
+}
+
+.pf-battlefield__pile {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--pf-battlefield-pile-background);
+  border: var(--pf-battlefield-pile-border);
+  border-radius: var(--pf-battlefield-slot-radius);
+}
+
+.pf-battlefield__pile-label {
+  font-size: var(--pf-battlefield-pile-label-font-size);
+  letter-spacing: 0.06em;
+  color: var(--pf-battlefield-pile-label-color);
+}
+
+.pf-battlefield__pile-count {
+  font-size: var(--pf-battlefield-pile-count-font-size);
+  font-weight: 700;
+  color: var(--pf-battlefield-pile-count-color);
+}
+
+.pf-battlefield__deck {
+  grid-column: 5;
+  grid-row: 1 / span 2;
+  position: relative;
+}
+
+/* 남은 덱은 카드 몇 장을 어긋나게 겹쳐 두께로 보여준다. 맨 위 장만 수치를 표시한다. */
+.pf-battlefield__deck-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--pf-battle-card-height);
+  background: var(--pf-battlefield-deck-stack-background);
+  border: var(--pf-battlefield-deck-stack-border);
+  border-radius: var(--pf-battlefield-slot-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pf-battlefield__rail {
+  position: absolute;
+  top: var(--pf-battle-padding-y);
+  width: var(--pf-battle-rail-width);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-battlefield-rail-gap);
+  padding: var(--pf-battlefield-rail-padding);
+  background: var(--pf-battlefield-rail-background);
+  border: var(--pf-battlefield-rail-border);
+  border-radius: var(--pf-battlefield-rail-radius);
+}
+
+.pf-battlefield__rail--left {
+  left: var(--pf-battle-rail-margin);
+}
+
+.pf-battlefield__rail--right {
+  right: var(--pf-battle-rail-margin);
+}
+
+.pf-battlefield__turn-banner {
+  padding: 8px 10px;
+  border-radius: 5px;
+  font-size: var(--pf-battlefield-rail-value-font-size);
+  font-weight: 700;
+  text-align: center;
+  color: var(--pf-battlefield-rail-value-color);
+  background: var(--pf-battlefield-turn-banner-background);
+}
+
+.pf-battlefield__turn-banner.is-enemy {
+  background: var(--pf-battlefield-turn-banner-enemy-background);
+}
+
+.pf-battlefield__rail-label {
+  font-size: var(--pf-battlefield-rail-label-font-size);
+  letter-spacing: 0.06em;
+  color: var(--pf-battlefield-rail-label-color);
+}
+
+.pf-battlefield__rail-value {
+  margin: -6px 0 0;
+  font-size: var(--pf-battlefield-rail-value-font-size);
+  font-weight: 700;
+  color: var(--pf-battlefield-rail-value-color);
+}
+
+.pf-battlefield__rail-spacer {
+  flex: 1;
+  min-height: 0;
+}
+
+.pf-battlefield__status {
+  margin: 0;
+  font-size: var(--pf-battlefield-log-font-size);
+  line-height: var(--pf-battlefield-log-line-height);
+  color: var(--pf-battlefield-log-color);
+}
+
+.pf-battlefield__status.is-error {
+  color: var(--pf-color-danger);
+}
+
+.pf-battlefield__button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pf-color-primary);
+  background: var(--pf-surface-slot-ready);
+  border: var(--pf-card-workbench-panel-border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.pf-battlefield__button:hover:not(:disabled) {
+  border-color: var(--pf-color-primary-warm);
+}
+
+.pf-battlefield__button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/*
+ * 손패는 아래에서 올라오는 서랍이다.
+ * 접힌 높이는 카드 위쪽 코스트·지배력 수정구슬이 걸치도록 잡아 접힌 채로도 배치 가능 여부를 읽을 수 있다.
+ */
+.pf-battlefield__hand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  background: var(--pf-battlefield-hand-background);
+  padding: var(--pf-battlefield-hand-padding);
+  transform: translateY(calc(100% - var(--pf-battle-hand-peek)));
+  transition: transform 0.22s ease;
+}
+
+.pf-battlefield__hand:hover,
+.pf-battlefield__hand:focus-within {
+  transform: translateY(0);
+}
+
+/*
+ * 카드를 끄는 동안에는 손패를 도로 접는다.
+ * 펼친 손패가 내 후위 줄을 가려서, 열어 둔 채로는 어디에 놓는지가 보이지 않는다.
+ * 끌고 있는 카드는 고스트가 커서를 따라가므로 접혀도 잃어버리지 않는다.
+ */
+.pf-battlefield.is-dragging .pf-battlefield__hand {
+  transform: translateY(calc(100% - var(--pf-battle-hand-peek)));
+}
+
+.pf-battlefield__hand-cards {
+  display: flex;
+  gap: var(--pf-battlefield-hand-gap);
+}
+
+.pf-battlefield__hand-card.is-unplayable {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pf-battlefield__hand-card.is-dragging {
+  opacity: 0.3;
+}
+
+/*
+ * 커서를 따라다니는 사본이다. 원본은 자리에 남아 어디서 뽑았는지 보이게 한다.
+ * 고스트도 button이라 오버레이 기본 규칙에 걸린다. 선택자를 한 단계 더 붙여 입력을 확실히 끈다.
+ */
+.pf-battlefield .pf-battlefield__drag-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  opacity: 0.92;
+  box-shadow: var(--pf-battlefield-ghost-shadow);
+  pointer-events: none;
+}
+
+.pf-battlefield__hand-empty {
+  margin: 0;
+  height: var(--pf-battle-card-height);
+  display: flex;
+  align-items: center;
+  font-size: var(--pf-battlefield-log-font-size);
+  color: var(--pf-battlefield-log-color);
+}
+
+/* 좌측 레일의 전투 기록이다. 최신 줄이 아래에 쌓이고 뷰가 매번 끝으로 스크롤한다. */
+.pf-battlefield__log {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  font-size: var(--pf-battlefield-log-font-size);
+  line-height: var(--pf-battlefield-log-line-height);
+  color: var(--pf-battlefield-log-color);
+}
+
+.pf-battlefield__log li {
+  padding: 3px 0;
+  border-bottom: var(--pf-card-workbench-divider-border);
+  word-break: keep-all;
+}
+
+.pf-battlefield__log li:last-child {
+  color: var(--pf-color-primary);
+  border-bottom: none;
+}
+
+/* 방어 선택과 전투 결과가 함께 쓰는 모달이다. 닫혀 있으면 입력을 통과시킨다. */
+.pf-battlefield__dialog {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--pf-surface-modal-backdrop);
+}
+
+.pf-battlefield__dialog.is-open {
+  display: flex;
+}
+
+.pf-battlefield__dialog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+  max-width: 460px;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--pf-surface-modal);
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 8px;
+  box-shadow: var(--pf-card-workbench-panel-shadow);
+}
+
+.pf-battlefield__dialog-panel.is-win {
+  border: 1px solid var(--pf-color-primary-warm);
+}
+
+.pf-battlefield__dialog-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--pf-color-primary-warm);
+}
+
+.pf-battlefield__dialog-body {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--pf-color-secondary);
+  white-space: pre-line;
+}
+
+/*
+ * 연출 캔버스 자리다.
+ * 배경을 그리는 본 캔버스는 DOM 오버레이 아래에 있어서 카드 위에 무언가를 얹을 수 없다.
+ * 그래서 오버레이 안쪽 카드 위에 캔버스를 한 장 더 두고 여기서만 타격 연출을 그린다.
+ */
+.pf-battlefield__effects {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.pf-battlefield__effects-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

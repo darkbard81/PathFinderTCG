@@ -2,8 +2,10 @@ import { DomLayer } from './dom/DomLayer';
 import { loadThemeFont } from './dom/theme-font';
 import { joinAssetUrl } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
+import type { StageBattleResult } from './game/stage/types';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
+import { BattlefieldScene } from './pixi/scenes/BattlefieldScene';
 import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { EquipmentScene } from './pixi/scenes/EquipmentScene';
 import { GrowthScene } from './pixi/scenes/GrowthScene';
@@ -13,7 +15,6 @@ import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
 import { StageScene } from './pixi/scenes/StageScene';
 import { TitleScene } from './pixi/scenes/TitleScene';
-import { ViewportProbeScene } from './pixi/scenes/ViewportProbeScene';
 import { createGameServices } from './services/game-services';
 import { UI_THEME } from './theme';
 
@@ -114,12 +115,13 @@ void (async (): Promise<void> => {
     );
   }
 
-  function showStage(session: GameSession): Promise<void> {
+  function showStage(session: GameSession, lastBattleResult?: StageBattleResult): Promise<void> {
     return router.goto(
       new StageScene({
         services,
         backgroundImageUrl,
         session,
+        ...(lastBattleResult ? { lastBattleResult } : {}),
         onBack: () => {
           void showSaveSlot();
         },
@@ -136,7 +138,7 @@ void (async (): Promise<void> => {
           void showTitle(message);
         },
         onStartBattle: (nextSession, stageId) => {
-          void showBattlePending(nextSession, stageId);
+          void showBattlefield(nextSession, stageId);
         },
       }),
     );
@@ -185,15 +187,18 @@ void (async (): Promise<void> => {
     );
   }
 
-  // Battlefield 이식 전 임시 착지점.
-  function showBattlePending(session: GameSession, stageId: string): Promise<void> {
+  function showBattlefield(session: GameSession, stageId: string): Promise<void> {
     return router.goto(
-      new ViewportProbeScene({
-        preloadSummary: [
-          `Battle ready · Stage ${stageId}`,
-          `Slot ${session.slotId} · ${session.saveName}`,
-          `Leader ${session.deck.leader.instance.name}`,
-        ].join('\n'),
+      new BattlefieldScene({
+        services,
+        backgroundImageUrl,
+        assetBaseUrl: ASSET_BASE_URL,
+        session,
+        stageId,
+        // 전투가 끝났으면 보상까지 반영해 저장한 세션이 돌아온다. 결과는 Stage가 요약으로 보여준다.
+        onLeave: (nextSession, result) => {
+          void showStage(nextSession, result ?? undefined);
+        },
       }),
     );
   }

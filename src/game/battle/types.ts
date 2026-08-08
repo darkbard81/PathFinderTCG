@@ -122,6 +122,11 @@ export type BattleAutomatedTurnResult = {
   actionCount: number;
 };
 
+/** 자동 턴을 한 행동만 진행한 결과다. `finished`면 이 진영의 턴에 더 진행할 것이 없다. */
+export type BattleAutomatedTurnStep = BattleAutomatedTurnResult & {
+  finished: boolean;
+};
+
 export type BattleTurnEndReason = 'MANUAL' | 'STALLED' | 'NO_ACTION' | 'ACTION_LIMIT';
 
 export type BattleTurnEvent =

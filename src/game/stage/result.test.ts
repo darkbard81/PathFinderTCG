@@ -15,6 +15,14 @@ import {
 
 const TEST_STAGE_DEFINITION = requireStageDefinition('test-stage-dark');
 
+/**
+ * 전투용 셔플을 고정한다.
+ * 이 값은 Fisher-Yates에서 항상 자기 자리를 뽑아 원본 덱 순서를 그대로 남긴다.
+ * 고정하지 않으면 어느 카드가 초기 손패로 빠지는지가 매 실행 달라져,
+ * 묘지에 넣은 카드의 순서에 기대는 보상 검증이 간헐적으로 어긋난다.
+ */
+const PRESERVE_DECK_ORDER = (): number => 0.999_999;
+
 describe('stage battle result', () => {
   it('maps enemy leader defeat to a win result', async () => {
     const runtime = await createRuntime();
@@ -361,7 +369,11 @@ describe('stage battle result', () => {
 
 async function createRuntime(): Promise<BattleRuntimeState> {
   const state = await createInitialSaveState({ slotId: 1 });
-  return createInitialBattleRuntime(createGameSession(state), TEST_STAGE_DEFINITION);
+  return createInitialBattleRuntime(
+    createGameSession(state),
+    TEST_STAGE_DEFINITION,
+    PRESERVE_DECK_ORDER,
+  );
 }
 
 function createRewardCard(card: CardInstance, instanceId: string): CardInstance {
