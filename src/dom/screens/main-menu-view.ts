@@ -52,7 +52,7 @@ export function createMainMenuView(options: MainMenuViewOptions): MainMenuView {
 
   const title = document.createElement('h1');
   title.className = 'pf-main-menu__title';
-  title.textContent = 'PATHFINDER TCG';
+  title.textContent = 'ARCANE FRONTIER TCG';
 
   const subtitle = document.createElement('p');
   subtitle.className = 'pf-main-menu__subtitle';
