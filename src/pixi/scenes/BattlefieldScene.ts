@@ -22,6 +22,7 @@ import { ACTIVE_SKILL_DEFINITIONS } from '../../game/battle/ability-handlers';
 import {
   applyActiveSkillAction,
   applyAttackAction,
+  applyAutoTurnEndIfStalled,
   applyBlockAction,
   applyMoveAction,
   applyPlaceAction,
@@ -48,6 +49,13 @@ import type {
 } from '../../game/battle/types';
 import type { GameSession } from '../../game/save/session';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
+import {
+  createBattleEffectsLayer,
+  readBattleEffectRequest,
+  toBattleEffectRequest,
+  type BattleEffectKind,
+  type BattleEffects,
+} from '../battle/battle-effects';
 import { SequenceRunner } from '../sequence/SequenceRunner';
 import type { SequenceTicker, SequenceTickerFrame } from '../sequence/sequence-types';
 import { UI_THEME } from '../../theme';
@@ -58,6 +66,12 @@ const TITLE_BACKGROUND_ALIAS = 'ui.title-screen';
 
 /** 적 행동 하나를 보여주고 다음으로 넘어가기 전까지 두는 간격이다. */
 const ENEMY_STEP_DELAY_MS = 620;
+
+/**
+ * 자동으로 연달아 넘길 수 있는 턴 수의 상한이다.
+ * 양측 다 둘 수가 없으면 턴이 영원히 오가므로, 그 전에 멈추고 조작을 돌려준다.
+ */
+const MAX_AUTO_TURN_CHAIN = 16;
 
 const PHASE_LABELS: Record<BattlePhase, string> = {
   MAIN: '메인',
@@ -85,6 +99,7 @@ export type BattlefieldSceneOptions = {
   stageId: string;
   onLeave: (session: GameSession) => void;
   view?: BattlefieldView;
+  effects?: BattleEffects;
   random?: () => number;
 };
 
@@ -92,7 +107,7 @@ export type BattlefieldSceneOptions = {
  * 전장 화면이다.
  * 규칙 판정은 전부 battle-engine이 맡고, 이 Scene은 런타임 상태를 뷰 모델로 옮기고
  * 드래그 결과를 엔진 액션으로 바꿔 적용하는 일만 한다.
- * 적 차례는 즉시 계산해 로그로 보여준다. 한 수씩 보여주는 연출은 다음 단계에서 붙인다.
+ * 적 차례는 한 행동씩 재생하고, 내가 둘 수 없는 턴은 자동으로 넘긴다.
  */
 export class BattlefieldScene implements Scene {
   public readonly view = new Container({
@@ -113,6 +128,8 @@ export class BattlefieldScene implements Scene {
   private pendingBlock: { decision: BattleBlockDecision; actionCount: number } | null = null;
   /** 적 차례를 한 수씩 재생하는 중이면 true다. 이 동안에는 내 조작을 받지 않는다. */
   private playingEnemyTurn = false;
+  /** 연출 캔버스는 화면에 들어온 뒤에야 만들 수 있다. 없으면 연출만 건너뛴다. */
+  private effects: BattleEffects | null = null;
 
   /**
    * SequenceRunner에 넘길 프레임 공급원이다.
@@ -130,6 +147,7 @@ export class BattlefieldScene implements Scene {
   });
 
   public constructor(private readonly options: BattlefieldSceneOptions) {
+    this.effects = options.effects ?? null;
     const stageDefinition = requireStageDefinition(options.stageId);
     this.stageName = stageDefinition.name;
     this.runtime = createInitialBattleRuntime(
@@ -156,9 +174,16 @@ export class BattlefieldScene implements Scene {
     this.active = true;
     this.renderView('전투를 시작합니다.');
 
+    await this.ensureEffects();
     await this.ensureBackground();
     if (this.layout) {
       this.layoutBackground(this.layout);
+    }
+
+    // 첫 턴부터 둘 수 없는 배치도 있다. 시작하자마자 멈춰 있지 않게 여기서도 확인한다.
+    // 화면 전환을 적 턴 한 판이 끝날 때까지 붙잡지 않도록 기다리지 않는다.
+    if (this.autoEndStalledPlayerTurn()) {
+      void this.advanceTurns(0);
     }
   }
 
@@ -166,6 +191,34 @@ export class BattlefieldScene implements Scene {
     this.active = false;
     // 대기 중인 연출을 깨워 보낸다. 남겨 두면 적 턴 재생 루프가 영원히 멈춘 채로 남는다.
     this.sequence.destroy();
+    this.effects?.destroy();
+    this.effects = null;
+  }
+
+  private async ensureEffects(): Promise<void> {
+    if (this.effects) {
+      return;
+    }
+
+    try {
+      const effects = await createBattleEffectsLayer({
+        host: this.battlefieldView.effectsHost,
+        resolveSlotCenter: (slotId) => this.battlefieldView.getSlotCenter(slotId),
+      });
+
+      if (!this.active) {
+        effects.destroy();
+        return;
+      }
+
+      this.effects = effects;
+      if (this.layout) {
+        effects.resize(this.layout);
+      }
+    } catch {
+      // 연출은 없어도 전투가 굴러간다. 캔버스를 못 만들면 조용히 포기한다.
+      this.effects = null;
+    }
   }
 
   public update(ticker: Ticker): void {
@@ -177,6 +230,7 @@ export class BattlefieldScene implements Scene {
   public resize(layout: ViewportLayout): void {
     this.layout = layout;
     this.layoutBackground(layout);
+    this.effects?.resize(layout);
     // 카드 크기가 뷰포트에 따라 달라진다. 배율이 바뀌면 보드를 다시 그려야 한다.
     this.renderView();
   }
@@ -191,7 +245,50 @@ export class BattlefieldScene implements Scene {
     }
 
     this.appendLog(applyTurnEnd(this.runtime, 'MANUAL'));
-    void this.runEnemyTurn(0);
+    void this.advanceTurns(0);
+  }
+
+  /**
+   * 내가 다시 둘 수 있게 될 때까지 차례를 넘긴다.
+   *
+   * 적 차례를 재생하고, 돌아온 내 차례에 둘 수 있는 수가 하나도 없으면 그 턴을 자동으로 넘긴다.
+   * 손패가 전부 비싸고 전장도 꽉 차면 아무것도 못 하는 턴이 생기는데,
+   * 그때 턴 종료를 직접 누르게 하면 무엇을 놓쳤는지 모른 채 버튼만 찾게 된다.
+   */
+  private async advanceTurns(initialActionCount: number): Promise<void> {
+    let actionCount = initialActionCount;
+
+    for (let guard = 0; guard < MAX_AUTO_TURN_CHAIN; guard += 1) {
+      await this.runEnemyTurn(actionCount);
+      if (!this.active || this.pendingBlock || this.runtime.outcome) {
+        return;
+      }
+
+      if (!this.autoEndStalledPlayerTurn()) {
+        return;
+      }
+
+      actionCount = 0;
+    }
+
+    // 양측 다 둘 수가 없으면 여기에 닿는다. 무한히 넘기지 않고 조작을 돌려준다.
+    this.renderView('양측 모두 둘 수 있는 수가 없습니다.', true);
+  }
+
+  /** 내 차례에 둘 수 있는 수가 없으면 턴을 넘긴다. 넘겼으면 true다. */
+  private autoEndStalledPlayerTurn(): boolean {
+    if (this.runtime.currentSide !== 'player' || this.runtime.phase === 'GAME_OVER') {
+      return false;
+    }
+
+    const events: BattleTurnEvent[] = [];
+    if (!applyAutoTurnEndIfStalled(this.runtime, events)) {
+      return false;
+    }
+
+    this.appendLog(events);
+    this.renderView('둘 수 있는 수가 없어 턴을 넘겼습니다.');
+    return true;
   }
 
   /**
@@ -201,7 +298,6 @@ export class BattlefieldScene implements Scene {
    */
   private async runEnemyTurn(initialActionCount: number): Promise<void> {
     if (this.runtime.currentSide !== 'enemy' || this.runtime.phase === 'GAME_OVER') {
-      this.renderView('내 차례입니다.');
       return;
     }
 
@@ -229,7 +325,7 @@ export class BattlefieldScene implements Scene {
         break;
       }
 
-      await this.wait(ENEMY_STEP_DELAY_MS);
+      await this.playStepFeedback(step.events);
       if (!this.active) {
         return;
       }
@@ -239,11 +335,37 @@ export class BattlefieldScene implements Scene {
     this.renderView(this.runtime.outcome ? '' : '내 차례입니다.');
   }
 
+  /**
+   * 적 행동 하나를 읽을 시간을 준다.
+   * 연출이 나가면 그 길이가 곧 간격이다. 연출과 고정 간격을 겹치면 한 수가 너무 길어진다.
+   */
+  private async playStepFeedback(events: readonly BattleTurnEvent[]): Promise<void> {
+    const request = readBattleEffectRequest(events);
+    if (request && this.effects) {
+      await this.effects.play(request);
+      return;
+    }
+
+    await this.wait(ENEMY_STEP_DELAY_MS);
+  }
+
   private wait(durationMs: number): Promise<void> {
     return this.sequence
       .createSequence()
       .add({ timer: 0, duration: durationMs, action: 'wait' })
       .play();
+  }
+
+  /** 내 행동의 연출이다. 기다리지 않는다. 내 조작은 곧바로 이어질 수 있어야 한다. */
+  private playEffect(kind: BattleEffectKind, slotId: BattleSlotId, value: number): void {
+    void this.effects?.play({ kind, slotId, value });
+  }
+
+  private playEffectFor(action: Parameters<typeof toBattleEffectRequest>[0]): void {
+    const request = toBattleEffectRequest(action);
+    if (request) {
+      void this.effects?.play(request);
+    }
   }
 
   /** 방어 선택 결과를 적용한다. 막지 않기를 고르면 원래 공격이 그대로 들어온다. */
@@ -274,8 +396,14 @@ export class BattlefieldScene implements Scene {
 
     this.appendLog([{ type: 'ACTION', side: 'enemy', action: pending.decision.attackAction }]);
     this.renderView(blockAction ? '공격을 막았습니다.' : '공격을 그대로 받았습니다.');
+    // 막았다면 피해는 원래 대상이 아니라 막은 유닛이 받는다. 연출도 그 칸에서 나야 한다.
+    this.playEffect(
+      'damage',
+      blockAction ? blockAction.blockerSlotId : pending.decision.attackAction.toSlotId,
+      pending.decision.attackAction.attack,
+    );
     // 멈춘 공격도 한 번의 행동이다. 이어서 돌릴 때 행동 제한 계산이 어긋나지 않게 1을 더한다.
-    void this.runEnemyTurn(pending.actionCount + 1);
+    void this.advanceTurns(pending.actionCount + 1);
   }
 
   /** 내가 카드를 움직일 수 있는 상태인지다. 턴 종료 조건과 같다. */
@@ -343,6 +471,8 @@ export class BattlefieldScene implements Scene {
 
       this.log = [...this.log, `나: ${message}`];
       this.renderView(message);
+      // 방금 수로 둘 것이 다 떨어졌을 수 있다. 그러면 여기서 바로 턴이 넘어간다.
+      void this.advanceTurns(0);
     } catch (error: unknown) {
       this.renderView(error instanceof Error ? error.message : String(error), true);
     }
@@ -372,6 +502,7 @@ export class BattlefieldScene implements Scene {
       }
 
       applyActiveSkillAction(this.runtime, action);
+      this.playEffectFor(action);
       return `${SKILL_EFFECT_LABELS[action.effect]} ${action.value}을(를) 적용했습니다.`;
     }
 
@@ -396,10 +527,13 @@ export class BattlefieldScene implements Scene {
     const [blockAction] = listBlockActions(this.runtime, attackAction);
     if (blockAction) {
       applyBlockAction(this.runtime, blockAction);
+      // 막았으면 피해는 막은 유닛이 받는다. 연출도 그 칸에서 나야 한다.
+      this.playEffect('damage', blockAction.blockerSlotId, attackAction.attack);
       return `공격을 ${attackAction.attack} 피해로 선언했지만 적이 막았습니다.`;
     }
 
     applyAttackAction(this.runtime, attackAction);
+    this.playEffectFor(attackAction);
     return `${attackAction.attack} 피해로 공격했습니다.`;
   }
 

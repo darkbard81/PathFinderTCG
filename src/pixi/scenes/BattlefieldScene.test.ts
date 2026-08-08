@@ -6,6 +6,7 @@ import type {
   BattlefieldViewModel,
 } from '../../dom/screens/battlefield-view';
 import { applyTurnEnd, listAttackActions, listBlockActions } from '../../game/battle/battle-engine';
+import type { BattleEffects } from '../battle/battle-effects';
 import {
   INITIAL_HAND_SIZE,
   type BattleBlockDecision,
@@ -28,7 +29,7 @@ async function createSession(): Promise<GameSession> {
 }
 
 /** Scene의 비공개 조작을 테스트에서 직접 부르기 위한 표면이다. */
-type BattlefieldHarness = Pick<BattlefieldScene, 'resize' | 'update'> & {
+type BattlefieldHarness = Pick<BattlefieldScene, 'resize' | 'update' | 'enter'> & {
   playingEnemyTurn: boolean;
   runtime: BattleRuntimeState;
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
@@ -42,6 +43,14 @@ function createHarness(session: GameSession) {
   const view: BattlefieldView & { render: ReturnType<typeof vi.fn> } = {
     element: {} as HTMLElement,
     render: vi.fn(),
+    effectsHost: {} as HTMLElement,
+    getSlotCenter: () => null,
+  };
+  // 연출은 canvas가 필요하다. 대역을 넣어 어떤 행동에 무엇이 나가는지만 본다.
+  const effects: BattleEffects & { play: ReturnType<typeof vi.fn> } = {
+    play: vi.fn(() => Promise.resolve()),
+    resize: vi.fn(),
+    destroy: vi.fn(),
   };
   const onLeave = vi.fn();
   const scene = new BattlefieldScene({
@@ -51,12 +60,13 @@ function createHarness(session: GameSession) {
     stageId: listStageDefinitions()[0]!.id,
     onLeave,
     view,
+    effects,
     random: fixedRandom,
   });
 
   scene.resize({ width: 1024, height: 768, scale: 1 });
 
-  return { scene: scene as unknown as BattlefieldHarness, view, onLeave };
+  return { scene: scene as unknown as BattlefieldHarness, view, effects, onLeave };
 }
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -87,6 +97,66 @@ function lastModel(view: { render: ReturnType<typeof vi.fn> }): BattlefieldViewM
   }
 
   return call[0] as BattlefieldViewModel;
+}
+
+function placeOnField(
+  runtime: BattleRuntimeState,
+  card: BattleCardRuntimeState,
+  slotId: BattleSlotId,
+): void {
+  const participant = card.side === 'player' ? runtime.player : runtime.enemy;
+  participant.hand = participant.hand.filter((candidate) => candidate !== card);
+  card.zone = 'BATTLEFIELD';
+  card.battlefieldSlot = slotId;
+  // 등장 턴에는 공격할 수 없다. 0턴에 나온 것으로 두어 그 제한을 벗어난다.
+  card.enteredBattlefieldTurnNumber = 0;
+  card.handIndex = null;
+  runtime.battlefield.push(card);
+}
+
+async function createBlockScenario() {
+  const harness = createHarness(await createSession());
+  const { runtime } = harness.scene;
+
+  const [target, blocker] = runtime.player.hand;
+  const [attacker] = runtime.enemy.hand;
+  if (!target || !blocker || !attacker) {
+    throw new Error('시나리오를 세울 손패가 모자라다');
+  }
+
+  placeOnField(runtime, target, 'player:FC');
+  placeOnField(runtime, blocker, 'player:FR');
+  placeOnField(runtime, attacker, 'enemy:FC');
+  // 정의는 같은 카드끼리 공유한다. 능력을 붙이기 전에 이 인스턴스 몫으로 복사한다.
+  blocker.card = {
+    instance: blocker.card.instance,
+    definition: {
+      ...blocker.card.definition,
+      abilities: [
+        ...blocker.card.definition.abilities,
+        { id: 'guardian_block', category: 'GLOBAL', name: '수호', text: '' },
+      ],
+    },
+  };
+  attacker.card.instance.attack = 3;
+  target.card.instance.hp = 9;
+  blocker.card.instance.hp = 9;
+  runtime.currentSide = 'enemy';
+
+  const [attackAction] = listAttackActions(runtime, 'enemy').filter(
+    (action) =>
+      action.attackerInstanceId === attacker.card.instance.instanceId &&
+      action.targetInstanceId === target.card.instance.instanceId,
+  );
+  if (!attackAction) {
+    throw new Error('세운 상황에서 합법 공격이 나오지 않았다');
+  }
+
+  const blockActions = listBlockActions(runtime, attackAction);
+  harness.scene.pendingBlock = { decision: { attackAction, blockActions }, actionCount: 0 };
+  harness.scene.resize({ width: 1024, height: 768, scale: 1 });
+
+  return { ...harness, target, blocker, attacker };
 }
 
 describe('BattlefieldScene', () => {
@@ -484,66 +554,6 @@ describe('BattlefieldScene 턴 진행', () => {
  * 엔진은 이미 지원하므로, 상황을 직접 세워 UI 배선만 검증한다.
  */
 describe('BattlefieldScene 방어 선택', () => {
-  function placeOnField(
-    runtime: BattleRuntimeState,
-    card: BattleCardRuntimeState,
-    slotId: BattleSlotId,
-  ): void {
-    const participant = card.side === 'player' ? runtime.player : runtime.enemy;
-    participant.hand = participant.hand.filter((candidate) => candidate !== card);
-    card.zone = 'BATTLEFIELD';
-    card.battlefieldSlot = slotId;
-    // 등장 턴에는 공격할 수 없다. 0턴에 나온 것으로 두어 그 제한을 벗어난다.
-    card.enteredBattlefieldTurnNumber = 0;
-    card.handIndex = null;
-    runtime.battlefield.push(card);
-  }
-
-  async function createBlockScenario() {
-    const harness = createHarness(await createSession());
-    const { runtime } = harness.scene;
-
-    const [target, blocker] = runtime.player.hand;
-    const [attacker] = runtime.enemy.hand;
-    if (!target || !blocker || !attacker) {
-      throw new Error('시나리오를 세울 손패가 모자라다');
-    }
-
-    placeOnField(runtime, target, 'player:FC');
-    placeOnField(runtime, blocker, 'player:FR');
-    placeOnField(runtime, attacker, 'enemy:FC');
-    // 정의는 같은 카드끼리 공유한다. 능력을 붙이기 전에 이 인스턴스 몫으로 복사한다.
-    blocker.card = {
-      instance: blocker.card.instance,
-      definition: {
-        ...blocker.card.definition,
-        abilities: [
-          ...blocker.card.definition.abilities,
-          { id: 'guardian_block', category: 'GLOBAL', name: '수호', text: '' },
-        ],
-      },
-    };
-    attacker.card.instance.attack = 3;
-    target.card.instance.hp = 9;
-    blocker.card.instance.hp = 9;
-    runtime.currentSide = 'enemy';
-
-    const [attackAction] = listAttackActions(runtime, 'enemy').filter(
-      (action) =>
-        action.attackerInstanceId === attacker.card.instance.instanceId &&
-        action.targetInstanceId === target.card.instance.instanceId,
-    );
-    if (!attackAction) {
-      throw new Error('세운 상황에서 합법 공격이 나오지 않았다');
-    }
-
-    const blockActions = listBlockActions(runtime, attackAction);
-    harness.scene.pendingBlock = { decision: { attackAction, blockActions }, actionCount: 0 };
-    harness.scene.resize({ width: 1024, height: 768, scale: 1 });
-
-    return { ...harness, target, blocker, attacker };
-  }
-
   it('막을 수 있는 유닛을 물음으로 내놓는다', async () => {
     const { view, blocker } = await createBlockScenario();
     const prompt = lastModel(view).blockPrompt;
@@ -624,5 +634,118 @@ describe('BattlefieldScene 적 차례 재생', () => {
 
     await settle(scene);
     expect(findSlot(lastModel(view), 'player:BC')?.ready).toBe(true);
+  });
+});
+
+describe('BattlefieldScene 연출', () => {
+  it('배치와 이동에는 연출을 내지 않는다', async () => {
+    const { scene, view, effects } = createHarness(await createSession());
+    const leaderId = findSlot(lastModel(view), 'player:BC')?.card?.instanceId ?? '';
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+
+    expect(effects.play).not.toHaveBeenCalled();
+  });
+
+  it('내 공격은 맞은 칸에서 피해 연출을 낸다', async () => {
+    const { scene, view, effects } = createHarness(await createSession());
+    const leaderId = findSlot(lastModel(view), 'player:BC')?.card?.instanceId ?? '';
+
+    // 등장 턴에는 공격할 수 없다. 내 턴 → 적 턴 → 내 턴으로 넘겨 등장 턴을 벗어난다.
+    applyTurnEnd(scene.runtime);
+    applyTurnEnd(scene.runtime);
+    scene.resize({ width: 1024, height: 768, scale: 1 });
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+    effects.play.mockClear();
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'enemy:BC');
+
+    expect(effects.play).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'damage', slotId: 'enemy:BC' }),
+    );
+  });
+
+  it('적 행동에도 연출을 내며 그 길이가 곧 행동 사이 간격이다', async () => {
+    const { scene, effects } = createHarness(await createSession());
+
+    scene.endTurn();
+    await settle(scene);
+
+    // 첫 턴 적 행동은 배치·이동 위주라 연출이 없을 수도 있다. 났다면 전부 칸을 갖는다.
+    for (const call of effects.play.mock.calls) {
+      expect(call[0]).toMatchObject({ slotId: expect.any(String), value: expect.any(Number) });
+    }
+  });
+
+  it('막힌 공격은 원래 대상이 아니라 막은 유닛 칸에서 연출을 낸다', async () => {
+    const { scene, effects, blocker } = await createBlockScenario();
+    effects.play.mockClear();
+
+    scene.resolveBlock(blocker.card.instance.instanceId);
+
+    expect(effects.play).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'damage', slotId: 'player:FR' }),
+    );
+  });
+
+  it('막지 않은 공격은 원래 대상 칸에서 연출을 낸다', async () => {
+    const { scene, effects } = await createBlockScenario();
+    effects.play.mockClear();
+
+    scene.resolveBlock(null);
+
+    expect(effects.play).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'damage', slotId: 'player:FC' }),
+    );
+  });
+});
+
+describe('BattlefieldScene 자동 턴 종료', () => {
+  /**
+   * 내가 둘 수 있는 수를 모두 없앤다.
+   * 손패를 비우면 배치가 사라지고, 내 진영 여섯 칸을 다 채우면 이동할 빈 칸이 사라진다.
+   * 리더 말고는 전부 등장 턴이라 공격도 못 하므로 완전히 막힌 턴이 된다.
+   */
+  function stallPlayerTurn(runtime: BattleRuntimeState): void {
+    const cards = runtime.player.hand.splice(0, runtime.player.hand.length);
+    const slots: BattleSlotId[] = ['player:FR', 'player:FC', 'player:FL', 'player:BR', 'player:BL'];
+
+    for (const [index, slotId] of slots.entries()) {
+      const card = cards[index];
+      if (card) {
+        placeOnField(runtime, card, slotId);
+        // 등장 턴으로 되돌려 공격 후보에서 뺀다.
+        card.enteredBattlefieldTurnNumber = runtime.turnNumber;
+      }
+    }
+
+    // 리더도 이번 턴에 나온 것으로 둬 공격을 막는다. 남은 수는 정말 없다.
+    runtime.player.leader.enteredBattlefieldTurnNumber = runtime.turnNumber;
+    runtime.player.deck.length = 0;
+  }
+
+  it('내 차례에 둘 수 있는 수가 없으면 턴이 저절로 넘어간다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    stallPlayerTurn(scene.runtime);
+    await scene.enter();
+    await settle(scene);
+
+    expect(lastModel(view).log).toContain('나: 할 수 있는 행동이 없어 턴이 넘어갔다');
+    // 자동으로 넘긴 뒤 적 차례까지 돌고 다시 내 차례로 돌아온다.
+    expect(lastModel(view).currentSide).toBe('player');
+    expect(lastModel(view).turnNumber).toBe(2);
+  });
+
+  it('둘 수 있는 수가 있으면 턴을 넘기지 않는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = findSlot(lastModel(view), 'player:BC')?.card?.instanceId ?? '';
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+    await settle(scene);
+
+    expect(lastModel(view).currentSide).toBe('player');
+    expect(lastModel(view).turnNumber).toBe(1);
+    expect(lastModel(view).log).not.toContain('나: 할 수 있는 행동이 없어 턴이 넘어갔다');
   });
 });

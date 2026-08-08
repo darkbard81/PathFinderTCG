@@ -1,5 +1,5 @@
 import type { BattleSide, BattleSlotId } from '../../game/battle/types';
-import { attachBattleCardDrag } from './battle-drag';
+import { attachBattleCardDrag, toLogicalPoint } from './battle-drag';
 import { createCardTileElement, type CardTile } from './card-tile';
 import { listRowSlotIds, type BattleBoardMetrics, type BattleRowId } from './battlefield-layout';
 import './battlefield.css';
@@ -96,6 +96,10 @@ export type BattlefieldViewOptions = {
 export type BattlefieldView = {
   element: HTMLElement;
   render: (model: BattlefieldViewModel) => void;
+  /** 연출 캔버스를 붙일 곳이다. 카드 위에 겹치고 입력은 통과시킨다. */
+  effectsHost: HTMLElement;
+  /** 칸 가운데의 논리 좌표다. 칸을 못 찾으면 null이다. */
+  getSlotCenter: (slotId: BattleSlotId) => { x: number; y: number } | null;
 };
 
 /** 각 진영 절반에서 위 행과 아래 행이 어느 슬롯 줄을 쓰는지다. 전위끼리 구분선을 사이에 두고 마주 본다. */
@@ -183,13 +187,17 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   handCards.className = 'pf-battlefield__hand-cards';
   hand.append(handCards);
 
+  // 연출 캔버스는 카드 위, 모달 아래에 둔다. 결과 창이 연출에 가려지면 안 된다.
+  const effectsHost = document.createElement('div');
+  effectsHost.className = 'pf-battlefield__effects';
+
   const dialog = document.createElement('div');
   dialog.className = 'pf-battlefield__dialog';
   const dialogPanel = document.createElement('div');
   dialogPanel.className = 'pf-battlefield__dialog-panel';
   dialog.append(dialogPanel);
 
-  element.append(leftRail, board, rightRail, hand, dialog);
+  element.append(leftRail, board, rightRail, hand, effectsHost, dialog);
 
   function render(model: BattlefieldViewModel): void {
     applyMetrics(element, model.metrics);
@@ -288,7 +296,24 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     return element;
   }
 
-  return { element, render };
+  /** 칸 가운데를 논리 좌표로 돌려준다. 연출 캔버스가 오버레이와 같은 좌표계를 쓰게 한다. */
+  function getSlotCenter(slotId: BattleSlotId): { x: number; y: number } | null {
+    const slot = deps.drag.slots.get(slotId);
+    if (!slot) {
+      return null;
+    }
+
+    const rect = slot.getBoundingClientRect();
+
+    return toLogicalPoint(
+      element.getBoundingClientRect(),
+      element.offsetWidth,
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+  }
+
+  return { element, render, effectsHost, getSlotCenter };
 }
 
 type BattleBoardDeps = {
