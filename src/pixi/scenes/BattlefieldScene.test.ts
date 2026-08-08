@@ -1,6 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { BattlefieldView, BattlefieldViewModel } from '../../dom/screens/battlefield-view';
-import { INITIAL_HAND_SIZE, type BattleSlotId } from '../../game/battle/types';
+import type {
+  BattleDragSource,
+  BattlefieldView,
+  BattlefieldViewModel,
+} from '../../dom/screens/battlefield-view';
+import { applyTurnEnd } from '../../game/battle/battle-engine';
+import {
+  INITIAL_HAND_SIZE,
+  type BattleRuntimeState,
+  type BattleSlotId,
+} from '../../game/battle/types';
 import { createInitialSaveState } from '../../game/save/create-initial-save';
 import { createGameSession, type GameSession } from '../../game/save/session';
 import { listStageDefinitions } from '../../game/stage/stage-definitions';
@@ -17,8 +26,9 @@ async function createSession(): Promise<GameSession> {
 
 /** Scene의 비공개 조작을 테스트에서 직접 부르기 위한 표면이다. */
 type BattlefieldHarness = Pick<BattlefieldScene, 'resize'> & {
-  resolvePlaceTargets: (cardInstanceId: string) => BattleSlotId[];
-  place: (cardInstanceId: string, slotId: BattleSlotId) => void;
+  runtime: BattleRuntimeState;
+  resolveTargets: (source: BattleDragSource) => BattleSlotId[];
+  applyDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
 };
 
 function createHarness(session: GameSession) {
@@ -140,7 +150,7 @@ describe('BattlefieldScene 손패 배치', () => {
     model: BattlefieldViewModel,
   ): { instanceId: string; slotId: BattleSlotId } | null {
     for (const card of model.hand) {
-      const [slotId] = scene.resolvePlaceTargets(card.tile.instanceId);
+      const [slotId] = scene.resolveTargets({ kind: 'hand', cardInstanceId: card.tile.instanceId });
       if (slotId) {
         return { instanceId: card.tile.instanceId, slotId };
       }
@@ -153,7 +163,9 @@ describe('BattlefieldScene 손패 배치', () => {
     const { scene, view } = createHarness(await createSession());
 
     for (const card of lastModel(view).hand) {
-      expect(card.playable).toBe(scene.resolvePlaceTargets(card.tile.instanceId).length > 0);
+      expect(card.playable).toBe(
+        scene.resolveTargets({ kind: 'hand', cardInstanceId: card.tile.instanceId }).length > 0,
+      );
     }
   });
 
@@ -162,7 +174,10 @@ describe('BattlefieldScene 손패 배치', () => {
     const model = lastModel(view);
 
     for (const card of model.hand) {
-      for (const slotId of scene.resolvePlaceTargets(card.tile.instanceId)) {
+      for (const slotId of scene.resolveTargets({
+        kind: 'hand',
+        cardInstanceId: card.tile.instanceId,
+      })) {
         expect(slotId.startsWith('player:')).toBe(true);
         expect(findSlot(model, slotId)?.card).toBeNull();
       }
@@ -177,7 +192,7 @@ describe('BattlefieldScene 손패 배치', () => {
       throw new Error('놓을 수 있는 손패 카드가 없다');
     }
 
-    scene.place(target.instanceId, target.slotId);
+    scene.applyDrop({ kind: 'hand', cardInstanceId: target.instanceId }, target.slotId);
     const model = lastModel(view);
 
     expect(findSlot(model, target.slotId)?.card?.instanceId).toBe(target.instanceId);
@@ -194,7 +209,7 @@ describe('BattlefieldScene 손패 배치', () => {
     }
 
     const before = lastModel(view);
-    scene.place(target.instanceId, target.slotId);
+    scene.applyDrop({ kind: 'hand', cardInstanceId: target.instanceId }, target.slotId);
     const after = lastModel(view);
 
     // 방금 채운 칸 자신은 카드가 생겼으니 제외하고, 나머지 빈 칸의 지배력 합계를 비교한다.
@@ -216,7 +231,7 @@ describe('BattlefieldScene 손패 배치', () => {
     }
 
     // enemy 진영 칸은 어떤 손패 카드로도 후보가 되지 않는다.
-    scene.place(cardId, 'enemy:FC');
+    scene.applyDrop({ kind: 'hand', cardInstanceId: cardId }, 'enemy:FC');
     const model = lastModel(view);
 
     expect(model.statusIsError).toBe(true);
@@ -232,6 +247,128 @@ describe('BattlefieldScene 손패 배치', () => {
       return;
     }
 
-    expect(scene.resolvePlaceTargets(unplayable.tile.instanceId)).toEqual([]);
+    expect(
+      scene.resolveTargets({ kind: 'hand', cardInstanceId: unplayable.tile.instanceId }),
+    ).toEqual([]);
+  });
+});
+
+describe('BattlefieldScene 전장 카드 조작', () => {
+  /** 내 리더는 시작부터 전장에 있고 인접 빈 칸이 있어서 이동 검증의 고정 기준으로 쓰기 좋다. */
+  function readLeaderId(model: BattlefieldViewModel): string {
+    const leader = findSlot(model, 'player:BC')?.card;
+    if (!leader) {
+      throw new Error('내 리더가 전장에 없다');
+    }
+
+    return leader.instanceId;
+  }
+
+  it('시작 상태에서는 어느 카드도 공격할 수 없다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = readLeaderId(lastModel(view));
+
+    // 양측 리더가 후위에 있다. 후위 카드는 기본 공격을 못 하므로 후보는 전부 내 진영 빈 칸이다.
+    for (const slotId of scene.resolveTargets({ kind: 'card', cardInstanceId: leaderId })) {
+      expect(slotId.startsWith('player:')).toBe(true);
+      expect(findSlot(lastModel(view), slotId)?.card).toBeNull();
+    }
+  });
+
+  it('내 카드는 ready, 적 카드는 판정하지 않는다', async () => {
+    const { view } = createHarness(await createSession());
+    const model = lastModel(view);
+
+    expect(findSlot(model, 'player:BC')?.ready).toBe(true);
+    expect(findSlot(model, 'enemy:BC')?.ready).toBeNull();
+    expect(findSlot(model, 'enemy:BC')?.skills).toEqual([]);
+  });
+
+  it('빈 칸은 ready를 판정하지 않는다', async () => {
+    const { view } = createHarness(await createSession());
+
+    expect(findSlot(lastModel(view), 'player:FL')?.ready).toBeNull();
+  });
+
+  it('인접 빈 칸으로 옮기면 카드가 그 칸으로 간다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = readLeaderId(lastModel(view));
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+    const model = lastModel(view);
+
+    expect(findSlot(model, 'player:FC')?.card?.instanceId).toBe(leaderId);
+    expect(findSlot(model, 'player:BC')?.card).toBeNull();
+  });
+
+  it('이번 턴에 이동한 카드는 다시 이동할 수 없다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = readLeaderId(lastModel(view));
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+
+    expect(scene.resolveTargets({ kind: 'card', cardInstanceId: leaderId })).toEqual([]);
+    expect(findSlot(lastModel(view), 'player:FC')?.ready).toBe(false);
+  });
+
+  it('인접하지 않은 칸으로는 옮길 수 없다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = readLeaderId(lastModel(view));
+
+    // player:BC에서 player:FL은 대각선이라 인접이 아니다.
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FL');
+    const model = lastModel(view);
+
+    expect(model.statusIsError).toBe(true);
+    expect(findSlot(model, 'player:BC')?.card?.instanceId).toBe(leaderId);
+    expect(findSlot(model, 'player:FL')?.card).toBeNull();
+  });
+
+  it('전위로 나간 카드는 다음 턴에 적을 공격할 수 있다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = readLeaderId(lastModel(view));
+
+    // 등장 턴에는 공격할 수 없다. 내 턴 → 적 턴 → 내 턴으로 넘겨 등장 턴을 벗어난다.
+    applyTurnEnd(scene.runtime);
+    applyTurnEnd(scene.runtime);
+    scene.resize({ width: 1024, height: 768, scale: 1 });
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+
+    const targets = scene.resolveTargets({ kind: 'card', cardInstanceId: leaderId });
+    // 적 전위가 비어 있으면 후위의 적 리더까지 닿는다.
+    expect(targets).toContain('enemy:BC');
+
+    const before = findSlot(lastModel(view), 'enemy:BC')?.card?.hp ?? 0;
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'enemy:BC');
+    const after = lastModel(view);
+
+    expect(after.statusIsError).toBe(false);
+    expect(findSlot(after, 'enemy:BC')?.card?.hp ?? 0).toBeLessThan(before);
+  });
+
+  it('스킬 배지는 지금 쓸 수 있는 스킬만 만든다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const model = lastModel(view);
+
+    for (const slot of Object.values(model.slots).flat()) {
+      for (const skill of slot.skills) {
+        const cardInstanceId = slot.card?.instanceId ?? '';
+        expect(
+          scene.resolveTargets({ kind: 'skill', cardInstanceId, skillId: skill.skillId }).length,
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('스킬 대상이 아닌 칸에 놓으면 전장을 건드리지 않는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = readLeaderId(lastModel(view));
+
+    scene.applyDrop(
+      { kind: 'skill', cardInstanceId: leaderId, skillId: 'unknown_skill' },
+      'enemy:BC',
+    );
+
+    expect(lastModel(view).statusIsError).toBe(true);
   });
 });

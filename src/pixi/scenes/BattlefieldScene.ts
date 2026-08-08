@@ -9,23 +9,35 @@ import {
 import {
   createBattlefieldView,
   type BattlefieldView,
+  type BattleDragSource,
   type BattleHandCardModel,
+  type BattleSkillBadgeModel,
   type BattleSlotModel,
 } from '../../dom/screens/battlefield-view';
 import type { CardTile } from '../../dom/screens/card-tile';
+import { ACTIVE_SKILL_DEFINITIONS } from '../../game/battle/ability-handlers';
 import {
+  applyActiveSkillAction,
+  applyAttackAction,
+  applyBlockAction,
+  applyMoveAction,
   applyPlaceAction,
   calculateSlotDominance,
   findBattlefieldCardAtSlot,
+  listActiveSkillActions,
+  listAttackActions,
+  listBlockActions,
+  listMoveActions,
   listPlaceActions,
 } from '../../game/battle/battle-engine';
 import { createInitialBattleRuntime } from '../../game/battle/create-battle-runtime';
 import type {
+  ActiveSkillBattleEffect,
+  BattleCardRuntimeState,
   BattlePhase,
   BattleParticipantRuntimeState,
   BattleRuntimeState,
   BattleSlotId,
-  PlaceBattleAction,
 } from '../../game/battle/types';
 import type { GameSession } from '../../game/save/session';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
@@ -41,6 +53,19 @@ const PHASE_LABELS: Record<BattlePhase, string> = {
   GAME_OVER: '종료',
 };
 
+/** 스킬 배지에 찍는 한 글자다. 값과 붙여 `회2`처럼 보인다. */
+const SKILL_GLYPHS: Record<ActiveSkillBattleEffect, string> = {
+  HEAL: '회',
+  DAMAGE: '피',
+  BUFF_ATTACK: '강',
+};
+
+const SKILL_EFFECT_LABELS: Record<ActiveSkillBattleEffect, string> = {
+  HEAL: '회복',
+  DAMAGE: '피해',
+  BUFF_ATTACK: '공격력',
+};
+
 export type BattlefieldSceneOptions = {
   backgroundImageUrl: string;
   assetBaseUrl: string;
@@ -53,8 +78,9 @@ export type BattlefieldSceneOptions = {
 
 /**
  * 전장 화면이다.
- * 규칙 판정은 전부 battle-engine이 맡고, 이 Scene은 런타임 상태를 뷰 모델로 옮기는 일만 한다.
- * 이번 단계는 초기 배치를 정적으로 보여주는 데까지다. 조작은 다음 단계에서 붙인다.
+ * 규칙 판정은 전부 battle-engine이 맡고, 이 Scene은 런타임 상태를 뷰 모델로 옮기고
+ * 드래그 결과를 엔진 액션으로 바꿔 적용하는 일만 한다.
+ * 턴 진행과 적 차례는 다음 단계에서 붙인다.
  */
 export class BattlefieldScene implements Scene {
   public readonly view = new Container({
@@ -85,8 +111,8 @@ export class BattlefieldScene implements Scene {
       createBattlefieldView({
         onEndTurn: () => this.endTurn(),
         onLeave: () => this.options.onLeave(this.options.session),
-        resolvePlaceTargets: (cardInstanceId) => this.resolvePlaceTargets(cardInstanceId),
-        onPlace: (cardInstanceId, slotId) => this.place(cardInstanceId, slotId),
+        resolveTargets: (source) => this.resolveTargets(source),
+        onDrop: (source, slotId) => this.applyDrop(source, slotId),
       });
 
     this.element = this.battlefieldView.element;
@@ -118,29 +144,106 @@ export class BattlefieldScene implements Scene {
     this.renderView('턴 진행은 다음 단계에서 연결합니다.');
   }
 
-  /** 손패 카드 한 장을 놓을 수 있는 칸 목록이다. 드래그를 시작할 때 강조할 칸이기도 하다. */
-  private resolvePlaceTargets(cardInstanceId: string): BattleSlotId[] {
-    return this.listPlaceActionsForCard(cardInstanceId).map((action) => action.toSlotId);
-  }
-
-  private place(cardInstanceId: string, slotId: BattleSlotId): void {
-    const action = this.listPlaceActionsForCard(cardInstanceId).find(
-      (candidate) => candidate.toSlotId === slotId,
-    );
-
-    if (!action) {
-      // 드래그를 시작한 뒤 상태가 바뀌면 여기에 온다. 규칙 판정은 엔진에만 두고 조용히 되돌린다.
-      this.renderView('지금은 그 칸에 놓을 수 없습니다.', true);
-      return;
+  /**
+   * 집은 것을 놓을 수 있는 칸 목록이다. 드래그를 시작할 때 강조할 칸이기도 하다.
+   * 이동 대상은 빈 칸, 공격 대상은 적이 선 칸이라 둘은 절대 겹치지 않는다.
+   */
+  private resolveTargets(source: BattleDragSource): BattleSlotId[] {
+    if (source.kind === 'hand') {
+      return listPlaceActions(this.runtime, 'player')
+        .filter((action) => action.cardInstanceId === source.cardInstanceId)
+        .map((action) => action.toSlotId);
     }
 
-    applyPlaceAction(this.runtime, action);
-    this.renderView(`${action.cost} 코스트 카드를 배치했습니다.`);
+    if (source.kind === 'skill') {
+      return this.listSkillActions(source.cardInstanceId, source.skillId).map(
+        (action) => action.targetSlotId,
+      );
+    }
+
+    return [
+      ...listMoveActions(this.runtime, 'player')
+        .filter((action) => action.cardInstanceId === source.cardInstanceId)
+        .map((action) => action.toSlotId),
+      ...listAttackActions(this.runtime, 'player')
+        .filter((action) => action.attackerInstanceId === source.cardInstanceId)
+        .map((action) => action.toSlotId),
+    ];
   }
 
-  private listPlaceActionsForCard(cardInstanceId: string): PlaceBattleAction[] {
-    return listPlaceActions(this.runtime, 'player').filter(
-      (action) => action.cardInstanceId === cardInstanceId,
+  private applyDrop(source: BattleDragSource, slotId: BattleSlotId): void {
+    try {
+      const message = this.executeDrop(source, slotId);
+      if (message === null) {
+        // 드래그를 시작한 뒤 상태가 바뀌면 여기에 온다. 규칙 판정은 엔진에만 두고 조용히 되돌린다.
+        this.renderView('지금은 그렇게 할 수 없습니다.', true);
+        return;
+      }
+
+      this.renderView(message);
+    } catch (error: unknown) {
+      this.renderView(error instanceof Error ? error.message : String(error), true);
+    }
+  }
+
+  /** 실제로 액션을 적용하고 상태 문구를 돌려준다. 맞는 액션이 없으면 null이다. */
+  private executeDrop(source: BattleDragSource, slotId: BattleSlotId): string | null {
+    if (source.kind === 'hand') {
+      const action = listPlaceActions(this.runtime, 'player').find(
+        (candidate) =>
+          candidate.cardInstanceId === source.cardInstanceId && candidate.toSlotId === slotId,
+      );
+      if (!action) {
+        return null;
+      }
+
+      applyPlaceAction(this.runtime, action);
+      return `${action.cost} 코스트 카드를 배치했습니다.`;
+    }
+
+    if (source.kind === 'skill') {
+      const action = this.listSkillActions(source.cardInstanceId, source.skillId).find(
+        (candidate) => candidate.targetSlotId === slotId,
+      );
+      if (!action) {
+        return null;
+      }
+
+      applyActiveSkillAction(this.runtime, action);
+      return `${SKILL_EFFECT_LABELS[action.effect]} ${action.value}을(를) 적용했습니다.`;
+    }
+
+    const moveAction = listMoveActions(this.runtime, 'player').find(
+      (candidate) =>
+        candidate.cardInstanceId === source.cardInstanceId && candidate.toSlotId === slotId,
+    );
+    if (moveAction) {
+      applyMoveAction(this.runtime, moveAction);
+      return '카드를 이동했습니다.';
+    }
+
+    const attackAction = listAttackActions(this.runtime, 'player').find(
+      (candidate) =>
+        candidate.attackerInstanceId === source.cardInstanceId && candidate.toSlotId === slotId,
+    );
+    if (!attackAction) {
+      return null;
+    }
+
+    // 방어 측 선택은 적이 한다. 막을 수 있으면 막는 것이 가디언 능력의 목적이라 항상 막게 한다.
+    const [blockAction] = listBlockActions(this.runtime, attackAction);
+    if (blockAction) {
+      applyBlockAction(this.runtime, blockAction);
+      return `공격을 ${attackAction.attack} 피해로 선언했지만 적이 막았습니다.`;
+    }
+
+    applyAttackAction(this.runtime, attackAction);
+    return `${attackAction.attack} 피해로 공격했습니다.`;
+  }
+
+  private listSkillActions(cardInstanceId: string, skillId: string) {
+    return listActiveSkillActions(this.runtime, 'player').filter(
+      (action) => action.cardInstanceId === cardInstanceId && action.skillId === skillId,
     );
   }
 
@@ -179,21 +282,81 @@ export class BattlefieldScene implements Scene {
   }
 
   private buildSlotModels(): Record<BattleRowId, BattleSlotModel[]> {
+    // 행동이 남은 카드를 미리 모아 둔다. 칸마다 후보를 다시 계산하면 12번 반복된다.
+    const movableCardIds = new Set(
+      listMoveActions(this.runtime, 'player').map((action) => action.cardInstanceId),
+    );
+    const attackerCardIds = new Set(
+      listAttackActions(this.runtime, 'player').map((action) => action.attackerInstanceId),
+    );
+    const skillActions = listActiveSkillActions(this.runtime, 'player');
+
     return Object.fromEntries(
       BATTLE_ROW_IDS.map((row) => [
         row,
         listRowSlotIds(row).map((slotId): BattleSlotModel => {
           const card = findBattlefieldCardAtSlot(this.runtime, slotId);
+          if (!card) {
+            return {
+              slotId,
+              card: null,
+              // 빈 칸에만 인접 지배력을 적는다. 무엇을 놓을 수 있는지 집기 전에 읽게 하는 값이다.
+              dominance: calculateSlotDominance(this.runtime, slotId),
+              ready: null,
+              skills: [],
+            };
+          }
+
+          const instanceId = card.card.instance.instanceId;
+          if (card.side !== 'player') {
+            return { slotId, card: this.toTile(card), dominance: null, ready: null, skills: [] };
+          }
+
+          const skills = this.buildSkillBadges(
+            card,
+            new Set(
+              skillActions
+                .filter((action) => action.cardInstanceId === instanceId)
+                .map((action) => action.skillId),
+            ),
+          );
 
           return {
             slotId,
-            card: card ? this.toTile(card) : null,
-            // 빈 칸에만 인접 지배력을 적는다. 무엇을 놓을 수 있는지 집기 전에 읽게 하는 값이다.
-            dominance: card ? null : calculateSlotDominance(this.runtime, slotId),
+            card: this.toTile(card),
+            dominance: null,
+            // 스킬만 남은 카드도 아직 할 일이 있다. 셋 중 하나라도 남았으면 소진으로 그리지 않는다.
+            ready:
+              movableCardIds.has(instanceId) ||
+              attackerCardIds.has(instanceId) ||
+              skills.length > 0,
+            skills,
           };
         }),
       ]),
     ) as Record<BattleRowId, BattleSlotModel[]>;
+  }
+
+  /** 지금 쓸 수 있는 대상이 하나라도 있는 스킬만 배지로 만든다. 눌러도 안 되는 배지는 띄우지 않는다. */
+  private buildSkillBadges(
+    card: BattleCardRuntimeState,
+    usableSkillIds: ReadonlySet<string>,
+  ): BattleSkillBadgeModel[] {
+    return card.card.definition.abilities.flatMap((ability): BattleSkillBadgeModel[] => {
+      const definition = ACTIVE_SKILL_DEFINITIONS[ability.id];
+      if (!definition || !usableSkillIds.has(ability.id)) {
+        return [];
+      }
+
+      return [
+        {
+          skillId: ability.id,
+          glyph: `${SKILL_GLYPHS[definition.effect]}${definition.value}`,
+          effect: definition.effect,
+          label: `${ability.name} · ${SKILL_EFFECT_LABELS[definition.effect]} ${definition.value} · 끌어서 대상 지정`,
+        },
+      ];
+    });
   }
 
   private buildHandModels(): BattleHandCardModel[] {

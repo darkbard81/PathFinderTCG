@@ -4,12 +4,35 @@ import { createCardTileElement, type CardTile } from './card-tile';
 import { listRowSlotIds, type BattleBoardMetrics, type BattleRowId } from './battlefield-layout';
 import './battlefield.css';
 
+export type BattleSkillBadgeModel = {
+  skillId: string;
+  /** 배지에 찍는 짧은 표기다. 회복·피해·강화를 값과 함께 한 눈에 구분한다. */
+  glyph: string;
+  effect: 'HEAL' | 'DAMAGE' | 'BUFF_ATTACK';
+  /** 툴팁이다. 능력 이름과 효과 설명을 함께 담는다. */
+  label: string;
+};
+
 export type BattleSlotModel = {
   slotId: BattleSlotId;
   card: CardTile | null;
   /** 빈 슬롯에 인접한 아군 지배력 합계다. 카드가 있으면 null이다. */
   dominance: number | null;
+  /** 내 카드에 이번 턴 할 수 있는 일이 하나라도 남았는지다. 적 카드와 빈 칸은 null이다. */
+  ready: boolean | null;
+  /** 이 카드로 지금 쓸 수 있는 활성 스킬이다. 배지 하나가 스킬 하나에 대응한다. */
+  skills: BattleSkillBadgeModel[];
 };
+
+/**
+ * 지금 끌고 있는 것이 무엇인지다.
+ * 카드 몸통은 이동·공격을, 스킬 배지는 그 스킬 대상만 노린다.
+ * 잡는 곳을 나눠서 같은 칸에 놓았을 때 공격인지 스킬인지 되묻지 않아도 되게 했다.
+ */
+export type BattleDragSource =
+  | { kind: 'hand'; cardInstanceId: string }
+  | { kind: 'card'; cardInstanceId: string }
+  | { kind: 'skill'; cardInstanceId: string; skillId: string };
 
 export type BattleSideModel = {
   deckCount: number;
@@ -42,11 +65,11 @@ export type BattlefieldViewOptions = {
   onEndTurn: () => void;
   onLeave: () => void;
   /**
-   * 손패 카드를 집었을 때 놓을 수 있는 칸을 물어본다.
+   * 무언가를 집었을 때 놓을 수 있는 칸을 물어본다.
    * 드래그 중에는 render를 부르지 않으므로 이 결과로 강조를 켠다.
    */
-  resolvePlaceTargets: (cardInstanceId: string) => BattleSlotId[];
-  onPlace: (cardInstanceId: string, slotId: BattleSlotId) => void;
+  resolveTargets: (source: BattleDragSource) => BattleSlotId[];
+  onDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
 };
 
 export type BattlefieldView = {
@@ -75,8 +98,15 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   const board = document.createElement('div');
   board.className = 'pf-battlefield__board';
 
-  const enemyHalf = createHalf('enemy');
-  const playerHalf = createHalf('player');
+  // 칸 엘리먼트는 한 번만 만들고 계속 쓴다. 드래그는 이 맵으로 커서 아래 칸을 찾는다.
+  const deps: BattleBoardDeps = {
+    drag: { root: element, slots: new Map() },
+    resolveTargets: options.resolveTargets,
+    onDrop: options.onDrop,
+  };
+
+  const enemyHalf = createHalf('enemy', deps);
+  const playerHalf = createHalf('player', deps);
   const divider = document.createElement('div');
   divider.className = 'pf-battlefield__divider';
   board.append(enemyHalf.root, divider, playerHalf.root);
@@ -129,11 +159,6 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
 
   element.append(leftRail, board, rightRail, hand);
 
-  const dragContext = {
-    root: element,
-    slots: new Map([...enemyHalf.slotElements, ...playerHalf.slotElements]),
-  };
-
   function render(model: BattlefieldViewModel): void {
     applyMetrics(element, model.metrics);
 
@@ -171,9 +196,10 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     element.classList.add('pf-battlefield__hand-card');
     element.classList.toggle('is-unplayable', !card.playable);
 
-    attachBattleCardDrag(element, dragContext, {
-      begin: () => (card.playable ? options.resolvePlaceTargets(card.tile.instanceId) : []),
-      drop: (slotId) => options.onPlace(card.tile.instanceId, slotId),
+    const source: BattleDragSource = { kind: 'hand', cardInstanceId: card.tile.instanceId };
+    attachBattleCardDrag(element, deps.drag, {
+      begin: () => (card.playable ? deps.resolveTargets(source) : []),
+      drop: (slotId) => deps.onDrop(source, slotId),
     });
 
     return element;
@@ -182,14 +208,19 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   return { element, render };
 }
 
+type BattleBoardDeps = {
+  /** 칸 맵은 칸을 만들면서 채운다. attachBattleCardDrag는 이 맵을 읽기만 한다. */
+  drag: { root: HTMLElement; slots: Map<BattleSlotId, HTMLElement> };
+  resolveTargets: (source: BattleDragSource) => BattleSlotId[];
+  onDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
+};
+
 type BattleHalf = {
   root: HTMLElement;
-  /** 드래그가 커서 아래 칸을 찾을 때 쓴다. 칸 엘리먼트는 처음 한 번 만들고 다시 만들지 않는다. */
-  slotElements: ReadonlyMap<BattleSlotId, HTMLElement>;
   render: (side: BattleSideModel, slots: Record<BattleRowId, BattleSlotModel[]>) => void;
 };
 
-function createHalf(side: BattleSide): BattleHalf {
+function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
   const root = document.createElement('div');
   root.className = `pf-battlefield__half pf-battlefield__half--${side}`;
 
@@ -224,8 +255,9 @@ function createHalf(side: BattleSide): BattleHalf {
   root.append(piles, deck);
   for (const [rowIndex, row] of [topRow, bottomRow].entries()) {
     for (const [columnIndex, slotId] of listRowSlotIds(row).entries()) {
-      const slot = createSlot(slotId, rowIndex + 1, columnIndex + 2);
+      const slot = createSlot(slotId, rowIndex + 1, columnIndex + 2, deps);
       slotElements.set(slotId, slot);
+      deps.drag.slots.set(slotId, slot.root);
       root.append(slot.root);
     }
   }
@@ -242,13 +274,7 @@ function createHalf(side: BattleSide): BattleHalf {
     }
   }
 
-  return {
-    root,
-    slotElements: new Map(
-      [...slotElements].map(([slotId, slot]): [BattleSlotId, HTMLElement] => [slotId, slot.root]),
-    ),
-    render,
-  };
+  return { root, render };
 }
 
 type BattleSlot = {
@@ -256,7 +282,12 @@ type BattleSlot = {
   render: (model: BattleSlotModel) => void;
 };
 
-function createSlot(slotId: BattleSlotId, gridRow: number, gridColumn: number): BattleSlot {
+function createSlot(
+  slotId: BattleSlotId,
+  gridRow: number,
+  gridColumn: number,
+  deps: BattleBoardDeps,
+): BattleSlot {
   const root = document.createElement('div');
   root.className = 'pf-battlefield__slot';
   root.dataset.slotId = slotId;
@@ -265,9 +296,11 @@ function createSlot(slotId: BattleSlotId, gridRow: number, gridColumn: number): 
 
   function render(model: BattleSlotModel): void {
     root.classList.toggle('has-card', model.card !== null);
+    root.classList.toggle('is-ready', model.ready === true);
+    root.classList.toggle('is-spent', model.ready === false);
 
     if (model.card) {
-      root.replaceChildren(createCardTileElement(model.card));
+      root.replaceChildren(createBoardCardElement(model.card, model), ...createSkillBadges(model));
       return;
     }
 
@@ -281,6 +314,49 @@ function createSlot(slotId: BattleSlotId, gridRow: number, gridColumn: number): 
     dominance.textContent = `${model.dominance}`;
     dominance.title = `인접 지배력 ${model.dominance} · 코스트 ${model.dominance} 이하 카드를 놓을 수 있습니다.`;
     root.replaceChildren(dominance);
+  }
+
+  function createBoardCardElement(tile: CardTile, model: BattleSlotModel): HTMLElement {
+    const element = createCardTileElement(tile, {
+      ...(model.ready === true ? { note: '끌어서 이동하거나 적을 공격' } : {}),
+    });
+    element.classList.add('pf-battlefield__board-card');
+
+    // 적 카드에는 드래그를 붙이지 않는다. 내 카드는 붙이되, 갈 곳이 없으면 begin이 빈 배열을 내
+    // 드래그가 시작되지 않는다. 이동·공격을 다 쓰고 스킬만 남은 카드가 여기에 해당한다.
+    if (model.ready !== null) {
+      const source: BattleDragSource = { kind: 'card', cardInstanceId: tile.instanceId };
+      attachBattleCardDrag(element, deps.drag, {
+        begin: () => deps.resolveTargets(source),
+        drop: (targetSlotId) => deps.onDrop(source, targetSlotId),
+      });
+    }
+
+    return element;
+  }
+
+  function createSkillBadges(model: BattleSlotModel): HTMLElement[] {
+    if (!model.card) {
+      return [];
+    }
+
+    const cardInstanceId = model.card.instanceId;
+    return model.skills.map((skill) => {
+      const badge = document.createElement('button');
+      badge.type = 'button';
+      badge.className = `pf-battlefield__skill pf-battlefield__skill--${skill.effect.toLowerCase()}`;
+      badge.textContent = skill.glyph;
+      badge.title = skill.label;
+      badge.setAttribute('aria-label', skill.label);
+
+      const source: BattleDragSource = { kind: 'skill', cardInstanceId, skillId: skill.skillId };
+      attachBattleCardDrag(badge, deps.drag, {
+        begin: () => deps.resolveTargets(source),
+        drop: (targetSlotId) => deps.onDrop(source, targetSlotId),
+      });
+
+      return badge;
+    });
   }
 
   return { root, render };

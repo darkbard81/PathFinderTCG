@@ -63,6 +63,64 @@
   box-shadow: var(--pf-battlefield-slot-drop-glow);
 }
 
+/* 아직 이동·공격이 남은 내 카드다. 무엇을 집을 수 있는지 집기 전에 알린다. */
+.pf-battlefield__slot.is-ready .pf-battlefield__board-card {
+  box-shadow: var(--pf-battlefield-card-ready-glow);
+}
+
+/* 이번 턴에 할 일을 끝낸 내 카드다. 집히지 않으므로 그렇게 보이게 한다. */
+.pf-battlefield__slot.is-spent .pf-battlefield__board-card {
+  filter: grayscale(0.55);
+  opacity: 0.62;
+  cursor: default;
+}
+
+.pf-battlefield__board-card.is-dragging {
+  opacity: 0.3;
+}
+
+/*
+ * 활성 스킬 배지다.
+ * 카드 몸통과 잡는 곳을 나눠서, 같은 적 카드에 놓아도 공격인지 스킬인지 되묻지 않는다.
+ * 네 모서리 수정구슬을 피해 왼쪽 가운데에 둔다.
+ */
+.pf-battlefield__skill {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  min-width: var(--pf-battlefield-skill-size);
+  height: var(--pf-battlefield-skill-size);
+  padding: 0 4px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: var(--pf-battlefield-skill-font-size);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--pf-battlefield-skill-color);
+  border: var(--pf-battlefield-skill-border);
+  border-radius: calc(var(--pf-battlefield-skill-size) / 2);
+  box-shadow: var(--pf-battlefield-skill-shadow);
+  cursor: grab;
+}
+
+.pf-battlefield__skill--heal {
+  background: var(--pf-battlefield-skill-heal-background);
+}
+
+.pf-battlefield__skill--damage {
+  background: var(--pf-battlefield-skill-damage-background);
+}
+
+.pf-battlefield__skill--buff_attack {
+  background: var(--pf-battlefield-skill-buff-background);
+}
+
+.pf-battlefield__skill.is-dragging {
+  opacity: 0.4;
+}
+
 /* 빈 슬롯의 인접 지배력 합계다. 손패를 집기 전에 무엇을 놓을 수 있는지 미리 읽게 한다. */
 .pf-battlefield__dominance {
   min-width: 22px;
