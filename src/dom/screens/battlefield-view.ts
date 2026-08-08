@@ -1,4 +1,5 @@
 import type { BattleSide, BattleSlotId } from '../../game/battle/types';
+import { attachBattleCardDrag } from './battle-drag';
 import { createCardTileElement, type CardTile } from './card-tile';
 import { listRowSlotIds, type BattleBoardMetrics, type BattleRowId } from './battlefield-layout';
 import './battlefield.css';
@@ -16,6 +17,12 @@ export type BattleSideModel = {
   exileCount: number;
 };
 
+export type BattleHandCardModel = {
+  tile: CardTile;
+  /** 지금 놓을 수 있는 칸이 하나라도 있는지다. 없으면 흐리게 그려 집기 전에 알 수 있게 한다. */
+  playable: boolean;
+};
+
 export type BattlefieldViewModel = {
   metrics: BattleBoardMetrics;
   stageName: string;
@@ -25,14 +32,21 @@ export type BattlefieldViewModel = {
   enemy: BattleSideModel & { handCount: number };
   player: BattleSideModel;
   slots: Record<BattleRowId, BattleSlotModel[]>;
-  hand: CardTile[];
+  hand: BattleHandCardModel[];
   status: string;
+  statusIsError: boolean;
   canEndTurn: boolean;
 };
 
 export type BattlefieldViewOptions = {
   onEndTurn: () => void;
   onLeave: () => void;
+  /**
+   * 손패 카드를 집었을 때 놓을 수 있는 칸을 물어본다.
+   * 드래그 중에는 render를 부르지 않으므로 이 결과로 강조를 켠다.
+   */
+  resolvePlaceTargets: (cardInstanceId: string) => BattleSlotId[];
+  onPlace: (cardInstanceId: string, slotId: BattleSlotId) => void;
 };
 
 export type BattlefieldView = {
@@ -115,6 +129,11 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
 
   element.append(leftRail, board, rightRail, hand);
 
+  const dragContext = {
+    root: element,
+    slots: new Map([...enemyHalf.slotElements, ...playerHalf.slotElements]),
+  };
+
   function render(model: BattlefieldViewModel): void {
     applyMetrics(element, model.metrics);
 
@@ -125,6 +144,7 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     phaseValue.textContent = model.phaseLabel;
     enemyHandValue.textContent = `${model.enemy.handCount}장`;
     status.textContent = model.status;
+    status.classList.toggle('is-error', model.statusIsError);
     endTurnButton.disabled = !model.canEndTurn;
 
     enemyHalf.render(model.enemy, model.slots);
@@ -132,8 +152,8 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     renderHand(model.hand);
   }
 
-  function renderHand(tiles: CardTile[]): void {
-    if (tiles.length === 0) {
+  function renderHand(cards: BattleHandCardModel[]): void {
+    if (cards.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'pf-battlefield__hand-empty';
       empty.textContent = '손패가 비었습니다.';
@@ -141,7 +161,22 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
       return;
     }
 
-    handCards.replaceChildren(...tiles.map((tile) => createCardTileElement(tile)));
+    handCards.replaceChildren(...cards.map((card) => createHandCardElement(card)));
+  }
+
+  function createHandCardElement(card: BattleHandCardModel): HTMLElement {
+    const element = createCardTileElement(card.tile, {
+      note: card.playable ? '끌어서 전장에 놓기' : '놓을 수 있는 칸이 없습니다',
+    });
+    element.classList.add('pf-battlefield__hand-card');
+    element.classList.toggle('is-unplayable', !card.playable);
+
+    attachBattleCardDrag(element, dragContext, {
+      begin: () => (card.playable ? options.resolvePlaceTargets(card.tile.instanceId) : []),
+      drop: (slotId) => options.onPlace(card.tile.instanceId, slotId),
+    });
+
+    return element;
   }
 
   return { element, render };
@@ -149,6 +184,8 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
 
 type BattleHalf = {
   root: HTMLElement;
+  /** 드래그가 커서 아래 칸을 찾을 때 쓴다. 칸 엘리먼트는 처음 한 번 만들고 다시 만들지 않는다. */
+  slotElements: ReadonlyMap<BattleSlotId, HTMLElement>;
   render: (side: BattleSideModel, slots: Record<BattleRowId, BattleSlotModel[]>) => void;
 };
 
@@ -205,7 +242,13 @@ function createHalf(side: BattleSide): BattleHalf {
     }
   }
 
-  return { root, render };
+  return {
+    root,
+    slotElements: new Map(
+      [...slotElements].map(([slotId, slot]): [BattleSlotId, HTMLElement] => [slotId, slot.root]),
+    ),
+    render,
+  };
 }
 
 type BattleSlot = {

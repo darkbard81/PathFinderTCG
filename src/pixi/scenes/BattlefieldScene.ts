@@ -9,15 +9,23 @@ import {
 import {
   createBattlefieldView,
   type BattlefieldView,
+  type BattleHandCardModel,
   type BattleSlotModel,
 } from '../../dom/screens/battlefield-view';
 import type { CardTile } from '../../dom/screens/card-tile';
-import { calculateSlotDominance, findBattlefieldCardAtSlot } from '../../game/battle/battle-engine';
+import {
+  applyPlaceAction,
+  calculateSlotDominance,
+  findBattlefieldCardAtSlot,
+  listPlaceActions,
+} from '../../game/battle/battle-engine';
 import { createInitialBattleRuntime } from '../../game/battle/create-battle-runtime';
 import type {
   BattlePhase,
   BattleParticipantRuntimeState,
   BattleRuntimeState,
+  BattleSlotId,
+  PlaceBattleAction,
 } from '../../game/battle/types';
 import type { GameSession } from '../../game/save/session';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
@@ -77,6 +85,8 @@ export class BattlefieldScene implements Scene {
       createBattlefieldView({
         onEndTurn: () => this.endTurn(),
         onLeave: () => this.options.onLeave(this.options.session),
+        resolvePlaceTargets: (cardInstanceId) => this.resolvePlaceTargets(cardInstanceId),
+        onPlace: (cardInstanceId, slotId) => this.place(cardInstanceId, slotId),
       });
 
     this.element = this.battlefieldView.element;
@@ -108,7 +118,33 @@ export class BattlefieldScene implements Scene {
     this.renderView('턴 진행은 다음 단계에서 연결합니다.');
   }
 
-  private renderView(status = ''): void {
+  /** 손패 카드 한 장을 놓을 수 있는 칸 목록이다. 드래그를 시작할 때 강조할 칸이기도 하다. */
+  private resolvePlaceTargets(cardInstanceId: string): BattleSlotId[] {
+    return this.listPlaceActionsForCard(cardInstanceId).map((action) => action.toSlotId);
+  }
+
+  private place(cardInstanceId: string, slotId: BattleSlotId): void {
+    const action = this.listPlaceActionsForCard(cardInstanceId).find(
+      (candidate) => candidate.toSlotId === slotId,
+    );
+
+    if (!action) {
+      // 드래그를 시작한 뒤 상태가 바뀌면 여기에 온다. 규칙 판정은 엔진에만 두고 조용히 되돌린다.
+      this.renderView('지금은 그 칸에 놓을 수 없습니다.', true);
+      return;
+    }
+
+    applyPlaceAction(this.runtime, action);
+    this.renderView(`${action.cost} 코스트 카드를 배치했습니다.`);
+  }
+
+  private listPlaceActionsForCard(cardInstanceId: string): PlaceBattleAction[] {
+    return listPlaceActions(this.runtime, 'player').filter(
+      (action) => action.cardInstanceId === cardInstanceId,
+    );
+  }
+
+  private renderView(status = '', statusIsError = false): void {
     const layout = this.layout ?? { width: 1024, height: 768, scale: 1 };
 
     this.battlefieldView.render({
@@ -123,8 +159,9 @@ export class BattlefieldScene implements Scene {
       },
       player: this.readPileCounts(this.runtime.player),
       slots: this.buildSlotModels(),
-      hand: this.buildHandTiles(),
+      hand: this.buildHandModels(),
       status,
+      statusIsError,
       canEndTurn: false,
     });
   }
@@ -159,10 +196,18 @@ export class BattlefieldScene implements Scene {
     ) as Record<BattleRowId, BattleSlotModel[]>;
   }
 
-  private buildHandTiles(): CardTile[] {
+  private buildHandModels(): BattleHandCardModel[] {
+    // 놓을 곳이 있는 카드를 한 번에 모아 둔다. 카드마다 후보를 다시 계산하면 손패 길이만큼 반복된다.
+    const placeableCardIds = new Set(
+      listPlaceActions(this.runtime, 'player').map((action) => action.cardInstanceId),
+    );
+
     return [...this.runtime.player.hand]
       .sort((left, right) => (left.handIndex ?? 0) - (right.handIndex ?? 0))
-      .map((card) => this.toTile(card));
+      .map((card) => ({
+        tile: this.toTile(card),
+        playable: placeableCardIds.has(card.card.instance.instanceId),
+      }));
   }
 
   private toTile(card: Parameters<typeof toBattleCardTile>[1]): CardTile {

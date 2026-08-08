@@ -51,6 +51,18 @@
   border-color: transparent;
 }
 
+/* 드래그 중에만 켜는 강조다. render를 거치지 않고 battle-drag가 직접 class를 켜고 끈다. */
+.pf-battlefield__slot.is-legal {
+  border: var(--pf-battlefield-slot-legal-border);
+  background: var(--pf-battlefield-slot-legal-background);
+}
+
+.pf-battlefield__slot.is-drop-target {
+  border: var(--pf-battlefield-slot-drop-border);
+  background: var(--pf-battlefield-slot-drop-background);
+  box-shadow: var(--pf-battlefield-slot-drop-glow);
+}
+
 /* 빈 슬롯의 인접 지배력 합계다. 손패를 집기 전에 무엇을 놓을 수 있는지 미리 읽게 한다. */
 .pf-battlefield__dominance {
   min-width: 22px;
@@ -180,6 +192,10 @@
   color: var(--pf-battlefield-log-color);
 }
 
+.pf-battlefield__status.is-error {
+  color: var(--pf-color-danger);
+}
+
 .pf-battlefield__button {
   font-family: inherit;
   font-size: 14px;
@@ -219,14 +235,46 @@
 }
 
 .pf-battlefield__hand:hover,
-.pf-battlefield__hand:focus-within,
-.pf-battlefield__hand.is-expanded {
+.pf-battlefield__hand:focus-within {
   transform: translateY(0);
+}
+
+/*
+ * 카드를 끄는 동안에는 손패를 도로 접는다.
+ * 펼친 손패가 내 후위 줄을 가려서, 열어 둔 채로는 어디에 놓는지가 보이지 않는다.
+ * 끌고 있는 카드는 고스트가 커서를 따라가므로 접혀도 잃어버리지 않는다.
+ */
+.pf-battlefield.is-dragging .pf-battlefield__hand {
+  transform: translateY(calc(100% - var(--pf-battle-hand-peek)));
 }
 
 .pf-battlefield__hand-cards {
   display: flex;
   gap: var(--pf-battlefield-hand-gap);
+}
+
+.pf-battlefield__hand-card.is-unplayable {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pf-battlefield__hand-card.is-dragging {
+  opacity: 0.3;
+}
+
+/*
+ * 커서를 따라다니는 사본이다. 원본은 자리에 남아 어디서 뽑았는지 보이게 한다.
+ * 고스트도 button이라 오버레이 기본 규칙에 걸린다. 선택자를 한 단계 더 붙여 입력을 확실히 끈다.
+ */
+.pf-battlefield .pf-battlefield__drag-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  transform: translate(-50%, -50%) rotate(-2deg);
+  opacity: 0.92;
+  box-shadow: var(--pf-battlefield-ghost-shadow);
+  pointer-events: none;
 }
 
 .pf-battlefield__hand-empty {

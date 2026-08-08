@@ -557,6 +557,13 @@ export const UI_THEME = {
       railValueColor: '#fff3c2',
       slotEmptyBorder: '1px dashed rgba(158, 207, 170, 0.4)',
       slotRadius: '6px',
+      /* 카드를 끄는 동안에만 켜는 강조다. 합법 칸은 은은하게, 커서 아래 칸은 확실하게 구분한다. */
+      slotLegalBorder: '1px dashed rgba(217, 255, 214, 0.85)',
+      slotLegalBackground: 'rgba(217, 255, 214, 0.12)',
+      slotDropBorder: '2px solid #fff3c2',
+      slotDropBackground: 'rgba(255, 243, 194, 0.22)',
+      slotDropGlow: '0 0 18px rgba(255, 243, 194, 0.45)',
+      ghostShadow: '0 18px 42px rgba(0, 0, 0, 0.65)',
       slotDominanceFontSize: '13px',
       slotDominanceColor: '#0d1712',
       slotDominanceBackground: 'rgba(255, 228, 168, 0.92)',

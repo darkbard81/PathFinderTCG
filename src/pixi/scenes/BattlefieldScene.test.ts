@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { BattlefieldView, BattlefieldViewModel } from '../../dom/screens/battlefield-view';
-import { INITIAL_HAND_SIZE } from '../../game/battle/types';
+import { INITIAL_HAND_SIZE, type BattleSlotId } from '../../game/battle/types';
 import { createInitialSaveState } from '../../game/save/create-initial-save';
 import { createGameSession, type GameSession } from '../../game/save/session';
 import { listStageDefinitions } from '../../game/stage/stage-definitions';
@@ -14,6 +14,12 @@ function fixedRandom(): number {
 async function createSession(): Promise<GameSession> {
   return createGameSession(await createInitialSaveState({ slotId: 1 }));
 }
+
+/** Scene의 비공개 조작을 테스트에서 직접 부르기 위한 표면이다. */
+type BattlefieldHarness = Pick<BattlefieldScene, 'resize'> & {
+  resolvePlaceTargets: (cardInstanceId: string) => BattleSlotId[];
+  place: (cardInstanceId: string, slotId: BattleSlotId) => void;
+};
 
 function createHarness(session: GameSession) {
   const view: BattlefieldView & { render: ReturnType<typeof vi.fn> } = {
@@ -33,7 +39,13 @@ function createHarness(session: GameSession) {
 
   scene.resize({ width: 1024, height: 768, scale: 1 });
 
-  return { scene, view, onLeave };
+  return { scene: scene as unknown as BattlefieldHarness, view, onLeave };
+}
+
+function findSlot(model: BattlefieldViewModel, slotId: BattleSlotId) {
+  return Object.values(model.slots)
+    .flat()
+    .find((slot) => slot.slotId === slotId);
 }
 
 function lastModel(view: { render: ReturnType<typeof vi.fn> }): BattlefieldViewModel {
@@ -118,5 +130,108 @@ describe('BattlefieldScene', () => {
     scene.resize({ width: 1600, height: 1000, scale: 1 });
 
     expect(lastModel(view).metrics.cardHeight).toBeGreaterThan(small);
+  });
+});
+
+describe('BattlefieldScene 손패 배치', () => {
+  /** 리더 인접 칸에 실제로 놓을 수 있는 손패 카드 하나를 찾는다. */
+  function findPlaceableCard(
+    scene: BattlefieldHarness,
+    model: BattlefieldViewModel,
+  ): { instanceId: string; slotId: BattleSlotId } | null {
+    for (const card of model.hand) {
+      const [slotId] = scene.resolvePlaceTargets(card.tile.instanceId);
+      if (slotId) {
+        return { instanceId: card.tile.instanceId, slotId };
+      }
+    }
+
+    return null;
+  }
+
+  it('놓을 칸이 있는 카드만 playable로 표시한다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    for (const card of lastModel(view).hand) {
+      expect(card.playable).toBe(scene.resolvePlaceTargets(card.tile.instanceId).length > 0);
+    }
+  });
+
+  it('후보 칸은 전부 내 진영의 빈 칸이다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const model = lastModel(view);
+
+    for (const card of model.hand) {
+      for (const slotId of scene.resolvePlaceTargets(card.tile.instanceId)) {
+        expect(slotId.startsWith('player:')).toBe(true);
+        expect(findSlot(model, slotId)?.card).toBeNull();
+      }
+    }
+  });
+
+  it('후보 칸에 놓으면 전장에 올라가고 손패에서 빠진다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const target = findPlaceableCard(scene, lastModel(view));
+
+    if (!target) {
+      throw new Error('놓을 수 있는 손패 카드가 없다');
+    }
+
+    scene.place(target.instanceId, target.slotId);
+    const model = lastModel(view);
+
+    expect(findSlot(model, target.slotId)?.card?.instanceId).toBe(target.instanceId);
+    expect(model.hand).toHaveLength(INITIAL_HAND_SIZE - 1);
+    expect(model.hand.map((card) => card.tile.instanceId)).not.toContain(target.instanceId);
+  });
+
+  it('카드를 놓으면 그 카드에 인접한 빈 칸의 지배력이 오른다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const target = findPlaceableCard(scene, lastModel(view));
+
+    if (!target) {
+      throw new Error('놓을 수 있는 손패 카드가 없다');
+    }
+
+    const before = lastModel(view);
+    scene.place(target.instanceId, target.slotId);
+    const after = lastModel(view);
+
+    // 방금 채운 칸 자신은 카드가 생겼으니 제외하고, 나머지 빈 칸의 지배력 합계를 비교한다.
+    const sumDominance = (model: BattlefieldViewModel): number =>
+      Object.values(model.slots)
+        .flat()
+        .filter((slot) => slot.slotId !== target.slotId)
+        .reduce((total, slot) => total + (slot.dominance ?? 0), 0);
+
+    expect(sumDominance(after)).toBeGreaterThan(sumDominance(before));
+  });
+
+  it('후보가 아닌 칸에 놓으면 전장을 건드리지 않고 오류로 알린다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const cardId = lastModel(view).hand[0]?.tile.instanceId;
+
+    if (!cardId) {
+      throw new Error('손패가 비어 있다');
+    }
+
+    // enemy 진영 칸은 어떤 손패 카드로도 후보가 되지 않는다.
+    scene.place(cardId, 'enemy:FC');
+    const model = lastModel(view);
+
+    expect(model.statusIsError).toBe(true);
+    expect(model.hand).toHaveLength(INITIAL_HAND_SIZE);
+    expect(findSlot(model, 'enemy:FC')?.card).toBeNull();
+  });
+
+  it('놓을 곳이 없는 카드는 후보 목록도 비어 있다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const unplayable = lastModel(view).hand.find((card) => !card.playable);
+
+    if (!unplayable) {
+      return;
+    }
+
+    expect(scene.resolvePlaceTargets(unplayable.tile.instanceId)).toEqual([]);
   });
 });
