@@ -67,18 +67,18 @@
   pointer-events: none;
 }
 
-.pf-battlefield__slot.is-ready::after,
 .pf-battlefield__slot.is-legal::after,
 .pf-battlefield__slot.is-drop-target::after {
   display: block;
 }
 
-/* 아직 이번 턴에 할 일이 남은 내 카드다. 무엇을 집을 수 있는지 집기 전에 알린다. */
-.pf-battlefield__slot.is-ready::after {
-  box-shadow: var(--pf-battlefield-slot-ready-ring);
-}
-
-/* 아래 둘은 드래그 중에만 켠다. render를 거치지 않고 battle-drag가 직접 class를 켜고 끈다. */
+/*
+ * 행동이 남은 카드에는 아무 표시도 하지 않는다.
+ * 소진한 카드가 이미 회색이라 "회색이 아니면 아직 쓸 수 있다"로 읽힌다.
+ * 여기에 링을 하나 더 얹으면 판이 표시로 뒤덮여 오히려 무슨 뜻인지 읽히지 않는다.
+ *
+ * 아래 둘은 드래그 중에만 켠다. render를 거치지 않고 battle-drag가 직접 class를 켜고 끈다.
+ */
 .pf-battlefield__slot.is-legal::after {
   background: var(--pf-battlefield-slot-legal-background);
   box-shadow: var(--pf-battlefield-slot-legal-ring);

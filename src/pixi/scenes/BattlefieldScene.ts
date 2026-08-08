@@ -1,4 +1,4 @@
-import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { Assets, Container, Graphics, Sprite, type Texture, type Ticker } from 'pixi.js';
 import { toBattleCardTile } from '../../dom/screens/battle-card-tile';
 import {
   BATTLE_ROW_IDS,
@@ -33,7 +33,7 @@ import {
   listBlockActions,
   listMoveActions,
   listPlaceActions,
-  runAutomatedTurnUntilBlockDecision,
+  stepAutomatedTurn,
 } from '../../game/battle/battle-engine';
 import { createInitialBattleRuntime } from '../../game/battle/create-battle-runtime';
 import type {
@@ -48,11 +48,16 @@ import type {
 } from '../../game/battle/types';
 import type { GameSession } from '../../game/save/session';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
+import { SequenceRunner } from '../sequence/SequenceRunner';
+import type { SequenceTicker, SequenceTickerFrame } from '../sequence/sequence-types';
 import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
 import type { Scene } from './scene';
 
 const TITLE_BACKGROUND_ALIAS = 'ui.title-screen';
+
+/** 적 행동 하나를 보여주고 다음으로 넘어가기 전까지 두는 간격이다. */
+const ENEMY_STEP_DELAY_MS = 620;
 
 const PHASE_LABELS: Record<BattlePhase, string> = {
   MAIN: '메인',
@@ -106,6 +111,23 @@ export class BattlefieldScene implements Scene {
   private log: string[] = [];
   /** 적 턴 도중 내 방어 선택을 기다리는 중이면 여기에 남는다. 이때 공격은 아직 적용되지 않았다. */
   private pendingBlock: { decision: BattleBlockDecision; actionCount: number } | null = null;
+  /** 적 차례를 한 수씩 재생하는 중이면 true다. 이 동안에는 내 조작을 받지 않는다. */
+  private playingEnemyTurn = false;
+
+  /**
+   * SequenceRunner에 넘길 프레임 공급원이다.
+   * Scene은 Ticker 자체를 받지 않고 `update`로만 프레임을 받으므로 여기서 중계한다.
+   * 화면이 라우터에서 빠지면 update가 끊겨 자연히 멈춘다.
+   */
+  private readonly frameCallbacks = new Set<(frame: SequenceTickerFrame) => void>();
+  private readonly sequenceTicker: SequenceTicker = {
+    add: (callback) => this.frameCallbacks.add(callback),
+    remove: (callback) => this.frameCallbacks.delete(callback),
+  };
+  private readonly sequence = new SequenceRunner({
+    ticker: this.sequenceTicker,
+    isActive: () => this.active,
+  });
 
   public constructor(private readonly options: BattlefieldSceneOptions) {
     const stageDefinition = requireStageDefinition(options.stageId);
@@ -142,6 +164,14 @@ export class BattlefieldScene implements Scene {
 
   public exit(): void {
     this.active = false;
+    // 대기 중인 연출을 깨워 보낸다. 남겨 두면 적 턴 재생 루프가 영원히 멈춘 채로 남는다.
+    this.sequence.destroy();
+  }
+
+  public update(ticker: Ticker): void {
+    for (const callback of [...this.frameCallbacks]) {
+      callback(ticker);
+    }
   }
 
   public resize(layout: ViewportLayout): void {
@@ -161,25 +191,59 @@ export class BattlefieldScene implements Scene {
     }
 
     this.appendLog(applyTurnEnd(this.runtime, 'MANUAL'));
-    this.runEnemyTurn(0);
-    this.renderView(this.pendingBlock ? '적의 공격을 막을지 고르세요.' : '');
+    void this.runEnemyTurn(0);
   }
 
-  /** 적 자동 턴을 방어 선택 지점이나 턴 종료까지 진행한다. */
-  private runEnemyTurn(initialActionCount: number): void {
+  /**
+   * 적 자동 턴을 한 행동씩 보여준다.
+   * 판정은 `stepAutomatedTurn`이 그대로 하고, 이 메서드는 사이에 간격만 넣는다.
+   * 방어 선택이 필요한 공격 앞에서 멈추면 선택이 끝난 뒤 이어서 재생한다.
+   */
+  private async runEnemyTurn(initialActionCount: number): Promise<void> {
     if (this.runtime.currentSide !== 'enemy' || this.runtime.phase === 'GAME_OVER') {
+      this.renderView('내 차례입니다.');
       return;
     }
 
-    const result = runAutomatedTurnUntilBlockDecision(this.runtime, 'enemy', {
-      interruptForBlockSide: 'player',
-      initialActionCount,
-    });
-    this.appendLog(result.events);
+    this.playingEnemyTurn = true;
+    this.renderView('적이 움직입니다...');
+    let actionCount = initialActionCount;
 
-    this.pendingBlock = result.blockDecision
-      ? { decision: result.blockDecision, actionCount: result.actionCount }
-      : null;
+    for (;;) {
+      const step = stepAutomatedTurn(this.runtime, 'enemy', {
+        interruptForBlockSide: 'player',
+        initialActionCount: actionCount,
+      });
+      actionCount = step.actionCount;
+      this.appendLog(step.events);
+
+      if (step.blockDecision) {
+        this.pendingBlock = { decision: step.blockDecision, actionCount };
+        this.playingEnemyTurn = false;
+        this.renderView('적의 공격을 막을지 고르세요.');
+        return;
+      }
+
+      this.renderView('적이 움직입니다...');
+      if (step.finished) {
+        break;
+      }
+
+      await this.wait(ENEMY_STEP_DELAY_MS);
+      if (!this.active) {
+        return;
+      }
+    }
+
+    this.playingEnemyTurn = false;
+    this.renderView(this.runtime.outcome ? '' : '내 차례입니다.');
+  }
+
+  private wait(durationMs: number): Promise<void> {
+    return this.sequence
+      .createSequence()
+      .add({ timer: 0, duration: durationMs, action: 'wait' })
+      .play();
   }
 
   /** 방어 선택 결과를 적용한다. 막지 않기를 고르면 원래 공격이 그대로 들어온다. */
@@ -209,23 +273,23 @@ export class BattlefieldScene implements Scene {
     }
 
     this.appendLog([{ type: 'ACTION', side: 'enemy', action: pending.decision.attackAction }]);
+    this.renderView(blockAction ? '공격을 막았습니다.' : '공격을 그대로 받았습니다.');
     // 멈춘 공격도 한 번의 행동이다. 이어서 돌릴 때 행동 제한 계산이 어긋나지 않게 1을 더한다.
-    this.runEnemyTurn(pending.actionCount + 1);
-    this.renderView(
-      this.pendingBlock
-        ? '적의 공격을 막을지 고르세요.'
-        : blockAction
-          ? '공격을 막았습니다.'
-          : '공격을 그대로 받았습니다.',
+    void this.runEnemyTurn(pending.actionCount + 1);
+  }
+
+  /** 내가 카드를 움직일 수 있는 상태인지다. 턴 종료 조건과 같다. */
+  private canAct(): boolean {
+    return (
+      this.runtime.phase !== 'GAME_OVER' &&
+      this.runtime.currentSide === 'player' &&
+      this.pendingBlock === null &&
+      !this.playingEnemyTurn
     );
   }
 
   private canEndTurn(): boolean {
-    return (
-      this.runtime.phase !== 'GAME_OVER' &&
-      this.runtime.currentSide === 'player' &&
-      this.pendingBlock === null
-    );
+    return this.canAct();
   }
 
   private appendLog(events: readonly BattleTurnEvent[]): void {
@@ -237,6 +301,11 @@ export class BattlefieldScene implements Scene {
    * 이동 대상은 빈 칸, 공격 대상은 적이 선 칸이라 둘은 절대 겹치지 않는다.
    */
   private resolveTargets(source: BattleDragSource): BattleSlotId[] {
+    // 적 차례 재생이나 방어 선택 중에는 아무것도 집히지 않게 빈 목록을 낸다.
+    if (!this.canAct()) {
+      return [];
+    }
+
     if (source.kind === 'hand') {
       return listPlaceActions(this.runtime, 'player')
         .filter((action) => action.cardInstanceId === source.cardInstanceId)
@@ -260,7 +329,7 @@ export class BattlefieldScene implements Scene {
   }
 
   private applyDrop(source: BattleDragSource, slotId: BattleSlotId): void {
-    if (this.pendingBlock || this.runtime.phase === 'GAME_OVER') {
+    if (!this.canAct()) {
       return;
     }
 
@@ -412,6 +481,7 @@ export class BattlefieldScene implements Scene {
   }
 
   private buildSlotModels(): Record<BattleRowId, BattleSlotModel[]> {
+    const canAct = this.canAct();
     // 행동이 남은 카드를 미리 모아 둔다. 칸마다 후보를 다시 계산하면 12번 반복된다.
     const movableCardIds = new Set(
       listMoveActions(this.runtime, 'player').map((action) => action.cardInstanceId),
@@ -455,11 +525,13 @@ export class BattlefieldScene implements Scene {
             slotId,
             card: this.toTile(card),
             dominance: null,
-            // 스킬만 남은 카드도 아직 할 일이 있다. 셋 중 하나라도 남았으면 소진으로 그리지 않는다.
-            ready:
-              movableCardIds.has(instanceId) ||
-              attackerCardIds.has(instanceId) ||
-              skills.length > 0,
+            // 내 차례가 아니면 소진 여부를 판정하지 않는다. 적 턴 내내 내 카드가 회색이 되면 산만하다.
+            ready: canAct
+              ? // 스킬만 남은 카드도 아직 할 일이 있다. 셋 중 하나라도 남았으면 소진으로 그리지 않는다.
+                movableCardIds.has(instanceId) ||
+                attackerCardIds.has(instanceId) ||
+                skills.length > 0
+              : null,
             skills,
           };
         }),

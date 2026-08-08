@@ -562,7 +562,6 @@ export const UI_THEME = {
        * 카드 이미지가 칸을 꽉 채워서, 칸 자체의 배경과 테두리는 카드가 선 순간 다 가려진다.
        * 그래서 테두리는 inset 그림자로 안쪽에 그리고 바깥 번짐만 밖으로 낸다.
        */
-      slotReadyRing: 'inset 0 0 0 2px rgba(191, 238, 197, 0.9), 0 0 12px rgba(191, 238, 197, 0.3)',
       slotLegalRing: 'inset 0 0 0 2px rgba(217, 255, 214, 0.9)',
       slotLegalBackground: 'rgba(217, 255, 214, 0.14)',
       slotDropRing: 'inset 0 0 0 3px #fff3c2, 0 0 22px rgba(255, 243, 194, 0.6)',

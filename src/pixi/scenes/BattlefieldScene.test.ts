@@ -1,3 +1,4 @@
+import type { Ticker } from 'pixi.js';
 import { describe, expect, it, vi } from 'vitest';
 import type {
   BattleDragSource,
@@ -27,7 +28,8 @@ async function createSession(): Promise<GameSession> {
 }
 
 /** Scene의 비공개 조작을 테스트에서 직접 부르기 위한 표면이다. */
-type BattlefieldHarness = Pick<BattlefieldScene, 'resize'> & {
+type BattlefieldHarness = Pick<BattlefieldScene, 'resize' | 'update'> & {
+  playingEnemyTurn: boolean;
   runtime: BattleRuntimeState;
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
   applyDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
@@ -55,6 +57,21 @@ function createHarness(session: GameSession) {
   scene.resize({ width: 1024, height: 768, scale: 1 });
 
   return { scene: scene as unknown as BattlefieldHarness, view, onLeave };
+}
+
+const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
+ * 적 차례 재생이 끝날 때까지 프레임을 공급한다.
+ * Scene은 SceneRouter의 update로만 프레임을 받으므로 테스트가 직접 돌려야 한다.
+ * 한 프레임을 크게 잡아 행동 사이 간격을 한 번에 넘긴다.
+ */
+async function settle(scene: BattlefieldHarness): Promise<void> {
+  for (let frame = 0; frame < 400 && scene.playingEnemyTurn; frame += 1) {
+    await flush();
+    scene.update({ deltaMS: 1000 } as unknown as Ticker);
+    await flush();
+  }
 }
 
 function findSlot(model: BattlefieldViewModel, slotId: BattleSlotId) {
@@ -389,9 +406,10 @@ describe('BattlefieldScene 턴 진행', () => {
     const { scene, view } = createHarness(await createSession());
 
     scene.endTurn();
+    await settle(scene);
     const model = lastModel(view);
 
-    // 적 자동 턴은 한 번에 끝까지 돈다. 첫 턴에는 방어 후보가 없어 중간에 멈추지 않는다.
+    // 첫 턴에는 방어 후보가 없어 적 차례가 중간에 멈추지 않는다.
     expect(model.blockPrompt).toBeNull();
     expect(model.currentSide).toBe('player');
     expect(model.turnNumber).toBe(2);
@@ -402,6 +420,7 @@ describe('BattlefieldScene 턴 진행', () => {
     const before = lastModel(view);
 
     scene.endTurn();
+    await settle(scene);
     const after = lastModel(view);
 
     expect(after.player.deckCount).toBe(before.player.deckCount - 1);
@@ -412,6 +431,7 @@ describe('BattlefieldScene 턴 진행', () => {
     const { scene, view } = createHarness(await createSession());
 
     scene.endTurn();
+    await settle(scene);
     const log = lastModel(view).log;
 
     expect(log[0]).toBe('나: 턴을 넘겼다');
@@ -442,9 +462,11 @@ describe('BattlefieldScene 턴 진행', () => {
     for (let turn = 0; turn < 60 && !lastModel(view).result; turn += 1) {
       if (lastModel(view).blockPrompt) {
         scene.resolveBlock(null);
+        await settle(scene);
         continue;
       }
       scene.endTurn();
+      await settle(scene);
     }
 
     const model = lastModel(view);
@@ -556,5 +578,51 @@ describe('BattlefieldScene 방어 선택', () => {
     expect(lastModel(view).blockPrompt).toBeNull();
     expect(target.card.instance.hp).toBe(6);
     expect(blocker.card.instance.hp).toBe(9);
+  });
+});
+
+describe('BattlefieldScene 적 차례 재생', () => {
+  it('재생 중에는 턴 종료와 조작이 모두 잠긴다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const handCardId = lastModel(view).hand[0]?.tile.instanceId ?? '';
+
+    scene.endTurn();
+
+    expect(scene.playingEnemyTurn).toBe(true);
+    expect(lastModel(view).canEndTurn).toBe(false);
+    expect(scene.resolveTargets({ kind: 'hand', cardInstanceId: handCardId })).toEqual([]);
+
+    await settle(scene);
+    expect(lastModel(view).canEndTurn).toBe(true);
+  });
+
+  it('적 행동을 한 번에 하나씩 쌓는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    scene.endTurn();
+    const afterFirstAction = lastModel(view).log.length;
+
+    // 프레임을 한 번만 공급하면 간격 하나를 넘겨 다음 행동 하나만 진행한다.
+    await flush();
+    scene.update({ deltaMS: 1000 } as unknown as Ticker);
+    await flush();
+    const afterSecondAction = lastModel(view).log.length;
+
+    expect(afterSecondAction).toBeGreaterThan(afterFirstAction);
+    expect(scene.playingEnemyTurn).toBe(true);
+
+    await settle(scene);
+    expect(lastModel(view).log.length).toBeGreaterThan(afterSecondAction);
+  });
+
+  it('재생 중 내 카드는 소진 여부를 판정하지 않는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    scene.endTurn();
+
+    expect(findSlot(lastModel(view), 'player:BC')?.ready).toBeNull();
+
+    await settle(scene);
+    expect(findSlot(lastModel(view), 'player:BC')?.ready).toBe(true);
   });
 });
