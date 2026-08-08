@@ -42,7 +42,7 @@ export function createTitleView(options: TitleViewOptions): TitleView {
 
   const heading = document.createElement('h1');
   heading.className = 'pf-title__heading';
-  heading.textContent = 'PATHFINDER TCG';
+  heading.textContent = 'ARCANE FRONTIER TCG';
 
   const panel = document.createElement('section');
   panel.className = 'pf-title__panel';

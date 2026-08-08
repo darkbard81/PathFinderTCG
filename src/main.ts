@@ -205,5 +205,5 @@ void (async (): Promise<void> => {
 
   await showTitle();
 })().catch((error: unknown) => {
-  console.error('PathfinderTCG bootstrap failed.', error);
+  console.error('Arcane Frontier TCG bootstrap failed.', error);
 });
