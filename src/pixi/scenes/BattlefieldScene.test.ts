@@ -4,9 +4,11 @@ import type {
   BattlefieldView,
   BattlefieldViewModel,
 } from '../../dom/screens/battlefield-view';
-import { applyTurnEnd } from '../../game/battle/battle-engine';
+import { applyTurnEnd, listAttackActions, listBlockActions } from '../../game/battle/battle-engine';
 import {
   INITIAL_HAND_SIZE,
+  type BattleBlockDecision,
+  type BattleCardRuntimeState,
   type BattleRuntimeState,
   type BattleSlotId,
 } from '../../game/battle/types';
@@ -29,6 +31,9 @@ type BattlefieldHarness = Pick<BattlefieldScene, 'resize'> & {
   runtime: BattleRuntimeState;
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
   applyDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
+  endTurn: () => void;
+  resolveBlock: (blockerInstanceId: string | null) => void;
+  pendingBlock: { decision: BattleBlockDecision; actionCount: number } | null;
 };
 
 function createHarness(session: GameSession) {
@@ -370,5 +375,186 @@ describe('BattlefieldScene 전장 카드 조작', () => {
     );
 
     expect(lastModel(view).statusIsError).toBe(true);
+  });
+});
+
+describe('BattlefieldScene 턴 진행', () => {
+  it('내 차례에는 턴을 넘길 수 있다', async () => {
+    const { view } = createHarness(await createSession());
+
+    expect(lastModel(view).canEndTurn).toBe(true);
+  });
+
+  it('턴을 넘기면 적 차례가 끝나고 다시 내 차례로 돌아온다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    scene.endTurn();
+    const model = lastModel(view);
+
+    // 적 자동 턴은 한 번에 끝까지 돈다. 첫 턴에는 방어 후보가 없어 중간에 멈추지 않는다.
+    expect(model.blockPrompt).toBeNull();
+    expect(model.currentSide).toBe('player');
+    expect(model.turnNumber).toBe(2);
+  });
+
+  it('턴을 넘기면 양쪽 다 카드를 한 장씩 뽑는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const before = lastModel(view);
+
+    scene.endTurn();
+    const after = lastModel(view);
+
+    expect(after.player.deckCount).toBe(before.player.deckCount - 1);
+    expect(after.enemy.deckCount).toBeLessThan(before.enemy.deckCount);
+  });
+
+  it('적 차례의 행동이 기록에 남는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    scene.endTurn();
+    const log = lastModel(view).log;
+
+    expect(log[0]).toBe('나: 턴을 넘겼다');
+    expect(log.some((line) => line.startsWith('적 차례 시작'))).toBe(true);
+  });
+
+  it('내 행동도 기록에 남는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = findSlot(lastModel(view), 'player:BC')?.card?.instanceId ?? '';
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FC');
+
+    expect(lastModel(view).log).toEqual(['나: 카드를 이동했습니다.']);
+  });
+
+  it('실패한 행동은 기록에 남기지 않는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+    const leaderId = findSlot(lastModel(view), 'player:BC')?.card?.instanceId ?? '';
+
+    scene.applyDrop({ kind: 'card', cardInstanceId: leaderId }, 'player:FL');
+
+    expect(lastModel(view).log).toEqual([]);
+  });
+
+  it('승패가 나면 결과를 넘기고 턴 종료를 막는다', async () => {
+    const { scene, view } = createHarness(await createSession());
+
+    for (let turn = 0; turn < 60 && !lastModel(view).result; turn += 1) {
+      if (lastModel(view).blockPrompt) {
+        scene.resolveBlock(null);
+        continue;
+      }
+      scene.endTurn();
+    }
+
+    const model = lastModel(view);
+
+    // 내가 아무것도 하지 않으면 리더가 맞아 죽는다. 결과는 반드시 난다.
+    expect(model.result?.title).toBe('패배');
+    expect(model.canEndTurn).toBe(false);
+    expect(model.phaseLabel).toBe('종료');
+  });
+});
+
+/**
+ * 방어 선택은 `guardian_block` 능력을 가진 카드가 있어야 생긴다.
+ * 지금 배포되는 덱에는 그 능력이 없어서 실제 대전으로는 이 경로에 닿지 않는다.
+ * 엔진은 이미 지원하므로, 상황을 직접 세워 UI 배선만 검증한다.
+ */
+describe('BattlefieldScene 방어 선택', () => {
+  function placeOnField(
+    runtime: BattleRuntimeState,
+    card: BattleCardRuntimeState,
+    slotId: BattleSlotId,
+  ): void {
+    const participant = card.side === 'player' ? runtime.player : runtime.enemy;
+    participant.hand = participant.hand.filter((candidate) => candidate !== card);
+    card.zone = 'BATTLEFIELD';
+    card.battlefieldSlot = slotId;
+    // 등장 턴에는 공격할 수 없다. 0턴에 나온 것으로 두어 그 제한을 벗어난다.
+    card.enteredBattlefieldTurnNumber = 0;
+    card.handIndex = null;
+    runtime.battlefield.push(card);
+  }
+
+  async function createBlockScenario() {
+    const harness = createHarness(await createSession());
+    const { runtime } = harness.scene;
+
+    const [target, blocker] = runtime.player.hand;
+    const [attacker] = runtime.enemy.hand;
+    if (!target || !blocker || !attacker) {
+      throw new Error('시나리오를 세울 손패가 모자라다');
+    }
+
+    placeOnField(runtime, target, 'player:FC');
+    placeOnField(runtime, blocker, 'player:FR');
+    placeOnField(runtime, attacker, 'enemy:FC');
+    // 정의는 같은 카드끼리 공유한다. 능력을 붙이기 전에 이 인스턴스 몫으로 복사한다.
+    blocker.card = {
+      instance: blocker.card.instance,
+      definition: {
+        ...blocker.card.definition,
+        abilities: [
+          ...blocker.card.definition.abilities,
+          { id: 'guardian_block', category: 'GLOBAL', name: '수호', text: '' },
+        ],
+      },
+    };
+    attacker.card.instance.attack = 3;
+    target.card.instance.hp = 9;
+    blocker.card.instance.hp = 9;
+    runtime.currentSide = 'enemy';
+
+    const [attackAction] = listAttackActions(runtime, 'enemy').filter(
+      (action) =>
+        action.attackerInstanceId === attacker.card.instance.instanceId &&
+        action.targetInstanceId === target.card.instance.instanceId,
+    );
+    if (!attackAction) {
+      throw new Error('세운 상황에서 합법 공격이 나오지 않았다');
+    }
+
+    const blockActions = listBlockActions(runtime, attackAction);
+    harness.scene.pendingBlock = { decision: { attackAction, blockActions }, actionCount: 0 };
+    harness.scene.resize({ width: 1024, height: 768, scale: 1 });
+
+    return { ...harness, target, blocker, attacker };
+  }
+
+  it('막을 수 있는 유닛을 물음으로 내놓는다', async () => {
+    const { view, blocker } = await createBlockScenario();
+    const prompt = lastModel(view).blockPrompt;
+
+    expect(prompt?.blockers.map((option) => option.instanceId)).toEqual([
+      blocker.card.instance.instanceId,
+    ]);
+    expect(prompt?.message).toContain('3 피해');
+  });
+
+  it('방어를 고르는 동안에는 턴을 넘길 수 없다', async () => {
+    const { view } = await createBlockScenario();
+
+    expect(lastModel(view).canEndTurn).toBe(false);
+  });
+
+  it('막기를 고르면 원래 대상 대신 막은 유닛이 맞는다', async () => {
+    const { scene, view, target, blocker } = await createBlockScenario();
+
+    scene.resolveBlock(blocker.card.instance.instanceId);
+
+    expect(lastModel(view).blockPrompt).toBeNull();
+    expect(blocker.card.instance.hp).toBe(6);
+    expect(target.card.instance.hp).toBe(9);
+  });
+
+  it('막지 않기를 고르면 원래 대상이 그대로 맞는다', async () => {
+    const { scene, view, target, blocker } = await createBlockScenario();
+
+    scene.resolveBlock(null);
+
+    expect(lastModel(view).blockPrompt).toBeNull();
+    expect(target.card.instance.hp).toBe(6);
+    expect(blocker.card.instance.hp).toBe(9);
   });
 });

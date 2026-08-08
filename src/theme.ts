@@ -557,14 +557,17 @@ export const UI_THEME = {
       railValueColor: '#fff3c2',
       slotEmptyBorder: '1px dashed rgba(158, 207, 170, 0.4)',
       slotRadius: '6px',
-      /* 카드를 끄는 동안에만 켜는 강조다. 합법 칸은 은은하게, 커서 아래 칸은 확실하게 구분한다. */
-      slotLegalBorder: '1px dashed rgba(217, 255, 214, 0.85)',
-      slotLegalBackground: 'rgba(217, 255, 214, 0.12)',
-      slotDropBorder: '2px solid #fff3c2',
-      slotDropBackground: 'rgba(255, 243, 194, 0.22)',
-      slotDropGlow: '0 0 18px rgba(255, 243, 194, 0.45)',
+      /*
+       * 칸 강조는 카드 위에 덮는 오버레이가 그린다.
+       * 카드 이미지가 칸을 꽉 채워서, 칸 자체의 배경과 테두리는 카드가 선 순간 다 가려진다.
+       * 그래서 테두리는 inset 그림자로 안쪽에 그리고 바깥 번짐만 밖으로 낸다.
+       */
+      slotReadyRing: 'inset 0 0 0 2px rgba(191, 238, 197, 0.9), 0 0 12px rgba(191, 238, 197, 0.3)',
+      slotLegalRing: 'inset 0 0 0 2px rgba(217, 255, 214, 0.9)',
+      slotLegalBackground: 'rgba(217, 255, 214, 0.14)',
+      slotDropRing: 'inset 0 0 0 3px #fff3c2, 0 0 22px rgba(255, 243, 194, 0.6)',
+      slotDropBackground: 'rgba(255, 243, 194, 0.26)',
       ghostShadow: '0 18px 42px rgba(0, 0, 0, 0.65)',
-      cardReadyGlow: '0 0 0 2px rgba(191, 238, 197, 0.85), 0 0 14px rgba(191, 238, 197, 0.35)',
       skillSize: '22px',
       skillFontSize: '11px',
       skillColor: '#07100d',

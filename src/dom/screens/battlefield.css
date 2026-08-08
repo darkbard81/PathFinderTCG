@@ -40,6 +40,7 @@
 .pf-battlefield__slot {
   grid-column: span 1;
   position: relative;
+  box-sizing: border-box;
   border: var(--pf-battlefield-slot-empty-border);
   border-radius: var(--pf-battlefield-slot-radius);
   display: flex;
@@ -51,21 +52,42 @@
   border-color: transparent;
 }
 
-/* 드래그 중에만 켜는 강조다. render를 거치지 않고 battle-drag가 직접 class를 켜고 끈다. */
-.pf-battlefield__slot.is-legal {
-  border: var(--pf-battlefield-slot-legal-border);
+/*
+ * 칸 강조 오버레이다.
+ * 카드 이미지가 칸을 꽉 채우므로 칸 자체의 배경과 테두리로는 카드가 선 칸을 강조할 수 없다.
+ * 카드보다 위에 덮는 레이어를 하나 두고 여기에만 강조를 그린다.
+ */
+.pf-battlefield__slot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: 5;
+  display: none;
+  border-radius: calc(var(--pf-battlefield-slot-radius) + 2px);
+  pointer-events: none;
+}
+
+.pf-battlefield__slot.is-ready::after,
+.pf-battlefield__slot.is-legal::after,
+.pf-battlefield__slot.is-drop-target::after {
+  display: block;
+}
+
+/* 아직 이번 턴에 할 일이 남은 내 카드다. 무엇을 집을 수 있는지 집기 전에 알린다. */
+.pf-battlefield__slot.is-ready::after {
+  box-shadow: var(--pf-battlefield-slot-ready-ring);
+}
+
+/* 아래 둘은 드래그 중에만 켠다. render를 거치지 않고 battle-drag가 직접 class를 켜고 끈다. */
+.pf-battlefield__slot.is-legal::after {
   background: var(--pf-battlefield-slot-legal-background);
+  box-shadow: var(--pf-battlefield-slot-legal-ring);
 }
 
-.pf-battlefield__slot.is-drop-target {
-  border: var(--pf-battlefield-slot-drop-border);
+/* 커서 아래 칸이다. 드래그 중 강조가 겹치면 이쪽이 이겨야 하므로 마지막에 둔다. */
+.pf-battlefield__slot.is-drop-target::after {
   background: var(--pf-battlefield-slot-drop-background);
-  box-shadow: var(--pf-battlefield-slot-drop-glow);
-}
-
-/* 아직 이동·공격이 남은 내 카드다. 무엇을 집을 수 있는지 집기 전에 알린다. */
-.pf-battlefield__slot.is-ready .pf-battlefield__board-card {
-  box-shadow: var(--pf-battlefield-card-ready-glow);
+  box-shadow: var(--pf-battlefield-slot-drop-ring);
 }
 
 /* 이번 턴에 할 일을 끝낸 내 카드다. 집히지 않으므로 그렇게 보이게 한다. */
@@ -89,7 +111,8 @@
   left: 3px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 3;
+  /* 칸 강조 오버레이(5)보다 위여야 강조가 켜져도 배지 색이 흐려지지 않는다. */
+  z-index: 6;
   min-width: var(--pf-battlefield-skill-size);
   height: var(--pf-battlefield-skill-size);
   padding: 0 4px;
@@ -342,4 +365,76 @@
   align-items: center;
   font-size: var(--pf-battlefield-log-font-size);
   color: var(--pf-battlefield-log-color);
+}
+
+/* 좌측 레일의 전투 기록이다. 최신 줄이 아래에 쌓이고 뷰가 매번 끝으로 스크롤한다. */
+.pf-battlefield__log {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  font-size: var(--pf-battlefield-log-font-size);
+  line-height: var(--pf-battlefield-log-line-height);
+  color: var(--pf-battlefield-log-color);
+}
+
+.pf-battlefield__log li {
+  padding: 3px 0;
+  border-bottom: var(--pf-card-workbench-divider-border);
+  word-break: keep-all;
+}
+
+.pf-battlefield__log li:last-child {
+  color: var(--pf-color-primary);
+  border-bottom: none;
+}
+
+/* 방어 선택과 전투 결과가 함께 쓰는 모달이다. 닫혀 있으면 입력을 통과시킨다. */
+.pf-battlefield__dialog {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--pf-surface-modal-backdrop);
+}
+
+.pf-battlefield__dialog.is-open {
+  display: flex;
+}
+
+.pf-battlefield__dialog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+  max-width: 460px;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--pf-surface-modal);
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 8px;
+  box-shadow: var(--pf-card-workbench-panel-shadow);
+}
+
+.pf-battlefield__dialog-panel.is-win {
+  border: 1px solid var(--pf-color-primary-warm);
+}
+
+.pf-battlefield__dialog-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--pf-color-primary-warm);
+}
+
+.pf-battlefield__dialog-body {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--pf-color-secondary);
+  white-space: pre-line;
 }

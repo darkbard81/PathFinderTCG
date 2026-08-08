@@ -59,11 +59,32 @@ export type BattlefieldViewModel = {
   status: string;
   statusIsError: boolean;
   canEndTurn: boolean;
+  /** 최근 줄이 마지막에 오는 순서다. 뷰가 아래로 스크롤해 최신 줄을 보여준다. */
+  log: string[];
+  blockPrompt: BattleBlockPromptModel | null;
+  result: BattleResultModel | null;
+};
+
+/**
+ * 적 공격을 막을지 고르는 물음이다.
+ * 엔진이 방어 후보를 다 계산해 주므로 뷰는 고르기만 시킨다.
+ */
+export type BattleBlockPromptModel = {
+  message: string;
+  blockers: { instanceId: string; label: string }[];
+};
+
+export type BattleResultModel = {
+  title: string;
+  body: string;
+  isWin: boolean;
 };
 
 export type BattlefieldViewOptions = {
   onEndTurn: () => void;
   onLeave: () => void;
+  /** 막을 유닛을 고르거나, null로 막지 않기를 고른다. */
+  onBlock: (blockerInstanceId: string | null) => void;
   /**
    * 무언가를 집었을 때 놓을 수 있는 칸을 물어본다.
    * 드래그 중에는 render를 부르지 않으므로 이 결과로 강조를 켠다.
@@ -119,6 +140,9 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   const stageValue = createRailValue();
   const roundValue = createRailValue();
   const phaseValue = createRailValue();
+  const log = document.createElement('ol');
+  log.className = 'pf-battlefield__log';
+  log.dataset.interactive = 'true';
   leftRail.append(
     turnBanner,
     createRailLabel('스테이지'),
@@ -127,6 +151,8 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     roundValue,
     createRailLabel('단계'),
     phaseValue,
+    createRailLabel('기록'),
+    log,
   );
 
   const rightRail = document.createElement('aside');
@@ -157,7 +183,13 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   handCards.className = 'pf-battlefield__hand-cards';
   hand.append(handCards);
 
-  element.append(leftRail, board, rightRail, hand);
+  const dialog = document.createElement('div');
+  dialog.className = 'pf-battlefield__dialog';
+  const dialogPanel = document.createElement('div');
+  dialogPanel.className = 'pf-battlefield__dialog-panel';
+  dialog.append(dialogPanel);
+
+  element.append(leftRail, board, rightRail, hand, dialog);
 
   function render(model: BattlefieldViewModel): void {
     applyMetrics(element, model.metrics);
@@ -175,6 +207,57 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     enemyHalf.render(model.enemy, model.slots);
     playerHalf.render(model.player, model.slots);
     renderHand(model.hand);
+    renderLog(model.log);
+    renderDialog(model);
+  }
+
+  function renderLog(lines: string[]): void {
+    log.replaceChildren(
+      ...lines.map((line) => {
+        const item = document.createElement('li');
+        item.textContent = line;
+        return item;
+      }),
+    );
+    // 최신 줄이 아래에 쌓인다. 매번 끝으로 붙여야 방금 일어난 일이 보인다.
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function renderDialog(model: BattlefieldViewModel): void {
+    // 결과가 먼저다. 승패가 났으면 방어 선택은 의미가 없다.
+    if (model.result) {
+      dialog.classList.add('is-open');
+      dialogPanel.classList.toggle('is-win', model.result.isWin);
+      const leave = createButton('스테이지로 돌아가기');
+      leave.addEventListener('click', () => options.onLeave());
+      dialogPanel.replaceChildren(
+        createDialogTitle(model.result.title),
+        createDialogBody(model.result.body),
+        leave,
+      );
+      return;
+    }
+
+    if (!model.blockPrompt) {
+      dialog.classList.remove('is-open');
+      dialogPanel.replaceChildren();
+      return;
+    }
+
+    dialog.classList.add('is-open');
+    dialogPanel.classList.remove('is-win');
+    const decline = createButton('막지 않는다');
+    decline.addEventListener('click', () => options.onBlock(null));
+    dialogPanel.replaceChildren(
+      createDialogTitle('방어 선택'),
+      createDialogBody(model.blockPrompt.message),
+      ...model.blockPrompt.blockers.map((blocker) => {
+        const button = createButton(blocker.label);
+        button.addEventListener('click', () => options.onBlock(blocker.instanceId));
+        return button;
+      }),
+      decline,
+    );
   }
 
   function renderHand(cards: BattleHandCardModel[]): void {
@@ -420,4 +503,18 @@ function createButton(label: string): HTMLButtonElement {
   button.className = 'pf-battlefield__button';
   button.textContent = label;
   return button;
+}
+
+function createDialogTitle(text: string): HTMLElement {
+  const title = document.createElement('h2');
+  title.className = 'pf-battlefield__dialog-title';
+  title.textContent = text;
+  return title;
+}
+
+function createDialogBody(text: string): HTMLElement {
+  const body = document.createElement('p');
+  body.className = 'pf-battlefield__dialog-body';
+  body.textContent = text;
+  return body;
 }

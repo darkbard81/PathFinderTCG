@@ -6,11 +6,14 @@ import {
   resolveBattleBoardMetrics,
   type BattleRowId,
 } from '../../dom/screens/battlefield-layout';
+import { formatBattleTurnEvents, readCardName } from '../../dom/screens/battle-log';
 import {
   createBattlefieldView,
   type BattlefieldView,
+  type BattleBlockPromptModel,
   type BattleDragSource,
   type BattleHandCardModel,
+  type BattleResultModel,
   type BattleSkillBadgeModel,
   type BattleSlotModel,
 } from '../../dom/screens/battlefield-view';
@@ -22,6 +25,7 @@ import {
   applyBlockAction,
   applyMoveAction,
   applyPlaceAction,
+  applyTurnEnd,
   calculateSlotDominance,
   findBattlefieldCardAtSlot,
   listActiveSkillActions,
@@ -29,15 +33,18 @@ import {
   listBlockActions,
   listMoveActions,
   listPlaceActions,
+  runAutomatedTurnUntilBlockDecision,
 } from '../../game/battle/battle-engine';
 import { createInitialBattleRuntime } from '../../game/battle/create-battle-runtime';
 import type {
   ActiveSkillBattleEffect,
+  BattleBlockDecision,
   BattleCardRuntimeState,
   BattlePhase,
   BattleParticipantRuntimeState,
   BattleRuntimeState,
   BattleSlotId,
+  BattleTurnEvent,
 } from '../../game/battle/types';
 import type { GameSession } from '../../game/save/session';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
@@ -80,7 +87,7 @@ export type BattlefieldSceneOptions = {
  * 전장 화면이다.
  * 규칙 판정은 전부 battle-engine이 맡고, 이 Scene은 런타임 상태를 뷰 모델로 옮기고
  * 드래그 결과를 엔진 액션으로 바꿔 적용하는 일만 한다.
- * 턴 진행과 적 차례는 다음 단계에서 붙인다.
+ * 적 차례는 즉시 계산해 로그로 보여준다. 한 수씩 보여주는 연출은 다음 단계에서 붙인다.
  */
 export class BattlefieldScene implements Scene {
   public readonly view = new Container({
@@ -96,6 +103,9 @@ export class BattlefieldScene implements Scene {
   private background: Sprite | null = null;
   private layout: ViewportLayout | null = null;
   private active = true;
+  private log: string[] = [];
+  /** 적 턴 도중 내 방어 선택을 기다리는 중이면 여기에 남는다. 이때 공격은 아직 적용되지 않았다. */
+  private pendingBlock: { decision: BattleBlockDecision; actionCount: number } | null = null;
 
   public constructor(private readonly options: BattlefieldSceneOptions) {
     const stageDefinition = requireStageDefinition(options.stageId);
@@ -111,6 +121,7 @@ export class BattlefieldScene implements Scene {
       createBattlefieldView({
         onEndTurn: () => this.endTurn(),
         onLeave: () => this.options.onLeave(this.options.session),
+        onBlock: (blockerInstanceId) => this.resolveBlock(blockerInstanceId),
         resolveTargets: (source) => this.resolveTargets(source),
         onDrop: (source, slotId) => this.applyDrop(source, slotId),
       });
@@ -140,8 +151,85 @@ export class BattlefieldScene implements Scene {
     this.renderView();
   }
 
+  /**
+   * 내 턴을 끝내고 적 턴을 끝까지 돌린 뒤 다시 내 턴으로 돌아온다.
+   * 적 공격을 내가 막을지 골라야 하면 그 앞에서 멈추고, 선택이 끝나면 이어서 돌린다.
+   */
   private endTurn(): void {
-    this.renderView('턴 진행은 다음 단계에서 연결합니다.');
+    if (!this.canEndTurn()) {
+      return;
+    }
+
+    this.appendLog(applyTurnEnd(this.runtime, 'MANUAL'));
+    this.runEnemyTurn(0);
+    this.renderView(this.pendingBlock ? '적의 공격을 막을지 고르세요.' : '');
+  }
+
+  /** 적 자동 턴을 방어 선택 지점이나 턴 종료까지 진행한다. */
+  private runEnemyTurn(initialActionCount: number): void {
+    if (this.runtime.currentSide !== 'enemy' || this.runtime.phase === 'GAME_OVER') {
+      return;
+    }
+
+    const result = runAutomatedTurnUntilBlockDecision(this.runtime, 'enemy', {
+      interruptForBlockSide: 'player',
+      initialActionCount,
+    });
+    this.appendLog(result.events);
+
+    this.pendingBlock = result.blockDecision
+      ? { decision: result.blockDecision, actionCount: result.actionCount }
+      : null;
+  }
+
+  /** 방어 선택 결과를 적용한다. 막지 않기를 고르면 원래 공격이 그대로 들어온다. */
+  private resolveBlock(blockerInstanceId: string | null): void {
+    const pending = this.pendingBlock;
+    if (!pending) {
+      return;
+    }
+
+    const blockAction =
+      blockerInstanceId === null
+        ? null
+        : (pending.decision.blockActions.find(
+            (action) => action.blockerInstanceId === blockerInstanceId,
+          ) ?? null);
+
+    this.pendingBlock = null;
+    try {
+      if (blockAction) {
+        applyBlockAction(this.runtime, blockAction);
+      } else {
+        applyAttackAction(this.runtime, pending.decision.attackAction);
+      }
+    } catch (error: unknown) {
+      this.renderView(error instanceof Error ? error.message : String(error), true);
+      return;
+    }
+
+    this.appendLog([{ type: 'ACTION', side: 'enemy', action: pending.decision.attackAction }]);
+    // 멈춘 공격도 한 번의 행동이다. 이어서 돌릴 때 행동 제한 계산이 어긋나지 않게 1을 더한다.
+    this.runEnemyTurn(pending.actionCount + 1);
+    this.renderView(
+      this.pendingBlock
+        ? '적의 공격을 막을지 고르세요.'
+        : blockAction
+          ? '공격을 막았습니다.'
+          : '공격을 그대로 받았습니다.',
+    );
+  }
+
+  private canEndTurn(): boolean {
+    return (
+      this.runtime.phase !== 'GAME_OVER' &&
+      this.runtime.currentSide === 'player' &&
+      this.pendingBlock === null
+    );
+  }
+
+  private appendLog(events: readonly BattleTurnEvent[]): void {
+    this.log = [...this.log, ...formatBattleTurnEvents(this.runtime, events)];
   }
 
   /**
@@ -172,6 +260,10 @@ export class BattlefieldScene implements Scene {
   }
 
   private applyDrop(source: BattleDragSource, slotId: BattleSlotId): void {
+    if (this.pendingBlock || this.runtime.phase === 'GAME_OVER') {
+      return;
+    }
+
     try {
       const message = this.executeDrop(source, slotId);
       if (message === null) {
@@ -180,6 +272,7 @@ export class BattlefieldScene implements Scene {
         return;
       }
 
+      this.log = [...this.log, `나: ${message}`];
       this.renderView(message);
     } catch (error: unknown) {
       this.renderView(error instanceof Error ? error.message : String(error), true);
@@ -265,8 +358,45 @@ export class BattlefieldScene implements Scene {
       hand: this.buildHandModels(),
       status,
       statusIsError,
-      canEndTurn: false,
+      canEndTurn: this.canEndTurn(),
+      log: this.log,
+      blockPrompt: this.buildBlockPrompt(),
+      result: this.buildResult(),
     });
+  }
+
+  private buildBlockPrompt(): BattleBlockPromptModel | null {
+    if (!this.pendingBlock) {
+      return null;
+    }
+
+    const { attackAction, blockActions } = this.pendingBlock.decision;
+    const attacker = readCardName(this.runtime, attackAction.attackerInstanceId);
+    const target = readCardName(this.runtime, attackAction.targetInstanceId);
+
+    return {
+      message: `${attacker}이(가) ${target}을(를) ${attackAction.attack} 피해로 공격합니다. 대신 맞을 유닛을 고를 수 있습니다.`,
+      blockers: blockActions.map((action) => ({
+        instanceId: action.blockerInstanceId,
+        label: `${readCardName(this.runtime, action.blockerInstanceId)}이(가) 막는다`,
+      })),
+    };
+  }
+
+  private buildResult(): BattleResultModel | null {
+    const { outcome } = this.runtime;
+    if (!outcome) {
+      return null;
+    }
+
+    const isWin = outcome.winner === 'player';
+    return {
+      title: isWin ? '승리' : '패배',
+      body: isWin
+        ? `${this.stageName}을(를) 돌파했습니다.\n보상과 성장 적용은 다음 단계에서 붙습니다.`
+        : `${this.stageName}에서 리더를 잃었습니다.`,
+      isWin,
+    };
   }
 
   private readPileCounts(participant: BattleParticipantRuntimeState): {

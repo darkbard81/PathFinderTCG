@@ -26,6 +26,18 @@ export function listRowSlotIds(row: BattleRowId): BattleSlotId[] {
   return zones.map((zone) => `${side}:${zone}` as BattleSlotId);
 }
 
+/** 화면에 보이는 열 위치다. 로그에 zone 약어 대신 이 말을 쓴다. */
+const COLUMN_LABELS = ['왼쪽', '가운데', '오른쪽'] as const;
+
+/** 전장 칸 하나를 로그에 쓸 수 있는 우리말 이름으로 바꾼다. */
+export function formatSlotLabel(slotId: BattleSlotId): string {
+  const [side, zone] = slotId.split(':') as [string, BattlefieldZone];
+  const zones = zone.startsWith('B') ? BACK_ZONES : FRONT_ZONES;
+  const column = COLUMN_LABELS[zones.indexOf(zone)] ?? '';
+
+  return `${side === 'player' ? '내' : '적'} ${zone.startsWith('B') ? '후위' : '전위'} ${column}`;
+}
+
 export type BattleBoardMetrics = {
   cardWidth: number;
   cardHeight: number;
