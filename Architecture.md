@@ -57,7 +57,7 @@ console.log(bad===0 ? 'OK' : bad+' violations');
 
 **Model — `src/game/`**
 
-게임 규칙과 저장 가능한 상태를 단독으로 소유한다. ElvenBattle에서 로직 변경 없이 이식했고, 원본 테스트가 그대로 통과한다.
+게임 규칙과 저장 가능한 상태를 단독으로 소유한다. 렌더러를 알지 않으며, 규칙의 정답은 이 계층의 테스트다.
 
 - `battle/` — 전투 엔진. 합법 수 계산(`list*Actions`)과 적용(`apply*Action`)이 분리돼 있다
 - `save/` — 저장 슬롯, 덱, 장비, 성장
@@ -119,7 +119,7 @@ onDrop(source, slotId)  →  그 목록에서 액션을 찾아 apply*Action 을 
 **주의: `enter()` 안에서 ticker 프레임을 기다리면 교착한다.**
 `update` 콜백은 `enter()`가 resolve된 뒤에야 등록된다. `enter()`에서 프레임 기반 연출이나 대기를 `await` 하면 프레임이 영원히 오지 않는다. `BattlefieldScene.enter()`가 자동 턴 진행을 `void`로 띄우고 기다리지 않는 이유가 이것이다.
 
-Phaser의 `SHUTDOWN` 자동 정리에 해당하는 것은 없다. 등록한 ticker 콜백, 이벤트 리스너, 만든 캔버스는 `exit()`에서 직접 해제한다.
+자동 정리는 없다. 등록한 ticker 콜백, 이벤트 리스너, 만든 캔버스는 `exit()`에서 직접 해제한다.
 
 ## 3. 좌표계 세 개
 
@@ -191,7 +191,7 @@ UI_THEME.surfaces.modal                →  --pf-surface-modal  (rgba로 합침)
 
 ### 연출
 
-`src/pixi/sequence/SequenceRunner`가 시간축을 소유한다. `Ticker` 위에서 step 시간표를 재생하며, 원본 `SequencePlugin`의 계약(`timer` / `duration` / `mode` / `playback` / `action`)을 유지한다.
+`src/pixi/sequence/SequenceRunner`가 시간축을 소유한다. `Ticker` 위에서 step 시간표(`timer` / `duration` / `mode` / `playback` / `action`)를 재생한다.
 
 `SequenceTarget`은 구조 타입(`{ x, y, destroyed, parent }`)이라 Pixi `Container`뿐 아니라 테스트 대역도 만족한다.
 
@@ -254,7 +254,7 @@ onDrop(source, slotId)                    // 드래그가 끝난 뒤에야 rende
 
 | 대상 | 위치 | 성격 |
 | --- | --- | --- |
-| 전투 규칙 | `src/game/battle/*.test.ts` | 원본에서 이식. 동일하게 통과해야 한다 |
+| 전투 규칙 | `src/game/battle/*.test.ts` | 게임 규칙의 정답 |
 | 저장·덱·장비·성장 | `src/game/save/*.test.ts` | 도메인 |
 | 레이아웃 계산 | `src/dom/screens/battlefield-layout.test.ts` | 순수 함수 |
 | 드래그 기하 | `src/dom/screens/battle-drag.test.ts` | 순수 함수. DOM 배선은 제외 |

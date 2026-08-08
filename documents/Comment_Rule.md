@@ -1,11 +1,11 @@
-# Comment Rule for ElvenBattle
+# Comment Rule for PathfinderTCG
 
 TypeScript 코드의 클래스, public 메서드, 의미 있는 top-level 함수에 TSDoc 문서 주석을 한글로 작성하라.
 
 작성 기준:
 - 선언 바로 위에 /** ... */ 형식으로 작성한다.
 - 코드가 드러내지 못하는 의도, 도메인 규칙, 부작용, 예외, 사용상 주의점을 설명한다.
-- Phaser Scene 클래스는 클래스 역할과 lifecycle 메서드의 책임을 설명한다.
+- 화면(Scene) 클래스는 클래스 역할과 lifecycle 메서드의 책임을 설명한다.
 - 단순 private/helper 함수에는 주석을 추가하지 않는다.
 - 함수명, 타입, 파라미터명에서 이미 알 수 있는 내용은 생략한다.
 - 함수나 메서드 본문 내부에는 주석을 추가하지 않는다.

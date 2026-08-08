@@ -1,42 +1,42 @@
 # PathfinderTCG Agent Guide
 
 이 문서는 PathfinderTCG 저장소에서 작업하는 사람과 에이전트의 기본 개발 규칙이다.
-이 저장소의 현재 목적은 하나다: **ElvenBattle(Phaser 4 + rexUI)을 PixiJS v8로 포팅한다.** 새 게임을 설계하는 곳이 아니다.
+이 저장소는 **Pathfinder 2e 몬스터를 카드로 쓰는 2D 턴제 카드 배틀 게임**을 만든다.
 
-작업 전 현재 브랜치, 작업 트리, 원본 구현을 먼저 확인하고 기존 사용자 변경을 보존한다.
+작업 전 현재 브랜치와 작업 트리를 먼저 확인하고 기존 사용자 변경을 보존한다.
 
 규칙의 우선순위는 다음과 같다.
 
 1. 사용자의 현재 요청과 이슈의 명시적 범위
-2. 저장소의 실제 설정과 스키마: `package.json`, `vite.config.ts`, `tsconfig*.json`, `eslint.config.js`, `cards/*.schema.json`
-3. 이 문서와 `README.md`, `Architecture.md`, `documents/Comment_Rule.md`
-4. 이식 원본 `/home/deck/Documents/ElvenBattle` — 게임 규칙·데이터·화면 흐름의 기준
+2. 저장소의 실제 코드와 테스트: `src/game/**/*.test.ts`가 게임 규칙의 정답이다
+3. 저장소의 설정과 스키마: `package.json`, `vite.config.ts`, `tsconfig*.json`, `eslint.config.js`, `cards/*.schema.json`
+4. 이 문서와 `README.md`, `Architecture.md`, `documents/Comment_Rule.md`
 5. `pixijs-skills` 스킬과 [PixiJS v8 공식 문서](https://pixijs.download/release/docs/llms.txt)
 6. 일반적인 프레임워크 관례
 
 충돌하거나 오래된 설명이 있으면 추측하지 말고 상위 source of truth를 따른다.
 PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 하위 스킬이나 공식 문서를 먼저 읽는다.
 
-## 이식 원본 취급 규칙
+## 게임 규칙을 바꿀 때
 
-- `/home/deck/Documents/ElvenBattle`은 **읽기 전용**이다. 어떤 경우에도 수정·커밋하지 않는다.
-- 게임 규칙, 카드 효과, 저장 형식, 화면 흐름의 정답은 원본 구현과 원본 테스트다. 포팅 중 "더 나은 규칙"을 발명하지 않는다.
-- 원본과 동작이 달라져야 한다면 코드로 결정하지 말고 사용자에게 확인한다.
-- 원본에 있는 버그를 발견하면 조용히 고치지 말고 보고한 뒤 지시를 받는다.
+- 규칙, 카드 효과, 밸런스, 저장 형식은 **사용자가 정한다.** 코드에서 발견한 어색함을 근거로 조용히 바꾸지 않는다.
+- 규칙을 바꿔야 한다고 판단되면 먼저 보고하고 지시를 받는다.
+- 규칙 변경은 `src/game/`과 그 테스트를 함께 고친다. 화면에서 우회 처리로 덮지 않는다.
+- 저장 형식을 바꾸면 schema version과 migration 영향을 함께 검토한다.
 
 ## Repository Map
 
-- `src/game/`: PixiJS에 의존하지 않는 전투 규칙, 카드·덱·장비·성장, 저장 상태, 스테이지 진행, 자산 manifest 해석. 원본에서 **로직 변경 없이** 이식한다.
+- `src/game/`: 렌더러에 의존하지 않는 전투 규칙, 카드·덱·장비·성장, 저장 상태, 스테이지 진행, 자산 manifest 해석. 게임 규칙의 **유일한 소유자**다.
 - `src/pixi/app/`: `Application` 생성, 반응형 viewport 정책(`viewport.ts`), 부트스트랩
 - `src/pixi/scenes/`: 화면(Presenter)과 `SceneRouter`. 도메인 호출, 뷰 모델 조립, 화면 전환
 - `src/pixi/battle/`: 전장 Presenter 보조 — 연출 캔버스, 카드 표시값 변환, 전투 로그 문장
-- `src/pixi/sequence/`: `Ticker` 기반 연출 시퀀스. 원본 `SequencePlugin` / `AnimationSequence` 대체
+- `src/pixi/sequence/`: `Ticker` 기반 연출 시퀀스와 `AnimationSequence` 빌더
 - `src/pixi/assets/`: `assets.json` manifest를 Pixi `Assets` 번들로 등록하는 경계
-- `src/dom/`: DOM UI 오버레이(View). 전장 보드와 카드를 포함한 화면 전체와 스케일 동기화를 담당한다 (원본 rexUI 대체)
+- `src/dom/`: DOM UI 오버레이(View). 전장 보드와 카드를 포함한 화면 전체와 스케일 동기화를 담당한다
 - `src/theme.ts`: Canvas UI와 DOM UI가 공유하는 semantic 색상·텍스트·surface 토큰
 - `src/server/`: `/tcg` 자산과 `/api/save-slots` 서버 미들웨어
 - `src/tools/card-text/`, `tools/card-text/`: 카드 텍스트 도구의 서버·클라이언트와 별도 HTML 진입점
-- `src/config.ts`: `PATHFINDER_TCG_*` 환경 변수와 서버·캡처·자산 기본 설정. 원본의 `ELVEN_BATTLE_*` 접두사는 이 저장소에서 사용하지 않는다
+- `src/config.ts`: `PATHFINDER_TCG_*` 환경 변수와 서버·캡처·자산 기본 설정
 - `cards/`: 카드·덱 정의, 스테이지 JSON, `card.schema.json`, `stage.schema.json`
 - `assets/`: 로컬 런타임 자산. 디렉터리 전체가 Git 추적 대상이 아니다. 실제 디렉터리이거나 외부 자산 트리로의 심볼릭 링크다
 - `.data/save-slots/`: 로컬 저장 슬롯 상태. 소스나 테스트 fixture로 간주하지 않는다
@@ -51,14 +51,14 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - `npm run test` / `npx vitest run <test-file...>`: 전체 또는 변경 범위 테스트
 - `npm run lint`, `npm run format`, `npm run format:check`
 - `npm run check`: typecheck, lint, format:check, test 최종 gate
-- `npm run assets:build`: **아직 이식하지 않았다.** `sharp` 의존이 필요하며, 현재는 기존 자산 트리의 `assets.json`을 그대로 쓴다
+- `npm run assets:build`: **아직 없다.** `sharp` 의존이 필요하며, 현재는 준비된 자산 트리의 `assets.json`을 그대로 쓴다
 
 무관한 파일까지 바꾸는 전체 포맷은 피한다. 필요하면 수정 파일만 Prettier로 정리하고 최종 gate에서 `npm run format:check`를 실행한다.
 
 ## Working Method
 
 1. `git status --short --branch`로 브랜치와 기존 변경을 확인한다.
-2. 원본 ElvenBattle의 대응 파일, 그 테스트, 관련 스키마를 먼저 읽는다.
+2. 건드릴 모듈과 그 테스트, 관련 스키마를 먼저 읽는다.
 3. 필요한 PixiJS API를 `pixijs-skills`에서 확인한다. 기억에 의존해 v7 문법을 쓰지 않는다.
 4. 가장 좁은 소유 모듈에서 변경하고, 중복 Helper나 우회 경로를 만들지 않는다.
 5. 동작 변경과 함께 같은 경계의 테스트를 추가하거나 갱신한다.
@@ -69,7 +69,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 ## PixiJS v8 규칙
 
-원본이 Phaser라서 v7 시절 Pixi 관용구나 Phaser 습관이 섞이기 쉽다. 아래는 반드시 지킨다.
+검색으로 나오는 예제는 대부분 v7이다. 아래는 반드시 지킨다.
 
 ### Application
 
@@ -81,15 +81,15 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 ### 화면 (Scene)
 
 - PixiJS에는 Scene Manager가 없다. 화면은 `Container`를 소유한 클래스이며 lifecycle(`enter` / `exit` / `update`)은 `SceneRouter`가 명시적으로 호출한다.
-- 화면 종료는 `container.destroy({ children: true })`로 서브트리를 정리하고, 등록한 ticker 콜백과 이벤트 리스너를 함께 해제한다. Phaser의 `SHUTDOWN` 자동 정리에 해당하는 것은 없다.
+- 화면 종료는 `container.destroy({ children: true })`로 서브트리를 정리하고, 등록한 ticker 콜백과 이벤트 리스너를 함께 해제한다. 자동 정리는 없다.
 - 화면 간 데이터는 명시적 인자나 저장·도메인 API로 전달하고 mutable global object를 쓰지 않는다.
 
 ### 반응형 viewport
 
 - 이 저장소는 고정 가상 해상도를 쓰지 않는다. **최소 해상도는 1024x768이고 그 위로는 논리 크기가 뷰포트에 따라 늘어난다.** 정책은 `src/pixi/app/viewport.ts`의 순수 함수 하나가 소유한다.
-- 화면은 좌표를 하드코딩하지 않는다. `resize(layout)`으로 받은 논리 사각형에 맞춰 앵커·비율로 배치한다. `1920`, `1280` 같은 원본 상수를 그대로 옮기지 않는다.
+- 화면은 좌표를 하드코딩하지 않는다. `resize(layout)`으로 받은 논리 사각형에 맞춰 앵커·비율로 배치한다.
 - 논리 크기는 1024x768 이상이 보장되므로 그보다 작은 경우를 방어할 필요는 없지만, **더 큰 경우는 항상 가능하다.** 남는 공간을 중앙 정렬로만 흘려보낼지 레이아웃이 사용할지는 화면마다 의도적으로 정한다.
-- 스케일 계산을 화면이나 `UiFactory`에서 다시 하지 않는다. `app.screen`을 직접 읽어 배치하지 않고 라우터가 전달한 layout을 쓴다.
+- 스케일 계산을 화면에서 다시 하지 않는다. `app.screen`을 직접 읽어 배치하지 않고 라우터가 전달한 layout을 쓴다.
 - devicePixelRatio는 viewport 정책과 무관하다. `resolution` + `autoDensity`가 담당한다.
 
 ### 씬 그래프
@@ -144,11 +144,11 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 오버레이 루트는 `pointer-events: none`이고 개별 위젯만 `auto`로 되돌린다. 이 규칙을 어기면 캔버스 입력이 죽는다.
 - DOM 오버레이의 스케일은 `DomLayer`가 `resolveViewportLayout` 결과로만 적용한다. 화면이나 CSS에서 스케일을 다시 계산하지 않는다.
 - 화면 전환 시 DOM 루트도 캔버스 `view`와 함께 반드시 정리한다. 남은 노드는 다음 화면의 입력을 가로챈다.
-- rexUI 위젯을 1:1로 흉내 내지 않는다. 원본 화면이 만족시키던 **요구**를 재현하고 구현은 DOM에 맞게 고른다.
+- 캔버스 위젯 툴킷을 만들지 않는다. 화면이 만족시켜야 할 **요구**를 정하고 구현은 DOM에 맞게 고른다.
 
 ### 연출 시퀀스
 
-- 시간축이 있는 wait, shake, video, custom 연출, 입력 잠금, 공통 재생속도는 `src/pixi/sequence/`의 `SequenceRunner`를 사용한다. 원본 `sequence-types.ts`의 step 계약(`timer`, `duration`, `mode`, `playback`, `action`)을 유지한다.
+- 시간축이 있는 wait, shake, video, custom 연출, 입력 잠금, 공통 재생속도는 `src/pixi/sequence/`의 `SequenceRunner`를 사용한다. step 계약(`timer`, `duration`, `mode`, `playback`, `action`)을 유지한다.
 - 재사용 가능한 새 step은 화면 로컬 타이머·보간 체인으로 복제하지 말고 step 타입, runner, builder, 테스트를 함께 확장한다.
 - `SequenceRunner`는 전투 판정이나 저장 상태를 소유하지 않는다. 화면이 확정된 오브젝트, 좌표, 안정적인 manifest key와 실행 순서만 전달한다.
 - runner는 화면 lifecycle에 맞춰 한 번 만들고 화면 종료 시 `destroy()`해 타이머, 진행 중 보간, 대기 중 Promise를 정리한다.
@@ -170,14 +170,14 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 게임 규칙과 저장 가능한 상태는 `src/game`이 소유한다. 화면은 입력을 action으로 전달하고 상태를 읽어 렌더링한다.
 - `Container`, `Sprite`, 보간 상태, 카메라 rig는 disposable view state이며 source of truth가 아니다.
 - 카메라, hit-stop, 흔들림, parallax는 규칙과 분리하고 전투 가독성을 우선한다.
-- 원본의 파일명, export 이름, 도메인 용어, manifest key를 우선한다. Phaser 전용 이름(`Scene`, `GameObject`, `rexUI`)만 Pixi 개념에 맞게 바꾼다.
+- 도메인 용어와 manifest key는 기존 이름을 우선한다. 이름을 바꾸면 저장 데이터와 자산 참조가 함께 깨진다.
 - 불필요한 호환 alias나 dead code를 남기지 않는다.
 
 ## Data, Assets, and Server Constraints
 
-- 카드 변경은 `cards/card.schema.json`, 스테이지 변경은 `cards/stage.schema.json`과 기존 loader를 따른다. 포팅 과정에서 schema를 바꾸지 않는다.
+- 카드 변경은 `cards/card.schema.json`, 스테이지 변경은 `cards/stage.schema.json`과 기존 loader를 따른다. schema 변경은 사용자에게 확인한다.
 - 저장 데이터는 schema version과 validation을 유지한다. 전투 중 mutation을 위해 저장 세션의 카드 인스턴스 참조를 공유하지 않는다.
-- `assets/assets.json` 생성기는 아직 이식하지 않았다. 자산을 바꿔야 하면 원본 저장소에서 생성한 결과를 가져온다. `assets/assets.json`, 로컬 이미지·폰트·영상은 커밋 대상이 아니다.
+- `assets/assets.json` 생성기는 아직 없다. 자산을 바꿔야 하면 준비된 자산 트리를 직접 갱신한다. `assets/assets.json`, 로컬 이미지·폰트·영상은 커밋 대상이 아니다.
 - fresh clone에는 런타임 `assets/`와 `.data/`가 없을 수 있다. 존재한다고 가정하거나 임의 fixture로 커밋하지 않는다.
 - `/tcg`, `/api/save-slots`, `/api/card-text-tool` 또는 Vite middleware 순서를 바꾸면 해당 서버 테스트와 두 HTML build input을 모두 확인한다.
 - 경로, URL, JSON 입출력에는 Node·Web 표준 API를 사용하고 traversal, malformed input, 네트워크 실패를 명시적으로 처리한다.
@@ -186,8 +186,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 ## Do Not
 
-- 원본 저장소 `/home/deck/Documents/ElvenBattle`을 수정하지 않는다.
-- 포팅 중 게임 규칙, 밸런스, 저장 형식, 카드 데이터를 임의로 바꾸지 않는다.
+- 게임 규칙, 밸런스, 저장 형식, 카드 데이터를 요청 없이 바꾸지 않는다.
 - `pixi.js` v7 API(`beginFill`/`endFill`, `BaseTexture`, `DisplayObject`, `@pixi/*` 서브패키지, 생성자 옵션 `Application`)를 쓰지 않는다.
 - 기존 사용자 변경을 덮어쓰거나 요청 없이 `git reset --hard`, checkout 복원, 대량 삭제를 실행하지 않는다.
 - 요청 없이 commit, push, branch 생성, PR 작성 또는 이슈 수정을 하지 않는다.
@@ -207,7 +206,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 변경과 가장 가까운 테스트를 실행하고 위험 경계에 따라 검증을 확장한다.
 
-- 전투·턴·카드 효과: 이식한 `src/game/battle/*.test.ts`. **원본과 동일하게 통과해야 한다.**
+- 전투·턴·카드 효과: `src/game/battle/*.test.ts`. **게임 규칙의 정답이다.**
 - 저장·덱·장비·성장: 관련 save 모듈 테스트와 필요 시 save-slot API 테스트
 - UI 경계와 테마 토큰: `src/dom/**/*.test.ts`, `src/theme.test.ts`
 - 연출: `src/pixi/sequence/*.test.ts`
@@ -230,7 +229,6 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 작업 완료는 다음 조건을 모두 만족할 때만 선언한다.
 
 - 요청과 이슈의 완료 조건을 빠짐없이 구현했고 범위 밖 동작은 바뀌지 않았다.
-- 이식된 화면·기능이 원본 ElvenBattle과 동일하게 동작한다. 차이가 있으면 의도적 결정이며 사용자에게 보고했다.
 - 시각적 변경이 있으면 사용자가 브라우저에서 확인할 항목을 제시했고, 그 결과를 받았다. 받기 전에는 완료가 아니다.
 - 새 동작과 회귀 위험을 검증하는 관련 Vitest가 통과한다.
 - `npm run check`(또는 lint, build, format:check, test 개별 실행)가 통과한다.
@@ -241,8 +239,8 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 ## PR Expectations
 
-- PR은 하나의 이슈·목적에 집중하고 drive-by 리팩터링을 섞지 않는다. 포팅은 화면 단위로 쪼갠다.
+- PR은 하나의 이슈·목적에 집중하고 drive-by 리팩터링을 섞지 않는다. 큰 작업은 화면 단위로 쪼갠다.
 - 제목과 commit은 `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:` 등 명확한 type과 짧은 요약을 사용한다.
-- 본문에는 사용자 관점의 변화, 대응하는 원본 파일, 공용 Helper 변경, 호환성·schema·asset 영향, 실행한 명령과 결과를 적는다.
+- 본문에는 사용자 관점의 변화, 공용 Helper 변경, 호환성·schema·asset 영향, 실행한 명령과 결과를 적는다.
 - 시각 변경에는 필요한 경우 before/after 캡처나 재현 절차를 제공하되 로컬 캡처 파일 자체를 소스에 남기지 않는다.
 - 리뷰 전에 전체 diff와 새 파일을 확인하고 Definition of Done을 체크한다.
