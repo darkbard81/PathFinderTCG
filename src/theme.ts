@@ -541,6 +541,49 @@ export const UI_THEME = {
       orbTextShadow:
         '0 0 2px rgba(0, 0, 0, 0.95), 0 1px 2px rgba(0, 0, 0, 0.9), 1px 0 1px rgba(0, 0, 0, 0.75), -1px 0 1px rgba(0, 0, 0, 0.75)',
     },
+    /**
+     * 전장 화면 토큰이다. 카드 자체는 cardTile 토큰을 그대로 쓰고 보드 껍데기 색만 여기서 정한다.
+     * 카드 크기·간격·레일 폭은 뷰포트마다 달라지므로 battlefield-layout이 인라인 변수로 덮어쓴다.
+     */
+    battlefield: {
+      railBackground: 'rgba(9, 24, 20, 0.9)',
+      railBorder: '1px solid rgba(158, 207, 170, 0.32)',
+      railRadius: '8px',
+      railPadding: '14px 14px',
+      railGap: '10px',
+      railLabelFontSize: '12px',
+      railLabelColor: '#a8c7af',
+      railValueFontSize: '22px',
+      railValueColor: '#fff3c2',
+      slotEmptyBorder: '1px dashed rgba(158, 207, 170, 0.4)',
+      slotRadius: '6px',
+      slotDominanceFontSize: '13px',
+      slotDominanceColor: '#0d1712',
+      slotDominanceBackground: 'rgba(255, 228, 168, 0.92)',
+      pileBackground: 'rgba(16, 34, 29, 0.82)',
+      pileBorder: '1px solid rgba(158, 207, 170, 0.28)',
+      pileLabelFontSize: '10px',
+      pileLabelColor: '#8ba493',
+      pileCountFontSize: '18px',
+      pileCountColor: '#d5e7d1',
+      deckStackBackground:
+        'linear-gradient(155deg, rgba(31, 58, 44, 0.96), rgba(13, 23, 18, 0.96))',
+      deckStackBorder: '1px solid rgba(168, 160, 95, 0.6)',
+      dividerBackground:
+        'linear-gradient(90deg, transparent, rgba(255, 228, 168, 0.62), transparent)',
+      handBackground: 'linear-gradient(0deg, rgba(4, 12, 9, 0.96) 62%, rgba(4, 12, 9, 0))',
+      handGap: '10px',
+      handPadding: '12px 18px 14px',
+      handHandleWidth: '68px',
+      handHandleHeight: '16px',
+      handHandleBackground: 'rgba(23, 53, 45, 0.94)',
+      handHandleBorder: '1px solid rgba(168, 160, 95, 0.6)',
+      turnBannerBackground: 'rgba(23, 53, 45, 0.9)',
+      turnBannerEnemyBackground: 'rgba(53, 30, 47, 0.9)',
+      logFontSize: '12px',
+      logColor: '#c7d7ca',
+      logLineHeight: '1.55',
+    },
   },
 } as const;
 

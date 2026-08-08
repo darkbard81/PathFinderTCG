@@ -4,6 +4,7 @@ import { joinAssetUrl } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
+import { BattlefieldScene } from './pixi/scenes/BattlefieldScene';
 import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { EquipmentScene } from './pixi/scenes/EquipmentScene';
 import { GrowthScene } from './pixi/scenes/GrowthScene';
@@ -13,7 +14,6 @@ import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
 import { StageScene } from './pixi/scenes/StageScene';
 import { TitleScene } from './pixi/scenes/TitleScene';
-import { ViewportProbeScene } from './pixi/scenes/ViewportProbeScene';
 import { createGameServices } from './services/game-services';
 import { UI_THEME } from './theme';
 
@@ -136,7 +136,7 @@ void (async (): Promise<void> => {
           void showTitle(message);
         },
         onStartBattle: (nextSession, stageId) => {
-          void showBattlePending(nextSession, stageId);
+          void showBattlefield(nextSession, stageId);
         },
       }),
     );
@@ -185,15 +185,16 @@ void (async (): Promise<void> => {
     );
   }
 
-  // Battlefield 이식 전 임시 착지점.
-  function showBattlePending(session: GameSession, stageId: string): Promise<void> {
+  function showBattlefield(session: GameSession, stageId: string): Promise<void> {
     return router.goto(
-      new ViewportProbeScene({
-        preloadSummary: [
-          `Battle ready · Stage ${stageId}`,
-          `Slot ${session.slotId} · ${session.saveName}`,
-          `Leader ${session.deck.leader.instance.name}`,
-        ].join('\n'),
+      new BattlefieldScene({
+        backgroundImageUrl,
+        assetBaseUrl: ASSET_BASE_URL,
+        session,
+        stageId,
+        onLeave: (nextSession) => {
+          void showStage(nextSession);
+        },
       }),
     );
   }
