@@ -82,6 +82,11 @@ export type XViewOptions = {
 };
 ```
 
+모든 화면이 이 형태다. 예외는 `TitleView`의 `clearPassword` / `focusId` / `focusPassword` 셋뿐이다.
+이들은 **상태가 아니라 사건**이라 `render`로 표현하지 않는다 — 포커스는 한 번 일어나는 일이고,
+입력값을 매 렌더마다 되돌리면 사용자가 타이핑할 수 없다.
+`BattlefieldView`의 `effectsHost` / `getSlotCenter`는 갱신 API가 아니라 연출 캔버스가 붙을 지점과 좌표 조회다.
+
 **Presenter — `src/pixi/scenes/*Scene.ts`**
 
 화면 상태를 보유하고, 도메인을 호출하고, 결과를 뷰 모델로 조립해 밀어 넣는다. `Scene` 인터페이스를 구현해 `SceneRouter`가 lifecycle을 관리한다.
@@ -244,7 +249,6 @@ onDrop(source, slotId)                    // 드래그가 끝난 뒤에야 rende
 
 이 문서가 서술하는 규칙과 실제 코드가 어긋나는 지점이다.
 
-1. **뷰 계약이 두 종류다.** Stage·DeckBuild·Equipment·Growth·Battlefield는 `render(model)` 단방향이다. Title·MainMenu·SaveSlot·Loader는 `setStatus` / `setBusy` / `renderSlots` 같은 명령형 setter를 노출하며, Presenter가 뷰 내부 상태를 직접 조작한다. Passive View 규칙이 서기 전에 만든 화면이다.
 
 ## 7. 테스트 경계
 

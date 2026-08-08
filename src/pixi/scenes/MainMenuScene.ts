@@ -6,6 +6,7 @@ import {
   formatMainMenuLoadSummary,
   LICENSE_INTRO_TEXT,
   type MainMenuView,
+  type MainMenuViewModel,
 } from '../../dom/screens/main-menu-view';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
@@ -44,9 +45,13 @@ export class MainMenuScene implements Scene {
   private layout: ViewportLayout | null = null;
   private isLoggingOut = false;
   private active = true;
+  private status = '';
+  private statusIsError = false;
+  /** 다이얼로그 열림 여부는 화면 상태다. 뷰에 물어보지 않고 여기서 소유한다. */
+  private licenseOpen = false;
   private readonly escapeHandler = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' && this.menuView.isLicenseOpen()) {
-      this.menuView.setLicenseOpen(false);
+    if (event.key === 'Escape' && this.licenseOpen) {
+      this.setLicenseOpen(false);
     }
   };
 
@@ -64,11 +69,11 @@ export class MainMenuScene implements Scene {
         onCardTextTool: () => {
           window.location.assign('/tools/card-text/');
         },
-        onLicense: () => this.menuView.setLicenseOpen(true),
+        onLicense: () => this.setLicenseOpen(true),
         onLogout: () => {
           void this.logout();
         },
-        onCloseLicense: () => this.menuView.setLicenseOpen(false),
+        onCloseLicense: () => this.setLicenseOpen(false),
       });
     this.element = this.menuView.element;
     this.view.addChild(this.backdrop, this.shade);
@@ -78,8 +83,8 @@ export class MainMenuScene implements Scene {
   public async enter(): Promise<void> {
     this.active = true;
     this.isLoggingOut = false;
-    this.menuView.setBusy(false);
-    this.menuView.setLicenseOpen(false);
+    this.licenseOpen = false;
+    this.renderView();
     document.addEventListener('keydown', this.escapeHandler);
 
     await this.ensureBackground();
@@ -91,7 +96,25 @@ export class MainMenuScene implements Scene {
   public exit(): void {
     this.active = false;
     document.removeEventListener('keydown', this.escapeHandler);
-    this.menuView.setLicenseOpen(false);
+    this.licenseOpen = false;
+    this.renderView();
+  }
+
+  private setLicenseOpen(open: boolean): void {
+    this.licenseOpen = open;
+    this.renderView();
+  }
+
+  private renderView(patch: Partial<MainMenuViewModel> = {}): void {
+    this.status = patch.status ?? this.status;
+    this.statusIsError = patch.statusIsError ?? this.statusIsError;
+    this.licenseOpen = patch.licenseOpen ?? this.licenseOpen;
+    this.menuView.render({
+      status: this.status,
+      statusIsError: this.statusIsError,
+      busy: this.isLoggingOut,
+      licenseOpen: this.licenseOpen,
+    });
   }
 
   /** 논리 영역에 맞춰 배경 Sprite와 딤 레이어를 다시 깐다. */
@@ -151,17 +174,18 @@ export class MainMenuScene implements Scene {
     }
 
     this.isLoggingOut = true;
-    this.menuView.setBusy(true);
-    this.menuView.setLicenseOpen(false);
-    this.menuView.setStatus('Signing out...');
+    this.licenseOpen = false;
+    this.renderView({ status: 'Signing out...', statusIsError: false });
 
     try {
       await this.options.services.auth.logout();
       this.options.onLoggedOut('You have been logged out.');
     } catch (error: unknown) {
       this.isLoggingOut = false;
-      this.menuView.setBusy(false);
-      this.menuView.setStatus(error instanceof Error ? error.message : String(error), true);
+      this.renderView({
+        status: error instanceof Error ? error.message : String(error),
+        statusIsError: true,
+      });
     }
   }
 }

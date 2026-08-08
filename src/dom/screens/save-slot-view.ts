@@ -11,15 +11,20 @@ export type SaveSlotViewOptions = {
   onSelectSlot: (slotId: SaveSlotId) => void;
 };
 
-/** 저장 슬롯 화면의 DOM 루트와 상태 갱신 함수다. */
+export type SaveSlotViewModel = {
+  slots: SaveSlotSummary[];
+  deleteMode: boolean;
+  busy: boolean;
+  status: string;
+  statusTone: SaveSlotStatusTone;
+  retryVisible: boolean;
+  deleteButtonVisible: boolean;
+};
+
+/** 저장 슬롯 화면의 DOM 루트와 갱신 API다. */
 export type SaveSlotView = {
   element: HTMLElement;
-  setStatus: (message: string, tone?: SaveSlotStatusTone) => void;
-  setBusy: (busy: boolean) => void;
-  setDeleteMode: (deleteMode: boolean) => void;
-  renderSlots: (slots: SaveSlotSummary[], deleteMode: boolean) => void;
-  showRetry: (visible: boolean) => void;
-  showDeleteButton: (visible: boolean) => void;
+  render: (model: SaveSlotViewModel) => void;
 };
 
 /**
@@ -90,34 +95,27 @@ export function createSaveSlotView(options: SaveSlotViewOptions): SaveSlotView {
 
   return {
     element,
-    setStatus: (message, tone = 'normal') => {
-      status.textContent = message;
-      status.dataset.tone = tone;
-    },
-    setBusy: (busy) => {
+    render: (model) => {
+      status.textContent = model.status;
+      status.dataset.tone = model.statusTone;
+      deleteButton.textContent = model.deleteMode ? 'Cancel Delete' : 'Delete';
+      deleteButton.hidden = !model.deleteButtonVisible;
+      retryButton.hidden = !model.retryVisible;
+
+      // 카드를 먼저 다시 만들고 나서 잠근다. 순서가 바뀌면 새 카드가 잠기지 않는다.
+      slots.replaceChildren(
+        ...model.slots.map((slot) =>
+          createSlotCard(slot, model.deleteMode, () => options.onSelectSlot(slot.slotId)),
+        ),
+      );
+
       for (const button of interactiveButtons) {
-        button.disabled = busy;
+        button.disabled = model.busy;
       }
 
       for (const card of slots.querySelectorAll<HTMLButtonElement>('button.pf-save-slot__card')) {
-        card.disabled = busy;
+        card.disabled = model.busy;
       }
-    },
-    setDeleteMode: (deleteMode) => {
-      deleteButton.textContent = deleteMode ? 'Cancel Delete' : 'Delete';
-    },
-    renderSlots: (slotSummaries, deleteMode) => {
-      slots.replaceChildren();
-
-      for (const slot of slotSummaries) {
-        slots.append(createSlotCard(slot, deleteMode, () => options.onSelectSlot(slot.slotId)));
-      }
-    },
-    showRetry: (visible) => {
-      retryButton.hidden = !visible;
-    },
-    showDeleteButton: (visible) => {
-      deleteButton.hidden = !visible;
     },
   };
 }

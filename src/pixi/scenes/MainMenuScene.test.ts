@@ -4,24 +4,25 @@ import {
   createDefaultLicenseLinks,
   formatMainMenuLoadSummary,
 } from '../../dom/screens/main-menu-view';
-import type { MainMenuView } from '../../dom/screens/main-menu-view';
+import type { MainMenuView, MainMenuViewModel } from '../../dom/screens/main-menu-view';
 import { MainMenuScene } from './MainMenuScene';
 
 const logout = vi.fn<() => Promise<void>>();
 
-function createMockView(): MainMenuView & {
-  setStatus: ReturnType<typeof vi.fn>;
-  setBusy: ReturnType<typeof vi.fn>;
-  setLicenseOpen: ReturnType<typeof vi.fn>;
-  isLicenseOpen: ReturnType<typeof vi.fn>;
-} {
+function createMockView(): MainMenuView & { render: ReturnType<typeof vi.fn> } {
   return {
     element: {} as HTMLElement,
-    setStatus: vi.fn(),
-    setBusy: vi.fn(),
-    setLicenseOpen: vi.fn(),
-    isLicenseOpen: vi.fn(() => false),
+    render: vi.fn(),
   };
+}
+
+function lastModel(view: { render: ReturnType<typeof vi.fn> }): MainMenuViewModel {
+  const call = view.render.mock.calls.at(-1);
+  if (!call) {
+    throw new Error('render was never called');
+  }
+
+  return call[0] as MainMenuViewModel;
 }
 
 type MainMenuSceneHarness = {
@@ -69,8 +70,9 @@ describe('MainMenuScene', () => {
     await scene.logout();
 
     expect(logout).toHaveBeenCalledOnce();
-    expect(mockView.setBusy).toHaveBeenCalledWith(true);
-    expect(mockView.setStatus).toHaveBeenCalledWith('Signing out...');
+    expect(mockView.render).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'Signing out...', busy: true, licenseOpen: false }),
+    );
     expect(onLoggedOut).toHaveBeenCalledWith('You have been logged out.');
   });
 
@@ -100,8 +102,11 @@ describe('MainMenuScene', () => {
 
     expect(onLoggedOut).not.toHaveBeenCalled();
     expect(scene.isLoggingOut).toBe(false);
-    expect(mockView.setBusy).toHaveBeenLastCalledWith(false);
-    expect(mockView.setStatus).toHaveBeenLastCalledWith('network down', true);
+    expect(lastModel(mockView)).toMatchObject({
+      status: 'network down',
+      statusIsError: true,
+      busy: false,
+    });
   });
 });
 

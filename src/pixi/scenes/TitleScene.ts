@@ -3,6 +3,7 @@ import {
   createTitleView,
   type TitleCredentials,
   type TitleView,
+  type TitleViewModel,
 } from '../../dom/screens/title-view';
 import { AuthApiError } from '../../game/auth/client';
 import type { GameServices } from '../../services/game-services';
@@ -15,6 +16,7 @@ export type TitleSceneOptions = {
   onAuthenticated: () => void;
   /** 세션 만료 등으로 타이틀에 돌아왔을 때 표시할 메시지다. */
   statusMessage?: string;
+  view?: TitleView;
 };
 
 /** 타이틀 배경 위에서 계정 로그인과 신규 가입을 받는 첫 화면이다. */
@@ -23,22 +25,26 @@ export class TitleScene implements Scene {
   public readonly element: HTMLElement;
 
   private readonly titleView: TitleView;
+  private status = '';
+  private statusIsError = false;
+  private busy = false;
   private active = true;
 
   public constructor(private readonly options: TitleSceneOptions) {
-    this.titleView = createTitleView({
-      backgroundImageUrl: options.backgroundImageUrl,
-      onSubmit: (credentials, register) => {
-        void this.submitCredentials(credentials, register);
-      },
-    });
+    this.titleView =
+      options.view ??
+      createTitleView({
+        backgroundImageUrl: options.backgroundImageUrl,
+        onSubmit: (credentials, register) => {
+          void this.submitCredentials(credentials, register);
+        },
+      });
     this.element = this.titleView.element;
   }
 
   /** 기존 쿠키 세션이 살아 있으면 입력 없이 통과시킨다. */
   public async enter(): Promise<void> {
-    this.titleView.setBusy(true);
-    this.titleView.setStatus('Checking session...', false);
+    this.renderView({ busy: true, status: 'Checking session...', statusIsError: false });
 
     try {
       const session = await this.options.services.auth.restore();
@@ -48,15 +54,14 @@ export class TitleScene implements Scene {
         return;
       }
 
-      this.titleView.setBusy(false);
-      this.titleView.setStatus(
-        this.options.statusMessage ?? 'Enter your account details to continue.',
-        false,
-      );
+      this.renderView({
+        busy: false,
+        status: this.options.statusMessage ?? 'Enter your account details to continue.',
+        statusIsError: false,
+      });
       this.titleView.focusId();
     } catch (error) {
-      this.titleView.setBusy(false);
-      this.titleView.setStatus(formatAuthError(error), true);
+      this.renderView({ busy: false, status: formatAuthError(error), statusIsError: true });
       this.titleView.focusId();
     }
   }
@@ -71,8 +76,11 @@ export class TitleScene implements Scene {
   }
 
   private async submitCredentials(credentials: TitleCredentials, register: boolean): Promise<void> {
-    this.titleView.setBusy(true);
-    this.titleView.setStatus(register ? 'Creating account...' : 'Signing in...', false);
+    this.renderView({
+      busy: true,
+      status: register ? 'Creating account...' : 'Signing in...',
+      statusIsError: false,
+    });
 
     try {
       const { auth } = this.options.services;
@@ -90,10 +98,20 @@ export class TitleScene implements Scene {
       }
     } catch (error) {
       this.titleView.clearPassword();
-      this.titleView.setBusy(false);
-      this.titleView.setStatus(formatAuthError(error), true);
+      this.renderView({ busy: false, status: formatAuthError(error), statusIsError: true });
       this.titleView.focusPassword();
     }
+  }
+
+  private renderView(patch: Partial<TitleViewModel>): void {
+    this.status = patch.status ?? this.status;
+    this.statusIsError = patch.statusIsError ?? this.statusIsError;
+    this.busy = patch.busy ?? this.busy;
+    this.titleView.render({
+      status: this.status,
+      statusIsError: this.statusIsError,
+      busy: this.busy,
+    });
   }
 }
 

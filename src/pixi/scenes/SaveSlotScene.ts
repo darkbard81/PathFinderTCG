@@ -46,6 +46,11 @@ export class SaveSlotScene implements Scene {
   private layout: ViewportLayout | null = null;
   private slotSummaries: SaveSlotSummary[] = [];
   private deleteMode = false;
+  private status = '';
+  private statusTone: SaveSlotStatusTone = 'normal';
+  private busy = false;
+  private retryVisible = false;
+  private deleteButtonVisible = true;
   private isSlotActionPending = false;
   private isLoggingOut = false;
   private active = true;
@@ -84,10 +89,7 @@ export class SaveSlotScene implements Scene {
     this.isSlotActionPending = false;
     this.deleteMode = false;
     this.slotSummaries = [];
-    this.saveSlotView.setDeleteMode(false);
-    this.saveSlotView.showRetry(false);
-    this.saveSlotView.showDeleteButton(true);
-    this.saveSlotView.renderSlots([], false);
+    this.deleteButtonVisible = true;
     this.showLoadingState();
 
     await this.ensureBackground();
@@ -157,9 +159,10 @@ export class SaveSlotScene implements Scene {
   }
 
   private showLoadingState(): void {
-    this.saveSlotView.setBusy(true);
-    this.saveSlotView.showRetry(false);
-    this.saveSlotView.renderSlots([], this.deleteMode);
+    // 불러오는 동안에는 카드를 비운다. 목록 상태와 화면이 어긋나지 않게 필드도 함께 비운다.
+    this.slotSummaries = [];
+    this.busy = true;
+    this.retryVisible = false;
     this.setStatus('Loading save slots...');
   }
 
@@ -169,8 +172,7 @@ export class SaveSlotScene implements Scene {
     }
 
     this.deleteMode = false;
-    this.saveSlotView.setDeleteMode(false);
-    this.saveSlotView.showDeleteButton(true);
+    this.deleteButtonVisible = true;
     this.showLoadingState();
     await this.loadSaveSlots();
   }
@@ -184,9 +186,8 @@ export class SaveSlotScene implements Scene {
       }
 
       this.slotSummaries = slots;
-      this.saveSlotView.renderSlots(slots, this.deleteMode);
-      this.saveSlotView.setBusy(false);
-      this.saveSlotView.showRetry(false);
+      this.busy = false;
+      this.retryVisible = false;
       this.setStatus('Select a slot to continue or create a new save.');
     } catch (error: unknown) {
       if (!this.active || this.isLoggingOut) {
@@ -199,15 +200,31 @@ export class SaveSlotScene implements Scene {
 
   private showFailureState(error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
-    this.saveSlotView.renderSlots([], false);
-    this.saveSlotView.setBusy(false);
-    this.saveSlotView.showRetry(true);
-    this.saveSlotView.showDeleteButton(false);
+    this.slotSummaries = [];
+    this.deleteMode = false;
+    this.busy = false;
+    this.retryVisible = true;
+    this.deleteButtonVisible = false;
     this.setStatus(`Failed to load save slots: ${message}`, 'error');
   }
 
+  /** 상태 문구를 바꾸고 화면 전체를 다시 그린다. 런타임 필드를 고친 뒤 마지막에 부른다. */
   private setStatus(message: string, tone: SaveSlotStatusTone = 'normal'): void {
-    this.saveSlotView.setStatus(message, tone);
+    this.status = message;
+    this.statusTone = tone;
+    this.renderView();
+  }
+
+  private renderView(): void {
+    this.saveSlotView.render({
+      slots: this.slotSummaries,
+      deleteMode: this.deleteMode,
+      busy: this.busy,
+      status: this.status,
+      statusTone: this.statusTone,
+      retryVisible: this.retryVisible,
+      deleteButtonVisible: this.deleteButtonVisible,
+    });
   }
 
   private toggleDeleteMode(): void {
@@ -221,8 +238,6 @@ export class SaveSlotScene implements Scene {
     }
 
     this.deleteMode = !this.deleteMode;
-    this.saveSlotView.setDeleteMode(this.deleteMode);
-    this.saveSlotView.renderSlots(this.slotSummaries, this.deleteMode);
 
     if (this.deleteMode) {
       this.setStatus('Delete mode: select a saved slot to delete.', 'danger');
@@ -243,7 +258,8 @@ export class SaveSlotScene implements Scene {
     }
 
     this.isSlotActionPending = true;
-    this.saveSlotView.setBusy(true);
+    this.busy = true;
+    this.renderView();
 
     try {
       if (slot.isEmpty) {
@@ -284,7 +300,7 @@ export class SaveSlotScene implements Scene {
     }
 
     this.isSlotActionPending = true;
-    this.saveSlotView.setBusy(true);
+    this.busy = true;
     this.setStatus(`Deleting Slot ${slot.slotId}...`, 'danger');
 
     try {
@@ -298,9 +314,7 @@ export class SaveSlotScene implements Scene {
         entry.slotId === summary.slotId ? summary : entry,
       );
       this.deleteMode = false;
-      this.saveSlotView.setDeleteMode(false);
-      this.saveSlotView.renderSlots(this.slotSummaries, false);
-      this.saveSlotView.setBusy(false);
+      this.busy = false;
       this.setStatus(`Slot ${slot.slotId} deleted. Select a slot to continue.`);
     } catch (error: unknown) {
       if (!this.active || this.isLoggingOut) {
@@ -308,7 +322,7 @@ export class SaveSlotScene implements Scene {
       }
 
       const message = error instanceof Error ? error.message : String(error);
-      this.saveSlotView.setBusy(false);
+      this.busy = false;
       this.setStatus(`Failed to delete Slot ${slot.slotId}: ${message}`, 'danger');
     } finally {
       this.isSlotActionPending = false;
@@ -321,7 +335,7 @@ export class SaveSlotScene implements Scene {
     }
 
     this.isLoggingOut = true;
-    this.saveSlotView.setBusy(true);
+    this.busy = true;
     this.setStatus('Signing out...');
 
     try {
@@ -329,7 +343,7 @@ export class SaveSlotScene implements Scene {
       this.options.onLoggedOut('You have been logged out.');
     } catch (error: unknown) {
       this.isLoggingOut = false;
-      this.saveSlotView.setBusy(false);
+      this.busy = false;
       this.setStatus(error instanceof Error ? error.message : String(error), 'error');
     }
   }

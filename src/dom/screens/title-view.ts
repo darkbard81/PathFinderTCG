@@ -10,11 +10,22 @@ export type TitleViewOptions = {
   onSubmit: (credentials: TitleCredentials, register: boolean) => void;
 };
 
-/** 타이틀 화면의 DOM 루트와 상태 갱신 함수다. */
+export type TitleViewModel = {
+  status: string;
+  statusIsError: boolean;
+  busy: boolean;
+};
+
+/**
+ * 타이틀 화면의 DOM 루트와 갱신 API다.
+ *
+ * 상태는 `render` 한 방향으로만 들어온다.
+ * 아래 셋은 상태가 아니라 **사건**이라 render로 표현하지 않는다.
+ * 포커스는 한 번 일어나는 일이고, 입력값을 매 렌더마다 되돌리면 사용자가 타이핑할 수 없다.
+ */
 export type TitleView = {
   element: HTMLElement;
-  setStatus: (message: string, isError: boolean) => void;
-  setBusy: (busy: boolean) => void;
+  render: (model: TitleViewModel) => void;
   clearPassword: () => void;
   focusId: () => void;
   focusPassword: () => void;
@@ -101,15 +112,13 @@ export function createTitleView(options: TitleViewOptions): TitleView {
 
   return {
     element,
-    setStatus: (message, isError) => {
-      status.textContent = message;
-      status.dataset.error = String(isError);
-    },
-    setBusy: (busy) => {
-      idField.input.disabled = busy;
-      passwordField.input.disabled = busy;
-      loginButton.disabled = busy;
-      registerButton.disabled = busy;
+    render: (model) => {
+      status.textContent = model.status;
+      status.dataset.error = String(model.statusIsError);
+      idField.input.disabled = model.busy;
+      passwordField.input.disabled = model.busy;
+      loginButton.disabled = model.busy;
+      registerButton.disabled = model.busy;
     },
     clearPassword: () => {
       passwordField.input.value = '';

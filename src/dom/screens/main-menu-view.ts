@@ -24,13 +24,17 @@ export type MainMenuViewOptions = {
   onCloseLicense: () => void;
 };
 
-/** 메인 메뉴 DOM 루트와 상태 갱신 함수다. */
+export type MainMenuViewModel = {
+  status: string;
+  statusIsError: boolean;
+  busy: boolean;
+  licenseOpen: boolean;
+};
+
+/** 메인 메뉴 DOM 루트와 갱신 API다. */
 export type MainMenuView = {
   element: HTMLElement;
-  setStatus: (message: string, isError?: boolean) => void;
-  setBusy: (busy: boolean) => void;
-  setLicenseOpen: (open: boolean) => void;
-  isLicenseOpen: () => boolean;
+  render: (model: MainMenuViewModel) => void;
 };
 
 /**
@@ -107,24 +111,25 @@ export function createMainMenuView(options: MainMenuViewOptions): MainMenuView {
     license.closeButton,
   ];
 
+  // 다이얼로그가 열리는 순간에만 포커스를 준다. 매 렌더마다 주면 포커스를 계속 빼앗는다.
+  let licenseWasOpen = false;
+
   return {
     element,
-    setStatus: (message, isError = false) => {
-      status.textContent = message;
-      status.dataset.error = String(isError);
-    },
-    setBusy: (busy) => {
+    render: (model) => {
+      status.textContent = model.status;
+      status.dataset.error = String(model.statusIsError);
+
       for (const button of interactiveButtons) {
-        button.disabled = busy;
+        button.disabled = model.busy;
       }
-    },
-    setLicenseOpen: (open) => {
-      license.root.hidden = !open;
-      if (open) {
+
+      license.root.hidden = !model.licenseOpen;
+      if (model.licenseOpen && !licenseWasOpen) {
         license.root.focus();
       }
+      licenseWasOpen = model.licenseOpen;
     },
-    isLicenseOpen: () => !license.root.hidden,
   };
 }
 

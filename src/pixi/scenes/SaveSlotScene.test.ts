@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SaveSlotSummary } from '../../game/save/types';
-import type { SaveSlotView } from '../../dom/screens/save-slot-view';
+import type { SaveSlotView, SaveSlotViewModel } from '../../dom/screens/save-slot-view';
 import { SaveSlotScene } from './SaveSlotScene';
 
 const deleteSaveSlot = vi.fn<(slotId: 1 | 2 | 3) => Promise<SaveSlotSummary>>();
@@ -35,23 +35,20 @@ type SaveSlotSceneHarness = {
   handleSlotSelection: (slot: SaveSlotSummary) => Promise<void>;
 };
 
-function createMockView(): SaveSlotView & {
-  setStatus: ReturnType<typeof vi.fn>;
-  setBusy: ReturnType<typeof vi.fn>;
-  setDeleteMode: ReturnType<typeof vi.fn>;
-  renderSlots: ReturnType<typeof vi.fn>;
-  showRetry: ReturnType<typeof vi.fn>;
-  showDeleteButton: ReturnType<typeof vi.fn>;
-} {
+function createMockView(): SaveSlotView & { render: ReturnType<typeof vi.fn> } {
   return {
     element: {} as HTMLElement,
-    setStatus: vi.fn(),
-    setBusy: vi.fn(),
-    setDeleteMode: vi.fn(),
-    renderSlots: vi.fn(),
-    showRetry: vi.fn(),
-    showDeleteButton: vi.fn(),
+    render: vi.fn(),
   };
+}
+
+function lastModel(view: { render: ReturnType<typeof vi.fn> }): SaveSlotViewModel {
+  const call = view.render.mock.calls.at(-1);
+  if (!call) {
+    throw new Error('render was never called');
+  }
+
+  return call[0] as SaveSlotViewModel;
 }
 
 function createHarness(view = createMockView()): {
@@ -94,12 +91,12 @@ describe('SaveSlotScene delete mode', () => {
     scene.toggleDeleteMode();
 
     expect(scene.deleteMode).toBe(true);
-    expect(mockView.setDeleteMode).toHaveBeenCalledWith(true);
-    expect(mockView.renderSlots).toHaveBeenCalledWith(scene.slotSummaries, true);
-    expect(mockView.setStatus).toHaveBeenCalledWith(
-      'Delete mode: select a saved slot to delete.',
-      'danger',
-    );
+    expect(lastModel(mockView)).toMatchObject({
+      deleteMode: true,
+      slots: scene.slotSummaries,
+      status: 'Delete mode: select a saved slot to delete.',
+      statusTone: 'danger',
+    });
   });
 
   it('deletes an occupied slot and leaves delete mode afterward', async () => {
@@ -114,10 +111,12 @@ describe('SaveSlotScene delete mode', () => {
     expect(scene.slotSummaries[0]).toEqual(deletedSummary);
     expect(scene.deleteMode).toBe(false);
     expect(scene.isSlotActionPending).toBe(false);
-    expect(mockView.setStatus).toHaveBeenLastCalledWith(
-      'Slot 1 deleted. Select a slot to continue.',
-      'normal',
-    );
+    expect(lastModel(mockView)).toMatchObject({
+      deleteMode: false,
+      busy: false,
+      status: 'Slot 1 deleted. Select a slot to continue.',
+      statusTone: 'normal',
+    });
   });
 
   it('does not call the delete API for an empty slot', async () => {
@@ -128,6 +127,9 @@ describe('SaveSlotScene delete mode', () => {
 
     expect(deleteSaveSlot).not.toHaveBeenCalled();
     expect(scene.deleteMode).toBe(true);
-    expect(mockView.setStatus).toHaveBeenCalledWith('Slot 2 is already empty.', 'danger');
+    expect(lastModel(mockView)).toMatchObject({
+      status: 'Slot 2 is already empty.',
+      statusTone: 'danger',
+    });
   });
 });

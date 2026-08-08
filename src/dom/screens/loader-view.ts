@@ -1,10 +1,15 @@
 import './loader.css';
 
-/** 로딩 화면의 DOM 루트와 갱신 함수다. 화면 로직은 이 핸들만 다룬다. */
+export type LoaderViewModel = {
+  /** 0~1 진행률이다. 범위를 벗어난 값은 뷰가 잘라 쓴다. */
+  progress: number;
+  status: string;
+};
+
+/** 로딩 화면의 DOM 루트와 갱신 API다. */
 export type LoaderView = {
   element: HTMLElement;
-  setProgress: (ratio: number) => void;
-  setStatus: (message: string) => void;
+  render: (model: LoaderViewModel) => void;
 };
 
 /**
@@ -43,16 +48,14 @@ export function createLoaderView(): LoaderView {
 
   return {
     element,
-    setProgress: (ratio) => {
-      const clamped = Math.min(1, Math.max(0, ratio));
+    render: (model) => {
+      const clamped = Math.min(1, Math.max(0, model.progress));
       const rounded = Math.round(clamped * 100);
 
       fill.style.width = `${clamped * 100}%`;
       track.setAttribute('aria-valuenow', String(rounded));
       percent.textContent = `${rounded}%`;
-    },
-    setStatus: (message) => {
-      status.textContent = message;
+      status.textContent = model.status;
     },
   };
 }

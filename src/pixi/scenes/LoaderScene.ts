@@ -1,5 +1,9 @@
 import { Container } from 'pixi.js';
-import { createLoaderView, type LoaderView } from '../../dom/screens/loader-view';
+import {
+  createLoaderView,
+  type LoaderView,
+  type LoaderViewModel,
+} from '../../dom/screens/loader-view';
 import {
   formatPreloadSummary,
   preloadManifestAssets,
@@ -10,6 +14,7 @@ import type { Scene } from './scene';
 export type LoaderSceneOptions = {
   assetBaseUrl: string;
   onComplete: (result: PreloadResult) => void;
+  view?: LoaderView;
 };
 
 /**
@@ -21,10 +26,13 @@ export class LoaderScene implements Scene {
   public readonly element: HTMLElement;
 
   private readonly loaderView: LoaderView;
+  private progress = 0;
+  private status = 'Requesting assets.json';
 
   public constructor(private readonly options: LoaderSceneOptions) {
-    this.loaderView = createLoaderView();
+    this.loaderView = options.view ?? createLoaderView();
     this.element = this.loaderView.element;
+    this.renderView();
   }
 
   /** manifest 로딩을 시작하고, 실패하더라도 집계 결과를 만들어 흐름을 이어간다. */
@@ -38,13 +46,12 @@ export class LoaderScene implements Scene {
 
     try {
       result = await preloadManifestAssets(this.options.assetBaseUrl, {
-        onStatus: (message) => this.loaderView.setStatus(message),
-        onProgress: (ratio) => this.loaderView.setProgress(ratio),
+        onStatus: (message) => this.renderView({ status: message }),
+        onProgress: (ratio) => this.renderView({ progress: ratio }),
       });
-      this.loaderView.setProgress(1);
-      this.loaderView.setStatus(formatPreloadSummary(result));
+      this.renderView({ progress: 1, status: formatPreloadSummary(result) });
     } catch (error) {
-      this.loaderView.setStatus(formatError(error));
+      this.renderView({ status: formatError(error) });
     }
 
     this.options.onComplete(result);
@@ -53,6 +60,12 @@ export class LoaderScene implements Scene {
   /** 배치는 CSS와 오버레이 루트가 담당하므로 좌표 계산이 필요 없다. */
   public resize(): void {
     // 의도적으로 비어 있다.
+  }
+
+  private renderView(patch: Partial<LoaderViewModel> = {}): void {
+    this.progress = patch.progress ?? this.progress;
+    this.status = patch.status ?? this.status;
+    this.loaderView.render({ progress: this.progress, status: this.status });
   }
 }
 

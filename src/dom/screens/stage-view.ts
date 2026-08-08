@@ -41,8 +41,6 @@ export type StageViewOptions = {
 export type StageView = {
   element: HTMLElement;
   render: (model: StageViewModel) => void;
-  setStatus: (message: string, isError?: boolean) => void;
-  setBusy: (busy: boolean) => void;
 };
 
 /**
@@ -180,14 +178,6 @@ export function createStageView(options: StageViewOptions): StageView {
 
   return {
     element,
-    setStatus: (message, isError = false) => {
-      status.textContent = message;
-      status.dataset.error = String(isError);
-    },
-    setBusy: (busy) => {
-      currentBusy = busy;
-      applyBusy();
-    },
     render: (model) => {
       currentBusy = model.busy;
       status.textContent = model.status;
