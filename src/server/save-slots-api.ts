@@ -20,6 +20,7 @@ import {
   type SaveSlotState,
   type SaveSlotsResponse,
 } from '../game/save/types';
+import { normalizeLobbyState } from '../game/lobby/lobby-state';
 import { normalizeStageProgressState } from '../game/stage/progress';
 import { authenticateHttpRequest } from './auth-api';
 import type { AuthService } from './auth-service';
@@ -252,7 +253,8 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     value.schemaVersion !== SAVE_SLOT_SCHEMA_VERSION &&
     value.schemaVersion !== 1 &&
     value.schemaVersion !== 2 &&
-    value.schemaVersion !== 3
+    value.schemaVersion !== 3 &&
+    value.schemaVersion !== 4
   ) {
     throw new Error(`Invalid schemaVersion: ${String(value.schemaVersion)}`);
   }
@@ -283,6 +285,7 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     collection,
   );
   const stageProgress = normalizeStageProgressState(value.stageProgress);
+  const lobby = normalizeLobbyState(value.lobby);
 
   return {
     schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
@@ -294,6 +297,7 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     collection,
     equipment,
     stageProgress,
+    lobby,
   };
 }
 
@@ -566,6 +570,7 @@ function getErrorStatusCode(error: unknown): number {
       error.message.startsWith('Equipment ') ||
       error.message.startsWith('Duplicate equipment ability:') ||
       error.message.startsWith('stageProgress') ||
+      error.message.startsWith('lobby') ||
       error.message.startsWith('Expected exactly one LEADER card') ||
       error.message.startsWith('Expected at least one UNIT card') ||
       error.message.startsWith('Invalid ')

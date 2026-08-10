@@ -10,6 +10,7 @@ import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { EquipmentScene } from './pixi/scenes/EquipmentScene';
 import { GrowthScene } from './pixi/scenes/GrowthScene';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
+import { LobbyScene } from './pixi/scenes/LobbyScene';
 import { MainMenuScene } from './pixi/scenes/MainMenuScene';
 import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
@@ -109,21 +110,23 @@ void (async (): Promise<void> => {
           void showTitle(message);
         },
         onSessionReady: (session) => {
-          void showStage(session);
+          void showLobby(session);
         },
       }),
     );
   }
 
-  function showStage(session: GameSession, lastBattleResult?: StageBattleResult): Promise<void> {
+  function showLobby(session: GameSession): Promise<void> {
     return router.goto(
-      new StageScene({
+      new LobbyScene({
         services,
-        backgroundImageUrl,
+        assetBaseUrl: ASSET_BASE_URL,
         session,
-        ...(lastBattleResult ? { lastBattleResult } : {}),
         onBack: () => {
           void showSaveSlot();
+        },
+        onPlay: (currentSession) => {
+          void showStage(currentSession);
         },
         onDeck: (currentSession) => {
           void showDeckBuild(currentSession);
@@ -136,6 +139,20 @@ void (async (): Promise<void> => {
         },
         onLoggedOut: (message) => {
           void showTitle(message);
+        },
+      }),
+    );
+  }
+
+  function showStage(session: GameSession, lastBattleResult?: StageBattleResult): Promise<void> {
+    return router.goto(
+      new StageScene({
+        services,
+        backgroundImageUrl,
+        session,
+        ...(lastBattleResult ? { lastBattleResult } : {}),
+        onBack: (currentSession) => {
+          void showLobby(currentSession);
         },
         onStartBattle: (nextSession, stageId) => {
           void showBattlefield(nextSession, stageId);
@@ -153,7 +170,7 @@ void (async (): Promise<void> => {
         session,
         // 저장했다면 갱신된 세션으로, 아니면 들어올 때 세션으로 Stage에 돌아간다.
         onBack: (nextSession) => {
-          void showStage(nextSession);
+          void showLobby(nextSession);
         },
       }),
     );
@@ -167,7 +184,7 @@ void (async (): Promise<void> => {
         assetBaseUrl: ASSET_BASE_URL,
         session,
         onBack: (nextSession) => {
-          void showStage(nextSession);
+          void showLobby(nextSession);
         },
       }),
     );
@@ -181,7 +198,7 @@ void (async (): Promise<void> => {
         assetBaseUrl: ASSET_BASE_URL,
         session,
         onBack: (nextSession) => {
-          void showStage(nextSession);
+          void showLobby(nextSession);
         },
       }),
     );

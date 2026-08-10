@@ -57,9 +57,22 @@ export function createAssetsMiddleware(): AssetsMiddleware {
 
     try {
       const file = await fs.readFile(filePath);
-      response.statusCode = 200;
       response.setHeader('Content-Type', getMimeType(filePath));
       response.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      // 비디오 요소는 Range로 받아 간다. 206을 돌려주지 않으면 탐색이 막힌다.
+      response.setHeader('Accept-Ranges', 'bytes');
+
+      const range = parseByteRange(request.headers.range, file.length);
+      if (range) {
+        response.statusCode = 206;
+        response.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${file.length}`);
+        response.end(
+          request.method === 'HEAD' ? undefined : file.subarray(range.start, range.end + 1),
+        );
+        return true;
+      }
+
+      response.statusCode = 200;
       response.end(request.method === 'HEAD' ? undefined : file);
       return true;
     } catch {
@@ -67,6 +80,26 @@ export function createAssetsMiddleware(): AssetsMiddleware {
       return true;
     }
   };
+}
+
+/**
+ * `Range: bytes=시작-끝` 한 구간만 해석한다.
+ * 여러 구간을 요구하는 요청은 처리하지 않고 전체를 그대로 돌려준다.
+ */
+function parseByteRange(
+  header: string | undefined,
+  size: number,
+): { start: number; end: number } | null {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? '');
+  if (!match) {
+    return null;
+  }
+
+  const [, rawStart, rawEnd] = match;
+  const start = rawStart ? Number(rawStart) : Math.max(0, size - Number(rawEnd));
+  const end = rawStart && rawEnd ? Math.min(Number(rawEnd), size - 1) : size - 1;
+
+  return start >= 0 && start <= end && end < size ? { start, end } : null;
 }
 
 async function readAssetsManifest(): Promise<AssetsManifest> {
@@ -88,6 +121,8 @@ function getMimeType(filePath: string): string {
       return 'image/png';
     case '.webp':
       return 'image/webp';
+    case '.gif':
+      return 'image/gif';
     case '.webm':
       return 'video/webm';
     case '.jpg':

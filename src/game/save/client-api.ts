@@ -100,7 +100,8 @@ function isSaveSlotState(value: unknown): value is SaveSlotState {
     Array.isArray(value.collection.cards) &&
     value.collection.cards.every((entry) => isCardInstance(entry, 'COLLECTION')) &&
     isEquipmentState(value.equipment) &&
-    isStageProgressState(value.stageProgress)
+    isStageProgressState(value.stageProgress) &&
+    isLobbyState(value.lobby)
   );
 }
 
@@ -114,6 +115,15 @@ function isEquipmentState(value: unknown): boolean {
         typeof entry.targetCardInstanceId === 'string' &&
         typeof entry.equipmentCardInstanceId === 'string',
     )
+  );
+}
+
+function isLobbyState(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.ownedBackgroundIds) &&
+    value.ownedBackgroundIds.every((backgroundId) => typeof backgroundId === 'string') &&
+    typeof value.selectedBackgroundId === 'string'
   );
 }
 

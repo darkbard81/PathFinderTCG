@@ -1,0 +1,133 @@
+/*
+ * 로비 크롬.
+ * 배경은 캔버스가 그리고 리더 standing은 여기 <img>다. 가운데 열은 비워 둔다.
+ * 논리 영역은 항상 ≥1024x768이라 @media 로 꺾지 않는다.
+ */
+.pf-lobby {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(280px, 26%) 1fr;
+  grid-template-rows: auto 1fr auto auto;
+  grid-template-areas:
+    'header .'
+    'menu .'
+    'account .'
+    'status status';
+  gap: clamp(10px, 1.6vh, 20px);
+  width: 100%;
+  height: 100%;
+  padding: clamp(20px, 3.4vh, 40px) clamp(20px, 2.5vw, var(--pf-space-xl))
+    clamp(12px, 2vh, var(--pf-space-lg));
+  box-sizing: border-box;
+  overflow: hidden;
+  background: transparent;
+}
+
+.pf-lobby__header {
+  grid-area: header;
+  display: grid;
+  gap: 4px;
+  padding: var(--pf-space-md);
+  border-radius: 6px;
+  background: var(--pf-surface-panel);
+  border: 1px solid var(--pf-color-accent);
+  min-width: 0;
+}
+
+.pf-lobby__save-name {
+  margin: 0;
+  font-size: var(--pf-text-panel-title-size);
+  color: var(--pf-text-panel-title-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-lobby__leader-name {
+  margin: 0;
+  font-size: var(--pf-text-panel-subtitle-size);
+  color: var(--pf-text-panel-subtitle-color);
+}
+
+.pf-lobby__menu {
+  grid-area: menu;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 16px);
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 큰 글자와 영문 캡션을 왼쪽으로 모은다. 9슬라이스 틀은 .pf-btn9--menu가 그린다. */
+.pf-lobby__menu-button {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  text-align: left;
+  min-height: clamp(56px, 8vh, 72px);
+}
+
+.pf-lobby__menu-label {
+  font-size: clamp(20px, 2.6vw, var(--pf-text-button-label-size));
+  line-height: 1.1;
+}
+
+.pf-lobby__menu-caption {
+  font-size: clamp(11px, 1.2vw, 13px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-color-secondary);
+}
+
+.pf-lobby__menu-button:disabled .pf-lobby__menu-caption {
+  color: var(--pf-color-disabled-text);
+}
+
+.pf-lobby__account {
+  grid-area: account;
+  display: flex;
+  gap: clamp(8px, 1.2vw, 14px);
+}
+
+.pf-lobby__account-button {
+  flex: 1 1 0;
+  min-height: clamp(40px, 5.5vh, 52px);
+  font-size: clamp(14px, 1.6vw, 18px);
+}
+
+.pf-lobby__status {
+  grid-area: status;
+  margin: 0;
+  min-height: 24px;
+  text-align: center;
+  font-size: var(--pf-text-status-size);
+  color: var(--pf-text-status-color);
+}
+
+/*
+ * 리더 standing.
+ * 브라우저가 애니메이션을 알아서 재생한다. 바닥에 세우고 세로를 화면에 맞춘 뒤
+ * 아래로 잘리게 둔다. 크롬보다 뒤에 두되 z-index를 음수로 주지는 않는다.
+ * 음수로 주면 조상 쌓임 맥락을 빠져나가 캔버스 뒤로 숨는다.
+ */
+.pf-lobby__standing {
+  position: absolute;
+  z-index: 0;
+  bottom: 0;
+  left: 56%;
+  height: 100%;
+  width: auto;
+  transform: translateX(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 크롬은 standing 위에 얹는다. */
+.pf-lobby__header,
+.pf-lobby__menu,
+.pf-lobby__account,
+.pf-lobby__status {
+  position: relative;
+  z-index: 1;
+}

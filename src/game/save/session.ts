@@ -1,3 +1,4 @@
+import type { LobbyState } from '../lobby/lobby-state';
 import {
   SAVE_SLOT_SCHEMA_VERSION,
   type CardCollection,
@@ -36,6 +37,7 @@ export type GameSession = {
   collection: RuntimeCardCollection;
   equipment: EquipmentState;
   stageProgress: StageProgressState;
+  lobby: LobbyState;
 };
 
 export function createGameSession(
@@ -64,6 +66,7 @@ export function createGameSession(
     },
     equipment: structuredClone(state.equipment),
     stageProgress: structuredClone(state.stageProgress),
+    lobby: structuredClone(state.lobby),
   };
 }
 
@@ -93,6 +96,7 @@ export function createSaveSlotStateFromGameSession(
     },
     equipment: structuredClone(session.equipment),
     stageProgress: structuredClone(session.stageProgress),
+    lobby: structuredClone(session.lobby),
   };
 }
 
