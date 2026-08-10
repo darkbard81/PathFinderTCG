@@ -119,7 +119,7 @@
   font-size: var(--pf-text-button-label-size);
   color: var(--pf-text-button-label-color);
   background: var(--pf-card-workbench-tab-background);
-  border: 1px solid rgba(218, 246, 211, 0.62);
+  border: 1px solid rgba(230, 184, 74, 0.62);
   border-radius: var(--pf-card-workbench-tab-radius);
   padding: 10px;
   cursor: pointer;
@@ -188,7 +188,7 @@
   font-weight: 700;
   color: var(--pf-color-primary);
   background: var(--pf-card-workbench-filter-background);
-  border: 1px solid rgba(183, 201, 186, 0.42);
+  border: 1px solid rgba(238, 231, 210, 0.3);
   /* 목업의 마름모 코스트 배지 형태를 그대로 쓴다. */
   clip-path: polygon(50% 0%, 100% 38%, 50% 100%, 0% 62%);
   cursor: pointer;
