@@ -22,7 +22,11 @@ const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 const SOURCE_PATH = path.join(PROJECT_ROOT, 'documents/9SLICE_BUTTON.png');
 const OUTPUT_DIR = path.join(PROJECT_ROOT, 'src/assets/ui/buttons');
 
-const WEBP_QUALITY = 92;
+/**
+ * 무손실로 굽는다. 손실 압축은 평탄하게 맞춰 둔 늘어나는 구간을 다시 흔들어
+ * 슬라이스 경계에 색이 어긋나게 만든다. 평면이 많은 그림이라 크기도 오히려 작다.
+ */
+const WEBP_LOSSLESS = true;
 
 /**
  * 프레임 바깥을 가려낼 때 배경으로 볼 밝기 상한이다.
@@ -113,6 +117,44 @@ function floodFillOutside(data, channels, width, height) {
   return isOutside;
 }
 
+/**
+ * 늘어나는 조각을 늘어나는 방향으로 평탄화한다.
+ *
+ * border-image는 위·아래 조각을 가로로, 좌·우 조각을 세로로, 가운데를 양쪽으로
+ * 늘린다. 원본이 그 방향으로 균일하지 않으면 늘린 색과 옆 조각의 색이 어긋나
+ * 슬라이스 경계에 희미한 선이 생긴다. 늘어나는 구간을 방향별 평균으로 덮어
+ * 어떤 배율에서 늘려도 같은 색이 나오게 한다.
+ */
+function flattenStretchBands(rgba, width, height, slice) {
+  const at = (x, y) => (y * width + x) * 4;
+
+  // 위·아래·가운데 조각은 가로로 늘어난다. 행마다 가로 평균으로 채운다.
+  for (let y = 0; y < height; y += 1) {
+    const mean = [0, 0, 0, 0];
+    for (let x = slice; x < width - slice; x += 1) {
+      for (let c = 0; c < 4; c += 1) mean[c] += rgba[at(x, y) + c];
+    }
+    const span = width - slice * 2;
+    for (let c = 0; c < 4; c += 1) mean[c] = Math.round(mean[c] / span);
+    for (let x = slice; x < width - slice; x += 1) {
+      for (let c = 0; c < 4; c += 1) rgba[at(x, y) + c] = mean[c];
+    }
+  }
+
+  // 좌·우·가운데 조각은 세로로 늘어난다. 열마다 세로 평균으로 채운다.
+  for (let x = 0; x < width; x += 1) {
+    const mean = [0, 0, 0, 0];
+    for (let y = slice; y < height - slice; y += 1) {
+      for (let c = 0; c < 4; c += 1) mean[c] += rgba[at(x, y) + c];
+    }
+    const span = height - slice * 2;
+    for (let c = 0; c < 4; c += 1) mean[c] = Math.round(mean[c] / span);
+    for (let y = slice; y < height - slice; y += 1) {
+      for (let c = 0; c < 4; c += 1) rgba[at(x, y) + c] = mean[c];
+    }
+  }
+}
+
 /** 잘라낸 한 상태를 알파가 구워진 RGBA 버퍼로 만든다. */
 async function buildState(source, button, rowIndex) {
   const [top, bottom] = button.rows[rowIndex];
@@ -162,23 +204,16 @@ async function main() {
       const offsetTop = Math.round((canvasHeight - state.height) / 2);
       const targetPath = path.join(OUTPUT_DIR, `${button.name}-${STATES[index]}.webp`);
 
-      const output = await sharp({
-        create: {
-          width: state.width,
-          height: canvasHeight,
-          channels: 4,
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        },
+      // 평탄화는 최종 크기에서 해야 한다. 위 여백을 넣기 전에 하면 슬라이스 띠가
+      // 여백만큼 밀려 어긋난다.
+      const canvas = Buffer.alloc(state.width * canvasHeight * 4);
+      state.rgba.copy(canvas, offsetTop * state.width * 4);
+      flattenStretchBands(canvas, state.width, canvasHeight, button.slice);
+
+      const output = await sharp(canvas, {
+        raw: { width: state.width, height: canvasHeight, channels: 4 },
       })
-        .composite([
-          {
-            input: state.rgba,
-            raw: { width: state.width, height: state.height, channels: 4 },
-            left: 0,
-            top: offsetTop,
-          },
-        ])
-        .webp({ quality: WEBP_QUALITY, alphaQuality: 100 })
+        .webp({ lossless: WEBP_LOSSLESS })
         .toFile(targetPath);
 
       console.log(
