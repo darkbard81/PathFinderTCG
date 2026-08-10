@@ -494,6 +494,14 @@ export const UI_THEME = {
      * slice는 그림 픽셀 단위라 코너 장식(36px)보다 커야 장식이 찌그러지지 않는다.
      * borderWidth는 화면에 그려질 두께라 slice보다 작아도 된다. 그만큼 줄여 그린다.
      */
+    /**
+     * 9슬라이스 틀이 맞지 않는 자리에 쓰는 평범한 버튼이다.
+     * 작은 아이콘 버튼처럼 사각 프레임과 코너 장식이 과한 곳에 쓴다.
+     */
+    buttonPlain: {
+      border: '1px solid rgba(230, 184, 74, 0.82)',
+      radius: '6px',
+    },
     button9: {
       /** 아홉 칸이 모두 같은 투명도다. 칸마다 다르게 주려면 그림을 두 겹 얹어야 한다. */
       opacity: '0.8',
@@ -513,7 +521,6 @@ export const UI_THEME = {
       inputBackground: 'rgba(17, 26, 48, 0.94)',
       inputBorder: '1px solid rgba(238, 231, 210, 0.3)',
       focusRing: 'rgba(230, 184, 74, 0.22)',
-      buttonBorder: '1px solid rgba(230, 184, 74, 0.82)',
     },
     licenseDialog: {
       overlayPadding: '28px',

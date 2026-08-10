@@ -142,6 +142,7 @@
   line-height: 1.2;
 }
 
+/* 색과 상태는 .pf-btn-plain이 정한다. 여기서는 크기와 대화상자용 테두리만 덮는다. */
 .pf-main-menu__license-close {
   display: grid;
   flex: 0 0 auto;
@@ -151,17 +152,8 @@
   padding: 0;
   border: var(--pf-license-dialog-close-button-border);
   border-radius: var(--pf-license-dialog-close-button-radius);
-  background: var(--pf-surface-button);
-  color: var(--pf-color-primary);
-  font: inherit;
   font-size: 28px;
   line-height: 1;
-  cursor: pointer;
-}
-
-.pf-main-menu__license-close:hover,
-.pf-main-menu__license-close:focus-visible {
-  background: var(--pf-color-surface-hover);
 }
 
 .pf-main-menu__license-body {
