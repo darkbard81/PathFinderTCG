@@ -51,6 +51,10 @@ void (async (): Promise<void> => {
 
   const backgroundImageUrl = joinAssetUrl(ASSET_BASE_URL, TITLE_BACKGROUND_PATH);
   let preloadCounts = { loadedCount: 0, failedCount: 0 };
+  const lobbyStandingPlayback = {
+    source: '',
+    currentTime: 0,
+  };
   const services = createGameServices({
     onSessionExpired: (message) => {
       void showTitle(message);
@@ -137,6 +141,7 @@ void (async (): Promise<void> => {
         onGrowth: (currentSession) => {
           void showGrowth(currentSession);
         },
+        standingPlayback: lobbyStandingPlayback,
         onLoggedOut: (message) => {
           void showTitle(message);
         },

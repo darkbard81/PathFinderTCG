@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { filterUsableStandingSources, supportsAlphaWebm } from './lobby-view';
+import {
+  filterUsableStandingSources,
+  resolveStandingPlaybackTime,
+  supportsAlphaWebm,
+} from './lobby-view';
 
 const AGENTS = {
   steamOsChrome: {
@@ -86,5 +90,31 @@ describe('filterUsableStandingSources', () => {
       'a/leader.gif',
       'a/leader.webp',
     ]);
+  });
+});
+
+describe('resolveStandingPlaybackTime', () => {
+  it('같은 영상이면 마지막 재생 위치를 복원한다', () => {
+    expect(
+      resolveStandingPlaybackTime('cards/leader.webm', {
+        source: 'cards/leader.webm',
+        currentTime: 12.5,
+      }),
+    ).toBe(12.5);
+  });
+
+  it('영상이 다르거나 위치가 유효하지 않으면 처음부터 재생한다', () => {
+    expect(
+      resolveStandingPlaybackTime('cards/other.webm', {
+        source: 'cards/leader.webm',
+        currentTime: 12.5,
+      }),
+    ).toBe(0);
+    expect(
+      resolveStandingPlaybackTime('cards/leader.webm', {
+        source: 'cards/leader.webm',
+        currentTime: Number.NaN,
+      }),
+    ).toBe(0);
   });
 });

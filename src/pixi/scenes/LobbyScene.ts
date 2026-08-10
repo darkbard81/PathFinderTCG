@@ -1,5 +1,10 @@
 import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
-import { createLobbyView, type LobbyMenuItem, type LobbyView } from '../../dom/screens/lobby-view';
+import {
+  createLobbyView,
+  type LobbyMenuItem,
+  type LobbyStandingPlayback,
+  type LobbyView,
+} from '../../dom/screens/lobby-view';
 import { joinAssetUrl } from '../../game/assets/manifest';
 import { findLobbyBackground } from '../../game/lobby/backgrounds';
 import type { GameSession } from '../../game/save/session';
@@ -34,6 +39,8 @@ export type LobbySceneOptions = {
   onEquipment: (session: GameSession) => void;
   onGrowth: (session: GameSession) => void;
   onLoggedOut: (statusMessage: string) => void;
+  /** Lobby를 다시 열 때 standing 영상의 마지막 위치를 복원한다. */
+  standingPlayback?: LobbyStandingPlayback;
   view?: LobbyView;
 };
 
@@ -55,7 +62,8 @@ export class LobbyScene implements Scene {
   private active = true;
 
   public constructor(private readonly options: LobbySceneOptions) {
-    this.lobbyView = options.view ?? createLobbyView(this.buildViewOptions());
+    this.lobbyView =
+      options.view ?? createLobbyView(this.buildViewOptions(options.standingPlayback));
     this.element = this.lobbyView.element;
     this.view.addChild(this.shade);
   }
@@ -73,6 +81,12 @@ export class LobbyScene implements Scene {
   }
 
   public exit(): void {
+    const playback = this.lobbyView.readStandingPlayback();
+    const standingPlayback = this.options.standingPlayback;
+    if (playback && standingPlayback) {
+      standingPlayback.source = playback.source;
+      standingPlayback.currentTime = playback.currentTime;
+    }
     this.active = false;
   }
 
@@ -81,7 +95,7 @@ export class LobbyScene implements Scene {
     this.layoutCanvas(layout);
   }
 
-  private buildViewOptions() {
+  private buildViewOptions(standingPlayback?: LobbyStandingPlayback) {
     const guard = (run: () => void) => () => {
       if (!this.isLoggingOut) {
         run();
@@ -126,6 +140,7 @@ export class LobbyScene implements Scene {
       saveName: this.options.session.saveName,
       leaderName: this.options.session.deck.leader.definition.name,
       menuItems,
+      ...(standingPlayback ? { standingPlayback } : {}),
       onBack: guard(() => this.options.onBack()),
       onLogout: () => void this.logout(),
     };

@@ -23,14 +23,23 @@ export type LobbyViewOptions = {
   /** 현재 덱 리더 이름이다. 헤더 둘째 줄에 쓴다. */
   leaderName: string;
   menuItems: LobbyMenuItem[];
+  /** Lobby를 잠시 떠날 때 복원할 standing 영상의 일시 재생 상태다. */
+  standingPlayback?: LobbyStandingPlayback;
   onBack: () => void;
   onLogout: () => void;
 };
 
 export type LobbyView = {
   element: HTMLElement;
+  readStandingPlayback: () => LobbyStandingPlayback | null;
   setStatus: (message: string) => void;
   setBusy: (busy: boolean) => void;
+};
+
+/** 저장 데이터에 포함하지 않는 Lobby standing 영상의 임시 재생 상태다. */
+export type LobbyStandingPlayback = {
+  source: string;
+  currentTime: number;
 };
 
 /**
@@ -43,7 +52,7 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
   const element = document.createElement('section');
   element.className = 'pf-lobby';
 
-  mountStanding(element, options.standingSources);
+  mountStanding(element, options.standingSources, options.standingPlayback);
 
   const header = document.createElement('header');
   header.className = 'pf-lobby__header';
@@ -83,6 +92,17 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
 
   return {
     element,
+    readStandingPlayback: () => {
+      const standing = element.querySelector('.pf-lobby__standing');
+      if (!(standing instanceof HTMLVideoElement) || !Number.isFinite(standing.currentTime)) {
+        return null;
+      }
+
+      return {
+        source: standing.dataset.source ?? standing.src,
+        currentTime: Math.max(0, standing.currentTime),
+      };
+    },
     setStatus: (message) => {
       status.textContent = message;
     },
@@ -129,6 +149,18 @@ export function filterUsableStandingSources(
   return sources.filter((url) => allowWebm || !url.toLowerCase().includes('.webm'));
 }
 
+/** 같은 standing 영상에만 저장된 재생 위치를 적용한다. */
+export function resolveStandingPlaybackTime(
+  source: string,
+  playback: LobbyStandingPlayback | undefined,
+): number {
+  if (!playback || playback.source !== source || !Number.isFinite(playback.currentTime)) {
+    return 0;
+  }
+
+  return Math.max(0, playback.currentTime);
+}
+
 function readUserAgent(): UserAgentInfo {
   if (typeof navigator === 'undefined') {
     return { userAgent: '', maxTouchPoints: 0 };
@@ -145,7 +177,11 @@ function isVideoSource(url: string): boolean {
  * 후보를 앞에서부터 하나씩 붙여 본다. 실패하면 그 요소를 떼고 다음으로 넘어가며,
  * 다 떨어지면 배경만 남는다. standing 원본이 아직 없는 리더가 있어서 필요하다.
  */
-function mountStanding(parent: HTMLElement, sources: readonly string[]): void {
+function mountStanding(
+  parent: HTMLElement,
+  sources: readonly string[],
+  playback: LobbyStandingPlayback | undefined,
+): void {
   const usable = filterUsableStandingSources(sources);
   const [url, ...rest] = usable;
   if (!url) {
@@ -156,8 +192,20 @@ function mountStanding(parent: HTMLElement, sources: readonly string[]): void {
   element.className = 'pf-lobby__standing';
   element.addEventListener('error', () => {
     element.remove();
-    mountStanding(parent, rest);
+    mountStanding(parent, rest, playback);
   });
+  if (element instanceof HTMLVideoElement) {
+    // video.src는 브라우저가 절대 URL로 정규화하므로 후보 URL을 별도로 보존한다.
+    element.dataset.source = url;
+    const restoreTime = resolveStandingPlaybackTime(url, playback);
+    element.addEventListener(
+      'loadedmetadata',
+      () => {
+        element.currentTime = restoreTime;
+      },
+      { once: true },
+    );
+  }
   parent.append(element);
 }
 
@@ -172,7 +220,6 @@ function createStandingElement(url: string): HTMLImageElement | HTMLVideoElement
   }
 
   const video = document.createElement('video');
-  video.src = url;
   video.autoplay = true;
   video.loop = true;
   // 음소거가 아니면 브라우저가 자동재생을 막는다. 속성과 프로퍼티를 함께 건다.
@@ -180,6 +227,7 @@ function createStandingElement(url: string): HTMLImageElement | HTMLVideoElement
   video.setAttribute('muted', '');
   video.playsInline = true;
   video.disablePictureInPicture = true;
+  video.src = url;
   return video;
 }
 
