@@ -62,10 +62,22 @@
 /* 큰 글자와 영문 캡션을 왼쪽으로 모은다. 9슬라이스 틀은 .pf-btn9--menu가 그린다. */
 .pf-lobby__menu-button {
   display: grid;
+  grid-template-columns: clamp(42px, 5vw, 58px) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
   justify-items: start;
-  gap: 2px;
+  gap: 2px clamp(8px, 1vw, 14px);
   text-align: left;
   min-height: clamp(56px, 8vh, 72px);
+}
+
+.pf-lobby__menu-icon {
+  grid-row: 1 / -1;
+  width: clamp(42px, 5vw, 58px);
+  height: clamp(42px, 5vw, 58px);
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
 .pf-lobby__menu-label {
@@ -94,6 +106,30 @@
   flex: 1 1 0;
   min-height: clamp(40px, 5.5vh, 52px);
   font-size: clamp(14px, 1.6vw, 18px);
+}
+
+.pf-lobby__standing-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pf-space-xs);
+  min-height: clamp(40px, 5.5vh, 52px);
+  padding: var(--pf-space-xs) var(--pf-space-sm);
+  font-size: clamp(12px, 1.4vw, 16px);
+  white-space: nowrap;
+}
+
+.pf-lobby__standing-toggle-icon {
+  width: clamp(24px, 3vw, 34px);
+  height: clamp(24px, 3vw, 34px);
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pf-lobby__standing-toggle[aria-pressed='false'] {
+  opacity: 0.68;
 }
 
 .pf-lobby__status {

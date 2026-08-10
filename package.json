@@ -10,6 +10,7 @@
     "assets:build": "vite-node src/scripts/build-assets.ts",
     "build:badges": "node tools/build-card-badges.mjs",
     "build:buttons": "node tools/build-button-9slice.mjs",
+    "build:lobby-icons": "node tools/build-lobby-icons.mjs",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "lint": "eslint .",

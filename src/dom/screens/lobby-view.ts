@@ -1,10 +1,50 @@
 import './lobby.css';
 
+import battleIconUrl from '../../assets/ui/icons/lobby/battle.webp';
+import cardIconUrl from '../../assets/ui/icons/lobby/card.webp';
+import currencyIconUrl from '../../assets/ui/icons/lobby/currency.webp';
+import deckIconUrl from '../../assets/ui/icons/lobby/deck.webp';
+import friendsIconUrl from '../../assets/ui/icons/lobby/friends.webp';
+import gemBlueBrightIconUrl from '../../assets/ui/icons/lobby/gem-blue-bright.webp';
+import gemBlueIconUrl from '../../assets/ui/icons/lobby/gem-blue.webp';
+import gemPurpleIconUrl from '../../assets/ui/icons/lobby/gem-purple.webp';
+import giftIconUrl from '../../assets/ui/icons/lobby/gift.webp';
+import mailIconUrl from '../../assets/ui/icons/lobby/mail.webp';
+import menuIconUrl from '../../assets/ui/icons/lobby/menu.webp';
+import noticeIconUrl from '../../assets/ui/icons/lobby/notice.webp';
+import questIconUrl from '../../assets/ui/icons/lobby/quest.webp';
+import rankIconUrl from '../../assets/ui/icons/lobby/rank.webp';
+import settingsIconUrl from '../../assets/ui/icons/lobby/settings.webp';
+import shieldIconUrl from '../../assets/ui/icons/lobby/shield.webp';
+
+const LOBBY_ICON_URLS = {
+  battle: battleIconUrl,
+  card: cardIconUrl,
+  currency: currencyIconUrl,
+  deck: deckIconUrl,
+  friends: friendsIconUrl,
+  'gem-blue': gemBlueIconUrl,
+  'gem-blue-bright': gemBlueBrightIconUrl,
+  'gem-purple': gemPurpleIconUrl,
+  gift: giftIconUrl,
+  mail: mailIconUrl,
+  menu: menuIconUrl,
+  notice: noticeIconUrl,
+  quest: questIconUrl,
+  rank: rankIconUrl,
+  settings: settingsIconUrl,
+  shield: shieldIconUrl,
+} as const;
+
+/** UI_Template 10번 아이콘 세트에서 현재 Lobby가 사용하는 아이콘 ID다. */
+export type LobbyMenuIcon = keyof typeof LOBBY_ICON_URLS;
+
 /** 좌측 레일에 세우는 메뉴 하나다. */
 export type LobbyMenuItem = {
   id: string;
   label: string;
   caption: string;
+  icon?: LobbyMenuIcon;
   disabled?: boolean;
   onSelect?: () => void;
 };
@@ -25,6 +65,10 @@ export type LobbyViewOptions = {
   menuItems: LobbyMenuItem[];
   /** Lobby를 잠시 떠날 때 복원할 standing 영상의 일시 재생 상태다. */
   standingPlayback?: LobbyStandingPlayback;
+  /** standing 캐릭터 표시 여부다. 저장 데이터가 아닌 임시 UI 상태다. */
+  standingVisible?: boolean;
+  /** standing 캐릭터 표시 여부가 바뀔 때 호출한다. */
+  onStandingVisibilityChange?: (visible: boolean) => void;
   onBack: () => void;
   onLogout: () => void;
 };
@@ -32,6 +76,7 @@ export type LobbyViewOptions = {
 export type LobbyView = {
   element: HTMLElement;
   readStandingPlayback: () => LobbyStandingPlayback | null;
+  setStandingVisible: (visible: boolean) => void;
   setStatus: (message: string) => void;
   setBusy: (busy: boolean) => void;
 };
@@ -51,8 +96,9 @@ export type LobbyStandingPlayback = {
 export function createLobbyView(options: LobbyViewOptions): LobbyView {
   const element = document.createElement('section');
   element.className = 'pf-lobby';
+  let standingVisible = options.standingVisible ?? true;
 
-  mountStanding(element, options.standingSources, options.standingPlayback);
+  mountStanding(element, options.standingSources, options.standingPlayback, () => standingVisible);
 
   const header = document.createElement('header');
   header.className = 'pf-lobby__header';
@@ -82,7 +128,12 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
 
   const backButton = createAccountButton('뒤로', options.onBack);
   const logoutButton = createAccountButton('Logout', options.onLogout);
-  account.append(backButton, logoutButton);
+  const standingToggle = createStandingToggleButton(standingVisible, (visible) => {
+    standingVisible = visible;
+    applyStandingVisibility(element, visible);
+    options.onStandingVisibilityChange?.(visible);
+  });
+  account.append(standingToggle, backButton, logoutButton);
 
   const status = document.createElement('p');
   status.className = 'pf-lobby__status';
@@ -103,11 +154,15 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
         currentTime: Math.max(0, standing.currentTime),
       };
     },
+    setStandingVisible: (visible) => {
+      standingVisible = visible;
+      applyStandingVisibility(element, visible);
+    },
     setStatus: (message) => {
       status.textContent = message;
     },
     setBusy: (busy) => {
-      for (const button of [...buttons, backButton, logoutButton]) {
+      for (const button of [...buttons, standingToggle, backButton, logoutButton]) {
         button.disabled = busy;
       }
     },
@@ -181,6 +236,7 @@ function mountStanding(
   parent: HTMLElement,
   sources: readonly string[],
   playback: LobbyStandingPlayback | undefined,
+  getStandingVisibility: () => boolean,
 ): void {
   const usable = filterUsableStandingSources(sources);
   const [url, ...rest] = usable;
@@ -192,7 +248,7 @@ function mountStanding(
   element.className = 'pf-lobby__standing';
   element.addEventListener('error', () => {
     element.remove();
-    mountStanding(parent, rest, playback);
+    mountStanding(parent, rest, playback, getStandingVisibility);
   });
   if (element instanceof HTMLVideoElement) {
     // video.src는 브라우저가 절대 URL로 정규화하므로 후보 URL을 별도로 보존한다.
@@ -207,6 +263,7 @@ function mountStanding(
     );
   }
   parent.append(element);
+  element.hidden = !getStandingVisibility();
 }
 
 /** 영상 확장자면 video로, 아니면 img로 만든다. 둘 다 브라우저가 알아서 재생한다. */
@@ -231,6 +288,43 @@ function createStandingElement(url: string): HTMLImageElement | HTMLVideoElement
   return video;
 }
 
+function createStandingToggleButton(
+  initialVisible: boolean,
+  onChange: (visible: boolean) => void,
+): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'pf-btn-plain pf-lobby__standing-toggle';
+  button.setAttribute('aria-label', '캐릭터 표시');
+
+  const icon = document.createElement('img');
+  icon.className = 'pf-lobby__standing-toggle-icon';
+  icon.src = LOBBY_ICON_URLS.notice;
+  icon.alt = '';
+  icon.setAttribute('aria-hidden', 'true');
+
+  const label = document.createElement('span');
+  label.className = 'pf-lobby__standing-toggle-label';
+
+  const update = (visible: boolean): void => {
+    button.setAttribute('aria-pressed', String(visible));
+    label.textContent = visible ? '캐릭터 ON' : '캐릭터 OFF';
+  };
+
+  update(initialVisible);
+  button.append(icon, label);
+  button.addEventListener('click', () => {
+    const visible = button.getAttribute('aria-pressed') !== 'true';
+    update(visible);
+    onChange(visible);
+  });
+  return button;
+}
+
+function applyStandingVisibility(parent: HTMLElement, visible: boolean): void {
+  parent.querySelector<HTMLElement>('.pf-lobby__standing')?.toggleAttribute('hidden', !visible);
+}
+
 /** 좌측 레일 메뉴 버튼이다. 큰 글자와 작은 영문 캡션을 함께 둔다. */
 function createMenuButton(item: LobbyMenuItem): HTMLButtonElement {
   const button = document.createElement('button');
@@ -238,6 +332,14 @@ function createMenuButton(item: LobbyMenuItem): HTMLButtonElement {
   button.className = 'pf-btn9 pf-btn9--menu pf-lobby__menu-button';
   button.dataset.kind = item.id;
   button.disabled = item.disabled ?? false;
+
+  const icon = document.createElement('img');
+  icon.className = 'pf-lobby__menu-icon';
+  if (item.icon) {
+    icon.src = LOBBY_ICON_URLS[item.icon];
+  }
+  icon.alt = '';
+  icon.setAttribute('aria-hidden', 'true');
 
   const label = document.createElement('span');
   label.className = 'pf-lobby__menu-label';
@@ -247,7 +349,7 @@ function createMenuButton(item: LobbyMenuItem): HTMLButtonElement {
   caption.className = 'pf-lobby__menu-caption';
   caption.textContent = item.caption;
 
-  button.append(label, caption);
+  button.append(icon, label, caption);
 
   const { onSelect } = item;
   if (onSelect) {

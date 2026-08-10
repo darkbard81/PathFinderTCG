@@ -55,6 +55,7 @@ void (async (): Promise<void> => {
     source: '',
     currentTime: 0,
   };
+  let lobbyStandingVisible = true;
   const services = createGameServices({
     onSessionExpired: (message) => {
       void showTitle(message);
@@ -142,6 +143,10 @@ void (async (): Promise<void> => {
           void showGrowth(currentSession);
         },
         standingPlayback: lobbyStandingPlayback,
+        standingVisible: lobbyStandingVisible,
+        onStandingVisibilityChange: (visible) => {
+          lobbyStandingVisible = visible;
+        },
         onLoggedOut: (message) => {
           void showTitle(message);
         },

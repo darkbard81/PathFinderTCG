@@ -41,6 +41,10 @@ export type LobbySceneOptions = {
   onLoggedOut: (statusMessage: string) => void;
   /** Lobby를 다시 열 때 standing 영상의 마지막 위치를 복원한다. */
   standingPlayback?: LobbyStandingPlayback;
+  /** Lobby를 다시 열 때 standing 캐릭터 표시 상태를 복원한다. */
+  standingVisible?: boolean;
+  /** standing 캐릭터 표시 상태를 앱 임시 상태에 반영한다. */
+  onStandingVisibilityChange?: (visible: boolean) => void;
   view?: LobbyView;
 };
 
@@ -63,7 +67,8 @@ export class LobbyScene implements Scene {
 
   public constructor(private readonly options: LobbySceneOptions) {
     this.lobbyView =
-      options.view ?? createLobbyView(this.buildViewOptions(options.standingPlayback));
+      options.view ??
+      createLobbyView(this.buildViewOptions(options.standingPlayback, options.standingVisible));
     this.element = this.lobbyView.element;
     this.view.addChild(this.shade);
   }
@@ -95,7 +100,7 @@ export class LobbyScene implements Scene {
     this.layoutCanvas(layout);
   }
 
-  private buildViewOptions(standingPlayback?: LobbyStandingPlayback) {
+  private buildViewOptions(standingPlayback?: LobbyStandingPlayback, standingVisible?: boolean) {
     const guard = (run: () => void) => () => {
       if (!this.isLoggingOut) {
         run();
@@ -107,28 +112,32 @@ export class LobbyScene implements Scene {
         id: 'play',
         label: '플레이',
         caption: 'Play',
+        icon: 'battle',
         onSelect: guard(() => this.options.onPlay(this.options.session)),
       },
       {
         id: 'deck',
         label: '구성',
         caption: 'Deck Build',
+        icon: 'deck',
         onSelect: guard(() => this.options.onDeck(this.options.session)),
       },
       {
         id: 'equipment',
         label: '장비',
         caption: 'Equipment',
+        icon: 'shield',
         onSelect: guard(() => this.options.onEquipment(this.options.session)),
       },
       {
         id: 'growth',
         label: '성장',
         caption: 'Growth',
+        icon: 'rank',
         onSelect: guard(() => this.options.onGrowth(this.options.session)),
       },
       // 연성은 아직 화면이 없다. 자리만 두고 눌리지 않게 한다.
-      { id: 'forge', label: '연성', caption: 'Forge', disabled: true },
+      { id: 'forge', label: '연성', caption: 'Forge', icon: 'card', disabled: true },
     ];
 
     const leaderId = this.options.session.deck.leader.definition.id;
@@ -141,6 +150,10 @@ export class LobbyScene implements Scene {
       leaderName: this.options.session.deck.leader.definition.name,
       menuItems,
       ...(standingPlayback ? { standingPlayback } : {}),
+      ...(standingVisible !== undefined ? { standingVisible } : {}),
+      ...(this.options.onStandingVisibilityChange
+        ? { onStandingVisibilityChange: this.options.onStandingVisibilityChange }
+        : {}),
       onBack: guard(() => this.options.onBack()),
       onLogout: () => void this.logout(),
     };
