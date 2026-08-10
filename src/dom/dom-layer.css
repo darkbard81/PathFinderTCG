@@ -6,7 +6,6 @@
   position: absolute;
   top: 0;
   left: 0;
-  transform-origin: top left;
   overflow: hidden;
   font-family: var(--pf-font-family), system-ui, sans-serif;
   color: var(--pf-color-primary);
