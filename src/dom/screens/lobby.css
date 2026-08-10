@@ -6,7 +6,11 @@
 .pf-lobby {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(280px, 26%) 1fr;
+  /*
+   * 왼쪽 열이 메뉴 버튼의 폭을 정한다. 26%만 두면 창을 넓힐수록 버튼이 끝없이 늘어나서
+   * min()으로 상한을 건다. 헤더·계정도 같은 열이라 함께 묶여 세로줄이 맞는다.
+   */
+  grid-template-columns: minmax(280px, min(26%, 400px)) 1fr;
   grid-template-rows: auto 1fr auto auto;
   grid-template-areas:
     'header .'
@@ -61,27 +65,41 @@
 
 /* 큰 글자와 영문 캡션을 왼쪽으로 모은다. 9슬라이스 틀은 .pf-btn9--menu가 그린다. */
 .pf-lobby__menu-button {
+  /* 아이콘 칸과 아이콘이 같은 값을 써야 글자가 밀리지 않아 변수로 한 번만 정한다. */
+  --pf-lobby-menu-icon-size: clamp(48px, 5.8vw, 66px);
+
   display: grid;
-  grid-template-columns: clamp(42px, 5vw, 58px) minmax(0, 1fr);
+  grid-template-columns: var(--pf-lobby-menu-icon-size) minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
   justify-items: start;
   gap: 2px clamp(8px, 1vw, 14px);
   text-align: left;
-  min-height: clamp(56px, 8vh, 72px);
+  min-height: clamp(52px, 6vh, 68px);
+}
+
+/*
+ * 버튼 높이는 아이콘 + 세로 패딩 × 2로 정해진다. 두 줄짜리 글자보다 아이콘이 커서
+ * 글자를 줄여도 높이는 그대로다. 아이콘을 키우면서 높이를 줄이려면 세로 패딩을 깎아야 한다.
+ * 가로 패딩은 .pf-btn9--menu의 토큰을 그대로 두려고 세로만 덮어쓰고,
+ * .pf-btn9와 명시도가 같아 파일 순서에 기대지 않도록 클래스를 둘 겹친다.
+ */
+.pf-btn9.pf-lobby__menu-button {
+  padding-block: clamp(4px, 0.8vh, 8px);
 }
 
 .pf-lobby__menu-icon {
   grid-row: 1 / -1;
-  width: clamp(42px, 5vw, 58px);
-  height: clamp(42px, 5vw, 58px);
+  width: var(--pf-lobby-menu-icon-size);
+  height: var(--pf-lobby-menu-icon-size);
   object-fit: contain;
   pointer-events: none;
   user-select: none;
 }
 
 .pf-lobby__menu-label {
-  font-size: clamp(20px, 2.6vw, var(--pf-text-button-label-size));
+  /* buttonLabel(28px)에서 한 단계 내린 prompt(26px)다. 중간값도 같은 비율로 낮춘다. */
+  font-size: clamp(18px, 2.4vw, var(--pf-text-prompt-size));
   line-height: 1.1;
 }
 
