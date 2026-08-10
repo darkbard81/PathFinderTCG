@@ -42,7 +42,8 @@ export class DomLayer {
 
     this.root.style.width = style.width;
     this.root.style.height = style.height;
-    this.root.style.transform = style.transform;
+    this.root.style.transform = 'none';
+    this.root.style.zoom = style.zoom;
   }
 
   public destroy(): void {

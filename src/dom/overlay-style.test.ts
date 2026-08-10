@@ -6,7 +6,7 @@ describe('resolveOverlayStyle', () => {
     expect(resolveOverlayStyle({ scale: 1, width: 1920, height: 1080 })).toEqual({
       width: '1920px',
       height: '1080px',
-      transform: 'none',
+      zoom: '1',
     });
   });
 
@@ -14,7 +14,7 @@ describe('resolveOverlayStyle', () => {
     expect(resolveOverlayStyle({ scale: 0.5, width: 1024, height: 768 })).toEqual({
       width: '1024px',
       height: '768px',
-      transform: 'scale(0.5)',
+      zoom: '0.5',
     });
   });
 
