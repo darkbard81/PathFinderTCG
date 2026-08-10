@@ -143,9 +143,12 @@
 
 /*
  * 리더 standing.
- * 브라우저가 애니메이션을 알아서 재생한다. 바닥에 세우고 세로를 화면에 맞춘 뒤
- * 아래로 잘리게 둔다. 크롬보다 뒤에 두되 z-index를 음수로 주지는 않는다.
+ * 브라우저가 애니메이션을 알아서 재생한다. 바닥에 세우고 세로를 논리 영역 높이에
+ * 맞추면 가로는 비율을 따라온다. 크롬보다 뒤에 두되 z-index를 음수로 주지는 않는다.
  * 음수로 주면 조상 쌓임 맥락을 빠져나가 캔버스 뒤로 숨는다.
+ *
+ * 원본 standing은 2:3으로 만든다. 비율을 명시해 두는 것은 <video>가 메타데이터를
+ * 받기 전까지 300x150을 원본 크기로 보고해, 첫 프레임에 인물 폭이 튀기 때문이다.
  */
 .pf-lobby__standing {
   position: absolute;
@@ -154,6 +157,7 @@
   left: 56%;
   height: 100%;
   width: auto;
+  aspect-ratio: 2 / 3;
   transform: translateX(-50%);
   pointer-events: none;
   user-select: none;

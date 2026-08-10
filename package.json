@@ -11,6 +11,7 @@
     "build:badges": "node tools/build-card-badges.mjs",
     "build:buttons": "node tools/build-button-9slice.mjs",
     "build:lobby-icons": "node tools/build-lobby-icons.mjs",
+    "build:standing": "bash tools/pingpong.sh",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "lint": "eslint .",

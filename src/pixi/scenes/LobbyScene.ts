@@ -23,6 +23,9 @@ const STANDING_PATH_PREFIX = 'cards/standing';
  * 메모리를 크게 쓰지 않는다. gif는 어디서나 재생되는 대신 색이 256개로 깎이고
  * 파일이 크다. 정지화가 마지막이다.
  *
+ * webm만 720x1080으로 굽고 gif는 480p로 남긴다. gif는 알파 webm을 못 그리는
+ * Safari/iOS만 타는 폴백이라, 같이 올리면 35MB를 넘겨 로비 진입만 무거워진다.
+ *
  * 캔버스가 아니라 <img>·<video>로 그리므로 PixiJS의 포맷 제약을 받지 않는다.
  */
 const STANDING_FILE_SUFFIXES = ['.webm', '.gif', '.webp'];
