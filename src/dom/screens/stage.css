@@ -305,13 +305,7 @@
   min-height: clamp(48px, 7vh, 64px);
   min-width: 104px;
   padding: 0 14px;
-  border: var(--pf-login-button-border);
-  border-radius: 6px;
-  background: var(--pf-surface-button);
-  color: var(--pf-color-primary);
-  font: inherit;
   font-size: clamp(16px, 2vw, 22px);
-  cursor: pointer;
 }
 
 .pf-stage__hud-button[data-kind='back'] {
@@ -322,14 +316,7 @@
   min-width: 180px;
 }
 
-.pf-stage__hud-button:hover:not(:disabled),
-.pf-stage__hud-button:focus-visible {
-  background: var(--pf-color-surface-hover);
-}
-
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-stage__hud-button:disabled {
   cursor: not-allowed;
-  opacity: 0.58;
-  color: var(--pf-text-button-label-disabled-color);
-  background: var(--pf-surface-button-disabled);
 }

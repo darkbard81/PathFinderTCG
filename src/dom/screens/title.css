@@ -99,20 +99,10 @@
   gap: 12px;
 }
 
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-title__actions button {
   min-height: 50px;
-  border: var(--pf-login-button-border);
-  border-radius: 6px;
-  background: var(--pf-surface-button);
-  color: var(--pf-color-primary);
-  font: inherit;
   font-size: 17px;
-  cursor: pointer;
-}
-
-.pf-title__actions button:hover:not(:disabled),
-.pf-title__actions button:focus-visible {
-  background: var(--pf-color-surface-hover);
 }
 
 .pf-title__actions button:disabled,

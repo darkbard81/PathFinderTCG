@@ -277,25 +277,13 @@
   color: var(--pf-color-danger);
 }
 
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-battlefield__button {
-  font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  color: var(--pf-color-primary);
-  background: var(--pf-surface-slot-ready);
-  border: var(--pf-card-workbench-panel-border);
-  border-radius: 5px;
-  padding: 10px 12px;
-  cursor: pointer;
-}
-
-.pf-battlefield__button:hover:not(:disabled) {
-  border-color: var(--pf-color-primary-warm);
-}
-
-.pf-battlefield__button:disabled {
-  cursor: default;
-  opacity: 0.55;
+  /* 전장 레일은 좁아 기본 여백을 줄인다. */
+  padding: 8px 16px;
+  min-height: 40px;
 }
 
 /*

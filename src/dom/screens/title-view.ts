@@ -161,6 +161,7 @@ function createField(options: {
 
 function createActionButton(label: string, intent: 'login' | 'register'): HTMLButtonElement {
   const button = document.createElement('button');
+  button.className = 'pf-btn9 pf-btn9--standard';
   button.type = 'submit';
   button.name = 'intent';
   button.value = intent;

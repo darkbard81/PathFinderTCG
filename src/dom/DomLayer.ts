@@ -1,4 +1,5 @@
 import './dom-layer.css';
+import './screens/button-9slice.css';
 import type { ViewportLayout } from '../pixi/app/viewport';
 import { resolveOverlayStyle } from './overlay-style';
 import { applyThemeCssVariables } from './theme-css';

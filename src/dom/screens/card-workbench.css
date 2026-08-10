@@ -114,25 +114,14 @@
   gap: var(--pf-space-xs);
 }
 
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-workbench__button {
-  font-family: inherit;
   font-size: var(--pf-text-button-label-size);
-  color: var(--pf-text-button-label-color);
-  background: var(--pf-card-workbench-tab-background);
-  border: 1px solid rgba(230, 184, 74, 0.62);
-  border-radius: var(--pf-card-workbench-tab-radius);
-  padding: 10px;
-  cursor: pointer;
 }
 
+/* 주 버튼은 눌리지 않아도 선택 상태 그림을 써서 눈에 먼저 들어오게 한다. */
 .pf-workbench__button--primary {
-  background: var(--pf-card-workbench-tab-selected-background);
-  border: var(--pf-card-workbench-tab-selected-border);
-}
-
-.pf-workbench__button:disabled {
-  cursor: default;
-  opacity: 0.5;
+  --pf-btn9-url: var(--pf-btn9-standard-selected-url);
 }
 
 .pf-workbench__panel {

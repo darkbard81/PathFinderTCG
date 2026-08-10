@@ -283,7 +283,7 @@ function createDetailRow(label: string, value: string): HTMLElement {
 function createHudButton(label: string, kind: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-stage__hud-button';
+  button.className = 'pf-btn9 pf-btn9--standard pf-stage__hud-button';
   button.dataset.kind = kind;
   button.textContent = label;
   return button;

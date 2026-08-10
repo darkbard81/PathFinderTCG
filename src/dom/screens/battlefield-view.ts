@@ -528,7 +528,7 @@ function createRailValue(): HTMLElement {
 function createButton(label: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-battlefield__button';
+  button.className = 'pf-btn9 pf-btn9--standard pf-battlefield__button';
   button.textContent = label;
   return button;
 }

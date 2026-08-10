@@ -153,8 +153,8 @@ export function createWorkbenchButton(label: string, primary = false): HTMLButto
   const button = document.createElement('button');
   button.type = 'button';
   button.className = primary
-    ? 'pf-workbench__button pf-workbench__button--primary'
-    : 'pf-workbench__button';
+    ? 'pf-btn9 pf-btn9--standard pf-workbench__button pf-workbench__button--primary'
+    : 'pf-btn9 pf-btn9--standard pf-workbench__button';
   button.textContent = label;
   return button;
 }

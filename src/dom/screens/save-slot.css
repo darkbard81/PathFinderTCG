@@ -25,21 +25,11 @@
   flex-shrink: 0;
 }
 
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-save-slot__chrome-button {
   min-width: 160px;
   min-height: 52px;
-  border: var(--pf-login-button-border);
-  border-radius: 6px;
-  background: var(--pf-surface-button);
-  color: var(--pf-color-primary);
-  font: inherit;
   font-size: 18px;
-  cursor: pointer;
-}
-
-.pf-save-slot__chrome-button:hover:not(:disabled),
-.pf-save-slot__chrome-button:focus-visible {
-  background: var(--pf-color-surface-hover);
 }
 
 .pf-save-slot__title-group {
@@ -225,18 +215,7 @@
 .pf-save-slot__action-button {
   min-width: min(280px, 100%);
   min-height: 56px;
-  border: var(--pf-login-button-border);
-  border-radius: 6px;
-  background: var(--pf-surface-button);
-  color: var(--pf-color-primary);
-  font: inherit;
   font-size: 20px;
-  cursor: pointer;
-}
-
-.pf-save-slot__action-button:hover:not(:disabled),
-.pf-save-slot__action-button:focus-visible {
-  background: var(--pf-color-surface-hover);
 }
 
 .pf-save-slot__action-button:disabled,

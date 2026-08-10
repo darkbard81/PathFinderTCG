@@ -123,7 +123,7 @@ export function createSaveSlotView(options: SaveSlotViewOptions): SaveSlotView {
 function createChromeButton(label: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-save-slot__chrome-button';
+  button.className = 'pf-btn9 pf-btn9--standard pf-save-slot__chrome-button';
   button.textContent = label;
   return button;
 }
@@ -131,7 +131,7 @@ function createChromeButton(label: string): HTMLButtonElement {
 function createActionButton(label: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-save-slot__action-button';
+  button.className = 'pf-btn9 pf-btn9--standard pf-save-slot__action-button';
   button.textContent = label;
   return button;
 }

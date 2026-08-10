@@ -487,6 +487,25 @@ export const UI_THEME = {
     xl: 32,
   },
   dom: {
+    /**
+     * 9슬라이스 버튼 스킨의 기하와 투명도다. 그림은 assets/ui/buttons에 있고
+     * URL은 assetBaseUrl을 알아야 만들 수 있어 DomLayer가 따로 넣는다.
+     *
+     * slice는 그림 픽셀 단위라 코너 장식(36px)보다 커야 장식이 찌그러지지 않는다.
+     * borderWidth는 화면에 그려질 두께라 slice보다 작아도 된다. 그만큼 줄여 그린다.
+     */
+    button9: {
+      /** 아홉 칸이 모두 같은 투명도다. 칸마다 다르게 주려면 그림을 두 겹 얹어야 한다. */
+      opacity: '0.8',
+      menuSlice: '44',
+      menuBorderWidth: '22px',
+      menuPadding: '14px 34px',
+      menuMinHeight: '58px',
+      standardSlice: '42',
+      standardBorderWidth: '18px',
+      standardPadding: '10px 26px',
+      standardMinHeight: '44px',
+    },
     login: {
       panelBackground: 'rgba(10, 14, 28, 0.96)',
       panelBorder: '1px solid rgba(230, 184, 74, 0.68)',
