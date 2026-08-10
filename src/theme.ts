@@ -514,6 +514,16 @@ export const UI_THEME = {
       standardPadding: '10px 26px',
       standardMinHeight: '44px',
     },
+    /**
+     * 진행 막대의 채움이다. 기본은 금색에서 하늘색으로 흐르는 그라데이션이고,
+     * 그라데이션이 과한 자리를 위해 같은 두 색의 단색 변형을 따로 둔다.
+     * surfaces.progressFill은 알파를 가진 한 색이라 그라데이션을 담을 수 없어 여기 둔다.
+     */
+    progressBar: {
+      fillGradient: `linear-gradient(90deg, ${colors.accent.css} 0%, ${colors.readyAccent.css} 100%)`,
+      fillGold: colors.accent.css,
+      fillAzure: colors.readyAccent.css,
+    },
     login: {
       panelBackground: 'rgba(10, 14, 28, 0.96)',
       panelBorder: '1px solid rgba(230, 184, 74, 0.68)',

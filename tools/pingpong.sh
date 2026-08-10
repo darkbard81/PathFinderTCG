@@ -7,8 +7,8 @@
 # 비율이 들어오면 화면에서 눌린다. 권장 크기는 720x1080이다. standing은 창
 # 높이(CSS px)만큼 그려지는데, 1080이면 1080p 전체화면에서 등배가 된다.
 #
-# gif 폴백은 480p로 남긴다. 알파 webm을 못 그리는 Safari/iOS 전용이라 화질
-# 기여가 작은 반면, 720p로 올리면 35MB를 넘어 로비 진입 비용이 커진다.
+# 알파 webm을 못 그리는 Safari/iOS는 hevc mov 폴백을 타고, 그마저 실패하면
+# 정지화 webp로 내려간다. 480p로도 14MB인 gif는 후보에서 뺐다.
 #
 # 사용법: npm run build:standing -- <webm> [crf]
 #         ./tools/pingpong.sh <webm> [crf]

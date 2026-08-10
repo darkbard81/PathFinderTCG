@@ -169,7 +169,7 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
   };
 }
 
-const VIDEO_EXTENSIONS = ['.webm', '.mp4'];
+const VIDEO_EXTENSIONS = ['.webm', '.mp4', '.mov'];
 
 /**
  * Safari와 iOS는 WebM의 알파 채널을 지원하지 않는다.

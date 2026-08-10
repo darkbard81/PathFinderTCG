@@ -79,15 +79,15 @@ describe('supportsAlphaWebm', () => {
 });
 
 describe('filterUsableStandingSources', () => {
-  const sources = ['a/leader.webm', 'a/leader.gif', 'a/leader.webp'];
+  const sources = ['a/leader.webm', 'a/leader.mov', 'a/leader.webp'];
 
   it('쓸 수 있는 곳에서는 순서를 그대로 둔다', () => {
     expect(filterUsableStandingSources(sources, AGENTS.steamOsChrome)).toEqual(sources);
   });
 
-  it('Safari에서는 webm만 빼고 나머지 순서를 지킨다', () => {
+  it('Safari에서는 webm만 빼고 mov가 먼저 온다', () => {
     expect(filterUsableStandingSources(sources, AGENTS.iphoneSafari)).toEqual([
-      'a/leader.gif',
+      'a/leader.mov',
       'a/leader.webp',
     ]);
   });

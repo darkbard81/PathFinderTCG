@@ -125,6 +125,8 @@ function getMimeType(filePath: string): string {
       return 'image/gif';
     case '.webm':
       return 'video/webm';
+    case '.mov':
+      return 'video/quicktime';
     case '.jpg':
     case '.jpeg':
       return 'image/jpeg';

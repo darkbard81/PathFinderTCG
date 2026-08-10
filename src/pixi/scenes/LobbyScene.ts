@@ -20,15 +20,15 @@ const STANDING_PATH_PREFIX = 'cards/standing';
  * standing 후보를 찾는 순서다. 앞에서부터 시도한다.
  *
  * webm이 먼저다. 영상은 브라우저가 스트리밍으로 풀어 프레임 수가 많아도
- * 메모리를 크게 쓰지 않는다. gif는 어디서나 재생되는 대신 색이 256개로 깎이고
- * 파일이 크다. 정지화가 마지막이다.
+ * 메모리를 크게 쓰지 않는다.
  *
- * webm만 720x1080으로 굽고 gif는 480p로 남긴다. gif는 알파 webm을 못 그리는
- * Safari/iOS만 타는 폴백이라, 같이 올리면 35MB를 넘겨 로비 진입만 무거워진다.
+ * 알파 webm을 못 그리는 Safari/iOS는 hevc mov를 탄다. mov가 없거나 재생에
+ * 실패하면 정지화 webp로 내려간다. gif는 색이 256개로 깎이는 데다 14MB라
+ * 로비 진입만 무거워져 뺐다.
  *
  * 캔버스가 아니라 <img>·<video>로 그리므로 PixiJS의 포맷 제약을 받지 않는다.
  */
-const STANDING_FILE_SUFFIXES = ['.webm', '.gif', '.webp'];
+const STANDING_FILE_SUFFIXES = ['.webm', '.mov', '.webp'];
 
 export type LobbySceneOptions = {
   services: GameServices;
