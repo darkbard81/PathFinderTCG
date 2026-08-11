@@ -122,6 +122,25 @@ const HALF_ROWS: Record<BattleSide, readonly [BattleRowId, BattleRowId]> = {
   player: ['playerFront', 'playerBack'],
 };
 
+type BattlePileKind = 'exile' | 'drop';
+
+const PILE_LABELS: Record<BattlePileKind, string> = {
+  exile: '추방',
+  drop: '묘지',
+};
+
+/**
+ * 각 진영 절반에서 더미 열을 위아래 어느 순서로 세우는지다.
+ *
+ * 보드는 구분선을 축으로 접힌다. 행이 HALF_ROWS로 접히듯 더미도 접어야
+ * 같은 더미끼리 구분선을 사이에 두고 마주 본다. 접지 않으면 내 추방은
+ * 구분선 쪽에 붙는데 적 추방만 바깥으로 떨어져 짝이 어긋나 보인다.
+ */
+const HALF_PILES: Record<BattleSide, readonly [BattlePileKind, BattlePileKind]> = {
+  enemy: ['drop', 'exile'],
+  player: ['exile', 'drop'],
+};
+
 /** 덱 더미 두께로 쓸 겹침 장수다. 맨 위 장에만 남은 수를 적는다. */
 const DECK_STACK_OFFSETS = [16, 12, 8, 4, 0];
 
@@ -435,14 +454,27 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
 
   const piles = document.createElement('div');
   piles.className = 'pf-battlefield__piles';
-  const exile = createPile('추방');
-  const drop = createPile('묘지');
-  piles.append(exile.root, drop.root);
+  const pilesByKind: Record<BattlePileKind, BattlePile> = {
+    exile: createPile(PILE_LABELS.exile),
+    drop: createPile(PILE_LABELS.drop),
+  };
+  const { exile, drop } = pilesByKind;
+  piles.append(...HALF_PILES[side].map((kind) => pilesByKind[kind].root));
 
   const deck = document.createElement('div');
   deck.className = 'pf-battlefield__deck';
   // 카드 뒷면 그림은 번들 자산이라 URL을 CSS가 알 수 없다. 변수로 넘겨 준다.
   deck.style.setProperty('--pf-battlefield-deck-card-back', `url("${cardBackUrl}")`);
+
+  /*
+   * 겹친 더미를 담는 상자다. 더미는 카드 한 장 높이에 겹친 두께만큼 더 높다.
+   * 그 두께를 CSS에 알려 주고 상자째 가운데에 세우면, 카드마다 top을 다시 계산하지 않아도
+   * 더미가 전위와 후위 사이에 놓인다.
+   */
+  const deckStack = document.createElement('div');
+  deckStack.className = 'pf-battlefield__deck-stack';
+  deckStack.style.setProperty('--pf-battle-deck-stagger', `${Math.max(...DECK_STACK_OFFSETS)}px`);
+  deck.append(deckStack);
   const deckCount = document.createElement('span');
   deckCount.className = 'pf-battlefield__pile-count';
   const deckLabel = document.createElement('span');
@@ -461,7 +493,7 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
       badge.append(deckLabel, deckCount);
       card.append(badge);
     }
-    deck.append(card);
+    deckStack.append(card);
   }
 
   // 격자 배치는 자동 흐름에 맡기지 않는다. 더미 열이 두 행을 걸쳐 자리를 밀어내기 때문이다.

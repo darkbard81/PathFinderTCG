@@ -232,6 +232,20 @@
 }
 
 /*
+ * 더미는 전위와 후위 사이 가운데에 선다.
+ * 더미 열은 두 행을 걸치는데 겹친 카드는 한 장 높이 + 두께밖에 안 되어서,
+ * 그냥 두면 위쪽 행에 붙는다. 두께까지 포함한 상자를 세로 가운데에 세운다.
+ */
+.pf-battlefield__deck-stack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: calc(var(--pf-battle-card-height) + var(--pf-battle-deck-stagger));
+}
+
+/*
  * 남은 덱은 카드 몇 장을 어긋나게 겹쳐 두께로 보여준다. 맨 위 장만 수치를 표시한다.
  *
  * 뒷면 그림은 번들 자산이라 경로를 CSS에 적을 수 없다. 뷰가 --pf-battlefield-deck-card-back
@@ -273,9 +287,17 @@
   background: var(--pf-battlefield-count-badge-background);
 }
 
+/*
+ * 레일은 내용만큼만 높다. 다만 상한을 둬야 한다.
+ * top만 두고 아래를 열어 두면 기록이 쌓일수록 레일이 화면 밖으로 자라고,
+ * 그러면 기록의 flex: 1이 무한한 높이를 받아 overflow-y: auto가 일하지 않는다.
+ * 접힌 손패가 아래를 가리므로 그 위에서 멈춘다. bottom이 아니라 max-height를 쓰는 것은
+ * 오른쪽 레일처럼 짧은 내용이 아래까지 늘어나 보이지 않게 하기 위해서다.
+ */
 .pf-battlefield__rail {
   position: absolute;
   top: var(--pf-battle-padding-y);
+  max-height: calc(100% - 2 * var(--pf-battle-padding-y) - var(--pf-battle-hand-peek));
   width: var(--pf-battle-rail-width);
   box-sizing: border-box;
   display: flex;

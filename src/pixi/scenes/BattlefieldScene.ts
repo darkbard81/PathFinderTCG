@@ -7,7 +7,7 @@ import {
   resolveBattleBoardMetrics,
   type BattleRowId,
 } from '../../dom/screens/battlefield-layout';
-import { formatBattleTurnEvents, readCardName } from '../battle/battle-log';
+import { appendBattleLogLines, formatBattleTurnEvents, readCardName } from '../battle/battle-log';
 import {
   createBattlefieldView,
   type BattlefieldView,
@@ -500,7 +500,7 @@ export class BattlefieldScene implements Scene {
   }
 
   private appendLog(events: readonly BattleTurnEvent[]): void {
-    this.log = [...this.log, ...formatBattleTurnEvents(this.runtime, events)];
+    this.log = appendBattleLogLines(this.log, formatBattleTurnEvents(this.runtime, events));
   }
 
   /**
@@ -548,7 +548,7 @@ export class BattlefieldScene implements Scene {
         return;
       }
 
-      this.log = [...this.log, `나: ${message}`];
+      this.log = appendBattleLogLines(this.log, [`나: ${message}`]);
       this.commit(message);
       // 방금 수로 둘 것이 다 떨어졌을 수 있다. 그러면 여기서 바로 턴이 넘어간다.
       void this.advanceTurns(0);
