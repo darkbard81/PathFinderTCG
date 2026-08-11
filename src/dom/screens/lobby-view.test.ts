@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   filterUsableStandingSources,
+  formatResourceAmount,
   resolveStandingPlaybackTime,
   supportsAlphaWebm,
 } from './lobby-view';
@@ -116,5 +117,24 @@ describe('resolveStandingPlaybackTime', () => {
         currentTime: Number.NaN,
       }),
     ).toBe(0);
+  });
+});
+
+describe('resource amount formatting', () => {
+  it('groups thousands with commas', () => {
+    expect(formatResourceAmount(125_680)).toBe('125,680');
+    expect(formatResourceAmount(8_420)).toBe('8,420');
+    expect(formatResourceAmount(1_000_000)).toBe('1,000,000');
+  });
+
+  it('leaves short amounts alone', () => {
+    expect(formatResourceAmount(0)).toBe('0');
+    expect(formatResourceAmount(12)).toBe('12');
+    expect(formatResourceAmount(999)).toBe('999');
+  });
+
+  it('puts the first separator at the fourth digit', () => {
+    expect(formatResourceAmount(1_000)).toBe('1,000');
+    expect(formatResourceAmount(10_000)).toBe('10,000');
   });
 });

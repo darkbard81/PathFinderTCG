@@ -5,6 +5,7 @@ import {
   type SaveSlotState,
   type SaveSlotSummary,
 } from './types';
+import { RESOURCE_KEYS } from '../resources/resource-state';
 import type { StageProgressState } from '../stage/types';
 import type { ApiFetch } from '../auth/client';
 
@@ -101,7 +102,8 @@ function isSaveSlotState(value: unknown): value is SaveSlotState {
     value.collection.cards.every((entry) => isCardInstance(entry, 'COLLECTION')) &&
     isEquipmentState(value.equipment) &&
     isStageProgressState(value.stageProgress) &&
-    isLobbyState(value.lobby)
+    isLobbyState(value.lobby) &&
+    isResourceState(value.resources)
   );
 }
 
@@ -115,6 +117,13 @@ function isEquipmentState(value: unknown): boolean {
         typeof entry.targetCardInstanceId === 'string' &&
         typeof entry.equipmentCardInstanceId === 'string',
     )
+  );
+}
+
+function isResourceState(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    RESOURCE_KEYS.every((key) => typeof value[key] === 'number' && Number.isSafeInteger(value[key]))
   );
 }
 

@@ -161,6 +161,7 @@ export class LobbyScene implements Scene {
       ),
       saveName: this.options.session.saveName,
       leaderName: this.options.session.deck.leader.definition.name,
+      resources: this.options.session.resources,
       menuItems,
       ...(standingPlayback ? { standingPlayback } : {}),
       ...(standingVisible !== undefined ? { standingVisible } : {}),

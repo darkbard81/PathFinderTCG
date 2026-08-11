@@ -1,3 +1,4 @@
+import cardBackUrl from '../../assets/ui/card-back.webp';
 import type { BattleSide, BattleSlotId } from '../../game/battle/types';
 import { attachBattleCardDrag, toLogicalPoint } from './battle-drag';
 import { createCardTileElement, type CardTile } from './card-tile';
@@ -343,6 +344,8 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
 
   const deck = document.createElement('div');
   deck.className = 'pf-battlefield__deck';
+  // 카드 뒷면 그림은 번들 자산이라 URL을 CSS가 알 수 없다. 변수로 넘겨 준다.
+  deck.style.setProperty('--pf-battlefield-deck-card-back', `url("${cardBackUrl}")`);
   const deckCount = document.createElement('span');
   deckCount.className = 'pf-battlefield__pile-count';
   const deckLabel = document.createElement('span');
@@ -354,8 +357,12 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
     card.style.top = `${offset}px`;
     card.style.zIndex = `${index + 1}`;
     // 맨 위 장에만 남은 장수를 적는다. 아래 장들은 두께만 만든다.
+    // 뒷면 그림이 밝고 복잡해서 글자를 그냥 얹으면 묻힌다. 어두운 판 위에 올린다.
     if (offset === 0) {
-      card.append(deckLabel, deckCount);
+      const badge = document.createElement('div');
+      badge.className = 'pf-battlefield__deck-badge';
+      badge.append(deckLabel, deckCount);
+      card.append(badge);
     }
     deck.append(card);
   }

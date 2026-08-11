@@ -196,20 +196,46 @@
   position: relative;
 }
 
-/* 남은 덱은 카드 몇 장을 어긋나게 겹쳐 두께로 보여준다. 맨 위 장만 수치를 표시한다. */
+/*
+ * 남은 덱은 카드 몇 장을 어긋나게 겹쳐 두께로 보여준다. 맨 위 장만 수치를 표시한다.
+ *
+ * 뒷면 그림은 번들 자산이라 경로를 CSS에 적을 수 없다. 뷰가 --pf-battlefield-deck-card-back
+ * 으로 넘겨 준다. 그림 아래에 기존 그러데이션을 그대로 깔아, 그림을 받지 못해도 더미가
+ * 빈 사각형으로 남지 않게 한다.
+ */
 .pf-battlefield__deck-card {
   position: absolute;
   left: 0;
   right: 0;
   height: var(--pf-battle-card-height);
-  background: var(--pf-battlefield-deck-stack-background);
+  background-image:
+    var(--pf-battlefield-deck-card-back, none), var(--pf-battlefield-deck-stack-background);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   border: var(--pf-battlefield-deck-stack-border);
   border-radius: var(--pf-battlefield-slot-radius);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  /* 장수 띠를 카드 아래변에 붙인다. 가운데 두면 뒷면 그림을 정면으로 가린다. */
+  justify-content: flex-end;
+}
+
+/*
+ * 장수 띠. 맨 위 장의 아래변에 걸치는 가로 띠다.
+ * 뒷면 그림 위에서 글자가 읽히도록 어두운 판을 깐다. 모서리는 카드의 overflow가 잘라 준다.
+ * 라벨 10px과 숫자 18px의 밑선을 맞춰야 띠가 한 줄로 읽힌다.
+ */
+.pf-battlefield__deck-badge {
+  display: flex;
+  align-items: baseline;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
+  padding: 3px 8px;
+  box-sizing: border-box;
+  background: var(--pf-battlefield-deck-badge-background);
 }
 
 .pf-battlefield__rail {

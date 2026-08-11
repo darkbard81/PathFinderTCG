@@ -668,6 +668,7 @@ export const UI_THEME = {
       deckStackBackground:
         'linear-gradient(155deg, rgba(27, 39, 72, 0.96), rgba(20, 29, 53, 0.96))',
       deckStackBorder: '1px solid rgba(107, 106, 143, 0.6)',
+      deckBadgeBackground: 'rgba(7, 10, 22, 0.78)',
       dividerBackground:
         'linear-gradient(90deg, transparent, rgba(230, 184, 74, 0.62), transparent)',
       handBackground: 'linear-gradient(0deg, rgba(7, 10, 22, 0.96) 62%, rgba(7, 10, 22, 0))',

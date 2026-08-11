@@ -16,6 +16,10 @@ import questIconUrl from '../../assets/ui/icons/lobby/quest.webp';
 import rankIconUrl from '../../assets/ui/icons/lobby/rank.webp';
 import settingsIconUrl from '../../assets/ui/icons/lobby/settings.webp';
 import shieldIconUrl from '../../assets/ui/icons/lobby/shield.webp';
+import goldIconUrl from '../../assets/ui/icons/resource/gold.webp';
+import manaStoneIconUrl from '../../assets/ui/icons/resource/mana-stone.webp';
+import summonTicketIconUrl from '../../assets/ui/icons/resource/summon-ticket.webp';
+import type { ResourceKey, ResourceState } from '../../game/resources/resource-state';
 
 const LOBBY_ICON_URLS = {
   battle: battleIconUrl,
@@ -62,6 +66,8 @@ export type LobbyViewOptions = {
   saveName: string;
   /** 현재 덱 리더 이름이다. 헤더 둘째 줄에 쓴다. */
   leaderName: string;
+  /** 보유 재화다. 우상단 리소스 바에 쓴다. */
+  resources: ResourceState;
   menuItems: LobbyMenuItem[];
   /** Lobby를 잠시 떠날 때 복원할 standing 영상의 일시 재생 상태다. */
   standingPlayback?: LobbyStandingPlayback;
@@ -126,20 +132,51 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
   const account = document.createElement('div');
   account.className = 'pf-lobby__account';
 
-  const backButton = createAccountButton('뒤로', options.onBack);
-  const logoutButton = createAccountButton('Logout', options.onLogout);
   const standingToggle = createStandingToggleButton(standingVisible, (visible) => {
     standingVisible = visible;
     applyStandingVisibility(element, visible);
     options.onStandingVisibilityChange?.(visible);
   });
-  account.append(standingToggle, backButton, logoutButton);
+  account.append(standingToggle);
+
+  // 우상단. 재화 오른쪽에 설정 버튼을 둔다.
+  const topbar = document.createElement('div');
+  topbar.className = 'pf-lobby__topbar';
+
+  const settingsButton = document.createElement('button');
+  settingsButton.type = 'button';
+  // 아이콘만 있는 작은 버튼이라 9슬라이스 틀 대신 평범한 버튼을 쓴다.
+  settingsButton.className = 'pf-btn-plain pf-lobby__settings-button';
+  settingsButton.setAttribute('aria-haspopup', 'dialog');
+  settingsButton.setAttribute('aria-expanded', 'false');
+
+  const settingsIcon = document.createElement('img');
+  settingsIcon.className = 'pf-lobby__settings-icon';
+  settingsIcon.src = LOBBY_ICON_URLS.settings;
+  // 옆에 보이는 글자가 버튼 이름이 되므로 그림은 접근성 트리에서 뺀다.
+  settingsIcon.alt = '';
+  settingsIcon.setAttribute('aria-hidden', 'true');
+
+  const settingsLabel = document.createElement('span');
+  settingsLabel.className = 'pf-lobby__settings-label';
+  settingsLabel.textContent = '설정';
+
+  settingsButton.append(settingsIcon, settingsLabel);
+
+  const settings = createSettingsDialog({
+    onBack: options.onBack,
+    onLogout: options.onLogout,
+    onOpenChange: (open) => settingsButton.setAttribute('aria-expanded', String(open)),
+  });
+
+  settingsButton.addEventListener('click', () => settings.open());
+  topbar.append(createResourceBar(options.resources), settingsButton);
 
   const status = document.createElement('p');
   status.className = 'pf-lobby__status';
   status.setAttribute('role', 'status');
 
-  element.append(header, menu, account, status);
+  element.append(header, topbar, menu, account, status, settings.root);
 
   return {
     element,
@@ -162,7 +199,7 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
       status.textContent = message;
     },
     setBusy: (busy) => {
-      for (const button of [...buttons, standingToggle, backButton, logoutButton]) {
+      for (const button of [...buttons, standingToggle, settingsButton, ...settings.buttons]) {
         button.disabled = busy;
       }
     },
@@ -323,6 +360,147 @@ function createStandingToggleButton(
 
 function applyStandingVisibility(parent: HTMLElement, visible: boolean): void {
   parent.querySelector<HTMLElement>('.pf-lobby__standing')?.toggleAttribute('hidden', !visible);
+}
+
+/**
+ * 로비 설정 다이얼로그다.
+ *
+ * 저장 슬롯으로 돌아가기와 로그아웃은 자주 쓰지 않는데 로비 아래를 계속 차지했다.
+ * 우상단 설정 버튼 뒤로 넣어 본판에서 치운다.
+ *
+ * 닫기는 × 버튼과 Escape 둘 다 받는다. 배경을 눌러 닫는 길은 두지 않았다.
+ * 오버레이 루트가 pointer-events:none 이라 배경이 클릭을 받으려면 따로 열어야 하는데,
+ * 로그아웃이 걸린 패널이라 실수로 닫히는 쪽보다 명시적으로 닫는 쪽이 낫다.
+ */
+function createSettingsDialog(options: {
+  onBack: () => void;
+  onLogout: () => void;
+  onOpenChange: (open: boolean) => void;
+}): {
+  root: HTMLDivElement;
+  buttons: HTMLButtonElement[];
+  open: () => void;
+} {
+  const root = document.createElement('div');
+  root.className = 'pf-lobby__settings';
+  root.hidden = true;
+  root.tabIndex = -1;
+  root.setAttribute('role', 'dialog');
+  root.setAttribute('aria-modal', 'true');
+  root.setAttribute('aria-labelledby', 'pf-lobby-settings-title');
+
+  const panel = document.createElement('section');
+  panel.className = 'pf-lobby__settings-panel';
+
+  const header = document.createElement('div');
+  header.className = 'pf-lobby__settings-header';
+
+  const title = document.createElement('h2');
+  title.id = 'pf-lobby-settings-title';
+  title.className = 'pf-lobby__settings-title';
+  title.textContent = '설정';
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'pf-btn-plain pf-lobby__settings-close';
+  closeButton.textContent = '×';
+  closeButton.setAttribute('aria-label', '닫기');
+
+  header.append(title, closeButton);
+
+  const body = document.createElement('div');
+  body.className = 'pf-lobby__settings-body';
+
+  const backButton = createAccountButton('뒤로', options.onBack);
+  const logoutButton = createAccountButton('Logout', options.onLogout);
+  body.append(backButton, logoutButton);
+
+  panel.append(header, body);
+  root.append(panel);
+
+  // 다이얼로그를 연 버튼을 기억해 두고 닫을 때 초점을 돌려준다.
+  let opener: HTMLElement | null = null;
+
+  function close(): void {
+    root.hidden = true;
+    options.onOpenChange(false);
+    opener?.focus();
+    opener = null;
+  }
+
+  closeButton.addEventListener('click', close);
+  root.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      close();
+    }
+  });
+
+  return {
+    root,
+    buttons: [closeButton, backButton, logoutButton],
+    open: () => {
+      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      root.hidden = false;
+      options.onOpenChange(true);
+      root.focus();
+    },
+  };
+}
+
+/**
+ * 우상단 리소스 바에 그릴 재화다.
+ * documents/Lobby_UI_Target.png 우상단 패널의 순서를 그대로 따른다.
+ */
+const RESOURCE_ITEMS: readonly { key: ResourceKey; label: string; iconUrl: string }[] = [
+  { key: 'gold', label: '골드', iconUrl: goldIconUrl },
+  { key: 'manaStone', label: '마나석', iconUrl: manaStoneIconUrl },
+  { key: 'summonTicket', label: '소환 티켓', iconUrl: summonTicketIconUrl },
+];
+
+/**
+ * 우상단 리소스 바를 만든다.
+ *
+ * 아이콘만으로는 무슨 재화인지 읽어줄 수 없어서 항목마다 이름과 수량을 aria-label로 묶는다.
+ * 그림은 그래서 alt를 비우고 접근성 트리에서 뺀다.
+ */
+function createResourceBar(resources: ResourceState): HTMLElement {
+  const bar = document.createElement('div');
+  bar.className = 'pf-lobby__resources';
+  bar.setAttribute('role', 'group');
+  bar.setAttribute('aria-label', '보유 재화');
+
+  for (const item of RESOURCE_ITEMS) {
+    const entry = document.createElement('div');
+    entry.className = 'pf-lobby__resource';
+    entry.dataset.resource = item.key;
+
+    const icon = document.createElement('img');
+    icon.className = 'pf-lobby__resource-icon';
+    icon.src = item.iconUrl;
+    icon.alt = '';
+    icon.setAttribute('aria-hidden', 'true');
+
+    const amount = document.createElement('span');
+    amount.className = 'pf-lobby__resource-amount';
+    amount.textContent = formatResourceAmount(resources[item.key]);
+
+    entry.setAttribute('aria-label', `${item.label} ${amount.textContent}`);
+    entry.append(icon, amount);
+    bar.append(entry);
+  }
+
+  return bar;
+}
+
+/**
+ * 재화를 세 자리마다 끊어 적는다.
+ *
+ * `toLocaleString`은 실행 환경의 ICU 데이터에 따라 구분자가 달라져 화면과 테스트가 갈린다.
+ * 자리 구분은 표기 규칙이지 지역화 대상이 아니라서 직접 끊는다.
+ */
+export function formatResourceAmount(amount: number): string {
+  return `${amount}`.replace(/\B(?=(\d{3})+$)/g, ',');
 }
 
 /** 좌측 레일 메뉴 버튼이다. 큰 글자와 작은 영문 캡션을 함께 둔다. */

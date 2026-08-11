@@ -1,4 +1,5 @@
 import { createDefaultLobbyState } from '../lobby/lobby-state';
+import { createDefaultResourceState } from '../resources/resource-state';
 import { SAVE_SLOT_SCHEMA_VERSION, type SaveSlotId, type SaveSlotState } from './types';
 import { CARD_DEFINITIONS } from './card-catalog';
 import {
@@ -51,5 +52,6 @@ export async function createInitialSaveState(
     },
     stageProgress: createDefaultStageProgressState(),
     lobby: createDefaultLobbyState(),
+    resources: createDefaultResourceState(),
   };
 }

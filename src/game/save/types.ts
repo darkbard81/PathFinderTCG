@@ -1,8 +1,9 @@
 import type { CardDefinition } from './card-catalog';
 import type { LobbyState } from '../lobby/lobby-state';
+import type { ResourceState } from '../resources/resource-state';
 import type { StageProgressState } from '../stage/types';
 
-export const SAVE_SLOT_SCHEMA_VERSION = 5 as const;
+export const SAVE_SLOT_SCHEMA_VERSION = 6 as const;
 
 export type SaveSlotId = 1 | 2 | 3;
 
@@ -49,6 +50,8 @@ export type SaveSlotState = {
   stageProgress: StageProgressState;
   /** 로비 꾸미기 상태다. schemaVersion 5에서 들어왔다. */
   lobby: LobbyState;
+  /** 골드·마나석·소환 티켓 잔액이다. schemaVersion 6에서 들어왔다. */
+  resources: ResourceState;
 };
 
 export type SaveSlotSummary = {
