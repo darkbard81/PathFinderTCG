@@ -29,7 +29,15 @@ describe('buildThemeCssVariables', () => {
   });
 
   it('surface는 색과 불투명도를 rgba 한 값으로 합친다', () => {
-    expect(variables['--pf-surface-progress-fill']).toBe('rgba(168, 230, 178, 0.95)');
+    // 팔레트를 갈아도 이 검사가 깨지지 않도록 기대값을 토큰에서 유도한다.
+    const { fill, fillAlpha } = UI_THEME.surfaces.progressFill;
+    const red = (fill.canvas >> 16) & 0xff;
+    const green = (fill.canvas >> 8) & 0xff;
+    const blue = fill.canvas & 0xff;
+
+    expect(variables['--pf-surface-progress-fill']).toBe(
+      `rgba(${red}, ${green}, ${blue}, ${fillAlpha})`,
+    );
   });
 
   it('모든 색 토큰과 surface 토큰이 빠짐없이 포함된다', () => {

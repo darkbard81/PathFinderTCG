@@ -1,6 +1,8 @@
 import type { CardTile } from './card-tile';
+import { createCardDetailView, type CardDetail } from './card-detail';
 import {
   createCardGridPanel,
+  createWorkbenchMain,
   createSummaryLabel,
   createSummaryValue,
   createWorkbenchButton,
@@ -34,6 +36,8 @@ export type DeckBuildViewModel = {
 };
 
 export type DeckBuildViewOptions = {
+  /** 카드를 길게 누르거나 우클릭했을 때다. instanceId를 넘긴다. */
+  onInspect: (instanceId: string) => void;
   onSelectMode: (mode: DeckBuildMode) => void;
   onToggleDeckCost: (cost: number) => void;
   onToggleCollectionCost: (cost: number) => void;
@@ -43,6 +47,8 @@ export type DeckBuildViewOptions = {
 
 export type DeckBuildView = {
   element: HTMLElement;
+  /** 상세 패널 내용이다. null이면 안내만 남긴다. */
+  showDetail: (detail: CardDetail | null) => void;
   render: (model: DeckBuildViewModel) => void;
 };
 
@@ -109,17 +115,27 @@ export function createDeckBuildView(options: DeckBuildViewOptions): DeckBuildVie
   sidebar.append(createWorkbenchTitle('덱 관리'), modeTabs, summary, spacer, status, actions);
 
   const deckPanel = createCardGridPanel({
+    onInspect: options.onInspect,
     title: '내 덱',
     busy: () => busy,
     onToggleCost: options.onToggleDeckCost,
   });
   const collectionPanel = createCardGridPanel({
+    onInspect: options.onInspect,
     title: '수집품',
     busy: () => busy,
     onToggleCost: options.onToggleCollectionCost,
   });
 
-  element.append(sidebar, deckPanel.root, collectionPanel.root);
+  const detail = createCardDetailView({
+    emptyMessage: '카드를 길게 누르거나 우클릭하면 상세를 봅니다.',
+  });
+  detail.root.classList.add('pf-card-detail--docked');
+  element.append(
+    sidebar,
+    createWorkbenchMain(detail.root, [deckPanel.root, collectionPanel.root]),
+    detail.overlay,
+  );
 
   function render(model: DeckBuildViewModel): void {
     busy = model.busy;
@@ -144,7 +160,7 @@ export function createDeckBuildView(options: DeckBuildViewOptions): DeckBuildVie
     collectionPanel.render(model.collection);
   }
 
-  return { element, render };
+  return { element, showDetail: detail.render, render };
 }
 
 /** 덱 구성 그리드에 놓을 카드 하나를 만든다. */

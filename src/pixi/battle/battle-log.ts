@@ -5,6 +5,14 @@ import type {
 } from '../../game/battle/types';
 import { formatSlotLabel } from '../../dom/screens/battlefield-layout';
 
+/**
+ * 기록에 남기는 최대 줄 수다.
+ *
+ * 화면은 스크롤되지만 배열과 <li>는 판이 길어질수록 끝없이 쌓인다.
+ * 오래된 줄부터 버린다. 지난 수를 되짚는 용도라 최근 것만 있으면 된다.
+ */
+export const MAX_BATTLE_LOG_LINES = 100;
+
 const SIDE_LABELS = { player: '나', enemy: '적' } as const;
 
 const TURN_END_REASONS: Record<BattleTurnEndReason, string> = {
@@ -76,4 +84,9 @@ export function readCardName(runtime: BattleRuntimeState, instanceId: string): s
   }
 
   return '카드';
+}
+
+/** 기록 뒤에 줄을 붙이고 상한을 넘은 만큼 앞에서 버린다. */
+export function appendBattleLogLines(log: readonly string[], lines: readonly string[]): string[] {
+  return [...log, ...lines].slice(-MAX_BATTLE_LOG_LINES);
 }

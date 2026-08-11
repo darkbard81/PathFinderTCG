@@ -1,5 +1,16 @@
 import './loader.css';
 
+/**
+ * 진행 막대의 채움 종류다.
+ * gradient는 금색에서 하늘색으로 흐르고, gold와 azure는 그 두 색의 단색이다.
+ */
+export type LoaderBarVariant = 'gradient' | 'gold' | 'azure';
+
+export type LoaderViewOptions = {
+  /** 생략하면 그라데이션이다. */
+  barVariant?: LoaderBarVariant;
+};
+
 export type LoaderViewModel = {
   /** 0~1 진행률이다. 범위를 벗어난 값은 뷰가 잘라 쓴다. */
   progress: number;
@@ -16,7 +27,9 @@ export type LoaderView = {
  * 로딩 화면의 DOM을 만든다.
  * 레이아웃과 배율은 CSS와 오버레이 루트가 담당하므로 좌표를 계산하지 않는다.
  */
-export function createLoaderView(): LoaderView {
+export function createLoaderView(options: LoaderViewOptions = {}): LoaderView {
+  const barVariant = options.barVariant ?? 'gradient';
+
   const element = document.createElement('section');
   element.className = 'pf-loader';
 
@@ -32,7 +45,10 @@ export function createLoaderView(): LoaderView {
   track.setAttribute('aria-valuenow', '0');
 
   const fill = document.createElement('div');
-  fill.className = 'pf-loader__fill';
+  fill.className =
+    barVariant === 'gradient'
+      ? 'pf-loader__fill'
+      : `pf-loader__fill pf-loader__fill--${barVariant}`;
   track.appendChild(fill);
 
   const status = document.createElement('p');
@@ -52,7 +68,7 @@ export function createLoaderView(): LoaderView {
       const clamped = Math.min(1, Math.max(0, model.progress));
       const rounded = Math.round(clamped * 100);
 
-      fill.style.width = `${clamped * 100}%`;
+      fill.style.setProperty('--pf-loader-fill-cut', `${100 - clamped * 100}%`);
       track.setAttribute('aria-valuenow', String(rounded));
       percent.textContent = `${rounded}%`;
       status.textContent = model.status;

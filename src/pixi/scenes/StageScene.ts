@@ -23,13 +23,8 @@ export type StageSceneOptions = {
   backgroundImageUrl: string;
   session: GameSession;
   lastBattleResult?: StageBattleResult;
-  /** Stage 선택은 전투 시작 시에만 저장한다. 뒤로 가기는 세션을 넘기지 않는다. */
-  onBack: () => void;
-  /** 덱 구성·장비·성장 화면으로 넘긴다. 저장 여부와 무관하게 현재 세션을 그대로 전달한다. */
-  onDeck: (session: GameSession) => void;
-  onEquipment: (session: GameSession) => void;
-  onGrowth: (session: GameSession) => void;
-  onLoggedOut: (statusMessage: string) => void;
+  /** 로비로 돌아간다. Stage 선택은 전투 시작 시에만 저장하므로 들어올 때 세션을 그대로 넘긴다. */
+  onBack: (session: GameSession) => void;
   /** 세션을 먼저 저장한 뒤 호출한다. 전투 중 이탈해도 스테이지 선택이 남는다. */
   onStartBattle: (session: GameSession, stageId: string) => void;
   view?: StageView;
@@ -56,7 +51,6 @@ export class StageScene implements Scene {
   private readonly stageDefinitions: StageDefinition[];
   private selectedStageId: string;
   private isStartingBattle = false;
-  private isLoggingOut = false;
   private active = true;
 
   public constructor(private readonly options: StageSceneOptions) {
@@ -71,29 +65,11 @@ export class StageScene implements Scene {
         onSelectStage: (stageId) => this.selectStage(stageId),
         onBack: () => {
           if (!this.isStartingBattle) {
-            this.options.onBack();
+            this.options.onBack(this.session);
           }
         },
         onStartBattle: () => {
           void this.handleStartBattle();
-        },
-        onDeck: () => {
-          if (!this.isStartingBattle && !this.isLoggingOut) {
-            this.options.onDeck(this.session);
-          }
-        },
-        onEquipment: () => {
-          if (!this.isStartingBattle && !this.isLoggingOut) {
-            this.options.onEquipment(this.session);
-          }
-        },
-        onGrowth: () => {
-          if (!this.isStartingBattle && !this.isLoggingOut) {
-            this.options.onGrowth(this.session);
-          }
-        },
-        onLogout: () => {
-          void this.logout();
         },
       });
     this.element = this.stageView.element;
@@ -103,7 +79,6 @@ export class StageScene implements Scene {
   public async enter(): Promise<void> {
     this.active = true;
     this.isStartingBattle = false;
-    this.isLoggingOut = false;
     this.renderView('Select a stage and start battle.');
 
     await this.ensureBackground();
@@ -128,7 +103,7 @@ export class StageScene implements Scene {
       lastBattleResult: this.lastBattleResult,
       status,
       statusIsError,
-      busy: this.isStartingBattle || this.isLoggingOut,
+      busy: this.isStartingBattle,
     });
   }
 
@@ -142,7 +117,7 @@ export class StageScene implements Scene {
   }
 
   private selectStage(stageId: string): void {
-    if (this.isStartingBattle || this.isLoggingOut) {
+    if (this.isStartingBattle) {
       return;
     }
 
@@ -161,7 +136,7 @@ export class StageScene implements Scene {
   }
 
   private async handleStartBattle(): Promise<void> {
-    if (this.isStartingBattle || this.isLoggingOut) {
+    if (this.isStartingBattle) {
       return;
     }
 
@@ -187,7 +162,7 @@ export class StageScene implements Scene {
       const savedState = await this.options.services.saveSlots.save(
         createSaveSlotStateFromGameSession(nextSession),
       );
-      if (!this.active || this.isLoggingOut) {
+      if (!this.active) {
         return;
       }
 
@@ -195,30 +170,13 @@ export class StageScene implements Scene {
       this.session = savedSession;
       this.options.onStartBattle(savedSession, stageDefinition.id);
     } catch (error: unknown) {
-      if (!this.active || this.isLoggingOut) {
+      if (!this.active) {
         return;
       }
 
       this.isStartingBattle = false;
       const message = error instanceof Error ? error.message : String(error);
       this.renderView(`Failed to start battle: ${message}`, true);
-    }
-  }
-
-  private async logout(): Promise<void> {
-    if (this.isLoggingOut || this.isStartingBattle) {
-      return;
-    }
-
-    this.isLoggingOut = true;
-    this.renderView('Signing out...');
-
-    try {
-      await this.options.services.auth.logout();
-      this.options.onLoggedOut('You have been logged out.');
-    } catch (error: unknown) {
-      this.isLoggingOut = false;
-      this.renderView(error instanceof Error ? error.message : String(error), true);
     }
   }
 

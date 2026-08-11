@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { BattleRuntimeState, BattleTurnEvent } from '../../game/battle/types';
-import { formatBattleTurnEvents } from './battle-log';
+import { MAX_BATTLE_LOG_LINES, appendBattleLogLines, formatBattleTurnEvents } from './battle-log';
 import { formatSlotLabel } from '../../dom/screens/battlefield-layout';
 
 /** 이름 조회만 하면 되므로 필요한 Zone 배열만 갖춘 최소 런타임을 만든다. */
@@ -134,5 +134,40 @@ describe('formatBattleTurnEvents', () => {
     };
 
     expect(formatBattleTurnEvents(runtime, [event])[0]).toContain('카드을(를) 뽑았다');
+  });
+});
+
+describe('battle log trimming', () => {
+  const line = (n: number): string => `${n}번째 줄`;
+
+  it('keeps every line while under the cap', () => {
+    const log = appendBattleLogLines([], [line(1), line(2)]);
+
+    expect(log).toEqual([line(1), line(2)]);
+  });
+
+  it('drops the oldest lines once the cap is passed', () => {
+    const full = Array.from({ length: MAX_BATTLE_LOG_LINES }, (_, index) => line(index + 1));
+    const log = appendBattleLogLines(full, [line(MAX_BATTLE_LOG_LINES + 1)]);
+
+    expect(log).toHaveLength(MAX_BATTLE_LOG_LINES);
+    // 가장 오래된 줄이 빠지고 새 줄이 끝에 남는다. 최신 줄이 화면 아래에 쌓이는 순서다.
+    expect(log[0]).toBe(line(2));
+    expect(log.at(-1)).toBe(line(MAX_BATTLE_LOG_LINES + 1));
+  });
+
+  it('keeps only the newest lines when one call overflows the cap', () => {
+    const burst = Array.from({ length: MAX_BATTLE_LOG_LINES + 30 }, (_, index) => line(index + 1));
+    const log = appendBattleLogLines([line(0)], burst);
+
+    expect(log).toHaveLength(MAX_BATTLE_LOG_LINES);
+    expect(log.at(-1)).toBe(line(MAX_BATTLE_LOG_LINES + 30));
+  });
+
+  it('does not change the array it was given', () => {
+    const original = [line(1)];
+    appendBattleLogLines(original, [line(2)]);
+
+    expect(original).toEqual([line(1)]);
   });
 });

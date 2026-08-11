@@ -1,3 +1,5 @@
+import type { LobbyState } from '../lobby/lobby-state';
+import type { ResourceState } from '../resources/resource-state';
 import {
   SAVE_SLOT_SCHEMA_VERSION,
   type CardCollection,
@@ -36,6 +38,8 @@ export type GameSession = {
   collection: RuntimeCardCollection;
   equipment: EquipmentState;
   stageProgress: StageProgressState;
+  lobby: LobbyState;
+  resources: ResourceState;
 };
 
 export function createGameSession(
@@ -64,6 +68,8 @@ export function createGameSession(
     },
     equipment: structuredClone(state.equipment),
     stageProgress: structuredClone(state.stageProgress),
+    lobby: structuredClone(state.lobby),
+    resources: structuredClone(state.resources),
   };
 }
 
@@ -93,6 +99,8 @@ export function createSaveSlotStateFromGameSession(
     },
     equipment: structuredClone(session.equipment),
     stageProgress: structuredClone(session.stageProgress),
+    lobby: structuredClone(session.lobby),
+    resources: structuredClone(session.resources),
   };
 }
 
@@ -207,3 +215,22 @@ function createCardDefinitionFromInstance(instance: CardInstance): CardDefinitio
 }
 
 export type { CardDefinition, SaveSlotState, DeckInstance, CardCollection, EquipmentState };
+
+/**
+ * 세션이 들고 있는 카드 한 장을 instanceId로 찾는다.
+ * 리더·덱·컬렉션을 한 번에 훑는다. 화면마다 어느 통에 있는지 따로 알 필요가 없게 한다.
+ */
+export function findSessionCard(
+  session: GameSession,
+  instanceId: string,
+): RuntimeCardInstance | null {
+  if (session.deck.leader.instance.instanceId === instanceId) {
+    return session.deck.leader;
+  }
+
+  return (
+    [...session.deck.cards, ...session.collection.cards].find(
+      (card) => card.instance.instanceId === instanceId,
+    ) ?? null
+  );
+}

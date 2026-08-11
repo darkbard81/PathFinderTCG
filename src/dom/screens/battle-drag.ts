@@ -36,7 +36,7 @@ export function findSlotAtPoint(
 
 /**
  * 화면 좌표를 오버레이 논리 좌표로 되돌린다.
- * 오버레이 루트는 `transform: scale`로 줄어 있어서, 실측 폭과 논리 폭의 비가 그 배율이다.
+ * 오버레이 루트는 CSS `zoom`으로 줄어 있어서, 실측 폭과 논리 폭의 비가 그 배율이다.
  */
 export function toLogicalPoint(
   rootBounds: { left: number; top: number; width: number },

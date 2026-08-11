@@ -1,0 +1,105 @@
+/*
+ * 9슬라이스 버튼 스킨이다.
+ *
+ * documents/9SLICE_BUTTON.png에서 잘라낸 두 종류를 쓴다.
+ *   .pf-btn9--menu      4. MAIN MENU BUTTON. 메인 메뉴처럼 넓고 큰 버튼
+ *   .pf-btn9--standard  11. 9-SLICE BUTTON. 나머지 화면의 일반 버튼
+ *
+ * 상태는 클래스가 아니라 버튼의 실제 상태에서 읽는다.
+ *   기본 / :hover / :active / [aria-pressed="true"]·.is-selected / :disabled
+ *
+ * 그림은 src/assets에 있어 번들러가 해시 붙은 경로로 바꿔 준다. 코드에서
+ * URL을 만들어 넣을 필요가 없고, 다른 화면 자산과 달리 fresh clone에도 있다.
+ */
+
+.pf-btn9 {
+  /* 틀을 그리는 가상 요소의 기준 상자다. */
+  position: relative;
+  /*
+   * 틀은 z-index -1로 글자 뒤에 깔린다. 그런데 position만 있고 z-index가 없는
+   * 요소는 스태킹 컨텍스트를 만들지 않아서, 그대로 두면 음수 z-index가 버튼을
+   * 빠져나가 조상까지 올라간다. 오버레이(.pf-overlay)는 배율이 1이면
+   * transform이 none이라 스태킹 컨텍스트가 아니고, 그때 틀이 루트까지 올라가
+   * PixiJS 캔버스 뒤에 그려져 사라진다. 창 크기에 따라 보였다 안 보였다 한 이유다.
+   * isolation으로 컨텍스트를 만들어 틀을 버튼 안에 가둔다.
+   */
+  isolation: isolate;
+  border: 0;
+  background: transparent;
+  color: var(--pf-text-button-label-color);
+  font: inherit;
+  font-size: var(--pf-text-button-label-size);
+  cursor: pointer;
+  /* 프레임이 글자를 물지 않도록 슬라이스 두께만큼 안쪽으로 민다. */
+  padding: var(--pf-btn9-padding);
+}
+
+/*
+ * 아홉 칸을 한 겹으로 깐다. fill이 있어 가운데 칸도 함께 그려지고,
+ * opacity가 요소 전체에 걸리므로 아홉 칸의 투명도가 같아진다.
+ */
+.pf-btn9::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-style: solid;
+  border-width: var(--pf-btn9-border-width);
+  border-image-source: var(--pf-btn9-url);
+  border-image-slice: var(--pf-btn9-slice) fill;
+  border-image-repeat: stretch;
+  opacity: var(--pf-button9-opacity);
+}
+
+/* 종류별 그림과 기하 */
+.pf-btn9--menu {
+  --pf-btn9-normal-url: url('../../assets/ui/buttons/menu-normal.webp');
+  --pf-btn9-hover-url: url('../../assets/ui/buttons/menu-hover.webp');
+  --pf-btn9-pressed-url: url('../../assets/ui/buttons/menu-pressed.webp');
+  --pf-btn9-selected-url: url('../../assets/ui/buttons/menu-selected.webp');
+  --pf-btn9-disabled-url: url('../../assets/ui/buttons/menu-disabled.webp');
+  --pf-btn9-url: var(--pf-btn9-normal-url);
+  --pf-btn9-slice: var(--pf-button9-menu-slice);
+  --pf-btn9-border-width: var(--pf-button9-menu-border-width);
+  --pf-btn9-padding: var(--pf-button9-menu-padding);
+  min-height: var(--pf-button9-menu-min-height);
+}
+
+.pf-btn9--standard {
+  --pf-btn9-normal-url: url('../../assets/ui/buttons/standard-normal.webp');
+  --pf-btn9-hover-url: url('../../assets/ui/buttons/standard-hover.webp');
+  --pf-btn9-pressed-url: url('../../assets/ui/buttons/standard-pressed.webp');
+  --pf-btn9-selected-url: url('../../assets/ui/buttons/standard-selected.webp');
+  --pf-btn9-disabled-url: url('../../assets/ui/buttons/standard-disabled.webp');
+  --pf-btn9-url: var(--pf-btn9-normal-url);
+  --pf-btn9-slice: var(--pf-button9-standard-slice);
+  --pf-btn9-border-width: var(--pf-button9-standard-border-width);
+  --pf-btn9-padding: var(--pf-button9-standard-padding);
+  min-height: var(--pf-button9-standard-min-height);
+}
+
+/* 상태별 그림 교체. 뒤에 올수록 우선한다. */
+.pf-btn9:hover:not(:disabled) {
+  --pf-btn9-url: var(--pf-btn9-hover-url);
+}
+
+.pf-btn9[aria-pressed='true'],
+.pf-btn9.is-selected {
+  --pf-btn9-url: var(--pf-btn9-selected-url);
+}
+
+.pf-btn9:active:not(:disabled) {
+  --pf-btn9-url: var(--pf-btn9-pressed-url);
+}
+
+.pf-btn9:disabled {
+  --pf-btn9-url: var(--pf-btn9-disabled-url);
+  cursor: default;
+  color: var(--pf-text-button-label-disabled-color);
+}
+
+.pf-btn9:focus-visible {
+  outline: none;
+  box-shadow: var(--pf-card-tile-select-glow);
+}

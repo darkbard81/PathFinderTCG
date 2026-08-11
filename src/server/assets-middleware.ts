@@ -1,3 +1,4 @@
+import type { Stats } from 'node:fs';
 import fs from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
@@ -39,8 +40,7 @@ export function createAssetsMiddleware(): AssetsMiddleware {
     );
     if (!requestedPath || requestedPath === 'assets.json') {
       try {
-        const manifest = await readAssetsManifest();
-        sendJson(response, manifest);
+        sendManifest(request, response, await readAssetsManifest());
       } catch {
         response.statusCode = 404;
         response.end('Not found');
@@ -56,10 +56,41 @@ export function createAssetsMiddleware(): AssetsMiddleware {
     }
 
     try {
-      const file = await fs.readFile(filePath);
-      response.statusCode = 200;
+      const stats = await fs.stat(filePath);
+      if (!stats.isFile()) {
+        next();
+        return true;
+      }
+
+      const etag = buildETag(await findRevision(filePath), stats);
+
       response.setHeader('Content-Type', getMimeType(filePath));
+      // max-age=0라 브라우저는 매번 물으러 온다. 그 물음에 ETag로 304를 준다.
       response.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      response.setHeader('ETag', etag);
+      // 비디오 요소는 Range로 받아 간다. 206을 돌려주지 않으면 탐색이 막힌다.
+      response.setHeader('Accept-Ranges', 'bytes');
+
+      // 같은 자산이면 본문을 읽지도 않고 끝낸다.
+      // Range보다 먼저 본다. 조건부 요청이 Range에 우선한다(RFC 9110 13.1.2).
+      if (matchesIfNoneMatch(request.headers['if-none-match'], etag)) {
+        response.statusCode = 304;
+        response.end();
+        return true;
+      }
+
+      const file = await fs.readFile(filePath);
+      const range = parseByteRange(request.headers.range, file.length);
+      if (range) {
+        response.statusCode = 206;
+        response.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${file.length}`);
+        response.end(
+          request.method === 'HEAD' ? undefined : file.subarray(range.start, range.end + 1),
+        );
+        return true;
+      }
+
+      response.statusCode = 200;
       response.end(request.method === 'HEAD' ? undefined : file);
       return true;
     } catch {
@@ -69,8 +100,103 @@ export function createAssetsMiddleware(): AssetsMiddleware {
   };
 }
 
+/**
+ * `Range: bytes=시작-끝` 한 구간만 해석한다.
+ * 여러 구간을 요구하는 요청은 처리하지 않고 전체를 그대로 돌려준다.
+ */
+function parseByteRange(
+  header: string | undefined,
+  size: number,
+): { start: number; end: number } | null {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? '');
+  if (!match) {
+    return null;
+  }
+
+  const [, rawStart, rawEnd] = match;
+  const start = rawStart ? Number(rawStart) : Math.max(0, size - Number(rawEnd));
+  const end = rawStart && rawEnd ? Math.min(Number(rawEnd), size - 1) : size - 1;
+
+  return start >= 0 && start <= end && end < size ? { start, end } : null;
+}
+
 async function readAssetsManifest(): Promise<AssetsManifest> {
   return JSON.parse(await fs.readFile(assetsManifestPath, 'utf8')) as AssetsManifest;
+}
+
+/**
+ * manifest revision을 경로로 찾는 표다. `assets.json`의 mtime이 그대로면 다시 읽지 않는다.
+ * 자산을 다시 구우면 `npm run assets:build`가 mtime을 바꾸므로 다음 요청에서 새로 읽는다.
+ */
+let revisionCache: { mtimeMs: number; byPath: Map<string, string> } | null = null;
+
+/**
+ * 자산 경로에 해당하는 manifest revision을 찾는다.
+ * manifest가 없거나 깨져도 자산 서빙은 계속해야 하므로 실패는 "없음"으로 다룬다.
+ */
+async function findRevision(filePath: string): Promise<string | undefined> {
+  try {
+    const { mtimeMs } = await fs.stat(assetsManifestPath);
+
+    if (revisionCache?.mtimeMs !== mtimeMs) {
+      const manifest = await readAssetsManifest();
+      revisionCache = {
+        mtimeMs,
+        byPath: new Map(
+          [...manifest.textures, ...manifest.videos].map((entry) => [entry.path, entry.revision]),
+        ),
+      };
+    }
+
+    return revisionCache.byPath.get(toManifestPath(filePath));
+  } catch {
+    return undefined;
+  }
+}
+
+/** manifest가 쓰는 assets 루트 기준 슬래시 경로로 바꾼다. */
+function toManifestPath(filePath: string): string {
+  return path.relative(assetsRoot, filePath).split(path.sep).join('/');
+}
+
+/**
+ * 조건부 요청에 쓸 ETag를 만든다.
+ *
+ * manifest에 있는 자산은 revision을 그대로 강한 ETag로 쓴다. 파일 내용의 sha256이라
+ * 내용이 같으면 값이 같다는 ETag의 정의를 이미 만족한다.
+ *
+ * manifest에 없는 자산도 있다. standing의 .webm/.mov처럼 런타임이 manifest를 거치지
+ * 않고 직접 경로로 받아 가는 것들이다. 이쪽까지 내용을 해시하면 304를 주려고 매 요청
+ * 5MB를 읽어야 하므로, 크기와 mtime으로 약한 ETag를 만든다.
+ */
+export function buildETag(revision: string | undefined, stats: Stats): string {
+  if (revision) {
+    return `"${revision}"`;
+  }
+
+  return `W/"${stats.size.toString(16)}-${Math.trunc(stats.mtimeMs).toString(16)}"`;
+}
+
+/**
+ * `If-None-Match`가 지금 ETag와 맞는지 본다.
+ * 값은 콤마로 여러 개가 올 수 있고, 캐시 검증은 weak comparison이라 `W/`는 떼고 비교한다.
+ */
+export function matchesIfNoneMatch(header: string | undefined, etag: string): boolean {
+  if (!header) {
+    return false;
+  }
+
+  if (header.trim() === '*') {
+    return true;
+  }
+
+  const target = stripWeakPrefix(etag);
+
+  return header.split(',').some((candidate) => stripWeakPrefix(candidate.trim()) === target);
+}
+
+function stripWeakPrefix(etag: string): string {
+  return etag.startsWith('W/') ? etag.slice(2) : etag;
 }
 
 function isAssetRoute(pathname: string, assetBaseUrl: string): boolean {
@@ -88,8 +214,12 @@ function getMimeType(filePath: string): string {
       return 'image/png';
     case '.webp':
       return 'image/webp';
+    case '.gif':
+      return 'image/gif';
     case '.webm':
       return 'video/webm';
+    case '.mov':
+      return 'video/quicktime';
     case '.jpg':
     case '.jpeg':
       return 'image/jpeg';
@@ -108,6 +238,40 @@ function getMimeType(filePath: string): string {
     default:
       return 'application/octet-stream';
   }
+}
+
+/**
+ * 자산 목록을 내려보낸다. 캐시는 하되 쓰기 전에 반드시 물어보게 한다.
+ *
+ * 헤더가 없으면 브라우저가 휴리스틱으로 캐시해, 자산을 새로 구워도 낡은 목록을 들고 있는다.
+ * 목록이 낡으면 그 안의 revision도 낡고, 개별 자산의 ETag는 서버가 자기 manifest로
+ * 계산하므로 클라이언트가 아는 자산 집합과 서버가 주는 것이 어긋난다.
+ *
+ * `manifestRevision`은 목록 내용에서 뽑은 해시라 그대로 ETag가 된다.
+ * 손으로 쓴 옛 목록처럼 값이 없으면 재검증만 걸고 본문을 그대로 보낸다.
+ */
+function sendManifest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  manifest: AssetsManifest,
+): void {
+  response.setHeader('Cache-Control', 'no-cache');
+
+  if (!manifest.manifestRevision) {
+    sendJson(response, manifest);
+    return;
+  }
+
+  const etag = `"${manifest.manifestRevision}"`;
+  response.setHeader('ETag', etag);
+
+  if (matchesIfNoneMatch(request.headers['if-none-match'], etag)) {
+    response.statusCode = 304;
+    response.end();
+    return;
+  }
+
+  sendJson(response, manifest);
 }
 
 function sendJson(response: ServerResponse, body: unknown): void {

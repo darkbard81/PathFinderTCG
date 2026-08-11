@@ -1,5 +1,7 @@
+import { createCardDetailView, type CardDetail } from './card-detail';
 import {
   createCardGridPanel,
+  createWorkbenchMain,
   createSummaryLabel,
   createSummaryValue,
   createWorkbenchButton,
@@ -34,6 +36,8 @@ export type GrowthViewModel = {
 };
 
 export type GrowthViewOptions = {
+  /** 카드를 길게 누르거나 우클릭했을 때다. instanceId를 넘긴다. */
+  onInspect: (instanceId: string) => void;
   onToggleMaterialCost: (cost: number) => void;
   onGrow: () => void;
   onClearMaterials: () => void;
@@ -43,6 +47,8 @@ export type GrowthViewOptions = {
 
 export type GrowthView = {
   element: HTMLElement;
+  /** 상세 패널 내용이다. null이면 안내만 남긴다. */
+  showDetail: (detail: CardDetail | null) => void;
   render: (model: GrowthViewModel) => void;
 };
 
@@ -97,14 +103,27 @@ export function createGrowthView(options: GrowthViewOptions): GrowthView {
 
   sidebar.append(createWorkbenchTitle('성장'), summary, spacer, status, actions);
 
-  const targetPanel = createCardGridPanel({ title: '덱 카드', busy: () => busy });
+  const targetPanel = createCardGridPanel({
+    title: '덱 카드',
+    busy: () => busy,
+    onInspect: options.onInspect,
+  });
   const materialPanel = createCardGridPanel({
+    onInspect: options.onInspect,
     title: '재료 (여러 장 선택)',
     busy: () => busy,
     onToggleCost: options.onToggleMaterialCost,
   });
 
-  element.append(sidebar, targetPanel.root, materialPanel.root);
+  const detail = createCardDetailView({
+    emptyMessage: '카드를 길게 누르거나 우클릭하면 상세를 봅니다.',
+  });
+  detail.root.classList.add('pf-card-detail--docked');
+  element.append(
+    sidebar,
+    createWorkbenchMain(detail.root, [targetPanel.root, materialPanel.root]),
+    detail.overlay,
+  );
 
   function render(model: GrowthViewModel): void {
     busy = model.busy;
@@ -140,5 +159,5 @@ export function createGrowthView(options: GrowthViewOptions): GrowthView {
     });
   }
 
-  return { element, render };
+  return { element, showDetail: detail.render, render };
 }

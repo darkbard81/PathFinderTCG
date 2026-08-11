@@ -4,7 +4,7 @@ import type { ViewportLayout } from '../pixi/app/viewport';
 export type OverlayStyle = {
   width: string;
   height: string;
-  transform: string;
+  zoom: string;
 };
 
 /**
@@ -15,6 +15,6 @@ export function resolveOverlayStyle(layout: ViewportLayout): OverlayStyle {
   return {
     width: `${layout.width}px`,
     height: `${layout.height}px`,
-    transform: layout.scale === 1 ? 'none' : `scale(${layout.scale})`,
+    zoom: `${layout.scale}`,
   };
 }

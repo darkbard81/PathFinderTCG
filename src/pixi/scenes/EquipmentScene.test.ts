@@ -19,6 +19,7 @@ type EquipmentHarness = {
 function createHarness(session: GameSession) {
   const view: EquipmentView & { render: ReturnType<typeof vi.fn> } = {
     element: {} as HTMLElement,
+    showDetail: vi.fn(),
     render: vi.fn(),
   };
   const onBack = vi.fn();

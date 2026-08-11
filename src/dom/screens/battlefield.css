@@ -166,6 +166,7 @@
 }
 
 .pf-battlefield__pile {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -176,6 +177,40 @@
   background: var(--pf-battlefield-pile-background);
   border: var(--pf-battlefield-pile-border);
   border-radius: var(--pf-battlefield-slot-radius);
+  overflow: hidden;
+}
+
+/*
+ * 더미에 마지막으로 들어간 카드다.
+ * 더는 쓸 수 없는 카드라 회색으로 죽인다. 전장 위 카드와 같은 채도로 두면
+ * 아직 살아 있는 카드로 읽힌다. is-spent가 쓰는 것보다 더 세게 뺀다.
+ */
+.pf-battlefield__pile-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.85);
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pf-battlefield__pile-art[hidden] {
+  display: none;
+}
+
+/* 그림 위에서 이름과 장수가 읽히도록 어두운 판에 올린다. 덱 더미와 같은 처리다. */
+.pf-battlefield__pile-badge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--pf-battlefield-count-badge-background);
 }
 
 .pf-battlefield__pile-label {
@@ -196,25 +231,73 @@
   position: relative;
 }
 
-/* 남은 덱은 카드 몇 장을 어긋나게 겹쳐 두께로 보여준다. 맨 위 장만 수치를 표시한다. */
+/*
+ * 더미는 전위와 후위 사이 가운데에 선다.
+ * 더미 열은 두 행을 걸치는데 겹친 카드는 한 장 높이 + 두께밖에 안 되어서,
+ * 그냥 두면 위쪽 행에 붙는다. 두께까지 포함한 상자를 세로 가운데에 세운다.
+ */
+.pf-battlefield__deck-stack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: calc(var(--pf-battle-card-height) + var(--pf-battle-deck-stagger));
+}
+
+/*
+ * 남은 덱은 카드 몇 장을 어긋나게 겹쳐 두께로 보여준다. 맨 위 장만 수치를 표시한다.
+ *
+ * 뒷면 그림은 번들 자산이라 경로를 CSS에 적을 수 없다. 뷰가 --pf-battlefield-deck-card-back
+ * 으로 넘겨 준다. 그림 아래에 기존 그러데이션을 그대로 깔아, 그림을 받지 못해도 더미가
+ * 빈 사각형으로 남지 않게 한다.
+ */
 .pf-battlefield__deck-card {
   position: absolute;
   left: 0;
   right: 0;
   height: var(--pf-battle-card-height);
-  background: var(--pf-battlefield-deck-stack-background);
+  background-image:
+    var(--pf-battlefield-deck-card-back, none), var(--pf-battlefield-deck-stack-background);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   border: var(--pf-battlefield-deck-stack-border);
   border-radius: var(--pf-battlefield-slot-radius);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  align-items: stretch;
+  /* 장수 띠를 카드 아래변에 붙인다. 가운데 두면 뒷면 그림을 정면으로 가린다. */
+  justify-content: flex-end;
 }
 
+/*
+ * 장수 띠. 맨 위 장의 아래변에 걸치는 가로 띠다.
+ * 뒷면 그림 위에서 글자가 읽히도록 어두운 판을 깐다. 모서리는 카드의 overflow가 잘라 준다.
+ * 라벨 10px과 숫자 18px의 밑선을 맞춰야 띠가 한 줄로 읽힌다.
+ */
+.pf-battlefield__deck-badge {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 3px 8px;
+  box-sizing: border-box;
+  background: var(--pf-battlefield-count-badge-background);
+}
+
+/*
+ * 레일은 내용만큼만 높다. 다만 상한을 둬야 한다.
+ * top만 두고 아래를 열어 두면 기록이 쌓일수록 레일이 화면 밖으로 자라고,
+ * 그러면 기록의 flex: 1이 무한한 높이를 받아 overflow-y: auto가 일하지 않는다.
+ * 접힌 손패가 아래를 가리므로 그 위에서 멈춘다. bottom이 아니라 max-height를 쓰는 것은
+ * 오른쪽 레일처럼 짧은 내용이 아래까지 늘어나 보이지 않게 하기 위해서다.
+ */
 .pf-battlefield__rail {
   position: absolute;
   top: var(--pf-battle-padding-y);
+  max-height: calc(100% - 2 * var(--pf-battle-padding-y) - var(--pf-battle-hand-peek));
   width: var(--pf-battle-rail-width);
   box-sizing: border-box;
   display: flex;
@@ -277,25 +360,13 @@
   color: var(--pf-color-danger);
 }
 
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-battlefield__button {
-  font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  color: var(--pf-color-primary);
-  background: var(--pf-surface-slot-ready);
-  border: var(--pf-card-workbench-panel-border);
-  border-radius: 5px;
-  padding: 10px 12px;
-  cursor: pointer;
-}
-
-.pf-battlefield__button:hover:not(:disabled) {
-  border-color: var(--pf-color-primary-warm);
-}
-
-.pf-battlefield__button:disabled {
-  cursor: default;
-  opacity: 0.55;
+  /* 전장 레일은 좁아 기본 여백을 줄인다. */
+  padding: 8px 16px;
+  min-height: 40px;
 }
 
 /*

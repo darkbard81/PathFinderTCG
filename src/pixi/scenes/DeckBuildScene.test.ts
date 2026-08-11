@@ -9,6 +9,7 @@ const save = vi.fn();
 function createMockView(): DeckBuildView & { render: ReturnType<typeof vi.fn> } {
   return {
     element: {} as HTMLElement,
+    showDetail: vi.fn(),
     render: vi.fn(),
   };
 }

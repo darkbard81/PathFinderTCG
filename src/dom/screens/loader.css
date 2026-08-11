@@ -27,12 +27,32 @@
   background: var(--pf-surface-progress-track);
 }
 
+/*
+ * 채움은 트랙을 꽉 채운 채로 오른쪽을 잘라 진행률을 나타낸다.
+ * 폭을 키우면 그라데이션이 막대 폭을 따라 압축돼 10%에서도 끝이 하늘색이 된다.
+ * 잘라내면 색띠가 트랙 폭에 고정돼 진행률만큼의 색만 보인다.
+ * 자르는 양은 뷰가 --pf-loader-fill-cut으로 넣는다. 모양은 여기만 안다.
+ */
 .pf-loader__fill {
-  width: 0%;
+  width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: var(--pf-surface-progress-fill);
-  transition: width 120ms linear;
+  background: var(--pf-progress-bar-fill-gradient);
+  clip-path: inset(0 var(--pf-loader-fill-cut, 100%) 0 0 round 999px);
+  transition: clip-path 120ms linear;
+}
+
+/*
+ * 단색 변형이다. 그라데이션 대신 한 색으로 채운다.
+ * 기본 그라데이션은 막대 자신의 폭을 기준으로 그려서 진행률이 낮아도 끝은 하늘색이다.
+ * 색이 진행률을 따라 변하길 원하면 그라데이션을 트랙 폭에 고정해야 한다.
+ */
+.pf-loader__fill--gold {
+  background: var(--pf-progress-bar-fill-gold);
+}
+
+.pf-loader__fill--azure {
+  background: var(--pf-progress-bar-fill-azure);
 }
 
 .pf-loader__status {

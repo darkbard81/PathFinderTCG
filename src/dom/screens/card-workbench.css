@@ -114,25 +114,32 @@
   gap: var(--pf-space-xs);
 }
 
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-workbench__button {
-  font-family: inherit;
   font-size: var(--pf-text-button-label-size);
-  color: var(--pf-text-button-label-color);
-  background: var(--pf-card-workbench-tab-background);
-  border: 1px solid rgba(218, 246, 211, 0.62);
-  border-radius: var(--pf-card-workbench-tab-radius);
-  padding: 10px;
-  cursor: pointer;
 }
 
+/* 주 버튼은 눌리지 않아도 선택 상태 그림을 써서 눈에 먼저 들어오게 한다. */
 .pf-workbench__button--primary {
-  background: var(--pf-card-workbench-tab-selected-background);
-  border: var(--pf-card-workbench-tab-selected-border);
+  --pf-btn9-url: var(--pf-btn9-standard-selected-url);
 }
 
-.pf-workbench__button:disabled {
-  cursor: default;
-  opacity: 0.5;
+/* 사이드바 오른쪽. 상세가 위에 눕고 패널 줄이 남는 높이를 가져간다. */
+.pf-workbench__main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-card-workbench-panel-gap);
+}
+
+.pf-workbench__panels {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  gap: var(--pf-card-workbench-panel-gap);
 }
 
 .pf-workbench__panel {
@@ -188,7 +195,7 @@
   font-weight: 700;
   color: var(--pf-color-primary);
   background: var(--pf-card-workbench-filter-background);
-  border: 1px solid rgba(183, 201, 186, 0.42);
+  border: 1px solid rgba(238, 231, 210, 0.3);
   /* 목업의 마름모 코스트 배지 형태를 그대로 쓴다. */
   clip-path: polygon(50% 0%, 100% 38%, 50% 100%, 0% 62%);
   cursor: pointer;
@@ -206,12 +213,21 @@
   opacity: 0.5;
 }
 
+/*
+ * 카드가 넘치면 스크롤한다.
+ *
+ * align-items를 flex-start로 못박는다. 기본값 stretch는 타일을 줄 높이에 맞춰 늘리는데,
+ * 그러면 .pf-card-tile의 aspect-ratio가 무시되어 카드가 세로로 길어진다.
+ * align-content: flex-start만으로는 막지 못한다. 그쪽은 줄 사이 배치를 정할 뿐이고
+ * 줄 안에서 타일을 늘리는 것은 align-items다.
+ */
 .pf-workbench__grid {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
+  align-items: flex-start;
   gap: var(--pf-card-tile-gap);
   overflow-y: auto;
 }

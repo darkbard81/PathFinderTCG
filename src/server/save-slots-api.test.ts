@@ -288,6 +288,88 @@ describe('save slots api', () => {
       clearedStageIds: [],
       lastSelectedStageId: null,
     });
+    expect(body.resources).toEqual({ gold: 0, manaStone: 0, summonTicket: 0 });
+  });
+
+  it('keeps resource balances through a save and reload, and defaults them for older slots', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+    await fs.mkdir(slotsRoot, { recursive: true });
+
+    // schemaVersion 5에는 resources가 없다. 없는 필드는 기본값으로 채워 열려야 한다.
+    const initialize = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize'),
+      initialize.response,
+      () => undefined,
+    );
+    const initialized = initialize.json() as { state: SaveSlotState };
+    const legacy = { ...initialized.state, schemaVersion: 5 };
+    delete (legacy as Partial<SaveSlotState>).resources;
+    await fs.writeFile(path.join(slotsRoot, 'slot-1.json'), JSON.stringify(legacy), 'utf8');
+
+    const migrated = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), migrated.response, () => undefined);
+
+    expect(migrated.statusCode()).toBe(200);
+    expect((migrated.json() as SaveSlotState).resources).toEqual({
+      gold: 0,
+      manaStone: 0,
+      summonTicket: 0,
+    });
+
+    const spent = createResponse();
+    await handler(
+      request(
+        'PUT',
+        '/api/save-slots/1',
+        JSON.stringify({
+          ...initialized.state,
+          resources: { gold: 125_680, manaStone: 8_420, summonTicket: 12 },
+        }),
+      ),
+      spent.response,
+      () => undefined,
+    );
+
+    expect(spent.statusCode()).toBe(200);
+
+    const reloaded = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), reloaded.response, () => undefined);
+
+    expect((reloaded.json() as SaveSlotState).resources).toEqual({
+      gold: 125_680,
+      manaStone: 8_420,
+      summonTicket: 12,
+    });
+  });
+
+  it('rejects a resource balance that is not a count', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+    const initialize = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize'),
+      initialize.response,
+      () => undefined,
+    );
+    const { state } = initialize.json() as { state: SaveSlotState };
+
+    const negative = createResponse();
+    await handler(
+      request(
+        'PUT',
+        '/api/save-slots/1',
+        JSON.stringify({
+          ...state,
+          resources: { gold: -1, manaStone: 0, summonTicket: 0 },
+        }),
+      ),
+      negative.response,
+      () => undefined,
+    );
+
+    expect(negative.statusCode()).toBe(400);
   });
 
   it('rejects collection cards outside the collection zone', async () => {

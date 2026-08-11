@@ -1,4 +1,5 @@
 import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { toCardDetail } from '../../dom/screens/card-detail';
 import { toCardTile, type CardTile } from '../../dom/screens/card-tile';
 import {
   buildCostFilters,
@@ -20,6 +21,7 @@ import {
   createSaveSlotStateFromGameSession,
   type GameSession,
   type RuntimeCardInstance,
+  findSessionCard,
 } from '../../game/save/session';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
@@ -69,6 +71,7 @@ export class EquipmentScene implements Scene {
     this.equipmentView =
       options.view ??
       createEquipmentView({
+        onInspect: (instanceId) => this.inspect(instanceId),
         onToggleAvailableCost: (cost) => {
           this.availableCostFilters = toggleCostFilter(this.availableCostFilters, cost);
           this.renderView();
@@ -305,6 +308,12 @@ export class EquipmentScene implements Scene {
         (card) => card.instance.instanceId === this.selectedUnitId,
       ) ?? null
     );
+  }
+
+  /** 길게 누르기·우클릭으로 연 카드를 상세 패널에 싣는다. */
+  private inspect(instanceId: string): void {
+    const card = findSessionCard(this.draftSession, instanceId);
+    this.equipmentView.showDetail(card ? toCardDetail(card, this.options.assetBaseUrl) : null);
   }
 
   private toTile(card: RuntimeCardInstance): CardTile {

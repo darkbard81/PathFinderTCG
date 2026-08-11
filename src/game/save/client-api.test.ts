@@ -41,6 +41,15 @@ function createValidSaveSlotState(): SaveSlotState {
       clearedStageIds: [],
       lastSelectedStageId: null,
     },
+    lobby: {
+      ownedBackgroundIds: ['background_01'],
+      selectedBackgroundId: 'background_01',
+    },
+    resources: {
+      gold: 125_680,
+      manaStone: 8_420,
+      summonTicket: 12,
+    },
   };
 }
 
@@ -198,6 +207,15 @@ describe('save slot client api', () => {
               stageProgress: {
                 clearedStageIds: [],
                 lastSelectedStageId: null,
+              },
+              lobby: {
+                ownedBackgroundIds: ['background_01'],
+                selectedBackgroundId: 'background_01',
+              },
+              resources: {
+                gold: 0,
+                manaStone: 0,
+                summonTicket: 0,
               },
             },
             summary: {

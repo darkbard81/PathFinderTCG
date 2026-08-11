@@ -46,6 +46,7 @@ function createHarness(session: GameSession) {
   const view: BattlefieldView & { render: ReturnType<typeof vi.fn> } = {
     element: {} as HTMLElement,
     render: vi.fn(),
+    showDetail: vi.fn(),
     effectsHost: {} as HTMLElement,
     getSlotCenter: () => null,
   };

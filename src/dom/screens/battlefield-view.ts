@@ -1,5 +1,9 @@
+import cardBackUrl from '../../assets/ui/card-back.webp';
 import type { BattleSide, BattleSlotId } from '../../game/battle/types';
 import { attachBattleCardDrag, toLogicalPoint } from './battle-drag';
+import { createCardDetailView, type CardDetail } from './card-detail';
+import { resolveDetailPlacement } from './card-detail-placement';
+import { attachCardInspect } from './card-inspect';
 import { createCardTileElement, type CardTile } from './card-tile';
 import { listRowSlotIds, type BattleBoardMetrics, type BattleRowId } from './battlefield-layout';
 import './battlefield.css';
@@ -38,6 +42,10 @@ export type BattleSideModel = {
   deckCount: number;
   dropCount: number;
   exileCount: number;
+  /** 묘지에 마지막으로 들어간 카드다. 비어 있으면 null이다. */
+  dropTop: CardTile | null;
+  /** 추방에 마지막으로 들어간 카드다. 비어 있으면 null이다. */
+  exileTop: CardTile | null;
 };
 
 export type BattleHandCardModel = {
@@ -93,11 +101,15 @@ export type BattlefieldViewOptions = {
    */
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
   onDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
+  /** 길게 누르기·우클릭으로 상세를 연다. */
+  onInspect: (cardInstanceId: string) => void;
 };
 
 export type BattlefieldView = {
   element: HTMLElement;
   render: (model: BattlefieldViewModel) => void;
+  /** 상세 패널 내용이다. null이면 닫는다. */
+  showDetail: (detail: CardDetail | null) => void;
   /** 연출 캔버스를 붙일 곳이다. 카드 위에 겹치고 입력은 통과시킨다. */
   effectsHost: HTMLElement;
   /** 칸 가운데의 논리 좌표다. 칸을 못 찾으면 null이다. */
@@ -108,6 +120,25 @@ export type BattlefieldView = {
 const HALF_ROWS: Record<BattleSide, readonly [BattleRowId, BattleRowId]> = {
   enemy: ['enemyBack', 'enemyFront'],
   player: ['playerFront', 'playerBack'],
+};
+
+type BattlePileKind = 'exile' | 'drop';
+
+const PILE_LABELS: Record<BattlePileKind, string> = {
+  exile: '추방',
+  drop: '묘지',
+};
+
+/**
+ * 각 진영 절반에서 더미 열을 위아래 어느 순서로 세우는지다.
+ *
+ * 보드는 구분선을 축으로 접힌다. 행이 HALF_ROWS로 접히듯 더미도 접어야
+ * 같은 더미끼리 구분선을 사이에 두고 마주 본다. 접지 않으면 내 추방은
+ * 구분선 쪽에 붙는데 적 추방만 바깥으로 떨어져 짝이 어긋나 보인다.
+ */
+const HALF_PILES: Record<BattleSide, readonly [BattlePileKind, BattlePileKind]> = {
+  enemy: ['drop', 'exile'],
+  player: ['exile', 'drop'],
 };
 
 /** 덱 더미 두께로 쓸 겹침 장수다. 맨 위 장에만 남은 수를 적는다. */
@@ -130,7 +161,76 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     drag: { root: element, slots: new Map() },
     resolveTargets: options.resolveTargets,
     onDrop: options.onDrop,
+    onInspect: (cardInstanceId, anchor) => {
+      inspectAnchor = anchor;
+      options.onInspect(cardInstanceId);
+    },
   };
+
+  // 상세를 연 카드다. showDetail이 이 자리 옆에 패널을 붙인다.
+  let inspectAnchor: HTMLElement | null = null;
+
+  // 상세는 보드 위에 떠서 카드 옆에 붙는다. 고정 열을 세울 폭이 전장에는 없다.
+  const detail = createCardDetailView({
+    emptyMessage: '',
+    onClose: () => closeDetail(),
+  });
+  detail.root.classList.add('pf-card-detail--floating');
+  detail.root.hidden = true;
+
+  /*
+   * 패널은 열린 뒤에도 커진다. 특성을 눌러 설명 줄이 생기면 아래로 자라는데,
+   * 자리를 열 때 한 번만 잡으면 늘어난 만큼 화면 밖으로 나간다.
+   * 크기가 바뀔 때마다 다시 잡는다. 자리 계산은 left와 top만 바꾸므로 되먹임이 생기지 않는다.
+   */
+  new ResizeObserver(() => {
+    if (!detail.root.hidden) {
+      placeDetail();
+    }
+  }).observe(detail.root);
+
+  function closeDetail(): void {
+    detail.root.hidden = true;
+    detail.render(null);
+    inspectAnchor = null;
+  }
+
+  /**
+   * 상세 패널을 상세를 연 카드 옆에 붙인다.
+   *
+   * 화면 좌표를 논리 좌표로 되돌려서 계산한다. 오버레이 루트가 zoom으로 줄어 있어
+   * getBoundingClientRect는 줄어든 값을 주는데, 패널의 left/top은 논리 좌표로 넣어야 한다.
+   */
+  function placeDetail(): void {
+    if (!inspectAnchor) {
+      return;
+    }
+
+    const rootBounds = element.getBoundingClientRect();
+    const logicalWidth = element.offsetWidth;
+    const anchorBounds = inspectAnchor.getBoundingClientRect();
+    const topLeft = toLogicalPoint(rootBounds, logicalWidth, anchorBounds.left, anchorBounds.top);
+    const bottomRight = toLogicalPoint(
+      rootBounds,
+      logicalWidth,
+      anchorBounds.right,
+      anchorBounds.bottom,
+    );
+
+    const placement = resolveDetailPlacement(
+      {
+        left: topLeft.x,
+        top: topLeft.y,
+        width: bottomRight.x - topLeft.x,
+        height: bottomRight.y - topLeft.y,
+      },
+      { width: detail.root.offsetWidth, height: detail.root.offsetHeight },
+      { width: logicalWidth, height: element.offsetHeight },
+    );
+
+    detail.root.style.left = `${placement.left}px`;
+    detail.root.style.top = `${placement.top}px`;
+  }
 
   const enemyHalf = createHalf('enemy', deps);
   const playerHalf = createHalf('player', deps);
@@ -199,7 +299,16 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   dialogPanel.className = 'pf-battlefield__dialog-panel';
   dialog.append(dialogPanel);
 
-  element.append(leftRail, board, rightRail, hand, effectsHost, dialog);
+  element.append(
+    leftRail,
+    board,
+    rightRail,
+    hand,
+    effectsHost,
+    detail.root,
+    detail.overlay,
+    dialog,
+  );
 
   function render(model: BattlefieldViewModel): void {
     applyMetrics(element, model.metrics);
@@ -289,6 +398,7 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     });
     element.classList.add('pf-battlefield__hand-card');
     element.classList.toggle('is-unplayable', !card.playable);
+    attachCardInspect(element, () => deps.onInspect(card.tile.instanceId, element));
 
     const source: BattleDragSource = { kind: 'hand', cardInstanceId: card.tile.instanceId };
     attachBattleCardDrag(element, deps.drag, {
@@ -316,7 +426,23 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     );
   }
 
-  return { element, render, effectsHost, getSlotCenter };
+  return {
+    element,
+    render,
+    showDetail: (value) => {
+      if (!value) {
+        closeDetail();
+        return;
+      }
+
+      detail.render(value);
+      // 크기를 재려면 먼저 보여야 한다. hidden인 요소는 0으로 잡힌다.
+      detail.root.hidden = false;
+      placeDetail();
+    },
+    effectsHost,
+    getSlotCenter,
+  };
 }
 
 type BattleBoardDeps = {
@@ -324,6 +450,8 @@ type BattleBoardDeps = {
   drag: { root: HTMLElement; slots: Map<BattleSlotId, HTMLElement> };
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
   onDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
+  /** 길게 누르기·우클릭으로 상세를 연다. 패널을 붙일 자리를 알아야 해서 카드 요소도 받는다. */
+  onInspect: (cardInstanceId: string, anchor: HTMLElement) => void;
 };
 
 type BattleHalf = {
@@ -337,12 +465,27 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
 
   const piles = document.createElement('div');
   piles.className = 'pf-battlefield__piles';
-  const exile = createPile('추방');
-  const drop = createPile('묘지');
-  piles.append(exile.root, drop.root);
+  const pilesByKind: Record<BattlePileKind, BattlePile> = {
+    exile: createPile(PILE_LABELS.exile),
+    drop: createPile(PILE_LABELS.drop),
+  };
+  const { exile, drop } = pilesByKind;
+  piles.append(...HALF_PILES[side].map((kind) => pilesByKind[kind].root));
 
   const deck = document.createElement('div');
   deck.className = 'pf-battlefield__deck';
+  // 카드 뒷면 그림은 번들 자산이라 URL을 CSS가 알 수 없다. 변수로 넘겨 준다.
+  deck.style.setProperty('--pf-battlefield-deck-card-back', `url("${cardBackUrl}")`);
+
+  /*
+   * 겹친 더미를 담는 상자다. 더미는 카드 한 장 높이에 겹친 두께만큼 더 높다.
+   * 그 두께를 CSS에 알려 주고 상자째 가운데에 세우면, 카드마다 top을 다시 계산하지 않아도
+   * 더미가 전위와 후위 사이에 놓인다.
+   */
+  const deckStack = document.createElement('div');
+  deckStack.className = 'pf-battlefield__deck-stack';
+  deckStack.style.setProperty('--pf-battle-deck-stagger', `${Math.max(...DECK_STACK_OFFSETS)}px`);
+  deck.append(deckStack);
   const deckCount = document.createElement('span');
   deckCount.className = 'pf-battlefield__pile-count';
   const deckLabel = document.createElement('span');
@@ -354,10 +497,14 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
     card.style.top = `${offset}px`;
     card.style.zIndex = `${index + 1}`;
     // 맨 위 장에만 남은 장수를 적는다. 아래 장들은 두께만 만든다.
+    // 뒷면 그림이 밝고 복잡해서 글자를 그냥 얹으면 묻힌다. 어두운 판 위에 올린다.
     if (offset === 0) {
-      card.append(deckLabel, deckCount);
+      const badge = document.createElement('div');
+      badge.className = 'pf-battlefield__deck-badge';
+      badge.append(deckLabel, deckCount);
+      card.append(badge);
     }
-    deck.append(card);
+    deckStack.append(card);
   }
 
   // 격자 배치는 자동 흐름에 맡기지 않는다. 더미 열이 두 행을 걸쳐 자리를 밀어내기 때문이다.
@@ -375,7 +522,9 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
 
   function render(model: BattleSideModel, slots: Record<BattleRowId, BattleSlotModel[]>): void {
     exile.setCount(model.exileCount);
+    exile.setTopCard(model.exileTop);
     drop.setCount(model.dropCount);
+    drop.setTopCard(model.dropTop);
     deckCount.textContent = `${model.deckCount}`;
 
     for (const row of [topRow, bottomRow]) {
@@ -432,6 +581,7 @@ function createSlot(
       ...(model.ready === true ? { note: '끌어서 이동하거나 적을 공격' } : {}),
     });
     element.classList.add('pf-battlefield__board-card');
+    attachCardInspect(element, () => deps.onInspect(tile.instanceId, element));
 
     // 적 카드에는 드래그를 붙이지 않는다. 내 카드는 붙이되, 갈 곳이 없으면 begin이 빈 배열을 내
     // 드래그가 시작되지 않는다. 이동·공격을 다 쓰고 스킬만 남은 카드가 여기에 해당한다.
@@ -476,11 +626,30 @@ function createSlot(
 type BattlePile = {
   root: HTMLElement;
   setCount: (count: number) => void;
+  setTopCard: (tile: CardTile | null) => void;
 };
 
+/**
+ * 묘지·추방 더미다.
+ *
+ * 마지막으로 들어간 카드를 바닥에 깔아 무엇이 빠졌는지 보이게 한다.
+ * 더는 쓸 수 없는 카드이므로 회색으로 죽여, 전장 위의 살아 있는 카드와 헷갈리지 않게 한다.
+ */
 function createPile(label: string): BattlePile {
   const root = document.createElement('div');
   root.className = 'pf-battlefield__pile';
+
+  const art = document.createElement('img');
+  art.className = 'pf-battlefield__pile-art';
+  art.alt = '';
+  art.loading = 'lazy';
+  art.draggable = false;
+  art.hidden = true;
+  art.setAttribute('aria-hidden', 'true');
+
+  // 그림 위에서 글자가 읽히도록 어두운 판에 올린다. 덱 더미와 같은 처리다.
+  const badge = document.createElement('div');
+  badge.className = 'pf-battlefield__pile-badge';
 
   const labelElement = document.createElement('span');
   labelElement.className = 'pf-battlefield__pile-label';
@@ -488,12 +657,23 @@ function createPile(label: string): BattlePile {
 
   const countElement = document.createElement('span');
   countElement.className = 'pf-battlefield__pile-count';
-  root.append(labelElement, countElement);
+  badge.append(labelElement, countElement);
+  root.append(art, badge);
 
   return {
     root,
     setCount: (count) => {
       countElement.textContent = `${count}`;
+    },
+    setTopCard: (tile) => {
+      art.hidden = tile === null;
+      // src를 비우면 브라우저가 현재 주소를 다시 받으러 간다. 숨길 때는 건드리지 않는다.
+      if (tile) {
+        art.src = tile.artUrl;
+        root.title = `${label}: ${tile.name}`;
+      } else {
+        root.removeAttribute('title');
+      }
     },
   };
 }
@@ -528,7 +708,7 @@ function createRailValue(): HTMLElement {
 function createButton(label: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-battlefield__button';
+  button.className = 'pf-btn9 pf-btn9--standard pf-battlefield__button';
   button.textContent = label;
   return button;
 }

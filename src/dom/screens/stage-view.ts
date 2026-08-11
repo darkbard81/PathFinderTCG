@@ -31,10 +31,6 @@ export type StageViewOptions = {
   onSelectStage: (stageId: string) => void;
   onBack: () => void;
   onStartBattle: () => void;
-  onDeck: () => void;
-  onEquipment: () => void;
-  onGrowth: () => void;
-  onLogout: () => void;
 };
 
 /** Stage 선택 화면 DOM 루트와 갱신 API다. */
@@ -67,9 +63,7 @@ export function createStageView(options: StageViewOptions): StageView {
 
   titleGroup.append(title, subtitle);
 
-  const logoutButton = createHudButton('Logout', 'logout');
-  logoutButton.addEventListener('click', () => options.onLogout());
-  top.append(titleGroup, logoutButton);
+  top.append(titleGroup);
 
   const body = document.createElement('div');
   body.className = 'pf-stage__body';
@@ -135,29 +129,10 @@ export function createStageView(options: StageViewOptions): StageView {
   const startButton = createHudButton('Start Battle', 'start');
   startButton.addEventListener('click', () => options.onStartBattle());
 
-  const deckButton = createHudButton('구성', 'deck');
-  deckButton.addEventListener('click', () => options.onDeck());
-
-  const equipmentButton = createHudButton('장비', 'equipment');
-  equipmentButton.addEventListener('click', () => options.onEquipment());
-
-  const growthButton = createHudButton('성장', 'growth');
-  growthButton.addEventListener('click', () => options.onGrowth());
-
-  const forgeButton = createHudButton('연성', 'forge');
-  forgeButton.disabled = true;
-
-  hud.append(backButton, startButton, deckButton, equipmentButton, growthButton, forgeButton);
+  hud.append(backButton, startButton);
   element.append(top, body, resultPanel, status, hud);
 
-  const actionButtons = [
-    logoutButton,
-    backButton,
-    startButton,
-    deckButton,
-    equipmentButton,
-    growthButton,
-  ];
+  const actionButtons = [backButton, startButton];
 
   let currentBusy = false;
   let startEnabled = false;
@@ -170,7 +145,6 @@ export function createStageView(options: StageViewOptions): StageView {
       }
       button.disabled = currentBusy;
     }
-    forgeButton.disabled = true;
     for (const card of list.querySelectorAll<HTMLButtonElement>('button.pf-stage__card')) {
       card.disabled = currentBusy;
     }
@@ -283,7 +257,7 @@ function createDetailRow(label: string, value: string): HTMLElement {
 function createHudButton(label: string, kind: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-stage__hud-button';
+  button.className = 'pf-btn9 pf-btn9--standard pf-stage__hud-button';
   button.dataset.kind = kind;
   button.textContent = label;
   return button;

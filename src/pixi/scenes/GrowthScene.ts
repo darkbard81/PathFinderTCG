@@ -1,4 +1,5 @@
 import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { toCardDetail } from '../../dom/screens/card-detail';
 import { toCardTile, type CardTile } from '../../dom/screens/card-tile';
 import {
   buildCostFilters,
@@ -19,6 +20,7 @@ import {
   createSaveSlotStateFromGameSession,
   type GameSession,
   type RuntimeCardInstance,
+  findSessionCard,
 } from '../../game/save/session';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
@@ -69,6 +71,7 @@ export class GrowthScene implements Scene {
     this.growthView =
       options.view ??
       createGrowthView({
+        onInspect: (instanceId) => this.inspect(instanceId),
         onToggleMaterialCost: (cost) => {
           this.materialCostFilters = toggleCostFilter(this.materialCostFilters, cost);
           this.renderView();
@@ -304,6 +307,12 @@ export class GrowthScene implements Scene {
         (card) => card.instance.instanceId === this.selectedTargetId,
       ) ?? null
     );
+  }
+
+  /** 길게 누르기·우클릭으로 연 카드를 상세 패널에 싣는다. */
+  private inspect(instanceId: string): void {
+    const card = findSessionCard(this.draftSession, instanceId);
+    this.growthView.showDetail(card ? toCardDetail(card, this.options.assetBaseUrl) : null);
   }
 
   private toTile(card: RuntimeCardInstance): CardTile {

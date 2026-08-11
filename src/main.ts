@@ -10,6 +10,7 @@ import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { EquipmentScene } from './pixi/scenes/EquipmentScene';
 import { GrowthScene } from './pixi/scenes/GrowthScene';
 import { LoaderScene } from './pixi/scenes/LoaderScene';
+import { LobbyScene } from './pixi/scenes/LobbyScene';
 import { MainMenuScene } from './pixi/scenes/MainMenuScene';
 import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
@@ -50,6 +51,11 @@ void (async (): Promise<void> => {
 
   const backgroundImageUrl = joinAssetUrl(ASSET_BASE_URL, TITLE_BACKGROUND_PATH);
   let preloadCounts = { loadedCount: 0, failedCount: 0 };
+  const lobbyStandingPlayback = {
+    source: '',
+    currentTime: 0,
+  };
+  let lobbyStandingVisible = true;
   const services = createGameServices({
     onSessionExpired: (message) => {
       void showTitle(message);
@@ -109,7 +115,40 @@ void (async (): Promise<void> => {
           void showTitle(message);
         },
         onSessionReady: (session) => {
-          void showStage(session);
+          void showLobby(session);
+        },
+      }),
+    );
+  }
+
+  function showLobby(session: GameSession): Promise<void> {
+    return router.goto(
+      new LobbyScene({
+        services,
+        assetBaseUrl: ASSET_BASE_URL,
+        session,
+        onBack: () => {
+          void showSaveSlot();
+        },
+        onPlay: (currentSession) => {
+          void showStage(currentSession);
+        },
+        onDeck: (currentSession) => {
+          void showDeckBuild(currentSession);
+        },
+        onEquipment: (currentSession) => {
+          void showEquipment(currentSession);
+        },
+        onGrowth: (currentSession) => {
+          void showGrowth(currentSession);
+        },
+        standingPlayback: lobbyStandingPlayback,
+        standingVisible: lobbyStandingVisible,
+        onStandingVisibilityChange: (visible) => {
+          lobbyStandingVisible = visible;
+        },
+        onLoggedOut: (message) => {
+          void showTitle(message);
         },
       }),
     );
@@ -122,20 +161,8 @@ void (async (): Promise<void> => {
         backgroundImageUrl,
         session,
         ...(lastBattleResult ? { lastBattleResult } : {}),
-        onBack: () => {
-          void showSaveSlot();
-        },
-        onDeck: (currentSession) => {
-          void showDeckBuild(currentSession);
-        },
-        onEquipment: (currentSession) => {
-          void showEquipment(currentSession);
-        },
-        onGrowth: (currentSession) => {
-          void showGrowth(currentSession);
-        },
-        onLoggedOut: (message) => {
-          void showTitle(message);
+        onBack: (currentSession) => {
+          void showLobby(currentSession);
         },
         onStartBattle: (nextSession, stageId) => {
           void showBattlefield(nextSession, stageId);
@@ -153,7 +180,7 @@ void (async (): Promise<void> => {
         session,
         // 저장했다면 갱신된 세션으로, 아니면 들어올 때 세션으로 Stage에 돌아간다.
         onBack: (nextSession) => {
-          void showStage(nextSession);
+          void showLobby(nextSession);
         },
       }),
     );
@@ -167,7 +194,7 @@ void (async (): Promise<void> => {
         assetBaseUrl: ASSET_BASE_URL,
         session,
         onBack: (nextSession) => {
-          void showStage(nextSession);
+          void showLobby(nextSession);
         },
       }),
     );
@@ -181,7 +208,7 @@ void (async (): Promise<void> => {
         assetBaseUrl: ASSET_BASE_URL,
         session,
         onBack: (nextSession) => {
-          void showStage(nextSession);
+          void showLobby(nextSession);
         },
       }),
     );

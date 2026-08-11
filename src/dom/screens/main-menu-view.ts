@@ -194,7 +194,7 @@ export function formatMainMenuLoadSummary(loadedCount: number, failedCount: numb
 function createMenuButton(label: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'pf-main-menu__button';
+  button.className = 'pf-btn9 pf-btn9--menu pf-main-menu__button';
   button.textContent = label;
   return button;
 }
@@ -225,7 +225,7 @@ function createLicenseDialog(options: {
 
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
-  closeButton.className = 'pf-main-menu__license-close';
+  closeButton.className = 'pf-btn-plain pf-main-menu__license-close';
   closeButton.textContent = '×';
   closeButton.setAttribute('aria-label', 'Close');
   closeButton.addEventListener('click', () => options.onClose());

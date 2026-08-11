@@ -1,0 +1,30 @@
+/*
+ * 9슬라이스 틀이 맞지 않는 자리에 쓰는 평범한 버튼이다.
+ *
+ * 대부분의 화면 버튼은 .pf-btn9 스킨을 쓴다. 작은 아이콘 버튼처럼 사각 프레임과
+ * 코너 장식이 과한 자리만 이쪽을 쓴다.
+ *
+ * 색과 상태만 정하고 크기·여백·글자 크기는 쓰는 쪽에서 정한다. 테두리와 모서리도
+ * 자리에 따라 달라질 수 있어 토큰으로 열어 둔다.
+ */
+
+.pf-btn-plain {
+  border: var(--pf-button-plain-border);
+  border-radius: var(--pf-button-plain-radius);
+  background: var(--pf-surface-button);
+  color: var(--pf-color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pf-btn-plain:hover:not(:disabled),
+.pf-btn-plain:focus-visible {
+  background: var(--pf-color-surface-hover);
+}
+
+.pf-btn-plain:disabled {
+  cursor: default;
+  opacity: 0.58;
+  color: var(--pf-text-button-label-disabled-color);
+  background: var(--pf-surface-button-disabled);
+}

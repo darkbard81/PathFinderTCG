@@ -100,8 +100,18 @@
   font-weight: 700;
 }
 
+/*
+ * 행은 반드시 내용에 맞춘다. 남는 높이가 모자라면 스크롤로 넘길 일이지 눌러서는 안 된다.
+ * 암시적 행 기본값 auto는 높이가 definite한 컨테이너에서 공간이 부족하면 max-content에서
+ * 최소치까지 줄어든다. 그러면 카드 안에서 .pf-stage__card-name 만 찌그러진다.
+ * 그 줄은 overflow:hidden이라 그리드 자동 최소 크기가 min-content가 아니라 0이어서,
+ * 세 줄 중 유일하게 줄어들 수 있는 줄이기 때문이다. 눌린 뒤 자기 overflow에 잘려 나온다.
+ * 가로 모드에서만 터졌던 것은 min-height(12vh)와 글자(2vw)가 화면비에 따라 서로
+ * 반대로 움직여, 납작하고 넓은 뷰포트에서 '가장 작은 상자 + 가장 큰 글자'가 되기 때문이다.
+ */
 .pf-stage__list {
   display: grid;
+  grid-auto-rows: max-content;
   gap: 12px;
   flex: 1 1 auto;
   min-height: 0;
@@ -171,8 +181,14 @@
   color: var(--pf-color-stage-locked-detail);
 }
 
+/*
+ * line-height를 못박는 것은 이 줄에 overflow:hidden이 걸려 있어서다.
+ * ellipsis 때문에 필요하지만 세로도 함께 자르므로, 줄 상자 높이를 `normal`에 맡기면
+ * 엔진이 폰트 메트릭 표를 읽는 방식 차이가 그대로 잘린 픽셀로 나타난다.
+ */
 .pf-stage__card-name {
   font-size: clamp(16px, 2vw, var(--pf-text-stage-card-name-size));
+  line-height: 1.25;
   color: var(--pf-text-stage-card-name-color);
   font-weight: 700;
   overflow: hidden;
@@ -305,13 +321,7 @@
   min-height: clamp(48px, 7vh, 64px);
   min-width: 104px;
   padding: 0 14px;
-  border: var(--pf-login-button-border);
-  border-radius: 6px;
-  background: var(--pf-surface-button);
-  color: var(--pf-color-primary);
-  font: inherit;
   font-size: clamp(16px, 2vw, 22px);
-  cursor: pointer;
 }
 
 .pf-stage__hud-button[data-kind='back'] {
@@ -322,14 +332,7 @@
   min-width: 180px;
 }
 
-.pf-stage__hud-button:hover:not(:disabled),
-.pf-stage__hud-button:focus-visible {
-  background: var(--pf-color-surface-hover);
-}
-
+/* 틀과 상태 그림은 .pf-btn9--standard가 그린다. */
 .pf-stage__hud-button:disabled {
   cursor: not-allowed;
-  opacity: 0.58;
-  color: var(--pf-text-button-label-disabled-color);
-  background: var(--pf-surface-button-disabled);
 }

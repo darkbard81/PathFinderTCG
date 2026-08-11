@@ -1,3 +1,4 @@
+import { attachCardInspect } from './card-inspect';
 import { createCardTileElement, type CardTile, type CardTileOptions } from './card-tile';
 import './card-workbench.css';
 
@@ -11,6 +12,12 @@ export type CostFilter = {
 export type CardGridEntry = CardTileOptions & {
   tile: CardTile;
 };
+
+/**
+ * 길게 누르기·우클릭으로 상세를 열 때 호출한다.
+ * 엔트리마다 콜백을 실어 나르지 않고 그리드가 타일의 instanceId를 넘긴다.
+ */
+export type CardInspectHandler = (instanceId: string) => void;
 
 export type CardGridPanelModel = {
   /** 모드에 따라 제목이 바뀌는 패널만 넘긴다. 없으면 생성 시 제목을 유지한다. */
@@ -31,6 +38,7 @@ export type CardGridPanelOptions = {
   title: string;
   busy?: () => boolean;
   onToggleCost?: (cost: number) => void;
+  onInspect?: CardInspectHandler;
 };
 
 /**
@@ -56,7 +64,7 @@ export function createCardGridPanel(options: CardGridPanelOptions): CardGridPane
   const filters = document.createElement('div');
   filters.className = 'pf-workbench__filters';
 
-  const grid = createCardGrid();
+  const grid = createCardGrid(options.onInspect);
 
   root.append(header, filters, grid.root);
 
@@ -83,7 +91,7 @@ export type CardGrid = {
 };
 
 /** 카드 타일을 감싸는 스크롤 그리드다. 패널 없이 단독으로도 쓴다. */
-export function createCardGrid(): CardGrid {
+export function createCardGrid(onInspect?: CardInspectHandler): CardGrid {
   const root = document.createElement('div');
   root.className = 'pf-workbench__grid';
   // 카드가 넘치면 스크롤한다. 스크롤바 드래그를 받으려면 명시적 interactive가 필요하다.
@@ -99,7 +107,14 @@ export function createCardGrid(): CardGrid {
     }
 
     root.replaceChildren(
-      ...entries.map(({ tile, ...tileOptions }) => createCardTileElement(tile, tileOptions)),
+      ...entries.map(({ tile, ...tileOptions }) => {
+        const element = createCardTileElement(tile, tileOptions);
+        if (onInspect) {
+          attachCardInspect(element, () => onInspect(tile.instanceId));
+        }
+
+        return element;
+      }),
     );
   }
 
@@ -153,8 +168,8 @@ export function createWorkbenchButton(label: string, primary = false): HTMLButto
   const button = document.createElement('button');
   button.type = 'button';
   button.className = primary
-    ? 'pf-workbench__button pf-workbench__button--primary'
-    : 'pf-workbench__button';
+    ? 'pf-btn9 pf-btn9--standard pf-workbench__button pf-workbench__button--primary'
+    : 'pf-btn9 pf-btn9--standard pf-workbench__button';
   button.textContent = label;
   return button;
 }
@@ -220,4 +235,24 @@ export function pruneCostFilters(
   }
 
   return new Set([...activeCosts].filter((cost) => available.has(cost)));
+}
+
+/**
+ * 사이드바 오른쪽 영역이다. 상세 패널이 위에 눕고 카드 패널들이 아래 남는 높이를 가져간다.
+ * 상세를 세로 열로 세우면 그리드가 6열에서 4열로 줄어, 고르는 화면에서 손이 더 간다.
+ */
+export function createWorkbenchMain(
+  detail: HTMLElement,
+  panels: readonly HTMLElement[],
+): HTMLElement {
+  const main = document.createElement('div');
+  main.className = 'pf-workbench__main';
+
+  const row = document.createElement('div');
+  row.className = 'pf-workbench__panels';
+  row.append(...panels);
+
+  main.append(detail, row);
+
+  return main;
 }

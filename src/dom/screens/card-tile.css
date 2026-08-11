@@ -8,7 +8,19 @@
   box-sizing: border-box;
   font-family: inherit;
   background: var(--pf-card-tile-fallback-background);
-  border: var(--pf-card-tile-border);
+  /*
+   * 테두리를 border가 아니라 outline으로 그린다.
+   * border는 안쪽 상자를 1px씩 깎는다. 그러면 이미지가 놓이는 칸이 2:3에서 어긋나고
+   * object-fit: fill이 그 어긋난 칸에 맞춰 그림을 늘린다.
+   * outline은 레이아웃을 차지하지 않아 안쪽 상자가 타일과 똑같이 2:3으로 남는다.
+   * 음수 offset으로 상자 안쪽에 그려 border와 같은 자리에 보이게 한다.
+   *
+   * border를 지우는 것으로는 부족하다. 타일은 <button>이라 선언을 빼면
+   * UA 기본값 2px outset이 되살아나 안쪽 상자를 더 크게 깎는다. 명시적으로 없앤다.
+   */
+  border: none;
+  outline: var(--pf-card-tile-border);
+  outline-offset: -1px;
   border-radius: var(--pf-card-tile-radius);
   box-shadow: var(--pf-card-tile-shadow);
   overflow: hidden;
@@ -18,12 +30,17 @@
 }
 
 .pf-card-tile:hover:not(:disabled) {
-  border: var(--pf-card-tile-hover-border);
+  outline: var(--pf-card-tile-hover-border);
+  outline-offset: -1px;
 }
 
+/*
+ * outline은 테두리로 이미 쓰고 있으므로 여기서 지우지 않는다.
+ * 지우면 고르거나 초점을 준 순간 테두리가 사라진다.
+ * 브라우저 기본 초점 테두리도 outline이라, 우리 것이 이미 그 자리를 차지한다.
+ */
 .pf-card-tile.is-selected,
 .pf-card-tile:focus-visible {
-  outline: none;
   box-shadow: var(--pf-card-tile-select-glow);
 }
 
@@ -37,7 +54,11 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  /* 타일과 이미지가 모두 정확히 2:3이다. cover는 반올림으로 잘려 수정구슬 위치가 어긋난다. */
+  /*
+   * 타일이 테두리를 outline으로 그려 안쪽 상자도 정확히 2:3이다.
+   * 그래서 fill이 늘리는 일 없이 원본 비율 그대로 놓인다.
+   * cover는 반올림으로 잘려 수정구슬 위치가 어긋난다.
+   */
   object-fit: fill;
   display: block;
 }
