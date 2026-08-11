@@ -1,6 +1,9 @@
 import cardBackUrl from '../../assets/ui/card-back.webp';
 import type { BattleSide, BattleSlotId } from '../../game/battle/types';
 import { attachBattleCardDrag, toLogicalPoint } from './battle-drag';
+import { createCardDetailView, type CardDetail } from './card-detail';
+import { resolveDetailPlacement } from './card-detail-placement';
+import { attachCardInspect } from './card-inspect';
 import { createCardTileElement, type CardTile } from './card-tile';
 import { listRowSlotIds, type BattleBoardMetrics, type BattleRowId } from './battlefield-layout';
 import './battlefield.css';
@@ -98,11 +101,15 @@ export type BattlefieldViewOptions = {
    */
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
   onDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
+  /** 길게 누르기·우클릭으로 상세를 연다. */
+  onInspect: (cardInstanceId: string) => void;
 };
 
 export type BattlefieldView = {
   element: HTMLElement;
   render: (model: BattlefieldViewModel) => void;
+  /** 상세 패널 내용이다. null이면 닫는다. */
+  showDetail: (detail: CardDetail | null) => void;
   /** 연출 캔버스를 붙일 곳이다. 카드 위에 겹치고 입력은 통과시킨다. */
   effectsHost: HTMLElement;
   /** 칸 가운데의 논리 좌표다. 칸을 못 찾으면 null이다. */
@@ -135,7 +142,65 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     drag: { root: element, slots: new Map() },
     resolveTargets: options.resolveTargets,
     onDrop: options.onDrop,
+    onInspect: (cardInstanceId, anchor) => {
+      inspectAnchor = anchor;
+      options.onInspect(cardInstanceId);
+    },
   };
+
+  // 상세를 연 카드다. showDetail이 이 자리 옆에 패널을 붙인다.
+  let inspectAnchor: HTMLElement | null = null;
+
+  // 상세는 보드 위에 떠서 카드 옆에 붙는다. 고정 열을 세울 폭이 전장에는 없다.
+  const detail = createCardDetailView({
+    emptyMessage: '',
+    onClose: () => closeDetail(),
+  });
+  detail.root.classList.add('pf-card-detail--floating');
+  detail.root.hidden = true;
+
+  function closeDetail(): void {
+    detail.root.hidden = true;
+    detail.render(null);
+    inspectAnchor = null;
+  }
+
+  /**
+   * 상세 패널을 상세를 연 카드 옆에 붙인다.
+   *
+   * 화면 좌표를 논리 좌표로 되돌려서 계산한다. 오버레이 루트가 zoom으로 줄어 있어
+   * getBoundingClientRect는 줄어든 값을 주는데, 패널의 left/top은 논리 좌표로 넣어야 한다.
+   */
+  function placeDetail(): void {
+    if (!inspectAnchor) {
+      return;
+    }
+
+    const rootBounds = element.getBoundingClientRect();
+    const logicalWidth = element.offsetWidth;
+    const anchorBounds = inspectAnchor.getBoundingClientRect();
+    const topLeft = toLogicalPoint(rootBounds, logicalWidth, anchorBounds.left, anchorBounds.top);
+    const bottomRight = toLogicalPoint(
+      rootBounds,
+      logicalWidth,
+      anchorBounds.right,
+      anchorBounds.bottom,
+    );
+
+    const placement = resolveDetailPlacement(
+      {
+        left: topLeft.x,
+        top: topLeft.y,
+        width: bottomRight.x - topLeft.x,
+        height: bottomRight.y - topLeft.y,
+      },
+      { width: detail.root.offsetWidth, height: detail.root.offsetHeight },
+      { width: logicalWidth, height: element.offsetHeight },
+    );
+
+    detail.root.style.left = `${placement.left}px`;
+    detail.root.style.top = `${placement.top}px`;
+  }
 
   const enemyHalf = createHalf('enemy', deps);
   const playerHalf = createHalf('player', deps);
@@ -204,7 +269,16 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   dialogPanel.className = 'pf-battlefield__dialog-panel';
   dialog.append(dialogPanel);
 
-  element.append(leftRail, board, rightRail, hand, effectsHost, dialog);
+  element.append(
+    leftRail,
+    board,
+    rightRail,
+    hand,
+    effectsHost,
+    detail.root,
+    detail.overlay,
+    dialog,
+  );
 
   function render(model: BattlefieldViewModel): void {
     applyMetrics(element, model.metrics);
@@ -294,6 +368,7 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     });
     element.classList.add('pf-battlefield__hand-card');
     element.classList.toggle('is-unplayable', !card.playable);
+    attachCardInspect(element, () => deps.onInspect(card.tile.instanceId, element));
 
     const source: BattleDragSource = { kind: 'hand', cardInstanceId: card.tile.instanceId };
     attachBattleCardDrag(element, deps.drag, {
@@ -321,7 +396,23 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     );
   }
 
-  return { element, render, effectsHost, getSlotCenter };
+  return {
+    element,
+    render,
+    showDetail: (value) => {
+      if (!value) {
+        closeDetail();
+        return;
+      }
+
+      detail.render(value);
+      // 크기를 재려면 먼저 보여야 한다. hidden인 요소는 0으로 잡힌다.
+      detail.root.hidden = false;
+      placeDetail();
+    },
+    effectsHost,
+    getSlotCenter,
+  };
 }
 
 type BattleBoardDeps = {
@@ -329,6 +420,8 @@ type BattleBoardDeps = {
   drag: { root: HTMLElement; slots: Map<BattleSlotId, HTMLElement> };
   resolveTargets: (source: BattleDragSource) => BattleSlotId[];
   onDrop: (source: BattleDragSource, slotId: BattleSlotId) => void;
+  /** 길게 누르기·우클릭으로 상세를 연다. 패널을 붙일 자리를 알아야 해서 카드 요소도 받는다. */
+  onInspect: (cardInstanceId: string, anchor: HTMLElement) => void;
 };
 
 type BattleHalf = {
@@ -445,6 +538,7 @@ function createSlot(
       ...(model.ready === true ? { note: '끌어서 이동하거나 적을 공격' } : {}),
     });
     element.classList.add('pf-battlefield__board-card');
+    attachCardInspect(element, () => deps.onInspect(tile.instanceId, element));
 
     // 적 카드에는 드래그를 붙이지 않는다. 내 카드는 붙이되, 갈 곳이 없으면 begin이 빈 배열을 내
     // 드래그가 시작되지 않는다. 이동·공격을 다 쓰고 스킬만 남은 카드가 여기에 해당한다.

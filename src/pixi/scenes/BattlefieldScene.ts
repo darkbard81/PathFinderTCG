@@ -1,4 +1,5 @@
 import { Assets, Container, Graphics, Sprite, type Texture, type Ticker } from 'pixi.js';
+import { toCardDetail } from '../../dom/screens/card-detail';
 import { toBattleCardTile } from '../battle/battle-card-tile';
 import {
   BATTLE_ROW_IDS,
@@ -179,6 +180,7 @@ export class BattlefieldScene implements Scene {
         onBlock: (blockerInstanceId) => this.resolveBlock(blockerInstanceId),
         resolveTargets: (source) => this.resolveTargets(source),
         onDrop: (source, slotId) => this.applyDrop(source, slotId),
+        onInspect: (cardInstanceId) => this.inspect(cardInstanceId),
       });
 
     this.element = this.battlefieldView.element;
@@ -802,6 +804,26 @@ export class BattlefieldScene implements Scene {
         tile: this.toTile(card),
         playable: placeableCardIds.has(card.card.instance.instanceId),
       }));
+  }
+
+  /**
+   * 길게 누르기·우클릭으로 연 카드를 떠 있는 상세 패널에 싣는다.
+   * 전장·손패·더미 어디에 있든 찾을 수 있도록 양 진영의 통을 모두 훑는다.
+   */
+  private inspect(cardInstanceId: string): void {
+    const found = [
+      ...this.runtime.battlefield,
+      ...this.runtime.player.hand,
+      ...this.runtime.enemy.hand,
+      ...this.runtime.drop,
+      ...this.runtime.exile,
+      this.runtime.player.leader,
+      this.runtime.enemy.leader,
+    ].find((entry) => entry.card.instance.instanceId === cardInstanceId);
+
+    this.battlefieldView.showDetail(
+      found ? toCardDetail(found.card, this.options.assetBaseUrl) : null,
+    );
   }
 
   private toTile(card: Parameters<typeof toBattleCardTile>[1]): CardTile {

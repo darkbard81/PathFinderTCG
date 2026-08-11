@@ -20,6 +20,7 @@ type GrowthHarness = {
 function createHarness(session: GameSession) {
   const view: GrowthView & { render: ReturnType<typeof vi.fn> } = {
     element: {} as HTMLElement,
+    showDetail: vi.fn(),
     render: vi.fn(),
   };
   const scene = new GrowthScene({

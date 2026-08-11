@@ -215,3 +215,22 @@ function createCardDefinitionFromInstance(instance: CardInstance): CardDefinitio
 }
 
 export type { CardDefinition, SaveSlotState, DeckInstance, CardCollection, EquipmentState };
+
+/**
+ * 세션이 들고 있는 카드 한 장을 instanceId로 찾는다.
+ * 리더·덱·컬렉션을 한 번에 훑는다. 화면마다 어느 통에 있는지 따로 알 필요가 없게 한다.
+ */
+export function findSessionCard(
+  session: GameSession,
+  instanceId: string,
+): RuntimeCardInstance | null {
+  if (session.deck.leader.instance.instanceId === instanceId) {
+    return session.deck.leader;
+  }
+
+  return (
+    [...session.deck.cards, ...session.collection.cards].find(
+      (card) => card.instance.instanceId === instanceId,
+    ) ?? null
+  );
+}

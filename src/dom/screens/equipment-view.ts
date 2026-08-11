@@ -1,6 +1,8 @@
+import { createCardDetailView, type CardDetail } from './card-detail';
 import {
   createCardGrid,
   createCardGridPanel,
+  createWorkbenchMain,
   createSummaryLabel,
   createSummaryValue,
   createWorkbenchButton,
@@ -38,6 +40,8 @@ export type EquipmentViewModel = {
 };
 
 export type EquipmentViewOptions = {
+  /** 카드를 길게 누르거나 우클릭했을 때다. instanceId를 넘긴다. */
+  onInspect: (instanceId: string) => void;
   onToggleAvailableCost: (cost: number) => void;
   onSave: () => void;
   onBack: () => void;
@@ -45,6 +49,8 @@ export type EquipmentViewOptions = {
 
 export type EquipmentView = {
   element: HTMLElement;
+  /** 상세 패널 내용이다. null이면 안내만 남긴다. */
+  showDetail: (detail: CardDetail | null) => void;
   render: (model: EquipmentViewModel) => void;
 };
 
@@ -84,7 +90,11 @@ export function createEquipmentView(options: EquipmentViewOptions): EquipmentVie
 
   sidebar.append(createWorkbenchTitle('장비'), summary, spacer, status, actions);
 
-  const unitPanel = createCardGridPanel({ title: '덱 유닛', busy: () => busy });
+  const unitPanel = createCardGridPanel({
+    title: '덱 유닛',
+    busy: () => busy,
+    onInspect: options.onInspect,
+  });
 
   // 오른쪽 패널만 위아래로 나눈다. 위는 장착 목록(고정), 아래는 보유 장비(남는 높이).
   const equipmentPanel = document.createElement('div');
@@ -95,7 +105,7 @@ export function createEquipmentView(options: EquipmentViewOptions): EquipmentVie
   const equippedTitle = document.createElement('h2');
   equippedTitle.className = 'pf-workbench__section-title';
   equippedTitle.textContent = '장착 중 (눌러서 해제)';
-  const equippedGrid = createCardGrid();
+  const equippedGrid = createCardGrid(options.onInspect);
   equippedSection.append(equippedTitle, equippedGrid.root);
 
   const availableSection = document.createElement('div');
@@ -110,11 +120,19 @@ export function createEquipmentView(options: EquipmentViewOptions): EquipmentVie
   availableHeader.append(availableTitle, availableSubtitle);
   const availableFilters = document.createElement('div');
   availableFilters.className = 'pf-workbench__filters';
-  const availableGrid = createCardGrid();
+  const availableGrid = createCardGrid(options.onInspect);
   availableSection.append(availableHeader, availableFilters, availableGrid.root);
 
   equipmentPanel.append(equippedSection, availableSection);
-  element.append(sidebar, unitPanel.root, equipmentPanel);
+  const detail = createCardDetailView({
+    emptyMessage: '카드를 길게 누르거나 우클릭하면 상세를 봅니다.',
+  });
+  detail.root.classList.add('pf-card-detail--docked');
+  element.append(
+    sidebar,
+    createWorkbenchMain(detail.root, [unitPanel.root, equipmentPanel]),
+    detail.overlay,
+  );
 
   function render(model: EquipmentViewModel): void {
     busy = model.busy;
@@ -157,5 +175,5 @@ export function createEquipmentView(options: EquipmentViewOptions): EquipmentVie
     availableGrid.render(model.available.entries, model.available.emptyMessage);
   }
 
-  return { element, render };
+  return { element, showDetail: detail.render, render };
 }
