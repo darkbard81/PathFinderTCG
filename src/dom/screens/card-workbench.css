@@ -213,12 +213,21 @@
   opacity: 0.5;
 }
 
+/*
+ * 카드가 넘치면 스크롤한다.
+ *
+ * align-items를 flex-start로 못박는다. 기본값 stretch는 타일을 줄 높이에 맞춰 늘리는데,
+ * 그러면 .pf-card-tile의 aspect-ratio가 무시되어 카드가 세로로 길어진다.
+ * align-content: flex-start만으로는 막지 못한다. 그쪽은 줄 사이 배치를 정할 뿐이고
+ * 줄 안에서 타일을 늘리는 것은 align-items다.
+ */
 .pf-workbench__grid {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
+  align-items: flex-start;
   gap: var(--pf-card-tile-gap);
   overflow-y: auto;
 }
