@@ -227,30 +227,6 @@ const text = {
     stroke: colors.ink,
     strokeThickness: 5,
   },
-  cardInfoTitle: {
-    fontSize: '32px',
-    color: color(palette.ink),
-    stroke: colors.ink,
-    strokeThickness: 2,
-  },
-  cardInfoSubtitle: {
-    fontSize: '22px',
-    color: color(palette.inkDim),
-    stroke: colors.ink,
-    strokeThickness: 2,
-  },
-  cardInfoLabel: {
-    fontSize: '21px',
-    color: color(palette.inkDim),
-    stroke: colors.ink,
-    strokeThickness: 2,
-  },
-  cardInfoValue: {
-    fontSize: '23px',
-    color: color(palette.ink),
-    stroke: colors.ink,
-    strokeThickness: 2,
-  },
 } as const satisfies Record<string, UiTextStyleToken>;
 
 const surfaces = {
@@ -435,13 +411,6 @@ const surfaces = {
     fillAlpha: 0.98,
     stroke: colors.dangerBorder,
     strokeAlpha: 0.94,
-    strokeWidth: 3,
-  },
-  cardInfo: {
-    fill: color(palette.panel),
-    fillAlpha: 0.96,
-    stroke: color(palette.gilt),
-    strokeAlpha: 0.86,
     strokeWidth: 3,
   },
   cardPreviewPlayer: { fill: color(palette.bg2), fillAlpha: 0.94 },
