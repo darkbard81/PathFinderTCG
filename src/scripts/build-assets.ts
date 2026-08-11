@@ -15,6 +15,20 @@ const videoExtensions = new Set(['.webm']);
 const attackMotionPathPrefix = 'motion/attack/';
 
 /**
+ * manifest에 올릴 런타임 자산 폴더다. 여기 없는 폴더는 훑지 않는다.
+ *
+ * assets/ 전체를 훑으면 카드 이미지를 굽기 위한 원본까지 딸려 들어온다.
+ * pf2e/monster_core/arts 1378MB, cards/png 381MB, cards/arts 272MB가 그것이고,
+ * 런타임은 이 셋을 한 번도 요청하지 않는다. 프리로드는 .webp/.webm만 고르고
+ * (src/pixi/assets/preload-assets.ts), 그 밖에 manifest를 키로 조회하는 코드는 없다.
+ * 담을 곳을 명시해야 새 원본 폴더가 생겨도 조용히 섞여 들어오지 않는다.
+ *
+ * motion/attack은 뺐다. 재생하는 코드가 아직 없어서 프리로드가 부팅마다 17MB를
+ * 받고 버리기만 한다. 모션을 쓰게 되면 이 목록에 한 줄 되돌리면 된다.
+ */
+const runtimeAssetDirs = ['cards/webp', 'cards/badge', 'cards/standing', 'ui'];
+
+/**
  * 런타임 자산이 아니라 다른 자산을 만들기 위한 원본이라 manifest에 올리지 않는다.
  * source_badge.png는 배지 4개를 잘라내는 2MB짜리 2x2 시트다.
  */
@@ -26,8 +40,31 @@ type AssetManifestEntry = {
   revision: string;
 };
 
+/**
+ * 런타임 자산 폴더만 훑는다.
+ * 목록에 적힌 폴더가 아직 없어도 진행한다. 자산 트리는 저장소에 없을 수 있다.
+ */
+async function collectRuntimeFiles(): Promise<string[]> {
+  const files: string[] = [];
+
+  for (const dir of runtimeAssetDirs) {
+    files.push(...(await walk(path.join(assetsRoot, dir))));
+  }
+
+  return files;
+}
+
 async function walk(dir: string): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true });
+  const entries = await readdir(dir, { withFileTypes: true }).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') {
+        console.warn(`자산 폴더 없음, 건너뜀: ${toRelativePath(dir)}`);
+        return [];
+      }
+
+      throw error;
+    },
+  );
   const files: string[] = [];
 
   for (const entry of entries) {
@@ -88,13 +125,13 @@ function isAttackMotionVideo(filePath: string): boolean {
 }
 
 /**
- * `assets/`를 순회해 텍스처와 전투 모션 manifest를 다시 생성한다.
+ * `runtimeAssetDirs`를 순회해 텍스처와 전투 모션 manifest를 다시 생성한다.
  * 실제 파일 해시와 경로를 함께 넣어 런타임 캐시 무결성을 유지한다.
  */
 async function main(): Promise<void> {
   const textures: AssetManifestEntry[] = [];
   const videos: AssetManifestEntry[] = [];
-  const files = await walk(assetsRoot);
+  const files = await collectRuntimeFiles();
 
   for (const filePath of files) {
     if (filePath === outputFile || excludedAssetPaths.has(toRelativePath(filePath))) {

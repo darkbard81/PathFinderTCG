@@ -13,7 +13,11 @@
 # 사용법: npm run build:standing -- <webm> [crf]
 #         ./tools/pingpong.sh <webm> [crf]
 #
-# <webm>에 경로 구분자가 없으면 assets/cards/standing/ 에서 찾는다.
+# <webm>은 cwd 기준으로 먼저 찾고, 없으면 assets/cards/standing/ 아래에서 찾는다.
+# standing은 리더 카드 id 폴더로 나뉘므로 보통 뒤쪽 형태로 부른다.
+#
+#   npm run build:standing -- leader_minerva/standing.source.webm
+#
 # 산출물은 언제나 입력 파일 옆에 <원본이름>_pingpong.webm 으로 떨어진다.
 
 set -euo pipefail
@@ -38,7 +42,10 @@ if [[ ! "$crf" =~ ^[0-9]+$ ]] || (( crf > 63 )); then
   exit 2
 fi
 
-if [[ "$input_arg" == */* ]]; then
+# 리더별 하위 폴더가 생겨 인자에도 경로 구분자가 들어온다. 구분자 유무로 갈라서는
+# leader_minerva/standing.source.webm 이 cwd 기준으로만 풀려 기본 위치를 놓친다.
+# 있는 그대로 먼저 보고, 없을 때 기본 위치를 뒤진다.
+if [[ -f "$input_arg" ]]; then
   input_path=$input_arg
 else
   input_path="$repo_root/$DEFAULT_DIR/$input_arg"

@@ -13,8 +13,15 @@ import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
 import type { Scene } from './scene';
 
-/** 리더 standing 그림이 놓인 폴더다. 파일명은 리더 카드 id를 그대로 쓴다. */
+/**
+ * 리더 standing 그림이 놓인 폴더다.
+ * 그 아래 리더 카드 id로 폴더를 하나 더 두고, 파일명은 역할 이름으로 고정한다.
+ * 리더마다 굽는 원본과 포맷 변형이 여러 개라 한 폴더에 평평하게 두면 섞인다.
+ *
+ *   cards/standing/<리더 카드 id>/standing.<확장자>
+ */
 const STANDING_PATH_PREFIX = 'cards/standing';
+const STANDING_FILE_STEM = 'standing';
 
 /**
  * standing 후보를 찾는 순서다. 앞에서부터 시도한다.
@@ -147,7 +154,10 @@ export class LobbyScene implements Scene {
 
     return {
       standingSources: STANDING_FILE_SUFFIXES.map((suffix) =>
-        joinAssetUrl(this.options.assetBaseUrl, `${STANDING_PATH_PREFIX}/${leaderId}${suffix}`),
+        joinAssetUrl(
+          this.options.assetBaseUrl,
+          `${STANDING_PATH_PREFIX}/${leaderId}/${STANDING_FILE_STEM}${suffix}`,
+        ),
       ),
       saveName: this.options.session.saveName,
       leaderName: this.options.session.deck.leader.definition.name,
