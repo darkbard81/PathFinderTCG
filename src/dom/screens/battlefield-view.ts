@@ -39,6 +39,10 @@ export type BattleSideModel = {
   deckCount: number;
   dropCount: number;
   exileCount: number;
+  /** 묘지에 마지막으로 들어간 카드다. 비어 있으면 null이다. */
+  dropTop: CardTile | null;
+  /** 추방에 마지막으로 들어간 카드다. 비어 있으면 null이다. */
+  exileTop: CardTile | null;
 };
 
 export type BattleHandCardModel = {
@@ -382,7 +386,9 @@ function createHalf(side: BattleSide, deps: BattleBoardDeps): BattleHalf {
 
   function render(model: BattleSideModel, slots: Record<BattleRowId, BattleSlotModel[]>): void {
     exile.setCount(model.exileCount);
+    exile.setTopCard(model.exileTop);
     drop.setCount(model.dropCount);
+    drop.setTopCard(model.dropTop);
     deckCount.textContent = `${model.deckCount}`;
 
     for (const row of [topRow, bottomRow]) {
@@ -483,11 +489,30 @@ function createSlot(
 type BattlePile = {
   root: HTMLElement;
   setCount: (count: number) => void;
+  setTopCard: (tile: CardTile | null) => void;
 };
 
+/**
+ * 묘지·추방 더미다.
+ *
+ * 마지막으로 들어간 카드를 바닥에 깔아 무엇이 빠졌는지 보이게 한다.
+ * 더는 쓸 수 없는 카드이므로 회색으로 죽여, 전장 위의 살아 있는 카드와 헷갈리지 않게 한다.
+ */
 function createPile(label: string): BattlePile {
   const root = document.createElement('div');
   root.className = 'pf-battlefield__pile';
+
+  const art = document.createElement('img');
+  art.className = 'pf-battlefield__pile-art';
+  art.alt = '';
+  art.loading = 'lazy';
+  art.draggable = false;
+  art.hidden = true;
+  art.setAttribute('aria-hidden', 'true');
+
+  // 그림 위에서 글자가 읽히도록 어두운 판에 올린다. 덱 더미와 같은 처리다.
+  const badge = document.createElement('div');
+  badge.className = 'pf-battlefield__pile-badge';
 
   const labelElement = document.createElement('span');
   labelElement.className = 'pf-battlefield__pile-label';
@@ -495,12 +520,23 @@ function createPile(label: string): BattlePile {
 
   const countElement = document.createElement('span');
   countElement.className = 'pf-battlefield__pile-count';
-  root.append(labelElement, countElement);
+  badge.append(labelElement, countElement);
+  root.append(art, badge);
 
   return {
     root,
     setCount: (count) => {
       countElement.textContent = `${count}`;
+    },
+    setTopCard: (tile) => {
+      art.hidden = tile === null;
+      // src를 비우면 브라우저가 현재 주소를 다시 받으러 간다. 숨길 때는 건드리지 않는다.
+      if (tile) {
+        art.src = tile.artUrl;
+        root.title = `${label}: ${tile.name}`;
+      } else {
+        root.removeAttribute('title');
+      }
     },
   };
 }

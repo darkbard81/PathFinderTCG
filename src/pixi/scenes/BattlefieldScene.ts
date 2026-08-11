@@ -14,6 +14,7 @@ import {
   type BattleDragSource,
   type BattleHandCardModel,
   type BattleResultModel,
+  type BattleSideModel,
   type BattleSkillBadgeModel,
   type BattleSlotModel,
 } from '../../dom/screens/battlefield-view';
@@ -629,10 +630,10 @@ export class BattlefieldScene implements Scene {
       currentSide: this.runtime.currentSide,
       phaseLabel: PHASE_LABELS[this.runtime.phase],
       enemy: {
-        ...this.readPileCounts(this.runtime.enemy),
+        ...this.readPiles(this.runtime.enemy),
         handCount: this.runtime.enemy.hand.length,
       },
-      player: this.readPileCounts(this.runtime.player),
+      player: this.readPiles(this.runtime.player),
       slots: this.buildSlotModels(),
       hand: this.buildHandModels(),
       status,
@@ -691,15 +692,20 @@ export class BattlefieldScene implements Scene {
     };
   }
 
-  private readPileCounts(participant: BattleParticipantRuntimeState): {
-    deckCount: number;
-    dropCount: number;
-    exileCount: number;
-  } {
+  /**
+   * 더미 수치와 맨 위 카드를 읽는다.
+   * drop과 exile은 뒤에 붙이므로 마지막 원소가 가장 나중에 들어간 카드다.
+   */
+  private readPiles(participant: BattleParticipantRuntimeState): BattleSideModel {
+    const dropTop = participant.drop.at(-1);
+    const exileTop = participant.exile.at(-1);
+
     return {
       deckCount: participant.deck.length,
       dropCount: participant.drop.length,
       exileCount: participant.exile.length,
+      dropTop: dropTop ? this.toTile(dropTop) : null,
+      exileTop: exileTop ? this.toTile(exileTop) : null,
     };
   }
 

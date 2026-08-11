@@ -166,6 +166,7 @@
 }
 
 .pf-battlefield__pile {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -176,6 +177,40 @@
   background: var(--pf-battlefield-pile-background);
   border: var(--pf-battlefield-pile-border);
   border-radius: var(--pf-battlefield-slot-radius);
+  overflow: hidden;
+}
+
+/*
+ * 더미에 마지막으로 들어간 카드다.
+ * 더는 쓸 수 없는 카드라 회색으로 죽인다. 전장 위 카드와 같은 채도로 두면
+ * 아직 살아 있는 카드로 읽힌다. is-spent가 쓰는 것보다 더 세게 뺀다.
+ */
+.pf-battlefield__pile-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.85);
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pf-battlefield__pile-art[hidden] {
+  display: none;
+}
+
+/* 그림 위에서 이름과 장수가 읽히도록 어두운 판에 올린다. 덱 더미와 같은 처리다. */
+.pf-battlefield__pile-badge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--pf-battlefield-count-badge-background);
 }
 
 .pf-battlefield__pile-label {
@@ -235,7 +270,7 @@
   gap: 6px;
   padding: 3px 8px;
   box-sizing: border-box;
-  background: var(--pf-battlefield-deck-badge-background);
+  background: var(--pf-battlefield-count-badge-background);
 }
 
 .pf-battlefield__rail {
