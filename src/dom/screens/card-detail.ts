@@ -8,6 +8,8 @@ export type CardDetailTrait = {
   id: string;
   label: string;
   category: TraitCategoryId | null;
+  /** 특성 규칙 설명이다. 카탈로그에 없는 id는 빈 문자열이다. */
+  description: string;
 };
 
 /** 상세 패널에 그릴 능력 하나다. */
@@ -37,6 +39,9 @@ export type CardDetail = {
   description: string;
   note: string;
 };
+
+/** 한 화면에 패널이 둘 이상 있어도 설명 줄의 id가 겹치지 않게 센다. */
+let detailViewCount = 0;
 
 const TYPE_LABELS: Record<string, string> = {
   UNIT: '유닛',
@@ -70,6 +75,7 @@ export function toCardDetail(card: RuntimeCardInstance, assetBaseUrl: string): C
         id: traitId,
         label: trait?.label ?? traitId,
         category: trait?.category ?? null,
+        description: trait?.description ?? '',
       };
     }),
     abilities: definition.abilities.map((ability) => ({
@@ -156,8 +162,37 @@ export function createCardDetailView(options: CardDetailViewOptions): CardDetail
   const stats = document.createElement('ul');
   stats.className = 'pf-card-detail__stats';
 
-  const traits = document.createElement('ul');
+  // 칩이 눌리는 컨트롤이 되므로 목록이 아니라 버튼 묶음으로 둔다.
+  const traits = document.createElement('div');
   traits.className = 'pf-card-detail__traits';
+  traits.setAttribute('role', 'group');
+  traits.setAttribute('aria-label', '특성');
+
+  /*
+   * 고른 특성의 규칙 설명이다.
+   *
+   * title 툴팁만으로는 hover가 없는 판에서 읽을 수 없다. 카드 상세를 hover가 아니라
+   * 길게 누르기로 여는 것과 같은 이유다. 눌러서 여는 줄을 따로 둔다.
+   */
+  const traitDescription = document.createElement('p');
+  traitDescription.className = 'pf-card-detail__trait-description';
+  traitDescription.id = `pf-card-detail-trait-${(detailViewCount += 1)}`;
+  traitDescription.hidden = true;
+
+  let openTraitId: string | null = null;
+
+  function setOpenTrait(trait: CardDetailTrait | null): void {
+    openTraitId = trait?.id ?? null;
+    traitDescription.textContent = trait?.description ?? '';
+    traitDescription.hidden = trait === null;
+    // 색 규칙이 칩과 같은 선택자를 쓰도록 고른 특성의 갈래를 그대로 실어 준다.
+    traitDescription.dataset.category = trait?.category ?? '';
+    traitDescription.dataset.trait = trait?.id ?? '';
+
+    for (const chip of traits.querySelectorAll<HTMLButtonElement>('.pf-card-detail__trait')) {
+      chip.setAttribute('aria-expanded', String(chip.dataset.trait === openTraitId));
+    }
+  }
 
   const abilities = document.createElement('div');
   abilities.className = 'pf-card-detail__abilities';
@@ -174,7 +209,9 @@ export function createCardDetailView(options: CardDetailViewOptions): CardDetail
   // 이름·수치·특성을 한 덩어리로 묶는다. 가로로 넓은 자리에서는 이 덩어리와 긴 글을 좌우로 나눈다.
   const summary = document.createElement('div');
   summary.className = 'pf-card-detail__summary';
-  summary.append(heading, stats, traits);
+  // 넘칠 때 이 열이 직접 스크롤한다. 오버레이 기본 pointer-events:none에서 스크롤을 받으려면 필요하다.
+  summary.dataset.interactive = 'true';
+  summary.append(heading, stats, traits, traitDescription);
 
   main.append(summary, scroll);
   body.append(art, main);
@@ -213,7 +250,12 @@ export function createCardDetailView(options: CardDetailViewOptions): CardDetail
         .join(' · ');
 
       renderStats(stats, detail.tile);
-      renderTraits(traits, detail.traits);
+      renderTraits(traits, detail.traits, traitDescription.id, (trait) =>
+        // 같은 칩을 다시 누르면 닫는다.
+        setOpenTrait(trait.id === openTraitId ? null : trait),
+      );
+      // 카드가 바뀌면 열려 있던 설명은 남기지 않는다.
+      setOpenTrait(null);
       renderAbilities(abilities, detail.abilities);
 
       description.textContent = [detail.description, detail.note].filter(Boolean).join('\n\n');
@@ -326,19 +368,42 @@ function renderStats(list: HTMLElement, tile: CardTile): void {
   }
 }
 
-function renderTraits(list: HTMLElement, traits: readonly CardDetailTrait[]): void {
-  list.replaceChildren();
-  list.hidden = traits.length === 0;
+function renderTraits(
+  group: HTMLElement,
+  traits: readonly CardDetailTrait[],
+  descriptionId: string,
+  onToggle: (trait: CardDetailTrait) => void,
+): void {
+  group.replaceChildren();
+  group.hidden = traits.length === 0;
 
   for (const trait of traits) {
-    const item = document.createElement('li');
-    item.className = 'pf-card-detail__trait';
-    // 희귀도는 별도 필드가 아니라 특성 하나다. 색을 나누려면 카테고리로 걸러야 한다.
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'pf-card-detail__trait';
+    chip.dataset.trait = trait.id;
+    /*
+     * 크기와 희귀도는 PF2e에서 색으로 구분한다.
+     * 희귀도는 별도 필드가 아니라 특성 하나로 들어오므로 카테고리와 id를 함께 실어
+     * CSS가 등급까지 갈라 칠할 수 있게 한다.
+     */
     if (trait.category) {
-      item.dataset.category = trait.category;
+      chip.dataset.category = trait.category;
     }
-    item.textContent = trait.label;
-    list.append(item);
+    chip.textContent = trait.label;
+
+    if (trait.description) {
+      // 마우스가 있는 판에서는 누르지 않아도 읽힌다. 두 방식을 함께 둔다.
+      chip.title = trait.description;
+      chip.setAttribute('aria-expanded', 'false');
+      chip.setAttribute('aria-controls', descriptionId);
+      chip.addEventListener('click', () => onToggle(trait));
+    } else {
+      // 카탈로그에 없는 id다. 읽을 설명이 없으므로 누를 것도 없다.
+      chip.disabled = true;
+    }
+
+    group.append(chip);
   }
 }
 

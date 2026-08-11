@@ -178,6 +178,17 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   detail.root.classList.add('pf-card-detail--floating');
   detail.root.hidden = true;
 
+  /*
+   * 패널은 열린 뒤에도 커진다. 특성을 눌러 설명 줄이 생기면 아래로 자라는데,
+   * 자리를 열 때 한 번만 잡으면 늘어난 만큼 화면 밖으로 나간다.
+   * 크기가 바뀔 때마다 다시 잡는다. 자리 계산은 left와 top만 바꾸므로 되먹임이 생기지 않는다.
+   */
+  new ResizeObserver(() => {
+    if (!detail.root.hidden) {
+      placeDetail();
+    }
+  }).observe(detail.root);
+
   function closeDetail(): void {
     detail.root.hidden = true;
     detail.render(null);

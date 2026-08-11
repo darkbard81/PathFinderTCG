@@ -61,6 +61,10 @@ const palette = {
   arcane: 0x6a83e0,
   arcaneHover: 0x8298ea,
   regal: 0xa877d9,
+  /* PF2e가 희귀도 Uncommon에 쓰는 주황이다. 어두운 바탕에서 읽히도록 원래 값보다 밝다. */
+  traitOrange: 0xd98131,
+  /* 크기 특성용 초록이다. 희귀도의 파랑·보라와 겹치지 않게 고른다. */
+  traitGreen: 0x5aa86a,
   regalHover: 0xbd94e6,
   danger: 0xb6362c,
   dangerHover: 0xcf4536,
@@ -77,6 +81,16 @@ const palette = {
  * 여기서 panel2를 ink 쪽으로 섞어 만든다. 섞는 비율은 8%, 14%, 20% 순이다.
  */
 const colors = {
+  /*
+   * 특성 칩 색이다. PF2e는 크기와 희귀도를 색으로 구분한다.
+   * 원작은 밝은 양피지 위 채운 태그라 값이 어둡다. 여기는 어두운 남색 패널이라
+   * 같은 계열을 밝은 쪽으로 옮겨 테두리와 글자로 쓴다. Common은 원작대로 색을 주지 않는다.
+   */
+  traitSize: color(palette.traitGreen),
+  traitRarityUncommon: color(palette.traitOrange),
+  traitRarityRare: color(palette.arcane),
+  traitRarityUnique: color(palette.regal),
+
   black: color(0x000000),
   background: color(palette.bg),
   backgroundDark: color(palette.bg3),
@@ -162,6 +176,25 @@ const text = {
   buttonLabel: { fontSize: '28px', color: colors.primary },
   buttonLabelDisabled: { fontSize: '28px', color: color(palette.inkFaint) },
   disabledCaption: { fontSize: '14px', color: color(palette.inkFaint) },
+  /*
+   * 카드 정보 패널 전용 크기다.
+   * 공용 토큰(panelTitle 30px, rowTitle 22px, bodySmall 18px)을 그대로 쓰면
+   * 높이 230px짜리 패널에 비해 글자가 커서 읽을 것이 몇 줄 안 들어간다.
+   * 공용 토큰을 줄이면 다른 화면이 함께 작아지므로 여기만 따로 잡는다.
+   */
+  cardDetailName: { fontSize: '22px', color: colors.primary, fontStyle: '700' },
+  cardDetailMeta: { fontSize: '14px', color: colors.accentSoft },
+  cardDetailStat: { fontSize: '17px', color: colors.primary },
+  cardDetailTrait: { fontSize: '13px', color: colors.secondarySoft },
+  cardDetailAbilityName: { fontSize: '16px', color: colors.primary },
+  /*
+   * 능력 분류 배지다. mutedSoft는 배지 배경 위에서 명암비가 2.56:1로 AA에 한참 못 미쳤다.
+   * 12px 작은 글자라 더 안 읽힌다. accentSoft는 같은 배경에서 7.31:1이다.
+   */
+  cardDetailAbilityCategory: { fontSize: '12px', color: colors.accentSoft },
+  cardDetailBody: { fontSize: '14px', color: colors.secondarySoft },
+  cardDetailEmpty: { fontSize: '15px', color: colors.muted },
+
   rowTitle: { fontSize: '22px', color: colors.primary },
   rowMeta: { fontSize: '17px', color: colors.secondarySoft },
   rowId: { fontSize: '14px', color: colors.mutedSoft },
