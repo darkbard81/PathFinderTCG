@@ -1,6 +1,7 @@
 import type { Stats } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildETag, isSoundAssetPath, matchesIfNoneMatch } from './assets-middleware';
+import { buildETag, getMimeType, isSoundAssetPath, matchesIfNoneMatch } from './assets-middleware';
 
 function createStats(size: number, mtimeMs: number): Stats {
   return { size, mtimeMs } as Stats;
@@ -63,7 +64,7 @@ describe('assets middleware If-None-Match', () => {
 
 describe('assets middleware 소리 판별', () => {
   it('sound 아래의 자산만 소리로 본다', () => {
-    expect(isSoundAssetPath('sound/bgm/intro.webm')).toBe(true);
+    expect(isSoundAssetPath('sound/bgm/intro.mp3')).toBe(true);
     expect(isSoundAssetPath('sound/voice/title-intro.webm')).toBe(true);
   });
 
@@ -72,5 +73,11 @@ describe('assets middleware 소리 판별', () => {
     expect(isSoundAssetPath('motion/attack/slash.webm')).toBe(false);
     expect(isSoundAssetPath('cards/standing/leader/standing.webm')).toBe(false);
     expect(isSoundAssetPath('ui/title-screen.webp')).toBe(false);
+  });
+
+  it('BGM MP3와 voice WebM에 각 오디오 MIME을 붙인다', () => {
+    expect(getMimeType(path.resolve('assets/sound/bgm/intro.mp3'))).toBe('audio/mpeg');
+    expect(getMimeType(path.resolve('assets/sound/voice/title-intro.webm'))).toBe('audio/webm');
+    expect(getMimeType(path.resolve('assets/motion/attack/slash.webm'))).toBe('video/webm');
   });
 });

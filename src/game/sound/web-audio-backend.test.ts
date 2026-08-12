@@ -22,9 +22,84 @@ type FakeBufferSource = {
   stop: ReturnType<typeof vi.fn>;
 };
 
+type FakeMediaElementSource = {
+  element: FakeAudioElement;
+  connect: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
+};
+
+type FakeAudioElement = {
+  src: string;
+  loop: boolean;
+  preload: string;
+  error: MediaError | null;
+  play: ReturnType<typeof vi.fn>;
+  pause: ReturnType<typeof vi.fn>;
+  load: ReturnType<typeof vi.fn>;
+  setAttribute: ReturnType<typeof vi.fn>;
+  removeAttribute: ReturnType<typeof vi.fn>;
+  addEventListener: ReturnType<typeof vi.fn>;
+  removeEventListener: ReturnType<typeof vi.fn>;
+  dispatch: (type: string) => void;
+};
+
+function installFakeAudio(playImpl: () => Promise<void> = () => Promise.resolve()) {
+  const elements: FakeAudioElement[] = [];
+
+  class FakeAudio {
+    public loop = false;
+    public preload = '';
+    public error: MediaError | null = null;
+    public readonly play = vi.fn(playImpl);
+    public readonly pause = vi.fn();
+    public readonly load = vi.fn();
+    public readonly setAttribute = vi.fn();
+    private readonly listeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
+
+    public readonly removeAttribute = vi.fn((name: string) => {
+      if (name === 'src') {
+        this.src = '';
+      }
+    });
+
+    public readonly addEventListener = vi.fn(
+      (type: string, listener: EventListenerOrEventListenerObject) => {
+        const listeners = this.listeners.get(type) ?? new Set();
+        listeners.add(listener);
+        this.listeners.set(type, listeners);
+      },
+    );
+
+    public readonly removeEventListener = vi.fn(
+      (type: string, listener: EventListenerOrEventListenerObject) => {
+        this.listeners.get(type)?.delete(listener);
+      },
+    );
+
+    public constructor(public src: string) {
+      elements.push(this);
+    }
+
+    public dispatch(type: string): void {
+      const event = { type, target: this } as unknown as Event;
+      for (const listener of this.listeners.get(type) ?? []) {
+        if (typeof listener === 'function') {
+          listener(event);
+        } else {
+          listener.handleEvent(event);
+        }
+      }
+    }
+  }
+
+  vi.stubGlobal('Audio', FakeAudio);
+  return elements;
+}
+
 function createFakeAudioContext() {
   const gains: FakeGainNode[] = [];
   const bufferSources: FakeBufferSource[] = [];
+  const mediaElementSources: FakeMediaElementSource[] = [];
   const decodedBuffer = {} as AudioBuffer;
   const context = {
     currentTime: 12.5,
@@ -57,11 +132,20 @@ function createFakeAudioContext() {
       bufferSources.push(source);
       return source;
     },
+    createMediaElementSource: vi.fn((element: FakeAudioElement) => {
+      const source: FakeMediaElementSource = {
+        element,
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+      };
+      mediaElementSources.push(source);
+      return source;
+    }),
     decodeAudioData: vi.fn(async () => decodedBuffer),
     close: vi.fn(async () => undefined),
   };
 
-  return { context, gains, bufferSources, decodedBuffer };
+  return { context, gains, bufferSources, mediaElementSources, decodedBuffer };
 }
 
 afterEach(() => {
@@ -82,59 +166,52 @@ describe('WebAudioBackend 채널 게인', () => {
   });
 });
 
-describe('WebAudioBackend BGM 임시 버퍼 경로', () => {
-  it('BGM을 내려받아 decodeAudioData로 풀고 BufferSource에서 반복한다', async () => {
-    const encoded = new ArrayBuffer(8);
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        arrayBuffer: async () => encoded,
-      })),
-    );
+describe('WebAudioBackend BGM media element 경로', () => {
+  it('MP3를 HTMLAudioElement에서 재생해 곡 게인과 BGM 채널에 연결한다', () => {
+    const elements = installFakeAudio();
     const fake = createFakeAudioContext();
     const backend = new WebAudioBackend(fake.context as unknown as AudioContext);
 
     const handle = backend.playStream({
-      url: '/tcg/sound/bgm/main.webm',
+      url: '/tcg/sound/bgm/main.mp3',
       channel: 'bgm',
       gain: 0.5,
       loop: true,
     });
 
-    await vi.waitFor(() => expect(fake.bufferSources).toHaveLength(1));
-    const source = fake.bufferSources[0];
-    expect(fetch).toHaveBeenCalledWith('/tcg/sound/bgm/main.webm');
-    expect(fake.context.decodeAudioData).toHaveBeenCalledWith(encoded);
-    expect(source?.buffer).toBe(fake.decodedBuffer);
-    expect(source?.loop).toBe(true);
-    expect(source?.start).toHaveBeenCalledOnce();
+    const element = elements[0];
+    const source = fake.mediaElementSources[0];
+    const trackGain = fake.gains[4];
+    expect(element?.src).toBe('/tcg/sound/bgm/main.mp3');
+    expect(element?.loop).toBe(true);
+    expect(element?.preload).toBe('auto');
+    expect(element?.setAttribute).toHaveBeenCalledWith('playsinline', '');
+    expect(element?.play).toHaveBeenCalledOnce();
+    expect(source?.element).toBe(element);
+    expect(source?.connect).toHaveBeenCalledWith(trackGain);
+    expect(trackGain?.gain.value).toBe(0.5);
+    expect(trackGain?.connect).toHaveBeenCalledWith(fake.gains[1]);
+
+    handle.setGain(0.25, 1);
+    expect(trackGain?.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.25, 13.5);
 
     handle.stop();
-    expect(source?.stop).toHaveBeenCalledOnce();
+    expect(element?.pause).toHaveBeenCalledOnce();
     expect(source?.disconnect).toHaveBeenCalledOnce();
+    expect(trackGain?.disconnect).toHaveBeenCalledOnce();
+    expect(element?.removeAttribute).toHaveBeenCalledWith('src');
+    expect(element?.load).toHaveBeenCalledOnce();
   });
 
-  it('BGM 디코드 실패를 알리고 만든 게인 노드를 정리한다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        arrayBuffer: async () => new ArrayBuffer(8),
-      })),
-    );
+  it('media element의 비동기 play 실패를 한 번 알리고 노드를 정리한다', async () => {
+    const error = new Error('play 실패');
+    const elements = installFakeAudio(() => Promise.reject(error));
     const fake = createFakeAudioContext();
-    const error = new Error('decode 실패');
-    fake.context.decodeAudioData.mockRejectedValue(error);
     const backend = new WebAudioBackend(fake.context as unknown as AudioContext);
     const onError = vi.fn();
 
     backend.playStream({
-      url: '/tcg/sound/bgm/main.webm',
+      url: '/tcg/sound/bgm/main.mp3',
       channel: 'bgm',
       gain: 0.5,
       loop: true,
@@ -142,41 +219,36 @@ describe('WebAudioBackend BGM 임시 버퍼 경로', () => {
     });
 
     await vi.waitFor(() => expect(onError).toHaveBeenCalledWith(error));
+    expect(elements[0]?.pause).toHaveBeenCalledOnce();
+    expect(fake.mediaElementSources[0]?.disconnect).toHaveBeenCalledOnce();
     expect(fake.gains[4]?.disconnect).toHaveBeenCalledOnce();
-    expect(fake.bufferSources).toHaveLength(0);
+
+    elements[0]?.dispatch('error');
+    expect(onError).toHaveBeenCalledOnce();
   });
 
-  it('디코드가 끝나기 전에 멈춘 BGM은 나중에 소스 노드를 만들지 않는다', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        arrayBuffer: async () => new ArrayBuffer(8),
-      })),
-    );
+  it('media error를 알리고 재생 중인 element를 정리한다', () => {
+    const elements = installFakeAudio();
     const fake = createFakeAudioContext();
-    let finishDecode: (buffer: AudioBuffer) => void = () => undefined;
-    fake.context.decodeAudioData.mockReturnValue(
-      new Promise<AudioBuffer>((resolve) => {
-        finishDecode = resolve;
-      }),
-    );
     const backend = new WebAudioBackend(fake.context as unknown as AudioContext);
-    const handle = backend.playStream({
-      url: '/tcg/sound/bgm/main.webm',
+    const onError = vi.fn();
+    const mediaError = new Error('로드 실패') as unknown as MediaError;
+
+    backend.playStream({
+      url: '/tcg/sound/bgm/main.mp3',
       channel: 'bgm',
-      gain: 0.5,
+      gain: 1,
       loop: true,
+      onError,
     });
-    await vi.waitFor(() => expect(fake.context.decodeAudioData).toHaveBeenCalledOnce());
+    const element = elements[0];
+    if (element) {
+      element.error = mediaError;
+      element.dispatch('error');
+    }
 
-    handle.stop();
-    finishDecode(fake.decodedBuffer);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(fake.bufferSources).toHaveLength(0);
-    expect(fake.gains[4]?.disconnect).toHaveBeenCalledOnce();
+    expect(onError).toHaveBeenCalledWith(mediaError);
+    expect(element?.pause).toHaveBeenCalledOnce();
+    expect(fake.mediaElementSources[0]?.disconnect).toHaveBeenCalledOnce();
   });
 });

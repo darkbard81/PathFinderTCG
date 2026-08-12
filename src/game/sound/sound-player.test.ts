@@ -67,12 +67,12 @@ function bgm(id: string, gainDb = 0): SoundTrackSource<BgmTrack> {
     id,
     sortSeq: 1,
     title: id,
-    file: `${id}.webm`,
+    file: `${id}.mp3`,
     gainDb,
     durationSec: 100,
     loopStart: null,
     loopEnd: null,
-    url: `/tcg/sound/bgm/${id}.webm`,
+    url: `/tcg/sound/bgm/${id}.mp3`,
   };
 }
 
@@ -125,7 +125,7 @@ describe('SoundPlayer BGM', () => {
     player.requestBgm(bgm('intro', -2));
 
     expect(fake.streams[0]).toMatchObject({
-      url: '/tcg/sound/bgm/intro.webm',
+      url: '/tcg/sound/bgm/intro.mp3',
       channel: 'bgm',
       loop: true,
       gain: decibelToGain(-2),
@@ -166,13 +166,13 @@ describe('SoundPlayer BGM', () => {
     expect(player.getPlayingBgmId()).toBeNull();
   });
 
-  it('비동기 BGM 디코드가 실패하면 알리고 같은 곡을 다시 요청할 수 있다', () => {
+  it('비동기 BGM 재생이 실패하면 알리고 같은 곡을 다시 요청할 수 있다', () => {
     const fake = createFakeBackend();
     const onError = vi.fn();
     const player = new SoundPlayer({ backend: fake.backend, onError });
 
     player.requestBgm(bgm('intro'));
-    fake.streams[0]?.onError?.(new Error('decode 실패'));
+    fake.streams[0]?.onError?.(new Error('media 재생 실패'));
 
     expect(player.getPlayingBgmId()).toBeNull();
     expect(onError).toHaveBeenCalledWith(expect.stringContaining('intro'), expect.any(Error));

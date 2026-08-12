@@ -41,7 +41,7 @@ function bgmTrack(overrides: Record<string, unknown> = {}) {
     id: 'intro',
     sortSeq: 1,
     title: '01. PF2eTCG Intro',
-    file: 'intro.webm',
+    file: 'intro.mp3',
     gainDb: -1.1,
     durationSec: 239.261,
     loopStart: null,
@@ -56,7 +56,7 @@ describe('loadBgmPlaylist', () => {
 
     const loaded = await loadBgmPlaylist({
       assetBaseUrl: '/tcg',
-      manifest: createManifest(['sound/bgm/intro.webm']),
+      manifest: createManifest(['sound/bgm/intro.mp3']),
       fetch: fetchPlaylist,
     });
 
@@ -65,18 +65,18 @@ describe('loadBgmPlaylist', () => {
       channel: 'bgm',
       referenceLoudnessLufs: -16,
       missingTrackIds: [],
-      tracks: [{ ...bgmTrack(), url: '/tcg/sound/bgm/intro.webm' }],
+      tracks: [{ ...bgmTrack(), url: '/tcg/sound/bgm/intro.mp3' }],
     });
   });
 
   it('manifest에 없는 트랙만 빼고 뺀 id를 알려준다', async () => {
     const loaded = await loadBgmPlaylist({
       assetBaseUrl: '/tcg',
-      manifest: createManifest(['sound/bgm/intro.webm']),
+      manifest: createManifest(['sound/bgm/intro.mp3']),
       fetch: createFetch(
         bgmBody([
           bgmTrack(),
-          bgmTrack({ id: 'gone', sortSeq: 2, title: '02. Gone', file: 'gone.webm' }),
+          bgmTrack({ id: 'gone', sortSeq: 2, title: '02. Gone', file: 'gone.mp3' }),
         ]),
       ),
     });
@@ -90,12 +90,12 @@ describe('loadBgmPlaylist', () => {
 
     const loaded = await loadBgmPlaylist({
       assetBaseUrl: 'static/tcg/',
-      manifest: createManifest(['sound/bgm/intro.webm']),
+      manifest: createManifest(['sound/bgm/intro.mp3']),
       fetch: fetchPlaylist,
     });
 
     expect(fetchPlaylist).toHaveBeenCalledWith('/static/tcg/sound/bgm/playlist.json');
-    expect(loaded.tracks[0]?.url).toBe('/static/tcg/sound/bgm/intro.webm');
+    expect(loaded.tracks[0]?.url).toBe('/static/tcg/sound/bgm/intro.mp3');
   });
 
   it('응답이 실패하면 상태를 담아 던진다', async () => {
@@ -112,7 +112,7 @@ describe('loadBgmPlaylist', () => {
     await expect(
       loadBgmPlaylist({
         assetBaseUrl: '/tcg',
-        manifest: createManifest(['sound/bgm/intro.webm']),
+        manifest: createManifest(['sound/bgm/intro.mp3']),
         fetch: createFetch(bgmBody([bgmTrack({ sortSeq: 9 })])),
       }),
     ).rejects.toThrow('sortSeq');
@@ -122,7 +122,7 @@ describe('loadBgmPlaylist', () => {
     await expect(
       loadBgmPlaylist({
         assetBaseUrl: '/tcg',
-        manifest: createManifest(['sound/bgm/intro.webm']),
+        manifest: createManifest(['sound/bgm/intro.mp3']),
         fetch: createFetch({ ...bgmBody([bgmTrack()]), channel: 'voice' }),
       }),
     ).rejects.toThrow('channel must be bgm');
@@ -171,7 +171,7 @@ describe('findSoundTrack', () => {
     referenceLoudnessLufs: -16,
     missingTrackIds: [],
     tracks: [
-      { ...bgmTrack(), url: '/tcg/sound/bgm/intro.webm' } as never,
+      { ...bgmTrack(), url: '/tcg/sound/bgm/intro.mp3' } as never,
       { ...bgmTrack({ id: 'comic', sortSeq: 2, title: '02. Comic' }), url: 'x' } as never,
     ],
   };

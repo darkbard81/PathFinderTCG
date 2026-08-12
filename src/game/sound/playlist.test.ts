@@ -12,7 +12,7 @@ function bgmTrack(overrides: Record<string, unknown> = {}) {
     id: 'intro',
     sortSeq: 1,
     title: '01. PF2eTCG Intro',
-    file: 'intro.webm',
+    file: 'intro.mp3',
     gainDb: -1.1,
     durationSec: 239.261,
     loopStart: null,
@@ -44,7 +44,7 @@ describe('normalizeBgmPlaylist', () => {
           id: 'intro',
           sortSeq: 1,
           title: '01. PF2eTCG Intro',
-          file: 'intro.webm',
+          file: 'intro.mp3',
           gainDb: -1.1,
           durationSec: 239.261,
           loopStart: null,
@@ -57,9 +57,9 @@ describe('normalizeBgmPlaylist', () => {
   it('배열 순서가 아니라 sortSeq로 정렬한다', () => {
     const playlist = normalizeBgmPlaylist(
       bgmPlaylist([
-        bgmTrack({ id: 'c', sortSeq: 3, title: '03. C', file: 'c.webm' }),
-        bgmTrack({ id: 'a', sortSeq: 1, title: '01. A', file: 'a.webm' }),
-        bgmTrack({ id: 'b', sortSeq: 2, title: '02. B', file: 'b.webm' }),
+        bgmTrack({ id: 'c', sortSeq: 3, title: '03. C', file: 'c.mp3' }),
+        bgmTrack({ id: 'a', sortSeq: 1, title: '01. A', file: 'a.mp3' }),
+        bgmTrack({ id: 'b', sortSeq: 2, title: '02. B', file: 'b.mp3' }),
       ]),
     );
 
@@ -201,7 +201,7 @@ describe('normalizeVoicePlaylist', () => {
 
 describe('resolveSoundAssetPath', () => {
   it('manifest에서 찾을 수 있는 경로로 바꾼다', () => {
-    expect(resolveSoundAssetPath('bgm', 'intro.webm')).toBe('sound/bgm/intro.webm');
+    expect(resolveSoundAssetPath('bgm', 'intro.mp3')).toBe('sound/bgm/intro.mp3');
     expect(resolveSoundAssetPath('voice', 'title-intro.webm')).toBe('sound/voice/title-intro.webm');
   });
 });

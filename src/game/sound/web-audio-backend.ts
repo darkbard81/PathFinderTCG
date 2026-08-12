@@ -17,13 +17,12 @@ const INSTANT_RAMP_SECONDS = 0.02;
  *
  * 게인 그래프는 이렇게 엮인다. 화면에 그리는 것은 하나도 없다.
  *
- *   BufferSource(bgm)   ─→ bgmGain   ─┐
- *   BufferSource(sfx)   ─→ sfxGain   ─┼─→ masterGain ─→ destination
- *   BufferSource(voice) ─→ voiceGain ─┘
+ *   MediaElementSource(bgm) ─→ trackGain ─→ bgmGain ─┐
+ *   BufferSource(sfx)       ─────────────→ sfxGain ─┼─→ masterGain ─→ destination
+ *   BufferSource(voice)     ────────────→ voiceGain ─┘
  *
- * 실기 iPad Safari에서 voice 버퍼는 나지만 MediaElement BGM이 나지 않아, 원인을 가르는
- * 동안 BGM도 `decodeAudioData`로 임시 재생한다. 긴 곡 전체가 PCM 메모리에 올라가고 시작도
- * 다운로드·디코드를 기다리므로 영구 설계로 두지 않는다.
+ * BGM은 긴 파일을 PCM 메모리에 모두 올리지 않도록 HTMLAudioElement로 스트리밍한다.
+ * voice와 SFX는 짧고 지연 없이 나가야 하므로 내려받아 `decodeAudioData`로 푼다.
  *
  * 테스트는 노드 연결과 예약 호출까지만 대역으로 확인한다. 실제 코덱과 기기 출력은 실기
  * 브라우저에서 확인해야 한다.
@@ -34,7 +33,7 @@ export class WebAudioBackend implements SoundBackend {
   private readonly channels: Map<VolumeChannel, GainNode> = new Map();
   /** 디코드 결과를 재사용한다. 같은 소리를 쏠 때마다 다시 풀면 낭비다. */
   private readonly buffers = new Map<string, Promise<AudioBuffer>>();
-  /** 다운로드 중인 것을 포함해 아직 멈추지 않은 BGM 손잡이다. */
+  /** 아직 멈추지 않은 BGM 손잡이다. backend 종료 때 media element도 함께 정리한다. */
   private readonly activeStreams = new Set<SoundVoiceHandle>();
   private destroyed = false;
 
@@ -83,21 +82,48 @@ export class WebAudioBackend implements SoundBackend {
   }
 
   public playStream(options: PlayStreamOptions): SoundVoiceHandle {
+    const element = new Audio(options.url);
+    element.loop = options.loop;
+    element.preload = 'auto';
+    element.setAttribute('playsinline', '');
+
+    const source = this.context.createMediaElementSource(element);
     const gain = this.context.createGain();
     gain.gain.value = options.gain;
+    source.connect(gain);
     gain.connect(this.channelNode(options.channel));
 
-    let source: AudioBufferSourceNode | null = null;
     let stopped = false;
     let cleaned = false;
+    let errorReported = false;
     const cleanup = (): void => {
       if (cleaned) {
         return;
       }
       cleaned = true;
-      source?.disconnect();
+      element.removeEventListener('error', handleError);
+      element.removeEventListener('ended', handleEnded);
+      source.disconnect();
       gain.disconnect();
       this.activeStreams.delete(handle);
+    };
+
+    const reportError = (error: unknown): void => {
+      if (stopped || this.destroyed || errorReported) {
+        return;
+      }
+      errorReported = true;
+      options.onError?.(error);
+    };
+
+    const handleError = (): void => {
+      reportError(element.error ?? new Error(`Failed to load sound: ${options.url}`));
+      handle.stop();
+    };
+
+    const handleEnded = (): void => {
+      stopped = true;
+      cleanup();
     };
 
     const handle: SoundVoiceHandle = {
@@ -109,38 +135,25 @@ export class WebAudioBackend implements SoundBackend {
           return;
         }
         stopped = true;
-        try {
-          source?.stop();
-        } catch {
-          // BufferSource는 이미 자연 종료됐을 수 있다. 아래 정리는 그대로 한다.
-        }
+        element.pause();
         cleanup();
+        element.removeAttribute('src');
+        element.load();
       },
     };
 
+    element.addEventListener('error', handleError);
+    element.addEventListener('ended', handleEnded);
     this.activeStreams.add(handle);
-    void this.loadBuffer(options.url)
-      .then((buffer) => {
-        if (stopped || this.destroyed) {
-          return;
-        }
-
-        source = this.context.createBufferSource();
-        source.buffer = buffer;
-        source.loop = options.loop;
-        source.connect(gain);
-        source.onended = () => {
-          stopped = true;
-          cleanup();
-        };
-        source.start();
-      })
-      .catch((error: unknown) => {
-        if (!stopped && !this.destroyed) {
-          options.onError?.(error);
-        }
+    try {
+      void element.play().catch((error: unknown) => {
+        reportError(error);
         handle.stop();
       });
+    } catch (error: unknown) {
+      reportError(error);
+      handle.stop();
+    }
 
     return handle;
   }
@@ -203,9 +216,7 @@ export class WebAudioBackend implements SoundBackend {
    * 게인을 옮긴다. 오디오 스레드에서 보간되므로 메인 스레드가 밀려도 매끄럽다.
    * 직접 값을 대입하거나 rAF로 조금씩 올리면 계단으로 튄다.
    *
-   * **`setTargetAtTime`을 쓰지 않는다.** 실기 iPad WebKit에서 이미 울리는 채널의
-   * 볼륨을 바꿔도 적용되지 않았다. 끝값에 정확히 도달하는 짧은 선형 램프는 같은
-   * 기기에서도 반영된다.
+   * 끝값에 정확히 도달하는 짧은 선형 램프로 채널과 곡 전환 게인을 같은 방식으로 다룬다.
    */
   private rampGain(node: GainNode, value: number, rampSeconds?: number): void {
     const now = this.context.currentTime;

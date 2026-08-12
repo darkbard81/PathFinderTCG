@@ -17,14 +17,14 @@ const manifestBase = {
  *
  * assets/ 전체를 훑으면 카드 이미지를 굽기 위한 원본까지 딸려 들어온다.
  * pf2e/monster_core/arts 1378MB, cards/png 381MB, cards/arts 272MB가 그것이고,
- * 런타임은 이 셋을 한 번도 요청하지 않는다. 프리로드는 .webp/.webm만 고르고
+ * 런타임은 이 셋을 한 번도 요청하지 않는다. 프리로드는 화면용 .webp/.webm만 고르고
  * (src/pixi/assets/preload-assets.ts), 그 밖에 manifest를 키로 조회하는 코드는 없다.
  * 담을 곳을 명시해야 새 원본 폴더가 생겨도 조용히 섞여 들어오지 않는다.
  *
  * motion/attack은 뺐다. 재생하는 코드가 아직 없어서 프리로드가 부팅마다 17MB를
  * 받고 버리기만 한다. 모션을 쓰게 되면 이 목록에 한 줄 되돌리면 된다.
  *
- * sound는 넣는다. 프리로드가 확장자로 대상을 고르는데(.webp/.webm) 소리는 `audio`
+ * sound는 넣는다. BGM MP3와 voice/SFX WebM은 `audio`
  * 배열에 따로 담기고 `selectPreloadAssets`가 그 배열을 보지 않으므로 부팅에 딸려오지
  * 않는다. 여기 올리는 것은 revision을 얻기 위해서다. 그래야 4MB짜리 BGM이 내용 해시로
  * 강한 ETag를 받아, 자산 트리를 다시 받아 mtime만 바뀌어도 재다운로드되지 않는다.

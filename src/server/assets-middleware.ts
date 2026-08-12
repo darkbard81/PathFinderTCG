@@ -225,7 +225,7 @@ export function isSoundAssetPath(manifestPath: string): boolean {
  * 소리만 든 webm에 `video/webm`을 붙이면 안 된다. Chrome은 내용을 보고 알아서 틀지만
  * Safari는 선언한 형식을 믿어서 `<audio>`가 받기를 거부한다.
  */
-function getMimeType(filePath: string): string {
+export function getMimeType(filePath: string): string {
   switch (path.extname(filePath).toLowerCase()) {
     case '.png':
       return 'image/png';
@@ -235,6 +235,8 @@ function getMimeType(filePath: string): string {
       return 'image/gif';
     case '.webm':
       return isSoundAssetPath(toManifestPath(filePath)) ? 'audio/webm' : 'video/webm';
+    case '.mp3':
+      return 'audio/mpeg';
     case '.mov':
       return 'video/quicktime';
     case '.jpg':

@@ -26,7 +26,7 @@ export type PlayStreamOptions = {
   /** 트랙 보정 게인을 반영한 시작 게인이다. */
   gain: number;
   loop: boolean;
-  /** 비동기 다운로드나 디코드가 실패했을 때 알린다. */
+  /** media element의 로드나 재생이 실패했을 때 알린다. */
   onError?: (error: unknown) => void;
 };
 
@@ -48,7 +48,7 @@ export type SoundBackend = {
   isRunning: () => boolean;
   /** 채널 게인을 정한다. 0~1 선형값이다. */
   setChannelGain: (channel: VolumeChannel, gain: number) => void;
-  /** BGM 재생 진입점이다. 현재는 Safari 확인을 위해 버퍼 디코드로 임시 구현한다. */
+  /** 긴 BGM을 media element로 스트리밍하는 진입점이다. */
   playStream: (options: PlayStreamOptions) => SoundVoiceHandle;
   /** 미리 디코드해 재생한다. 지연 없이 나가야 하는 짧은 소리에 쓴다. */
   playBuffer: (options: PlayBufferOptions) => Promise<SoundVoiceHandle>;

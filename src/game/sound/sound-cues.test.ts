@@ -8,12 +8,12 @@ function track(id: string, sortSeq: number): SoundTrackSource<BgmTrack> {
     id,
     sortSeq,
     title: id,
-    file: `${id}.webm`,
+    file: `${id}.mp3`,
     gainDb: 0,
     durationSec: 100,
     loopStart: null,
     loopEnd: null,
-    url: `/tcg/sound/bgm/${id}.webm`,
+    url: `/tcg/sound/bgm/${id}.mp3`,
   };
 }
 
