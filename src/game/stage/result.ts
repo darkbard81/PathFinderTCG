@@ -146,6 +146,7 @@ export function applyStageBattleResultToSession(
       ],
     },
     stageProgress: {
+      ...session.stageProgress,
       clearedStageIds,
       lastSelectedStageId: result.stageId,
     },

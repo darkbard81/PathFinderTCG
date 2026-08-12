@@ -22,6 +22,7 @@ describe('createGameSession', () => {
     expect(session.stageProgress).toEqual({
       clearedStageIds: [],
       lastSelectedStageId: null,
+      stageBgmIds: {},
     });
   });
 
@@ -74,6 +75,7 @@ describe('createGameSession', () => {
     state.stageProgress = {
       clearedStageIds: ['test-stage-dark'],
       lastSelectedStageId: 'test-stage-dark',
+      stageBgmIds: {},
     };
     const session = createGameSession(state);
 
@@ -91,6 +93,7 @@ describe('createGameSession', () => {
       stageProgress: {
         clearedStageIds: ['test-stage-dark'],
         lastSelectedStageId: 'test-stage-dark',
+        stageBgmIds: {},
       },
       deck: {
         id: state.deck.id,

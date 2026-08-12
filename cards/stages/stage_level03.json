@@ -26,5 +26,6 @@
   "unlock": {
     "type": "STAGE_CLEARED",
     "stageId": "level02"
-  }
+  },
+  "battleBgmId": "elegy-for-a-fading-star"
 }

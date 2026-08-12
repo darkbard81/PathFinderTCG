@@ -2,31 +2,34 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { appConfig } from '../config';
+import { classifyRuntimeAsset, type RuntimeAssetKind } from './classify-runtime-asset';
 
 const assetsRoot = path.resolve('assets');
 const outputFile = path.join(assetsRoot, 'assets.json');
 const manifestBase = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   revisionAlgorithm: 'sha256-12hex',
   assetBaseUrl: appConfig.assets.assetBaseUrl,
 };
-const textureExtensions = new Set(['.png', '.webp']);
-const videoExtensions = new Set(['.webm']);
-const attackMotionPathPrefix = 'motion/attack/';
 
 /**
  * manifest에 올릴 런타임 자산 폴더다. 여기 없는 폴더는 훑지 않는다.
  *
  * assets/ 전체를 훑으면 카드 이미지를 굽기 위한 원본까지 딸려 들어온다.
  * pf2e/monster_core/arts 1378MB, cards/png 381MB, cards/arts 272MB가 그것이고,
- * 런타임은 이 셋을 한 번도 요청하지 않는다. 프리로드는 .webp/.webm만 고르고
+ * 런타임은 이 셋을 한 번도 요청하지 않는다. 프리로드는 화면용 .webp/.webm만 고르고
  * (src/pixi/assets/preload-assets.ts), 그 밖에 manifest를 키로 조회하는 코드는 없다.
  * 담을 곳을 명시해야 새 원본 폴더가 생겨도 조용히 섞여 들어오지 않는다.
  *
  * motion/attack은 뺐다. 재생하는 코드가 아직 없어서 프리로드가 부팅마다 17MB를
  * 받고 버리기만 한다. 모션을 쓰게 되면 이 목록에 한 줄 되돌리면 된다.
+ *
+ * sound는 넣는다. BGM MP3와 voice/SFX WebM은 `audio`
+ * 배열에 따로 담기고 `selectPreloadAssets`가 그 배열을 보지 않으므로 부팅에 딸려오지
+ * 않는다. 여기 올리는 것은 revision을 얻기 위해서다. 그래야 4MB짜리 BGM이 내용 해시로
+ * 강한 ETag를 받아, 자산 트리를 다시 받아 mtime만 바뀌어도 재다운로드되지 않는다.
  */
-const runtimeAssetDirs = ['cards/webp', 'cards/badge', 'cards/standing', 'ui'];
+const runtimeAssetDirs = ['cards/webp', 'cards/badge', 'cards/standing', 'ui', 'sound'];
 
 /**
  * 런타임 자산이 아니라 다른 자산을 만들기 위한 원본이라 manifest에 올리지 않는다.
@@ -115,48 +118,41 @@ async function buildManifestEntry(filePath: string): Promise<AssetManifestEntry>
 }
 
 /**
- * 일반공격 모션으로 사용할 `motion/attack` webm만 video manifest 대상으로 판별한다.
- */
-function isAttackMotionVideo(filePath: string): boolean {
-  return (
-    toRelativePath(filePath).startsWith(attackMotionPathPrefix) &&
-    videoExtensions.has(path.extname(filePath).toLowerCase())
-  );
-}
-
-/**
- * `runtimeAssetDirs`를 순회해 텍스처와 전투 모션 manifest를 다시 생성한다.
+ * `runtimeAssetDirs`를 순회해 텍스처와 전투 모션, 소리 manifest를 다시 생성한다.
  * 실제 파일 해시와 경로를 함께 넣어 런타임 캐시 무결성을 유지한다.
  */
 async function main(): Promise<void> {
-  const textures: AssetManifestEntry[] = [];
-  const videos: AssetManifestEntry[] = [];
+  const buckets: Record<RuntimeAssetKind, AssetManifestEntry[]> = {
+    texture: [],
+    video: [],
+    audio: [],
+  };
   const files = await collectRuntimeFiles();
 
   for (const filePath of files) {
-    if (filePath === outputFile || excludedAssetPaths.has(toRelativePath(filePath))) {
+    const relativePath = toRelativePath(filePath);
+    if (filePath === outputFile || excludedAssetPaths.has(relativePath)) {
       continue;
     }
 
-    if (isAttackMotionVideo(filePath)) {
-      videos.push(await buildManifestEntry(filePath));
+    const kind = classifyRuntimeAsset(relativePath);
+    if (!kind) {
       continue;
     }
 
-    if (!textureExtensions.has(path.extname(filePath).toLowerCase())) {
-      continue;
-    }
-
-    textures.push(await buildManifestEntry(filePath));
+    buckets[kind].push(await buildManifestEntry(filePath));
   }
 
-  textures.sort((left, right) => left.key.localeCompare(right.key));
-  videos.sort((left, right) => left.key.localeCompare(right.key));
+  const { texture: textures, video: videos, audio } = buckets;
+  for (const entries of [textures, videos, audio]) {
+    entries.sort((left, right) => left.key.localeCompare(right.key));
+  }
 
   const manifestBody = {
     ...manifestBase,
     textures,
     videos,
+    audio,
   };
   const manifestRevision = createHash('sha256')
     .update(`${JSON.stringify(manifestBody, null, 2)}\n`)
@@ -175,7 +171,9 @@ async function main(): Promise<void> {
     )}\n`,
   );
 
-  console.log(`assets.json 갱신: 텍스처 ${textures.length}개, 모션 ${videos.length}개`);
+  console.log(
+    `assets.json 갱신: 텍스처 ${textures.length}개, 모션 ${videos.length}개, 소리 ${audio.length}개`,
+  );
 }
 
 main().catch((error: unknown) => {

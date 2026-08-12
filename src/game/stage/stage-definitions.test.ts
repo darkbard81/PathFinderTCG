@@ -29,6 +29,7 @@ const TEST_STAGE_DATA = {
     },
   },
   unlock: { type: 'ALWAYS' },
+  battleBgmId: null,
 } satisfies StageDefinition;
 
 describe('stage definitions', () => {
@@ -53,6 +54,7 @@ describe('stage definitions', () => {
         },
       },
       unlock: { type: 'ALWAYS' },
+      battleBgmId: null,
     });
   });
 
@@ -80,6 +82,8 @@ describe('stage definitions', () => {
     expect(stage).toMatchObject({
       name: 'Level 01',
       unlock: { type: 'ALWAYS' },
+      // 전투 곡은 스테이지 데이터가 정한다. 정렬순서 3번 곡이 첫 스테이지에 붙는다.
+      battleBgmId: 'pf2etcg-intro',
     });
     expect(enemyDeck.deckId).toBe('deck-enemy-level01');
     expect(enemyDeck.deckPath).toBe('cards/deck_level01.json');
@@ -106,6 +110,7 @@ describe('stage definitions', () => {
       isStageUnlocked(stage, {
         clearedStageIds: ['level01'],
         lastSelectedStageId: 'level01',
+        stageBgmIds: {},
       }),
     ).toBe(true);
   });
@@ -132,6 +137,7 @@ describe('stage definitions', () => {
       isStageUnlocked(stage, {
         clearedStageIds: [`level${previous}`],
         lastSelectedStageId: `level${previous}`,
+        stageBgmIds: {},
       }),
     ).toBe(true);
   });
@@ -245,6 +251,43 @@ function createStageData(overrides: Record<string, unknown> = {}): Record<string
       },
     },
     unlock: { type: 'ALWAYS' },
+    battleBgmId: null,
     ...overrides,
   };
 }
+
+describe('전투 BGM', () => {
+  it('스테이지가 정한 곡 id를 읽는다', () => {
+    const stages = loadStageDefinitions({
+      'cards/stages/stage_a.json': createStageData({ id: 'a', order: 1, battleBgmId: 'comic' }),
+    });
+
+    expect(stages[0]?.battleBgmId).toBe('comic');
+  });
+
+  it('없거나 null이면 흐르던 곡을 그대로 두라는 뜻이다', () => {
+    const stages = loadStageDefinitions({
+      'cards/stages/stage_a.json': createStageData({ id: 'a', order: 1, battleBgmId: null }),
+      'cards/stages/stage_b.json': createStageData({ id: 'b', order: 2, battleBgmId: undefined }),
+    });
+
+    expect(stages.map((stage) => stage.battleBgmId)).toEqual([null, null]);
+  });
+
+  it('빈 문자열은 거부한다', () => {
+    // 지운 것인지 오타인지 구분할 수 없다. 지울 때는 null을 쓴다.
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_a.json': createStageData({ battleBgmId: '' }),
+      }),
+    ).toThrow('battleBgmId must be a non-empty string or null');
+  });
+
+  it('실제 스테이지 데이터에 곡이 겹치지 않는다', () => {
+    const assigned = listStageDefinitions()
+      .map((stage) => stage.battleBgmId)
+      .filter((trackId): trackId is string => trackId !== null);
+
+    expect(new Set(assigned).size).toBe(assigned.length);
+  });
+});

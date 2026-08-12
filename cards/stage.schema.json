@@ -14,7 +14,8 @@
     "victoryCondition",
     "defeatConditions",
     "rewards",
-    "unlock"
+    "unlock",
+    "battleBgmId"
   ],
   "additionalProperties": false,
   "properties": {
@@ -65,6 +66,18 @@
     },
     "unlock": {
       "$ref": "#/$defs/unlockCondition"
+    },
+    "battleBgmId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ],
+      "description": "전투 중 흘릴 BGM 트랙 id. assets/sound/bgm/playlist.json의 id를 쓴다. null이면 들어올 때 흐르던 곡을 그대로 둔다."
     }
   },
   "$defs": {

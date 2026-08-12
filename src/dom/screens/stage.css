@@ -336,3 +336,49 @@
 .pf-stage__hud-button:disabled {
   cursor: not-allowed;
 }
+
+/*
+ * 전투 BGM 선택. 승리·패배 조건 아래에 선을 그어 구역을 나눈다.
+ * 조건은 스테이지가 정한 규칙이고 이쪽은 사용자가 고르는 값이라 성격이 다르다.
+ */
+.pf-stage__bgm {
+  display: grid;
+  gap: var(--pf-space-xs);
+  margin-top: var(--pf-space-md);
+  padding-top: var(--pf-space-md);
+  border-top: var(--pf-battlefield-rail-border);
+}
+
+.pf-stage__bgm[hidden] {
+  display: none;
+}
+
+.pf-stage__bgm-label {
+  display: grid;
+  gap: var(--pf-space-xs);
+  color: var(--pf-color-secondary);
+  font-size: 14px;
+}
+
+.pf-stage__bgm-select {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--pf-space-xs) var(--pf-space-sm);
+  box-sizing: border-box;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 6px;
+  background: var(--pf-surface-modal);
+  color: var(--pf-color-primary);
+  font: inherit;
+}
+
+/* 잠긴 드롭다운도 무엇이 나올지는 읽혀야 한다. 흐리게만 두고 감추지 않는다. */
+.pf-stage__bgm-select:disabled {
+  opacity: 0.6;
+}
+
+.pf-stage__bgm-hint {
+  margin: 0;
+  color: var(--pf-text-status-color);
+  font-size: 12px;
+}

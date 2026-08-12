@@ -162,6 +162,7 @@ describe('stage battle result', () => {
       stageProgress: {
         clearedStageIds: ['test-stage-dark'],
         lastSelectedStageId: null,
+        stageBgmIds: {},
       },
     });
 
@@ -179,6 +180,7 @@ describe('stage battle result', () => {
     expect(nextSession.stageProgress).toEqual({
       clearedStageIds: ['test-stage-dark'],
       lastSelectedStageId: 'test-stage-dark',
+      stageBgmIds: {},
     });
   });
 
@@ -224,6 +226,7 @@ describe('stage battle result', () => {
       stageProgress: {
         clearedStageIds: [],
         lastSelectedStageId: null,
+        stageBgmIds: {},
       },
     });
 
@@ -241,6 +244,7 @@ describe('stage battle result', () => {
     expect(nextSession.stageProgress).toEqual({
       clearedStageIds: [],
       lastSelectedStageId: 'test-stage-dark',
+      stageBgmIds: {},
     });
     expect(nextSession.collection.cards.map((card) => card.definition.id)).toEqual(
       CARD_DEFINITIONS.filter((definition) => definition.type === 'EQUIPMENT').map(

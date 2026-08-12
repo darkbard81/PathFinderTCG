@@ -36,6 +36,7 @@ describe('createInitialSaveState', () => {
     expect(state.stageProgress).toEqual({
       clearedStageIds: [],
       lastSelectedStageId: null,
+      stageBgmIds: {},
     });
 
     const instanceIds = new Set([

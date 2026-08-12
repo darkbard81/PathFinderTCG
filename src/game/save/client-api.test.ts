@@ -40,6 +40,7 @@ function createValidSaveSlotState(): SaveSlotState {
     stageProgress: {
       clearedStageIds: [],
       lastSelectedStageId: null,
+      stageBgmIds: {},
     },
     lobby: {
       ownedBackgroundIds: ['background_01'],
@@ -49,6 +50,8 @@ function createValidSaveSlotState(): SaveSlotState {
       standingPositionX: 56,
       standingPositionY: -100,
       standingScale: 100,
+      bgmTrackIds: [],
+      bgmPlayMode: 'sequential',
     },
     resources: {
       gold: 125_680,
@@ -211,6 +214,7 @@ describe('save slot client api', () => {
             stageProgress: {
               clearedStageIds: [],
               lastSelectedStageId: null,
+              stageBgmIds: {},
             },
             lobby: {
               ownedBackgroundIds: ['background_01'],
@@ -220,6 +224,8 @@ describe('save slot client api', () => {
               standingPositionX: 56,
               standingPositionY: 0,
               standingScale: 100,
+              bgmTrackIds: [],
+              bgmPlayMode: 'sequential',
             },
             resources: {
               gold: 0,
