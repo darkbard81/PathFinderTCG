@@ -6,8 +6,9 @@ function createManifest(overrides: Partial<AssetsManifest> = {}): AssetsManifest
     assetBaseUrl: '/tcg',
     textures: [],
     videos: [],
+    audio: [],
     manifestRevision: 'rev',
-    schemaVersion: 2,
+    schemaVersion: 3,
     revisionAlgorithm: 'sha1',
     ...overrides,
   };
@@ -51,5 +52,17 @@ describe('selectPreloadAssets', () => {
 
   it('대상이 없으면 빈 목록을 반환한다', () => {
     expect(selectPreloadAssets(createManifest())).toEqual([]);
+  });
+
+  it('소리는 확장자가 webm이어도 프리로드하지 않는다', () => {
+    const manifest = createManifest({
+      audio: [
+        { key: 'sound.bgm.intro', path: 'sound/bgm/intro.webm', revision: 'a' },
+        { key: 'sound.voice.title-intro', path: 'sound/voice/title-intro.webm', revision: 'b' },
+      ],
+    });
+
+    // BGM은 흘려 받고 SFX는 필요할 때 디코드한다. 부팅에 25MB를 딸려 보내면 안 된다.
+    expect(selectPreloadAssets(manifest)).toEqual([]);
   });
 });

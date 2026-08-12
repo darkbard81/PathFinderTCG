@@ -28,5 +28,22 @@ describe('asset manifest helpers', () => {
     });
 
     expect(normalized.videos).toEqual([]);
+    expect(normalized.audio).toEqual([]);
+  });
+
+  it('audio가 있는 manifest는 그대로 둔다', () => {
+    const audio = [{ key: 'sound.bgm.intro', path: 'sound/bgm/intro.webm', revision: 'a' }];
+
+    expect(
+      normalizeAssetsManifest({
+        assetBaseUrl: '/tcg',
+        textures: [],
+        videos: [],
+        audio,
+        manifestRevision: 'rev',
+        schemaVersion: 3,
+        revisionAlgorithm: 'sha256-12hex',
+      }).audio,
+    ).toEqual(audio);
   });
 });

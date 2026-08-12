@@ -143,7 +143,10 @@ async function findRevision(filePath: string): Promise<string | undefined> {
       revisionCache = {
         mtimeMs,
         byPath: new Map(
-          [...manifest.textures, ...manifest.videos].map((entry) => [entry.path, entry.revision]),
+          [...manifest.textures, ...manifest.videos, ...manifest.audio].map((entry) => [
+            entry.path,
+            entry.revision,
+          ]),
         ),
       };
     }
@@ -208,6 +211,20 @@ function isWithinDirectory(targetPath: string, directoryPath: string): boolean {
   return relativePath !== '' && !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
 }
 
+/**
+ * `.webm`이 모션 비디오와 소리 양쪽에 쓰여 확장자만으로는 가를 수 없다.
+ * `classifyRuntimeAsset`이 manifest를 만들 때 쓰는 것과 같은 경로 규칙을 쓴다.
+ */
+export function isSoundAssetPath(manifestPath: string): boolean {
+  return manifestPath.startsWith('sound/');
+}
+
+/**
+ * 확장자와 경로로 Content-Type을 정한다.
+ *
+ * 소리만 든 webm에 `video/webm`을 붙이면 안 된다. Chrome은 내용을 보고 알아서 틀지만
+ * Safari는 선언한 형식을 믿어서 `<audio>`가 받기를 거부한다.
+ */
 function getMimeType(filePath: string): string {
   switch (path.extname(filePath).toLowerCase()) {
     case '.png':
@@ -217,7 +234,7 @@ function getMimeType(filePath: string): string {
     case '.gif':
       return 'image/gif';
     case '.webm':
-      return 'video/webm';
+      return isSoundAssetPath(toManifestPath(filePath)) ? 'audio/webm' : 'video/webm';
     case '.mov':
       return 'video/quicktime';
     case '.jpg':
