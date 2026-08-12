@@ -12,6 +12,7 @@ import {
 import { MAIN_MENU_VOICE_TRACK_ID, selectMainBgmTrack } from './game/sound/sound-cues';
 import { SoundPlayer } from './game/sound/sound-player';
 import { unlockSoundOnGesture } from './game/sound/unlock-on-gesture';
+import { loadVolumeState, saveVolumeState } from './game/sound/volume-storage';
 import { WebAudioBackend } from './game/sound/web-audio-backend';
 import type { StageBattleResult } from './game/stage/types';
 import { createPixiApp } from './pixi/app/create-app';
@@ -97,6 +98,9 @@ void (async (): Promise<void> => {
     try {
       return new SoundPlayer({
         backend: new WebAudioBackend(),
+        // 볼륨은 기기에 저장한다. 슬롯을 따라다니면 안 되는 값이다.
+        volume: loadVolumeState(),
+        onVolumeChange: (state) => saveVolumeState(state),
         onError: (message, error) => console.warn(`[sound] ${message}`, error),
       });
     } catch (error: unknown) {
@@ -266,6 +270,7 @@ void (async (): Promise<void> => {
           void showGrowth(currentSession);
         },
         standingPlayback: lobbyStandingPlayback,
+        ...(soundPlayer ? { volume: soundPlayer } : {}),
         onLoggedOut: (message) => {
           void showTitle(message);
         },

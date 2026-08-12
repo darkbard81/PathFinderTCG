@@ -5,6 +5,7 @@ import {
   type LobbyMenuItem,
   type LobbyStandingPlayback,
   type LobbyView,
+  type LobbyViewOptions,
 } from '../../dom/screens/lobby-view';
 import { joinAssetUrl } from '../../game/assets/manifest';
 import { findLobbyBackground, LOBBY_BACKGROUNDS } from '../../game/lobby/backgrounds';
@@ -25,6 +26,7 @@ import {
   type GameSession,
 } from '../../game/save/session';
 import type { SaveSlotState } from '../../game/save/types';
+import type { SoundVolumeControl } from '../../game/sound/sound-player';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
@@ -66,6 +68,8 @@ export type LobbySceneOptions = {
   onEquipment: (session: GameSession) => void;
   onGrowth: (session: GameSession) => void;
   onLoggedOut: (statusMessage: string) => void;
+  /** 설정 다이얼로그의 볼륨 슬라이더가 쓴다. 소리를 켤 수 없으면 넘기지 않는다. */
+  volume?: SoundVolumeControl;
   /** Lobby를 다시 열 때 standing 영상의 마지막 위치를 복원한다. */
   standingPlayback?: LobbyStandingPlayback;
   view?: LobbyView;
@@ -127,7 +131,7 @@ export class LobbyScene implements Scene {
     this.layoutCanvas(layout);
   }
 
-  private buildViewOptions(standingPlayback?: LobbyStandingPlayback) {
+  private buildViewOptions(standingPlayback?: LobbyStandingPlayback): LobbyViewOptions {
     const guard = (run: () => void) => () => {
       if (!this.isLoggingOut) {
         run();
@@ -168,6 +172,7 @@ export class LobbyScene implements Scene {
     ];
 
     const leaderId = this.options.session.deck.leader.definition.id;
+    const volume = this.options.volume;
 
     return {
       standingSources: STANDING_FILE_SUFFIXES.map((suffix) =>
@@ -193,6 +198,14 @@ export class LobbyScene implements Scene {
         standingPositionY: DEFAULT_LOBBY_STANDING_POSITION_Y,
         standingScale: DEFAULT_LOBBY_STANDING_SCALE,
       },
+      ...(volume
+        ? {
+            volume: {
+              state: volume.getVolume(),
+              onChange: (channel, patch) => volume.setVolume(channel, patch),
+            },
+          }
+        : {}),
       ...(standingPlayback ? { standingPlayback } : {}),
       onSaveName: (saveName: string) => void this.saveName(saveName),
       onSaveCustomization: (customization: LobbyCustomizationModel) =>

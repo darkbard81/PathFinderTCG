@@ -165,6 +165,21 @@ describe('SoundPlayer BGM', () => {
     expect(fake.streams[0]?.handle.stop).toHaveBeenCalled();
     expect(player.getPlayingBgmId()).toBeNull();
   });
+
+  it('비동기 BGM 디코드가 실패하면 알리고 같은 곡을 다시 요청할 수 있다', () => {
+    const fake = createFakeBackend();
+    const onError = vi.fn();
+    const player = new SoundPlayer({ backend: fake.backend, onError });
+
+    player.requestBgm(bgm('intro'));
+    fake.streams[0]?.onError?.(new Error('decode 실패'));
+
+    expect(player.getPlayingBgmId()).toBeNull();
+    expect(onError).toHaveBeenCalledWith(expect.stringContaining('intro'), expect.any(Error));
+
+    player.requestBgm(bgm('intro'));
+    expect(fake.streams).toHaveLength(2);
+  });
 });
 
 describe('SoundPlayer 자동재생 잠금', () => {

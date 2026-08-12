@@ -20,6 +20,7 @@ import goldIconUrl from '../../assets/ui/icons/resource/gold.webp';
 import manaStoneIconUrl from '../../assets/ui/icons/resource/mana-stone.webp';
 import summonTicketIconUrl from '../../assets/ui/icons/resource/summon-ticket.webp';
 import type { LobbyStandingMediaType } from '../../game/lobby/lobby-state';
+import type { ChannelVolume, SoundVolumeState, VolumeChannel } from '../../game/sound/volume';
 import type { ResourceKey, ResourceState } from '../../game/resources/resource-state';
 
 const LOBBY_ICON_URLS = {
@@ -67,6 +68,12 @@ export type LobbyStandingDefaults = {
   standingScale: number;
 };
 
+/** 설정 다이얼로그가 그릴 볼륨 값과 사용자 입력 콜백이다. */
+export type LobbyVolumeViewModel = {
+  state: SoundVolumeState;
+  onChange: (channel: VolumeChannel, patch: Partial<ChannelVolume>) => void;
+};
+
 /** DOM이 표시하고 입력으로 돌려주는 로비 standing 설정값이다. */
 export type LobbyCustomizationModel = {
   selectedBackgroundId: string;
@@ -100,6 +107,8 @@ export type LobbyViewOptions = {
   standingPositionYRange: { min: number; max: number };
   standingScaleRange: { min: number; max: number };
   standingDefaults: LobbyStandingDefaults;
+  /** 설정 다이얼로그의 볼륨 값과 입력 콜백이다. 없으면 소리 구역을 만들지 않는다. */
+  volume?: LobbyVolumeViewModel;
   /** Lobby를 잠시 떠날 때 복원할 standing 영상의 일시 재생 상태다. */
   standingPlayback?: LobbyStandingPlayback;
   onSaveName: (saveName: string) => void;
@@ -218,6 +227,7 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
   settingsButton.append(settingsIcon, settingsLabel);
 
   const settings = createSettingsDialog({
+    volume: options.volume,
     saveName: options.saveName,
     saveNameMaxLength: options.saveNameMaxLength,
     onSaveName: options.onSaveName,
@@ -467,6 +477,75 @@ function applyStandingCustomization(
     ?.toggleAttribute('hidden', !customization.standingVisible);
 }
 
+/** 볼륨 슬라이더에 붙일 채널과 이름이다. 순서대로 보여준다. */
+const VOLUME_CHANNEL_LABELS: readonly { channel: VolumeChannel; label: string }[] = [
+  { channel: 'master', label: '전체' },
+  { channel: 'bgm', label: '음악' },
+  { channel: 'sfx', label: '효과음' },
+  { channel: 'voice', label: '음성' },
+];
+
+/**
+ * 채널 하나의 볼륨 줄이다. 슬라이더와 음소거가 한 쌍으로 움직인다.
+ *
+ * 음소거를 볼륨 0으로 대신하지 않으므로 둘을 따로 둔다. 음소거 중에도 슬라이더 값은
+ * 남아 있어야 풀었을 때 원래 크기로 돌아간다.
+ */
+function createVolumeRow(
+  label: string,
+  onChange: (patch: Partial<ChannelVolume>) => void,
+): {
+  root: HTMLDivElement;
+  setValue: (volume: ChannelVolume) => void;
+} {
+  const root = document.createElement('div');
+  root.className = 'pf-lobby__volume-row';
+
+  const heading = document.createElement('span');
+  heading.className = 'pf-lobby__settings-range-heading';
+  const name = document.createElement('span');
+  name.textContent = label;
+  const output = document.createElement('output');
+  heading.append(name, output);
+
+  const slider = document.createElement('input');
+  slider.className = 'pf-lobby__settings-range';
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '100';
+  slider.step = '1';
+  slider.setAttribute('aria-label', `${label} 볼륨`);
+
+  const mute = document.createElement('input');
+  mute.type = 'checkbox';
+  mute.className = 'pf-lobby__volume-mute';
+  mute.setAttribute('aria-label', `${label} 음소거`);
+
+  root.append(heading, slider, mute);
+
+  const refreshOutput = (): void => {
+    output.value = mute.checked ? '음소거' : `${slider.value}%`;
+  };
+
+  slider.addEventListener('input', () => {
+    refreshOutput();
+    onChange({ level: Number(slider.value) });
+  });
+  mute.addEventListener('change', () => {
+    refreshOutput();
+    onChange({ muted: mute.checked });
+  });
+
+  return {
+    root,
+    setValue: (volume) => {
+      slider.value = `${volume.level}`;
+      mute.checked = volume.muted;
+      refreshOutput();
+    },
+  };
+}
+
 /**
  * 로비 설정 다이얼로그다.
  *
@@ -479,6 +558,7 @@ function applyStandingCustomization(
 function createSettingsDialog(options: {
   saveName: string;
   saveNameMaxLength: number;
+  volume: LobbyVolumeViewModel | undefined;
   onSaveName: (saveName: string) => void;
   onBack: () => void;
   onLogout: () => void;
@@ -540,6 +620,32 @@ function createSettingsDialog(options: {
   saveNameButton.type = 'submit';
   nameForm.append(nameTitle, nameLabel, saveNameButton);
 
+  /*
+   * 소리 구역이다. 소리를 켤 수 없는 환경이면 통째로 만들지 않는다.
+   * 만지면 아무 일도 안 일어나는 슬라이더를 보여 주는 편이 더 헷갈린다.
+   */
+  const volumeModel = options.volume;
+  const volumeRows: ReturnType<typeof createVolumeRow>[] = [];
+  const volumeSection = document.createElement('section');
+  if (volumeModel) {
+    volumeSection.className = 'pf-lobby__settings-section';
+    const volumeTitle = document.createElement('h3');
+    volumeTitle.className = 'pf-lobby__settings-section-title';
+    volumeTitle.textContent = '소리';
+    volumeSection.append(volumeTitle);
+
+    for (const { channel, label } of VOLUME_CHANNEL_LABELS) {
+      const row = createVolumeRow(label, (patch) => volumeModel.onChange(channel, patch));
+      volumeRows.push(row);
+      volumeSection.append(row.root);
+    }
+
+    // 저장된 값으로 슬라이더를 맞춘다. 기기마다 다른 값이 들어 있다.
+    VOLUME_CHANNEL_LABELS.forEach(({ channel }, index) => {
+      volumeRows[index]?.setValue(volumeModel.state[channel]);
+    });
+  }
+
   const backButton = createAccountButton('뒤로', options.onBack);
   const logoutButton = createAccountButton('Logout', options.onLogout);
   const accountActions = document.createElement('div');
@@ -549,7 +655,7 @@ function createSettingsDialog(options: {
   settingsStatus.className = 'pf-lobby__settings-status';
   settingsStatus.setAttribute('role', 'status');
   settingsStatus.setAttribute('aria-live', 'polite');
-  body.append(nameForm, settingsStatus, accountActions);
+  body.append(nameForm, ...(volumeModel ? [volumeSection] : []), settingsStatus, accountActions);
 
   panel.append(header, body);
   root.append(panel);
@@ -608,6 +714,10 @@ function createSettingsDialog(options: {
       settingsStatus.textContent = message;
     },
     setBusy: (busy) => {
+      /*
+       * 볼륨 슬라이더는 잠그지 않는다. 저장 요청과 아무 상관이 없고, 소리가 거슬려
+       * 줄이려는 순간에 잠기면 곤란하다. 잠그는 것은 저장에 얽힌 것들뿐이다.
+       */
       for (const control of controls) {
         control.disabled = busy;
       }

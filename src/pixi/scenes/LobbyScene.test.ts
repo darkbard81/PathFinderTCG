@@ -1,13 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Texture } from 'pixi.js';
-import type { LobbyCustomizationModel, LobbyView } from '../../dom/screens/lobby-view';
+import type {
+  LobbyCustomizationModel,
+  LobbyView,
+  LobbyViewOptions,
+} from '../../dom/screens/lobby-view';
 import { createInitialSaveState } from '../../game/save/create-initial-save';
 import { createGameSession, type GameSession } from '../../game/save/session';
+import type { SoundVolumeControl } from '../../game/sound/sound-player';
+import { createDefaultVolumeState } from '../../game/sound/volume';
 import { LobbyScene } from './LobbyScene';
 
 type LobbyHarness = {
   saveName: (saveName: string) => Promise<void>;
   saveCustomization: (customization: LobbyCustomizationModel) => Promise<void>;
+  buildViewOptions: () => LobbyViewOptions;
   replaceBackground: (backgroundId: string) => Promise<boolean>;
   loadAsset: () => Promise<Texture | null>;
   backgroundId: string | null;
@@ -33,7 +40,10 @@ function createMockView(): LobbyView & {
   };
 }
 
-function createHarness(session: GameSession, options: { stubBackground?: boolean } = {}) {
+function createHarness(
+  session: GameSession,
+  options: { stubBackground?: boolean; volume?: SoundVolumeControl } = {},
+) {
   const view = createMockView();
   const save = vi.fn(async (state) => state);
   const scene = new LobbyScene({
@@ -49,6 +59,7 @@ function createHarness(session: GameSession, options: { stubBackground?: boolean
     onEquipment: vi.fn(),
     onGrowth: vi.fn(),
     onLoggedOut: vi.fn(),
+    ...(options.volume ? { volume: options.volume } : {}),
     view,
   }) as unknown as LobbyHarness;
   const replaceBackground = vi.fn(async () => true);
@@ -75,6 +86,23 @@ describe('LobbyScene settings', () => {
     expect(view.setSaveName).toHaveBeenLastCalledWith('두 번째 모험');
     expect(view.setSettingsStatus).toHaveBeenLastCalledWith('저장 이름을 바꿨습니다.');
     expect(view.setStatus).not.toHaveBeenCalled();
+  });
+
+  it('볼륨 상태는 Presenter가 읽고 DOM에는 값과 입력 콜백만 넘긴다', async () => {
+    const session = createGameSession(await createInitialSaveState({ slotId: 1 }));
+    const state = createDefaultVolumeState();
+    state.bgm.level = 35;
+    const volume: SoundVolumeControl = {
+      getVolume: vi.fn(() => state),
+      setVolume: vi.fn(),
+    };
+    const { scene } = createHarness(session, { volume });
+
+    const viewOptions = scene.buildViewOptions();
+
+    expect(viewOptions.volume?.state.bgm.level).toBe(35);
+    viewOptions.volume?.onChange('bgm', { level: 20 });
+    expect(volume.setVolume).toHaveBeenCalledWith('bgm', { level: 20 });
   });
 
   it('보유 배경과 standing 표시, 미디어 형식, 위치, 크기를 한 저장 상태로 반영한다', async () => {

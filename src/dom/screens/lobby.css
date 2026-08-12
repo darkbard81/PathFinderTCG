@@ -432,3 +432,33 @@
   position: relative;
   z-index: 1;
 }
+
+/*
+ * 볼륨 줄. 이름과 값이 한 줄, 그 아래 슬라이더와 음소거가 한 줄이다.
+ * 음소거는 슬라이더 오른쪽에 붙여 둘이 한 쌍임을 보인다.
+ */
+.pf-lobby__volume-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'heading heading'
+    'slider mute';
+  align-items: center;
+  gap: var(--pf-space-xs) var(--pf-space-sm);
+  color: var(--pf-color-secondary);
+  font-size: 14px;
+}
+
+.pf-lobby__volume-row .pf-lobby__settings-range-heading {
+  grid-area: heading;
+}
+
+.pf-lobby__volume-row .pf-lobby__settings-range {
+  grid-area: slider;
+}
+
+.pf-lobby__volume-mute {
+  grid-area: mute;
+  width: 20px;
+  height: 20px;
+}

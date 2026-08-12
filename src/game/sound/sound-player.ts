@@ -36,6 +36,17 @@ export type SoundPlayerOptions = {
   onError?: (message: string, error: unknown) => void;
 };
 
+/**
+ * 화면이 볼륨을 만질 때 쓰는 좁은 표면이다.
+ *
+ * 설정 다이얼로그에 `SoundPlayer`를 통째로 넘기지 않는다. 화면이 필요한 것은 값을
+ * 읽고 바꾸는 일뿐이고, 재생과 잠금 해제까지 손댈 수 있게 두면 씬이 소리 수명에 얽힌다.
+ */
+export type SoundVolumeControl = {
+  getVolume: () => SoundVolumeState;
+  setVolume: (channel: VolumeChannel, patch: Partial<ChannelVolume>) => void;
+};
+
 type ActiveBgm = {
   trackId: string;
   handle: SoundVoiceHandle;
@@ -285,13 +296,21 @@ export class SoundPlayer {
   private startBgm(track: SoundTrackSource<BgmTrack>): void {
     const previous = this.bgm;
     const gain = decibelToGain(track.gainDb);
+    const started: { handle?: SoundVoiceHandle } = {};
     const handle = this.backend.playStream({
       url: track.url,
       channel: 'bgm',
       // 울리던 곡이 없으면 겹칠 것도 없으니 곧바로 제 크기로 시작한다.
       gain: previous ? 0 : gain,
       loop: true,
+      onError: (error) => {
+        if (started.handle && this.bgm?.handle === started.handle) {
+          this.bgm = null;
+        }
+        this.onError?.(`bgm 재생 실패: ${track.id}`, error);
+      },
     });
+    started.handle = handle;
 
     if (previous) {
       handle.setGain(gain, this.crossfadeSeconds);
