@@ -462,3 +462,152 @@
   width: 20px;
   height: 20px;
 }
+
+/* 꾸미기 다이얼로그의 탭. 고른 탭만 남기고 나머지는 hidden으로 감춘다. */
+.pf-lobby__tabs {
+  display: grid;
+  gap: var(--pf-space-sm);
+  min-height: 0;
+}
+
+.pf-lobby__tab-strip {
+  display: flex;
+  gap: var(--pf-space-xs);
+  border-bottom: var(--pf-battlefield-rail-border);
+}
+
+.pf-lobby__tab {
+  padding: var(--pf-space-xs) var(--pf-space-md);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--pf-color-secondary);
+  font: inherit;
+  font-weight: 700;
+}
+
+.pf-lobby__tab.is-active {
+  border-bottom-color: var(--pf-color-primary-warm);
+  color: var(--pf-color-primary-warm);
+}
+
+.pf-lobby__tab-panels {
+  min-height: 0;
+}
+
+.pf-lobby__tab-panels > [hidden] {
+  display: none;
+}
+
+/* BGM 탭. 조작 줄이 위에 붙고 목록이 그 아래에서 스크롤한다. */
+.pf-lobby__bgm-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--pf-space-sm);
+  min-height: 0;
+}
+
+.pf-lobby__bgm-actions {
+  display: flex;
+  gap: var(--pf-space-sm);
+}
+
+.pf-lobby__bgm-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 6px;
+  background: var(--pf-surface-modal);
+  color: var(--pf-color-secondary);
+}
+
+.pf-lobby__bgm-button.is-active {
+  border-color: var(--pf-color-primary-warm);
+  color: var(--pf-color-primary-warm);
+}
+
+.pf-media-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.pf-lobby__bgm-list {
+  display: grid;
+  gap: 2px;
+  max-height: min(46vh, 320px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.pf-lobby__bgm-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: var(--pf-space-xs);
+  padding: 4px var(--pf-space-xs);
+  border-radius: 4px;
+  color: var(--pf-color-secondary);
+  font-size: 14px;
+}
+
+/* 고른 곡은 색으로 구분한다. 순서 번호만으로는 목록이 길 때 눈에 안 들어온다. */
+.pf-lobby__bgm-row.is-selected {
+  background: var(--pf-surface-panel);
+  color: var(--pf-color-primary);
+}
+
+.pf-lobby__bgm-label {
+  display: flex;
+  align-items: center;
+  gap: var(--pf-space-xs);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-lobby__bgm-order {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 4px;
+  background: var(--pf-surface-modal);
+  color: var(--pf-color-secondary);
+  font-size: 11px;
+}
+
+.pf-lobby__bgm-order:disabled {
+  opacity: 0.35;
+}
+
+.pf-lobby__bgm-empty {
+  margin: 0;
+  color: var(--pf-text-status-color);
+  font-size: 13px;
+}
+
+.pf-lobby__bgm-empty[hidden] {
+  display: none;
+}
+
+/*
+ * 재생 중 표시. 자리는 늘 잡아 두고 보이기만 껐다 켠다.
+ * 곡이 바뀔 때마다 넣고 빼면 그 줄만 너비가 달라져 목록이 흔들린다.
+ */
+.pf-lobby__bgm-note {
+  width: 16px;
+  height: 16px;
+  color: var(--pf-color-primary-warm);
+  visibility: hidden;
+}
+
+.pf-lobby__bgm-note.is-playing {
+  visibility: visible;
+}

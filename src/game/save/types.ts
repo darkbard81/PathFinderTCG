@@ -3,7 +3,7 @@ import type { LobbyState } from '../lobby/lobby-state';
 import type { ResourceState } from '../resources/resource-state';
 import type { StageProgressState } from '../stage/types';
 
-export const SAVE_SLOT_SCHEMA_VERSION = 9 as const;
+export const SAVE_SLOT_SCHEMA_VERSION = 10 as const;
 
 export type SaveSlotId = 1 | 2 | 3;
 
@@ -48,7 +48,10 @@ export type SaveSlotState = {
   collection: CardCollection;
   equipment: EquipmentState;
   stageProgress: StageProgressState;
-  /** 로비 꾸미기 상태다. schemaVersion 5에 배경, 7에 standing 설정, 8에 세로 위치, 9에 미디어 선택이 들어왔다. */
+  /**
+   * 로비 꾸미기 상태다. schemaVersion 5에 배경, 7에 standing 설정, 8에 세로 위치,
+   * 9에 미디어 선택, 10에 로비 BGM 플레이리스트가 들어왔다.
+   */
   lobby: LobbyState;
   /** 골드·마나석·소환 티켓 잔액이다. schemaVersion 6에서 들어왔다. */
   resources: ResourceState;

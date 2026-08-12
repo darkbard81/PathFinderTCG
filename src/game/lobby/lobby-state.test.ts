@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_LOBBY_BACKGROUND_ID, LOBBY_BACKGROUNDS } from './backgrounds';
 import {
   createDefaultLobbyState,
+  DEFAULT_LOBBY_BGM_PLAY_MODE,
+  LOBBY_BGM_TRACK_LIMIT,
   DEFAULT_LOBBY_STANDING_MEDIA_TYPE,
   DEFAULT_LOBBY_STANDING_POSITION_X,
   DEFAULT_LOBBY_STANDING_POSITION_Y,
@@ -159,5 +161,59 @@ describe('normalizeLobbyState', () => {
         standingMediaType: 'audio',
       }),
     ).toThrow('standingMediaType');
+  });
+});
+
+describe('로비 BGM 플레이리스트', () => {
+  const base = {
+    ownedBackgroundIds: [DEFAULT_LOBBY_BACKGROUND_ID],
+    selectedBackgroundId: DEFAULT_LOBBY_BACKGROUND_ID,
+  };
+
+  it('schemaVersion 9 이하의 누락을 빈 목록과 순차 재생으로 채운다', () => {
+    // 비어 있으면 로비 전용 곡이 없다는 뜻이고 Main BGM이 그대로 흐른다.
+    expect(normalizeLobbyState(base)).toMatchObject({
+      bgmTrackIds: [],
+      bgmPlayMode: DEFAULT_LOBBY_BGM_PLAY_MODE,
+    });
+  });
+
+  it('적은 순서를 그대로 재생 순서로 지킨다', () => {
+    expect(
+      normalizeLobbyState({ ...base, bgmTrackIds: ['neon-velocity', 'intro', 'comic'] })
+        .bgmTrackIds,
+    ).toEqual(['neon-velocity', 'intro', 'comic']);
+  });
+
+  it('같은 곡이 두 번 담기면 앞의 것만 남긴다', () => {
+    // 두 번 있으면 다음 곡이 어디인지 정해지지 않고 셔플에서도 그 곡만 자주 나온다.
+    expect(
+      normalizeLobbyState({ ...base, bgmTrackIds: ['intro', 'comic', 'intro'] }).bgmTrackIds,
+    ).toEqual(['intro', 'comic']);
+  });
+
+  it('없는 곡 id도 그대로 둔다', () => {
+    // 곡 목록은 런타임 자산이라 저장 스키마가 알 수 없다. 거르는 일은 재생기가 맡는다.
+    expect(normalizeLobbyState({ ...base, bgmTrackIds: ['사라진곡'] }).bgmTrackIds).toEqual([
+      '사라진곡',
+    ]);
+  });
+
+  it('셔플을 저장하고 되읽는다', () => {
+    expect(normalizeLobbyState({ ...base, bgmPlayMode: 'shuffle' }).bgmPlayMode).toBe('shuffle');
+  });
+
+  it('구조가 어긋난 값을 거부한다', () => {
+    expect(() => normalizeLobbyState({ ...base, bgmTrackIds: 'intro' })).toThrow('bgmTrackIds');
+    expect(() => normalizeLobbyState({ ...base, bgmTrackIds: [1] })).toThrow('bgmTrackIds');
+    expect(() => normalizeLobbyState({ ...base, bgmPlayMode: 'auto-reverse' })).toThrow(
+      'bgmPlayMode',
+    );
+    expect(() =>
+      normalizeLobbyState({
+        ...base,
+        bgmTrackIds: Array.from({ length: LOBBY_BGM_TRACK_LIMIT + 1 }, (_, index) => `t${index}`),
+      }),
+    ).toThrow('exceed');
   });
 });

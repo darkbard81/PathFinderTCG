@@ -7,6 +7,7 @@ import {
 } from './types';
 import { RESOURCE_KEYS } from '../resources/resource-state';
 import {
+  isLobbyBgmPlayMode,
   isLobbyStandingMediaType,
   LOBBY_STANDING_POSITION_X_RANGE,
   LOBBY_STANDING_POSITION_Y_RANGE,
@@ -146,7 +147,10 @@ function isLobbyState(value: unknown): boolean {
     isLobbyStandingMediaType(value.standingMediaType) &&
     isNumberInRange(value.standingPositionX, LOBBY_STANDING_POSITION_X_RANGE) &&
     isNumberInRange(value.standingPositionY, LOBBY_STANDING_POSITION_Y_RANGE) &&
-    isNumberInRange(value.standingScale, LOBBY_STANDING_SCALE_RANGE)
+    isNumberInRange(value.standingScale, LOBBY_STANDING_SCALE_RANGE) &&
+    Array.isArray(value.bgmTrackIds) &&
+    value.bgmTrackIds.every((trackId) => typeof trackId === 'string') &&
+    isLobbyBgmPlayMode(value.bgmPlayMode)
   );
 }
 

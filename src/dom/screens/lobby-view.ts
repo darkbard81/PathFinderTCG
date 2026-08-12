@@ -19,8 +19,9 @@ import shieldIconUrl from '../../assets/ui/icons/lobby/shield.webp';
 import goldIconUrl from '../../assets/ui/icons/resource/gold.webp';
 import manaStoneIconUrl from '../../assets/ui/icons/resource/mana-stone.webp';
 import summonTicketIconUrl from '../../assets/ui/icons/resource/summon-ticket.webp';
-import type { LobbyStandingMediaType } from '../../game/lobby/lobby-state';
+import type { LobbyBgmPlayMode, LobbyStandingMediaType } from '../../game/lobby/lobby-state';
 import type { ChannelVolume, SoundVolumeState, VolumeChannel } from '../../game/sound/volume';
+import { createMediaIcon, type MediaIconName } from './media-icons';
 import type { ResourceKey, ResourceState } from '../../game/resources/resource-state';
 
 const LOBBY_ICON_URLS = {
@@ -74,7 +75,13 @@ export type LobbyVolumeViewModel = {
   onChange: (channel: VolumeChannel, patch: Partial<ChannelVolume>) => void;
 };
 
-/** DOM이 표시하고 입력으로 돌려주는 로비 standing 설정값이다. */
+/** BGM 탭이 고를 수 있는 곡 하나다. 로비 플레이리스트에 담을 후보다. */
+export type LobbyBgmTrackOption = {
+  id: string;
+  title: string;
+};
+
+/** DOM이 표시하고 입력으로 돌려주는 로비 꾸미기 설정값이다. */
 export type LobbyCustomizationModel = {
   selectedBackgroundId: string;
   standingVisible: boolean;
@@ -82,6 +89,9 @@ export type LobbyCustomizationModel = {
   standingPositionX: number;
   standingPositionY: number;
   standingScale: number;
+  /** 로비에서 흘릴 곡 id다. 적힌 순서가 재생 순서다. */
+  bgmTrackIds: string[];
+  bgmPlayMode: LobbyBgmPlayMode;
 };
 
 export type LobbyViewOptions = {
@@ -107,6 +117,13 @@ export type LobbyViewOptions = {
   standingPositionYRange: { min: number; max: number };
   standingScaleRange: { min: number; max: number };
   standingDefaults: LobbyStandingDefaults;
+  /** BGM 탭에서 고를 수 있는 곡이다. 비면 BGM 탭을 만들지 않는다. */
+  bgmTracks?: LobbyBgmTrackOption[];
+  /** BGM 탭의 재생 버튼이 부른다. 지금 짜고 있는 목록을 그대로 들려준다. */
+  onPlayBgmPreview?: (trackIds: string[], mode: LobbyBgmPlayMode) => void;
+  onStopBgmPreview?: () => void;
+  /** BGM 탭의 이전·다음 버튼이 부른다. 목록을 돌고 있을 때만 뜻이 있다. */
+  onSkipBgm?: (delta: 1 | -1) => void;
   /** 설정 다이얼로그의 볼륨 값과 입력 콜백이다. 없으면 소리 구역을 만들지 않는다. */
   volume?: LobbyVolumeViewModel;
   /** Lobby를 잠시 떠날 때 복원할 standing 영상의 일시 재생 상태다. */
@@ -128,6 +145,8 @@ export type LobbyView = {
   setSettingsStatus: (message: string) => void;
   /** 로비 꾸미기 다이얼로그 안의 상태를 바꾼다. */
   setCustomizationStatus: (message: string) => void;
+  /** BGM 탭에서 지금 울리는 곡을 음표로 짚어 준다. */
+  setPlayingBgmTrackId: (trackId: string | null) => void;
   setBusy: (busy: boolean) => void;
 };
 
@@ -262,6 +281,10 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
     standingPositionYRange: options.standingPositionYRange,
     standingScaleRange: options.standingScaleRange,
     standingDefaults: options.standingDefaults,
+    bgmTracks: options.bgmTracks ?? [],
+    onPlayBgmPreview: options.onPlayBgmPreview ?? (() => undefined),
+    onStopBgmPreview: options.onStopBgmPreview ?? (() => undefined),
+    onSkipBgm: options.onSkipBgm ?? (() => undefined),
     onSaveCustomization: options.onSaveCustomization,
     onPreviewCustomization: previewLobbyCustomization,
     onOpenChange: (open) => customizationButton.setAttribute('aria-expanded', String(open)),
@@ -299,6 +322,7 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
     },
     setSettingsStatus: settings.setStatus,
     setCustomizationStatus: customizationDialog.setStatus,
+    setPlayingBgmTrackId: customizationDialog.setPlayingBgmTrackId,
     setBusy: (busy) => {
       for (const button of [...buttons, settingsButton, customizationButton]) {
         button.disabled = busy;
@@ -725,7 +749,255 @@ function createSettingsDialog(options: {
   };
 }
 
-/** 배경과 standing 표시·위치·크기를 조정하는 로비 전용 다이얼로그다. */
+/**
+ * 다이얼로그 안의 탭 묶음이다.
+ *
+ * 고른 탭만 남기고 나머지는 `hidden`으로 감춘다. 감추기만 하면 입력한 값이 살아 있어
+ * 탭을 오갈 때마다 다시 만들 필요가 없다. 저장은 두 탭의 값을 함께 읽어 간다.
+ */
+function createTabStrip(tabs: { id: string; label: string; panel: HTMLElement }[]): {
+  root: HTMLDivElement;
+  buttons: HTMLButtonElement[];
+} {
+  const root = document.createElement('div');
+  root.className = 'pf-lobby__tabs';
+
+  const strip = document.createElement('div');
+  strip.className = 'pf-lobby__tab-strip';
+  strip.setAttribute('role', 'tablist');
+
+  const panels = document.createElement('div');
+  panels.className = 'pf-lobby__tab-panels';
+
+  const select = (id: string): void => {
+    for (const tab of tabs) {
+      const active = tab.id === id;
+      tab.panel.hidden = !active;
+      const button = buttons.find((candidate) => candidate.dataset.tabId === tab.id);
+      button?.setAttribute('aria-selected', String(active));
+      button?.classList.toggle('is-active', active);
+    }
+  };
+
+  const buttons = tabs.map((tab) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'pf-btn-plain pf-lobby__tab';
+    button.textContent = tab.label;
+    button.dataset.tabId = tab.id;
+    button.setAttribute('role', 'tab');
+    button.addEventListener('click', () => select(tab.id));
+    strip.append(button);
+    tab.panel.setAttribute('role', 'tabpanel');
+    panels.append(tab.panel);
+    return button;
+  });
+
+  root.append(strip, panels);
+  if (tabs[0]) {
+    select(tabs[0].id);
+  }
+
+  return { root, buttons };
+}
+
+/**
+ * 로비 플레이리스트를 짜는 BGM 탭이다.
+ *
+ * 고른 곡을 위에 재생 순서대로, 고르지 않은 곡을 아래에 카탈로그 순서로 둔다.
+ * 목록 하나로 "무엇을 담을지"와 "어떤 순서로 돌지"를 함께 다루기 위해서다.
+ * 두 칸으로 나누면 화면은 넓어지는데 옮기는 조작이 오히려 늘어난다.
+ */
+function createBgmTabPanel(options: {
+  tracks: LobbyBgmTrackOption[];
+  onChange: () => void;
+  onPlay: () => void;
+  onStop: () => void;
+  onSkip: (delta: 1 | -1) => void;
+}): {
+  root: HTMLDivElement;
+  controls: (HTMLInputElement | HTMLButtonElement)[];
+  read: () => { bgmTrackIds: string[]; bgmPlayMode: LobbyBgmPlayMode };
+  setValue: (value: { bgmTrackIds: string[]; bgmPlayMode: LobbyBgmPlayMode }) => void;
+  setPlayingTrackId: (trackId: string | null) => void;
+} {
+  const root = document.createElement('div');
+  root.className = 'pf-lobby__bgm-panel';
+
+  const list = document.createElement('ul');
+  list.className = 'pf-lobby__bgm-list';
+
+  const actions = document.createElement('div');
+  actions.className = 'pf-lobby__bgm-actions';
+  const playButton = createMediaButton('play', '로비 플레이리스트 재생', options.onPlay);
+  const stopButton = createMediaButton('stop', '재생 정지', options.onStop);
+  const shuffleButton = createMediaButton('shuffle', '셔플', () => {
+    shuffle = !shuffle;
+    syncShuffleButton();
+    options.onChange();
+  });
+  const previousButton = createMediaButton('previous', '이전 곡', () => options.onSkip(-1));
+  const nextButton = createMediaButton('next', '다음 곡', () => options.onSkip(1));
+  // 관례대로 이전·재생·다음을 붙여 두고, 정지와 셔플을 뒤에 세운다.
+  actions.append(previousButton, playButton, nextButton, stopButton, shuffleButton);
+
+  const empty = document.createElement('p');
+  empty.className = 'pf-lobby__bgm-empty';
+  empty.textContent = '고른 곡이 없습니다. 아무것도 고르지 않으면 기본 BGM이 그대로 흐릅니다.';
+
+  root.append(actions, list, empty);
+
+  /** 고른 곡의 재생 순서다. 여기 담긴 순서가 곧 저장될 순서다. */
+  let selected: string[] = [];
+  let shuffle = false;
+  /** 지금 울리는 곡이다. 목록에서 음표로 짚어 준다. */
+  let playingTrackId: string | null = null;
+  /** 줄마다 만든 음표를 들고 있다가 재생 곡이 바뀌면 그것만 켜고 끈다. */
+  const noteByTrackId = new Map<string, SVGSVGElement>();
+
+  const syncPlayingNote = (): void => {
+    for (const [trackId, note] of noteByTrackId) {
+      note.classList.toggle('is-playing', trackId === playingTrackId);
+    }
+  };
+
+  const syncShuffleButton = (): void => {
+    shuffleButton.setAttribute('aria-pressed', String(shuffle));
+    shuffleButton.classList.toggle('is-active', shuffle);
+  };
+
+  const move = (trackId: string, delta: number): void => {
+    const from = selected.indexOf(trackId);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= selected.length) {
+      return;
+    }
+
+    const next = [...selected];
+    next[from] = selected[to]!;
+    next[to] = trackId;
+    selected = next;
+    render();
+    options.onChange();
+  };
+
+  const toggle = (trackId: string, checked: boolean): void => {
+    // 담을 때는 맨 뒤에 붙인다. 중간에 끼워 넣으면 어디로 갔는지 눈으로 좇기 어렵다.
+    selected = checked ? [...selected, trackId] : selected.filter((id) => id !== trackId);
+    render();
+    options.onChange();
+  };
+
+  const rowControls: (HTMLInputElement | HTMLButtonElement)[] = [];
+
+  function render(): void {
+    rowControls.length = 0;
+    noteByTrackId.clear();
+    const unselected = options.tracks.filter((track) => !selected.includes(track.id));
+    const ordered = [
+      ...selected.flatMap((id) => options.tracks.filter((track) => track.id === id)),
+      ...unselected,
+    ];
+
+    list.replaceChildren(
+      ...ordered.map((track) => {
+        const order = selected.indexOf(track.id);
+        const row = document.createElement('li');
+        row.className = 'pf-lobby__bgm-row';
+        row.classList.toggle('is-selected', order >= 0);
+
+        const label = document.createElement('label');
+        label.className = 'pf-lobby__bgm-label';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = order >= 0;
+        checkbox.addEventListener('change', () => toggle(track.id, checkbox.checked));
+        const title = document.createElement('span');
+        title.textContent = order >= 0 ? `${order + 1}. ${track.title}` : track.title;
+        label.append(checkbox, title);
+
+        const up = createOrderButton('▲', `${track.title} 위로`, () => move(track.id, -1));
+        const down = createOrderButton('▼', `${track.title} 아래로`, () => move(track.id, 1));
+        up.disabled = order <= 0;
+        down.disabled = order < 0 || order >= selected.length - 1;
+
+        /*
+         * 재생 중 표시다. 자리는 늘 잡아 두고 보이기만 껐다 켠다.
+         * 곡이 바뀔 때마다 넣고 빼면 그 줄의 너비가 달라져 목록이 흔들린다.
+         */
+        const note = createMediaIcon('note');
+        note.classList.add('pf-lobby__bgm-note');
+        noteByTrackId.set(track.id, note);
+
+        row.append(label, note, up, down);
+        rowControls.push(checkbox, up, down);
+        return row;
+      }),
+    );
+
+    empty.hidden = selected.length > 0;
+    syncPlayingNote();
+  }
+
+  render();
+  syncShuffleButton();
+
+  return {
+    root,
+    // 줄 안의 조작은 다시 그릴 때마다 새로 만들어지므로 여기 담지 않는다.
+    controls: [previousButton, playButton, nextButton, stopButton, shuffleButton],
+    read: () => ({
+      bgmTrackIds: [...selected],
+      bgmPlayMode: shuffle ? 'shuffle' : 'sequential',
+    }),
+    setValue: (value) => {
+      // 카탈로그에 없는 곡은 버린다. 자산이 바뀌면 저장에 남아 있을 수 있다.
+      const known = new Set(options.tracks.map((track) => track.id));
+      selected = value.bgmTrackIds.filter((id) => known.has(id));
+      shuffle = value.bgmPlayMode === 'shuffle';
+      render();
+      syncShuffleButton();
+    },
+    setPlayingTrackId: (trackId: string | null) => {
+      playingTrackId = trackId;
+      // 다시 그리지 않는다. 표시만 옮기면 되고, 다시 그리면 조작 중 초점을 잃는다.
+      syncPlayingNote();
+    },
+  };
+}
+
+function createMediaButton(
+  icon: MediaIconName,
+  label: string,
+  onClick: () => void,
+): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'pf-btn-plain pf-lobby__bgm-button';
+  button.setAttribute('aria-label', label);
+  button.title = label;
+  button.append(createMediaIcon(icon));
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function createOrderButton(text: string, label: string, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'pf-btn-plain pf-lobby__bgm-order';
+  button.textContent = text;
+  button.setAttribute('aria-label', label);
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+/**
+ * 로비 꾸미기 다이얼로그다. 화면 탭과 BGM 탭으로 나눈다.
+ *
+ * 배경·standing과 곡 목록은 다루는 결이 달라 한 화면에 이어 붙이면 세로로 길어지기만
+ * 한다. 저장 버튼은 하나로 둔다. 두 탭의 값이 같은 `LobbyState`에 함께 들어가므로,
+ * 탭마다 저장을 두면 한쪽만 저장한 상태가 생긴다.
+ */
 function createCustomizationDialog(options: {
   backgroundOptions: LobbyBackgroundOption[];
   customization: LobbyCustomizationModel;
@@ -733,8 +1005,13 @@ function createCustomizationDialog(options: {
   standingPositionYRange: { min: number; max: number };
   standingScaleRange: { min: number; max: number };
   standingDefaults: LobbyStandingDefaults;
+  /** 로비 플레이리스트에 담을 수 있는 곡이다. 비면 BGM 탭을 만들지 않는다. */
+  bgmTracks: LobbyBgmTrackOption[];
   onSaveCustomization: (customization: LobbyCustomizationModel) => void;
   onPreviewCustomization: (customization: LobbyCustomizationModel) => void;
+  onPlayBgmPreview: (trackIds: string[], mode: LobbyBgmPlayMode) => void;
+  onStopBgmPreview: () => void;
+  onSkipBgm: (delta: 1 | -1) => void;
   onOpenChange: (open: boolean) => void;
 }): {
   root: HTMLDivElement;
@@ -742,6 +1019,7 @@ function createCustomizationDialog(options: {
   setCustomization: (customization: LobbyCustomizationModel) => void;
   setStatus: (message: string) => void;
   setBusy: (busy: boolean) => void;
+  setPlayingBgmTrackId: (trackId: string | null) => void;
 } {
   const root = document.createElement('div');
   root.className = 'pf-lobby__customization';
@@ -830,11 +1108,6 @@ function createCustomizationDialog(options: {
     scaleControl.setValue(options.standingDefaults.standingScale);
     preview();
   });
-  const saveButton = createAccountButton('로비 꾸미기 저장', () => undefined);
-  saveButton.type = 'submit';
-  const formActions = document.createElement('div');
-  formActions.className = 'pf-lobby__settings-account-actions';
-  formActions.append(resetButton, saveButton);
   form.append(
     backgroundLabel,
     mediaTypeLabel,
@@ -842,14 +1115,43 @@ function createCustomizationDialog(options: {
     positionXControl.label,
     positionYControl.label,
     scaleControl.label,
-    formActions,
+    resetButton,
   );
+
+  /*
+   * BGM 탭이다. 고를 곡이 하나도 없으면 만들지 않고 탭 자체를 감춘다.
+   * 자산이 아직 안 들어왔거나 목록을 못 받은 경우다.
+   */
+  const bgmPanel =
+    options.bgmTracks.length > 0
+      ? createBgmTabPanel({
+          tracks: options.bgmTracks,
+          // preview는 아래에서 선언한다. 호출 시점에는 이미 만들어져 있다.
+          onChange: () => preview(),
+          onPlay: () => {
+            const value = bgmPanel?.read();
+            if (value) {
+              options.onPlayBgmPreview(value.bgmTrackIds, value.bgmPlayMode);
+            }
+          },
+          onStop: options.onStopBgmPreview,
+          onSkip: (delta) => options.onSkipBgm(delta),
+        })
+      : null;
+
+  const tabs = createTabStrip([
+    { id: 'screen', label: '화면', panel: form },
+    ...(bgmPanel ? [{ id: 'bgm', label: 'BGM', panel: bgmPanel.root }] : []),
+  ]);
+
+  const saveButton = createAccountButton('로비 꾸미기 저장', () => undefined);
 
   const customizationStatus = document.createElement('p');
   customizationStatus.className = 'pf-lobby__settings-status';
   customizationStatus.setAttribute('role', 'status');
   customizationStatus.setAttribute('aria-live', 'polite');
-  body.append(form, customizationStatus);
+  // 저장은 탭 밖에 둔다. 두 탭의 값이 한 번에 저장된다는 것이 눈에 보여야 한다.
+  body.append(tabs.root, customizationStatus, saveButton);
   panel.append(header, body);
   root.append(panel);
 
@@ -863,6 +1165,13 @@ function createCustomizationDialog(options: {
     standingPositionX: Number(positionXControl.input.value),
     standingPositionY: Number(positionYControl.input.value),
     standingScale: Number(scaleControl.input.value),
+    // BGM 탭이 없으면 저장에 담긴 값을 그대로 되돌려 준다. 저장하며 지우지 않는다.
+    ...(bgmPanel
+      ? bgmPanel.read()
+      : {
+          bgmTrackIds: currentCustomization.bgmTrackIds,
+          bgmPlayMode: currentCustomization.bgmPlayMode,
+        }),
   });
 
   const setCustomization = (customization: LobbyCustomizationModel): void => {
@@ -873,6 +1182,7 @@ function createCustomizationDialog(options: {
     positionXControl.setValue(customization.standingPositionX);
     positionYControl.setValue(customization.standingPositionY);
     scaleControl.setValue(customization.standingScale);
+    bgmPanel?.setValue(customization);
     options.onPreviewCustomization(currentCustomization);
   };
 
@@ -898,10 +1208,9 @@ function createCustomizationDialog(options: {
       close();
     }
   });
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    options.onSaveCustomization(readCustomization());
-  });
+  // 저장 버튼이 탭 밖에 있어 submit으로 묶을 수 없다. 클릭으로 직접 받는다.
+  form.addEventListener('submit', (event) => event.preventDefault());
+  saveButton.addEventListener('click', () => options.onSaveCustomization(readCustomization()));
   for (const control of [
     backgroundSelect,
     mediaTypeSelect,
@@ -939,6 +1248,7 @@ function createCustomizationDialog(options: {
     setStatus: (message) => {
       customizationStatus.textContent = message;
     },
+    setPlayingBgmTrackId: (trackId) => bgmPanel?.setPlayingTrackId(trackId),
     setBusy: (busy) => {
       for (const control of controls) {
         control.disabled = busy;

@@ -87,6 +87,10 @@ void (async (): Promise<void> => {
   const soundPlayer = createSoundPlayer();
   let mainBgmTrack: SoundTrackSource<BgmTrack> | null = null;
   let mainMenuVoiceTrack: SoundTrackSource<VoiceTrack> | null = null;
+  /** BGM 플레이리스트 전체다. 로비가 이 중에서 자기 목록을 고른다. */
+  let bgmTracks: SoundTrackSource<BgmTrack>[] = [];
+  /** 재생 곡이 바뀔 때 알릴 곳이다. 지금은 로비 BGM 탭 하나가 듣는다. */
+  const bgmTrackListeners = new Set<() => void>();
 
   if (soundPlayer) {
     // AudioContext는 잠긴 채로 시작한다. 첫 입력에서 풀고, 풀릴 때까지 계속 듣는다.
@@ -102,6 +106,11 @@ void (async (): Promise<void> => {
         volume: loadVolumeState(),
         onVolumeChange: (state) => saveVolumeState(state),
         onError: (message, error) => console.warn(`[sound] ${message}`, error),
+        onBgmTrackChange: () => {
+          for (const listener of bgmTrackListeners) {
+            listener();
+          }
+        },
       });
     } catch (error: unknown) {
       console.warn('소리를 켜지 못했습니다. 소리 없이 진행합니다.', error);
@@ -133,6 +142,7 @@ void (async (): Promise<void> => {
         console.warn(`자산이 없어 뺀 BGM: ${playlist.missingTrackIds.join(', ')}`);
       }
 
+      bgmTracks = playlist.tracks;
       mainBgmTrack = selectMainBgmTrack(playlist);
       requestMainBgm();
     } catch (error: unknown) {
@@ -169,6 +179,31 @@ void (async (): Promise<void> => {
     }
 
     soundPlayer?.requestBgm(mainBgmTrack);
+  }
+
+  /** 저장된 곡 id를 실제 트랙으로 바꾼다. 자산에서 사라진 id는 조용히 버린다. */
+  function resolveBgmTracks(trackIds: readonly string[]): SoundTrackSource<BgmTrack>[] {
+    const byId = new Map(bgmTracks.map((track) => [track.id, track]));
+    return trackIds.flatMap((trackId) => {
+      const track = byId.get(trackId);
+      return track ? [track] : [];
+    });
+  }
+
+  /**
+   * 로비가 원하는 BGM을 건다.
+   *
+   * 고른 곡이 있으면 그 목록으로 넘어가고, 비어 있으면 Main BGM을 그대로 둔다.
+   * 로비를 드나들어도 같은 목록이면 재생기가 되감지 않는다.
+   */
+  function requestLobbyBgm(session: GameSession): void {
+    const tracks = resolveBgmTracks(session.lobby.bgmTrackIds);
+    if (tracks.length === 0) {
+      requestMainBgm();
+      return;
+    }
+
+    soundPlayer?.requestBgmPlaylist(tracks, session.lobby.bgmPlayMode);
   }
 
   function showTitle(statusMessage?: string): Promise<void> {
@@ -248,12 +283,29 @@ void (async (): Promise<void> => {
   }
 
   function showLobby(session: GameSession): Promise<void> {
-    requestMainBgm();
+    requestLobbyBgm(session);
     return router.goto(
       new LobbyScene({
         services,
         assetBaseUrl: ASSET_BASE_URL,
         session,
+        ...(soundPlayer
+          ? {
+              bgm: {
+                listTracks: () => bgmTracks.map((track) => ({ id: track.id, title: track.title })),
+                play: (trackIds, mode) =>
+                  soundPlayer.requestBgmPlaylist(resolveBgmTracks(trackIds), mode),
+                // 미리듣기를 멈추면 저장된 로비 설정으로 되돌린다.
+                stop: () => requestLobbyBgm(session),
+                skip: (delta) => soundPlayer.skipBgm(delta),
+                getPlayingTrackId: () => soundPlayer.getPlayingBgmId(),
+                subscribe: (listener) => {
+                  bgmTrackListeners.add(listener);
+                  return () => bgmTrackListeners.delete(listener);
+                },
+              },
+            }
+          : {}),
         onBack: () => {
           void showSaveSlot();
         },

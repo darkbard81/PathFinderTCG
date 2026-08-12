@@ -474,6 +474,36 @@ describe('save slots api', () => {
     expect((response.json() as SaveSlotState).lobby.standingMediaType).toBe('auto');
   });
 
+  it('schemaVersion 9 로비에 없던 BGM 플레이리스트를 기본값으로 승격한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+    await fs.mkdir(slotsRoot, { recursive: true });
+    const state = await createInitialSaveState({ slotId: 1 });
+    const legacy = {
+      ...state,
+      schemaVersion: 9,
+      lobby: {
+        ownedBackgroundIds: state.lobby.ownedBackgroundIds,
+        selectedBackgroundId: state.lobby.selectedBackgroundId,
+        standingVisible: state.lobby.standingVisible,
+        standingMediaType: state.lobby.standingMediaType,
+        standingPositionX: state.lobby.standingPositionX,
+        standingPositionY: state.lobby.standingPositionY,
+        standingScale: state.lobby.standingScale,
+      },
+    };
+    await fs.writeFile(path.join(slotsRoot, 'slot-1.json'), JSON.stringify(legacy), 'utf8');
+
+    const response = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), response.response, () => undefined);
+
+    expect(response.statusCode()).toBe(200);
+    expect((response.json() as SaveSlotState).lobby).toMatchObject({
+      bgmTrackIds: [],
+      bgmPlayMode: 'sequential',
+    });
+  });
+
   it('rejects a resource balance that is not a count', async () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
     const { handler, request } = await createTestContext(tempRoot);

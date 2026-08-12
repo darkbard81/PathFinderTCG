@@ -469,3 +469,225 @@ describe('SoundPlayer 실패 알림', () => {
     expect(onError).not.toHaveBeenCalled();
   });
 });
+
+describe('SoundPlayer 로비 플레이리스트', () => {
+  const list = (ids: string[]) => ids.map((id) => bgm(id));
+
+  it('첫 곡을 걸고, 여러 곡이면 반복을 끈다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b', 'c']), 'sequential');
+
+    // loop가 참이면 ended가 오지 않아 다음 곡으로 넘어갈 수 없다.
+    expect(fake.streams[0]).toMatchObject({ url: '/tcg/sound/bgm/a.mp3', loop: false });
+    expect(player.getPlayingBgmId()).toBe('a');
+  });
+
+  it('곡이 하나뿐이면 반복시켜 이음매를 만들지 않는다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a']), 'sequential');
+
+    expect(fake.streams[0]?.loop).toBe(true);
+  });
+
+  it('곡이 끝나면 적힌 다음 곡으로 넘어간다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b', 'c']), 'sequential');
+    fake.streams[0]?.onEnded?.();
+
+    expect(player.getPlayingBgmId()).toBe('b');
+  });
+
+  it('마지막 곡이 끝나면 처음으로 돌아간다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    fake.streams[0]?.onEnded?.();
+    fake.streams[1]?.onEnded?.();
+
+    expect(player.getPlayingBgmId()).toBe('a');
+  });
+
+  it('한 곡을 못 받아도 목록이 멈추지 않는다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    fake.streams[0]?.onError?.(new Error('404'));
+
+    expect(player.getPlayingBgmId()).toBe('b');
+  });
+
+  it('같은 목록을 다시 요청하면 되감지 않는다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    fake.streams[0]?.onEnded?.();
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+
+    expect(player.getPlayingBgmId()).toBe('b');
+    expect(fake.streams).toHaveLength(2);
+  });
+
+  it('재생 방식이 바뀌면 목록을 다시 건다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    player.requestBgmPlaylist(list(['a', 'b']), 'shuffle');
+
+    expect(fake.streams.length).toBeGreaterThan(1);
+  });
+
+  it('빈 목록은 울리던 것을 그대로 둔다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgm(bgm('main'));
+    player.requestBgmPlaylist([], 'sequential');
+
+    // 로비 목록이 비면 Main BGM이 이어져야 한다.
+    expect(player.getPlayingBgmId()).toBe('main');
+    expect(player.getPlaylistTrackIds()).toBeNull();
+  });
+
+  it('한 곡 요청으로 돌아가면 목록에서 빠진다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    expect(player.getPlaylistTrackIds()).toEqual(['a', 'b']);
+
+    player.requestBgm(bgm('main'));
+
+    expect(player.getPlaylistTrackIds()).toBeNull();
+    expect(player.getPlayingBgmId()).toBe('main');
+  });
+
+  it('잠긴 동안 들어온 목록도 풀릴 때 시작한다', async () => {
+    const fake = createFakeBackend();
+    fake.lock();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    expect(fake.streams).toHaveLength(0);
+
+    await player.unlock();
+
+    expect(player.getPlayingBgmId()).toBe('a');
+  });
+});
+
+describe('SoundPlayer 재생 곡 알림', () => {
+  it('곡이 바뀔 때마다 알린다', () => {
+    const fake = createFakeBackend();
+    const onBgmTrackChange = vi.fn();
+    const player = new SoundPlayer({ backend: fake.backend, onBgmTrackChange });
+
+    player.requestBgmPlaylist([bgm('a'), bgm('b')], 'sequential');
+    expect(onBgmTrackChange).toHaveBeenLastCalledWith('a');
+
+    fake.streams[0]?.onEnded?.();
+    expect(onBgmTrackChange).toHaveBeenLastCalledWith('b');
+  });
+
+  it('같은 곡을 다시 요청하면 알리지 않는다', () => {
+    const fake = createFakeBackend();
+    const onBgmTrackChange = vi.fn();
+    const player = new SoundPlayer({ backend: fake.backend, onBgmTrackChange });
+
+    player.requestBgm(bgm('intro'));
+    onBgmTrackChange.mockClear();
+    player.requestBgm(bgm('intro'));
+
+    // 듣는 쪽이 쓸데없이 다시 그리지 않게 한다.
+    expect(onBgmTrackChange).not.toHaveBeenCalled();
+  });
+
+  it('음악을 끄면 null로 알린다', () => {
+    const fake = createFakeBackend();
+    const onBgmTrackChange = vi.fn();
+    const player = new SoundPlayer({ backend: fake.backend, onBgmTrackChange });
+
+    player.requestBgm(bgm('intro'));
+    player.requestBgm(null);
+
+    expect(onBgmTrackChange).toHaveBeenLastCalledWith(null);
+  });
+});
+
+describe('SoundPlayer 곡 건너뛰기', () => {
+  const list = (ids: string[]) => ids.map((id) => bgm(id));
+
+  it('다음 곡으로 건너뛴다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b', 'c']), 'sequential');
+    player.skipBgm(1);
+
+    expect(player.getPlayingBgmId()).toBe('b');
+  });
+
+  it('이전 곡으로 되돌아간다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b', 'c']), 'sequential');
+    player.skipBgm(1);
+    player.skipBgm(-1);
+
+    expect(player.getPlayingBgmId()).toBe('a');
+  });
+
+  it('첫 곡에서 이전을 누르면 마지막 곡으로 간다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b', 'c']), 'sequential');
+    player.skipBgm(-1);
+
+    expect(player.getPlayingBgmId()).toBe('c');
+  });
+
+  it('마지막 곡에서 다음을 누르면 처음으로 돌아간다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b']), 'sequential');
+    player.skipBgm(1);
+    player.skipBgm(1);
+
+    expect(player.getPlayingBgmId()).toBe('a');
+  });
+
+  it('목록을 돌고 있지 않으면 아무것도 하지 않는다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgm(bgm('main'));
+    player.skipBgm(1);
+
+    // 한 곡만 거는 요청에는 건너뛸 곳이 없다.
+    expect(player.getPlayingBgmId()).toBe('main');
+    expect(fake.streams).toHaveLength(1);
+  });
+
+  it('건너뛴 뒤에도 곡이 끝나면 그 자리에서 이어 간다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist(list(['a', 'b', 'c']), 'sequential');
+    player.skipBgm(1);
+    fake.streams.at(-1)?.onEnded?.();
+
+    expect(player.getPlayingBgmId()).toBe('c');
+  });
+});

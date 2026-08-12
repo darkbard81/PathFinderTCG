@@ -262,7 +262,8 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     value.schemaVersion !== 5 &&
     value.schemaVersion !== 6 &&
     value.schemaVersion !== 7 &&
-    value.schemaVersion !== 8
+    value.schemaVersion !== 8 &&
+    value.schemaVersion !== 9
   ) {
     throw new Error(`Invalid schemaVersion: ${String(value.schemaVersion)}`);
   }

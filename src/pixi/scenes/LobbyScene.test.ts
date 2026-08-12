@@ -36,6 +36,7 @@ function createMockView(): LobbyView & {
     setStatus: vi.fn(),
     setSettingsStatus: vi.fn(),
     setCustomizationStatus: vi.fn(),
+    setPlayingBgmTrackId: vi.fn(),
     setBusy: vi.fn(),
   };
 }
@@ -115,6 +116,8 @@ describe('LobbyScene settings', () => {
       standingPositionX: 68,
       standingPositionY: 18,
       standingScale: 125,
+      bgmTrackIds: ['intro'],
+      bgmPlayMode: 'shuffle',
     };
 
     await scene.saveCustomization(customization);

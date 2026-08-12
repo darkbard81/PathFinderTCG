@@ -49,6 +49,8 @@ function createValidSaveSlotState(): SaveSlotState {
       standingPositionX: 56,
       standingPositionY: -100,
       standingScale: 100,
+      bgmTrackIds: [],
+      bgmPlayMode: 'sequential',
     },
     resources: {
       gold: 125_680,
@@ -220,6 +222,8 @@ describe('save slot client api', () => {
               standingPositionX: 56,
               standingPositionY: 0,
               standingScale: 100,
+              bgmTrackIds: [],
+              bgmPlayMode: 'sequential',
             },
             resources: {
               gold: 0,

@@ -26,6 +26,11 @@ export type PlayStreamOptions = {
   /** 트랙 보정 게인을 반영한 시작 게인이다. */
   gain: number;
   loop: boolean;
+  /**
+   * 곡이 끝까지 흘렀을 때 알린다. `loop`가 참이면 오지 않는다.
+   * 로비 플레이리스트가 다음 곡으로 넘어가는 신호로 쓴다.
+   */
+  onEnded?: () => void;
   /** media element의 로드나 재생이 실패했을 때 알린다. */
   onError?: (error: unknown) => void;
 };

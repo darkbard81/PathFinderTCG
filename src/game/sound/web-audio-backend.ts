@@ -122,8 +122,13 @@ export class WebAudioBackend implements SoundBackend {
     };
 
     const handleEnded = (): void => {
+      if (stopped || this.destroyed) {
+        return;
+      }
       stopped = true;
       cleanup();
+      // 정리한 뒤에 알린다. 듣는 쪽이 곧바로 다음 곡을 걸어도 이 노드와 얽히지 않는다.
+      options.onEnded?.();
     };
 
     const handle: SoundVoiceHandle = {

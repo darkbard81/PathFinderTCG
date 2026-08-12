@@ -3,6 +3,7 @@ import {
   createLobbyView,
   type LobbyCustomizationModel,
   type LobbyMenuItem,
+  type LobbyBgmTrackOption,
   type LobbyStandingPlayback,
   type LobbyView,
   type LobbyViewOptions,
@@ -10,6 +11,7 @@ import {
 import { joinAssetUrl } from '../../game/assets/manifest';
 import { findLobbyBackground, LOBBY_BACKGROUNDS } from '../../game/lobby/backgrounds';
 import {
+  type LobbyBgmPlayMode,
   DEFAULT_LOBBY_STANDING_POSITION_X,
   DEFAULT_LOBBY_STANDING_POSITION_Y,
   DEFAULT_LOBBY_STANDING_SCALE,
@@ -56,6 +58,32 @@ const STANDING_FILE_STEM = 'standing';
  */
 const STANDING_FILE_SUFFIXES = ['.webm', '.mov', '.webp'];
 
+/**
+ * BGM 탭이 쓰는 좁은 표면이다.
+ *
+ * 재생기를 통째로 넘기지 않는다. 씬이 필요한 것은 고를 수 있는 곡과 미리듣기뿐이고,
+ * 잠금 해제나 대사 재생까지 손댈 수 있게 두면 로비가 소리 수명에 얽힌다.
+ */
+export type LobbyBgmControl = {
+  /** 로비 플레이리스트에 담을 수 있는 곡이다. */
+  listTracks: () => LobbyBgmTrackOption[];
+  /** 지금 짜고 있는 목록을 그대로 들려준다. */
+  play: (trackIds: string[], mode: LobbyBgmPlayMode) => void;
+  /** 미리듣기를 멈추고 원래 흐르던 것으로 돌린다. */
+  stop: () => void;
+  /** 목록에서 한 곡 건너뛴다. -1이면 이전 곡이다. */
+  skip: (delta: 1 | -1) => void;
+  /** 지금 울리는 곡 id다. 없으면 null이다. */
+  getPlayingTrackId: () => string | null;
+  /**
+   * 재생 곡이 바뀔 때 부른다. 떼는 함수를 돌려준다.
+   *
+   * 곡은 씬 바깥에서도 바뀐다. 한 곡이 끝나 다음으로 넘어가는 일이 그렇다.
+   * 씬이 열릴 때 한 번 읽고 마는 것으로는 표시가 곧 낡는다.
+   */
+  subscribe: (listener: () => void) => () => void;
+};
+
 export type LobbySceneOptions = {
   services: GameServices;
   assetBaseUrl: string;
@@ -70,6 +98,8 @@ export type LobbySceneOptions = {
   onLoggedOut: (statusMessage: string) => void;
   /** 설정 다이얼로그의 볼륨 슬라이더가 쓴다. 소리를 켤 수 없으면 넘기지 않는다. */
   volume?: SoundVolumeControl;
+  /** BGM 탭이 쓰는 표면이다. 곡 목록과 미리듣기를 맡는다. */
+  bgm?: LobbyBgmControl;
   /** Lobby를 다시 열 때 standing 영상의 마지막 위치를 복원한다. */
   standingPlayback?: LobbyStandingPlayback;
   view?: LobbyView;
@@ -94,6 +124,8 @@ export class LobbyScene implements Scene {
   private layout: ViewportLayout | null = null;
   private isLoggingOut = false;
   private isSavingSettings = false;
+  /** BGM 재생 곡 구독을 떼는 함수다. 로비를 떠날 때 뗀다. */
+  private unsubscribeBgm: (() => void) | null = null;
   private active = true;
 
   public constructor(private readonly options: LobbySceneOptions) {
@@ -109,6 +141,7 @@ export class LobbyScene implements Scene {
     this.isSavingSettings = false;
     this.lobbyView.setStatus('');
     this.lobbyView.setBusy(false);
+    this.watchPlayingBgm();
 
     await this.ensureBackground();
     if (this.layout) {
@@ -117,6 +150,8 @@ export class LobbyScene implements Scene {
   }
 
   public exit(): void {
+    this.unsubscribeBgm?.();
+    this.unsubscribeBgm = null;
     const playback = this.lobbyView.readStandingPlayback();
     const standingPlayback = this.options.standingPlayback;
     if (playback && standingPlayback) {
@@ -129,6 +164,19 @@ export class LobbyScene implements Scene {
   public resize(layout: ViewportLayout): void {
     this.layout = layout;
     this.layoutCanvas(layout);
+  }
+
+  /** 지금 울리는 곡을 BGM 탭에 알리고, 바뀔 때마다 따라가게 구독한다. */
+  private watchPlayingBgm(): void {
+    const bgm = this.options.bgm;
+    if (!bgm) {
+      return;
+    }
+
+    const sync = (): void => this.lobbyView.setPlayingBgmTrackId(bgm.getPlayingTrackId());
+    sync();
+    this.unsubscribeBgm?.();
+    this.unsubscribeBgm = bgm.subscribe(sync);
   }
 
   private buildViewOptions(standingPlayback?: LobbyStandingPlayback): LobbyViewOptions {
@@ -173,6 +221,7 @@ export class LobbyScene implements Scene {
 
     const leaderId = this.options.session.deck.leader.definition.id;
     const volume = this.options.volume;
+    const bgm = this.options.bgm;
 
     return {
       standingSources: STANDING_FILE_SUFFIXES.map((suffix) =>
@@ -204,6 +253,15 @@ export class LobbyScene implements Scene {
               state: volume.getVolume(),
               onChange: (channel, patch) => volume.setVolume(channel, patch),
             },
+          }
+        : {}),
+      ...(bgm
+        ? {
+            bgmTracks: bgm.listTracks(),
+            onPlayBgmPreview: (trackIds: string[], mode: LobbyBgmPlayMode) =>
+              bgm.play(trackIds, mode),
+            onStopBgmPreview: () => bgm.stop(),
+            onSkipBgm: (delta: 1 | -1) => bgm.skip(delta),
           }
         : {}),
       ...(standingPlayback ? { standingPlayback } : {}),
@@ -283,6 +341,8 @@ export class LobbyScene implements Scene {
       standingPositionX,
       standingPositionY,
       standingScale,
+      bgmTrackIds,
+      bgmPlayMode,
     } = this.options.session.lobby;
     return {
       selectedBackgroundId,
@@ -291,6 +351,8 @@ export class LobbyScene implements Scene {
       standingPositionX,
       standingPositionY,
       standingScale,
+      bgmTrackIds: [...bgmTrackIds],
+      bgmPlayMode,
     };
   }
 

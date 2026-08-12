@@ -1,5 +1,7 @@
 import type { SoundBackend, SoundVoiceHandle } from './sound-backend';
 import type { SoundTrackSource } from './playlist-loader';
+import type { LobbyBgmPlayMode } from '../lobby/lobby-state';
+import { avoidRepeatAtSeam, buildBgmOrder } from './bgm-queue';
 import type { BgmTrack, SoundTrack, VoiceTrack } from './playlist';
 import {
   createDefaultVolumeState,
@@ -34,6 +36,11 @@ export type SoundPlayerOptions = {
    * 삼키기만 하면 왜 안 나는지 알 길이 없어 바깥에 알릴 자리를 둔다.
    */
   onError?: (message: string, error: unknown) => void;
+  /**
+   * 울리는 BGM 곡이 바뀔 때 부른다.
+   * 목록이 스스로 다음 곡으로 넘어가는 일도 있어, 바깥이 읽어 가기만 해서는 낡는다.
+   */
+  onBgmTrackChange?: (trackId: string | null) => void;
 };
 
 /**
@@ -45,6 +52,24 @@ export type SoundPlayerOptions = {
 export type SoundVolumeControl = {
   getVolume: () => SoundVolumeState;
   setVolume: (channel: VolumeChannel, patch: Partial<ChannelVolume>) => void;
+};
+
+/**
+ * 앱이 원하는 BGM 상태다. 잠금이 풀릴 때까지 들고 있다가 그대로 건다.
+ *
+ * 한 곡만 무한 반복하는 요청과 목록을 도는 요청을 함께 담는다. 둘을 따로 두면
+ * 로비에서 목록을, 그 밖에서 한 곡을 걸 때 어느 쪽이 이겼는지 알 수 없다.
+ */
+export type BgmRequest =
+  | { kind: 'track'; track: SoundTrackSource<BgmTrack> }
+  | { kind: 'playlist'; tracks: SoundTrackSource<BgmTrack>[]; mode: LobbyBgmPlayMode };
+
+/** 목록을 도는 중의 자리다. `order`는 이번 바퀴의 재생 순서다. */
+type PlaylistCursor = {
+  mode: LobbyBgmPlayMode;
+  tracks: SoundTrackSource<BgmTrack>[];
+  order: string[];
+  index: number;
 };
 
 type ActiveBgm = {
@@ -75,6 +100,7 @@ export class SoundPlayer {
   private readonly sfxPolyphony: number;
   private readonly onVolumeChange: ((state: SoundVolumeState) => void) | undefined;
   private readonly onError: ((message: string, error: unknown) => void) | undefined;
+  private readonly onBgmTrackChange: ((trackId: string | null) => void) | undefined;
   private volume: SoundVolumeState;
   private bgm: ActiveBgm | null = null;
   private voice: SoundVoiceHandle | null = null;
@@ -83,7 +109,9 @@ export class SoundPlayer {
    * 자동재생이 풀리기 전에 들어온 BGM 요청이다.
    * 잠긴 동안 요청을 버리면 로그인 화면에서 건 곡이 로비에서 저절로 시작하지 않는다.
    */
-  private pendingBgm: SoundTrackSource<BgmTrack> | null = null;
+  private pendingBgm: BgmRequest | null = null;
+  /** 로비 플레이리스트를 도는 중이면 그 자리다. 한 곡만 거는 요청에서는 null이다. */
+  private playlist: PlaylistCursor | null = null;
   /**
    * 잠금이 풀리기 전에 들어온 대사다.
    *
@@ -103,6 +131,7 @@ export class SoundPlayer {
     this.sfxPolyphony = options.sfxPolyphony ?? DEFAULT_SFX_POLYPHONY;
     this.onVolumeChange = options.onVolumeChange;
     this.onError = options.onError;
+    this.onBgmTrackChange = options.onBgmTrackChange;
     this.volume = options.volume ?? createDefaultVolumeState();
     this.applyChannelGains();
   }
@@ -128,32 +157,158 @@ export class SoundPlayer {
    * 때마다 곡이 처음으로 돌아가므로, 씬은 원하는 상태만 말하고 판단은 여기서 한다.
    */
   public requestBgm(track: SoundTrackSource<BgmTrack> | null): void {
+    this.requestBgmState(track === null ? null : { kind: 'track', track });
+  }
+
+  /**
+   * 이 화면이 원하는 BGM 목록을 선언한다. 곡이 끝나면 다음 곡으로 넘어간다.
+   *
+   * 같은 곡 묶음과 같은 재생 방식을 다시 요청하면 아무것도 하지 않는다. 로비를 드나들
+   * 때마다 목록이 처음으로 되감기면 곤란하다.
+   */
+  public requestBgmPlaylist(
+    tracks: readonly SoundTrackSource<BgmTrack>[],
+    mode: LobbyBgmPlayMode,
+  ): void {
+    if (tracks.length === 0) {
+      // 고른 곡이 없다. 울리던 것을 그대로 둔다. 로비 목록이 비면 Main BGM이 이어진다.
+      return;
+    }
+
+    this.requestBgmState({ kind: 'playlist', tracks: [...tracks], mode });
+  }
+
+  /** 지금 울리는 BGM 트랙 id다. 없으면 null이다. */
+  public getPlayingBgmId(): string | null {
+    return this.bgm?.trackId ?? null;
+  }
+
+  /** 로비 플레이리스트를 돌고 있으면 그 곡 id 목록이다. 아니면 null이다. */
+  public getPlaylistTrackIds(): string[] | null {
+    return this.playlist ? this.playlist.tracks.map((track) => track.id) : null;
+  }
+
+  private requestBgmState(request: BgmRequest | null): void {
     if (this.destroyed) {
       return;
     }
 
     if (!this.backend.isRunning()) {
       // 아직 잠겨 있다. 마지막 요청만 기억했다가 풀릴 때 시작한다.
-      this.pendingBgm = track;
+      this.pendingBgm = request;
       return;
     }
 
     this.pendingBgm = null;
-    if (track === null) {
+    this.applyBgmRequest(request);
+  }
+
+  private applyBgmRequest(request: BgmRequest | null): void {
+    if (request === null) {
+      this.playlist = null;
       this.stopBgm();
       return;
     }
 
-    if (this.bgm?.trackId === track.id) {
+    if (request.kind === 'track') {
+      this.playlist = null;
+      if (this.bgm?.trackId === request.track.id) {
+        return;
+      }
+      this.startBgm(request.track, true);
       return;
     }
 
-    this.startBgm(track);
+    if (this.isSamePlaylist(request)) {
+      return;
+    }
+
+    this.playlist = {
+      mode: request.mode,
+      tracks: request.tracks,
+      order: buildBgmOrder({ trackIds: request.tracks.map((t) => t.id), mode: request.mode }),
+      index: 0,
+    };
+    this.startPlaylistTrack();
   }
 
-  /** 지금 울리는 BGM 트랙 id다. 없으면 null이다. */
-  public getPlayingBgmId(): string | null {
-    return this.bgm?.trackId ?? null;
+  private isSamePlaylist(request: Extract<BgmRequest, { kind: 'playlist' }>): boolean {
+    const current = this.playlist;
+    if (!current || current.mode !== request.mode) {
+      return false;
+    }
+
+    return (
+      current.tracks.length === request.tracks.length &&
+      current.tracks.every((track, index) => track.id === request.tracks[index]?.id)
+    );
+  }
+
+  /** 지금 자리의 곡을 건다. 곡이 하나뿐이면 반복시켜 이음매를 만들지 않는다. */
+  private startPlaylistTrack(): void {
+    const playlist = this.playlist;
+    const trackId = playlist?.order[playlist.index];
+    const track = playlist?.tracks.find((candidate) => candidate.id === trackId);
+    if (!playlist || !track) {
+      return;
+    }
+
+    this.startBgm(track, playlist.tracks.length === 1);
+  }
+
+  /**
+   * 로비 플레이리스트에서 한 곡 건너뛴다. `-1`이면 이전 곡이다.
+   *
+   * 목록을 돌고 있지 않으면 아무것도 하지 않는다. 한 곡만 거는 요청에는 건너뛸 곳이 없다.
+   * 끝을 넘으면 순서를 새로 만들고, 앞을 넘으면 이번 바퀴의 마지막 곡으로 돌아간다.
+   */
+  public skipBgm(delta: 1 | -1): void {
+    const playlist = this.playlist;
+    if (this.destroyed || !playlist || !this.backend.isRunning()) {
+      return;
+    }
+
+    const nextIndex = playlist.index + delta;
+    if (nextIndex >= playlist.order.length) {
+      playlist.order = avoidRepeatAtSeam(
+        buildBgmOrder({ trackIds: playlist.tracks.map((t) => t.id), mode: playlist.mode }),
+        playlist.order[playlist.index] ?? null,
+      );
+      playlist.index = 0;
+    } else if (nextIndex < 0) {
+      playlist.index = playlist.order.length - 1;
+    } else {
+      playlist.index = nextIndex;
+    }
+
+    this.startPlaylistTrack();
+  }
+
+  /**
+   * 곡이 끝났다. 다음 자리로 옮긴다.
+   *
+   * 한 바퀴를 다 돌면 순서를 새로 만든다. 셔플은 그때 다시 섞어야 두 번째 바퀴부터
+   * 순차 재생처럼 굳지 않는다.
+   */
+  private advancePlaylist(endedTrackId: string): void {
+    const playlist = this.playlist;
+    if (this.destroyed || !playlist || playlist.order[playlist.index] !== endedTrackId) {
+      return;
+    }
+
+    const nextIndex = playlist.index + 1;
+    if (nextIndex < playlist.order.length) {
+      playlist.index = nextIndex;
+      this.startPlaylistTrack();
+      return;
+    }
+
+    playlist.order = avoidRepeatAtSeam(
+      buildBgmOrder({ trackIds: playlist.tracks.map((t) => t.id), mode: playlist.mode }),
+      endedTrackId,
+    );
+    playlist.index = 0;
+    this.startPlaylistTrack();
   }
 
   /**
@@ -257,13 +412,14 @@ export class SoundPlayer {
      */
     const pending = this.pendingBgm;
     if (pending && !this.bgm) {
-      this.startBgm(pending);
+      this.applyBgmRequest(pending);
     }
 
     const resumed = await resuming;
     if (!resumed || this.destroyed) {
       // 방금 건 곡을 접는다. 담아 둔 요청은 그대로 있어 다음 입력에서 다시 건다.
       if (pending) {
+        this.playlist = null;
         this.stopBgm();
       }
       return false;
@@ -283,6 +439,7 @@ export class SoundPlayer {
     this.destroyed = true;
     this.pendingBgm = null;
     this.pendingVoice = null;
+    this.playlist = null;
     this.stopBgm();
     this.voice?.stop();
     this.voice = null;
@@ -292,8 +449,13 @@ export class SoundPlayer {
     this.backend.destroy();
   }
 
-  /** 새 곡을 0에서 올리고, 울리던 곡은 0으로 내리며 겹친다. */
-  private startBgm(track: SoundTrackSource<BgmTrack>): void {
+  /**
+   * 새 곡을 0에서 올리고, 울리던 곡은 0으로 내리며 겹친다.
+   *
+   * `loop`가 참이면 끝나도 `onEnded`가 오지 않는다. 한 곡만 거는 요청과 곡이 하나뿐인
+   * 목록에서만 참이다. 여러 곡을 도는 목록은 거짓이라야 다음 곡으로 넘어갈 수 있다.
+   */
+  private startBgm(track: SoundTrackSource<BgmTrack>, loop: boolean): void {
     const previous = this.bgm;
     const gain = decibelToGain(track.gainDb);
     const started: { handle?: SoundVoiceHandle } = {};
@@ -302,12 +464,20 @@ export class SoundPlayer {
       channel: 'bgm',
       // 울리던 곡이 없으면 겹칠 것도 없으니 곧바로 제 크기로 시작한다.
       gain: previous ? 0 : gain,
-      loop: true,
+      loop,
+      onEnded: () => {
+        if (started.handle && this.bgm?.handle === started.handle) {
+          this.setActiveBgm(null);
+        }
+        this.advancePlaylist(track.id);
+      },
       onError: (error) => {
         if (started.handle && this.bgm?.handle === started.handle) {
-          this.bgm = null;
+          this.setActiveBgm(null);
         }
         this.onError?.(`bgm 재생 실패: ${track.id}`, error);
+        // 한 곡을 못 받았다고 목록이 멈추면 안 된다. 다음 곡으로 넘어간다.
+        this.advancePlaylist(track.id);
       },
     });
     started.handle = handle;
@@ -319,12 +489,25 @@ export class SoundPlayer {
       setTimeout(() => previous.handle.stop(), this.crossfadeSeconds * 1000);
     }
 
-    this.bgm = { trackId: track.id, handle, gain };
+    this.setActiveBgm({ trackId: track.id, handle, gain });
   }
 
   private stopBgm(): void {
     this.bgm?.handle.stop();
-    this.bgm = null;
+    this.setActiveBgm(null);
+  }
+
+  /**
+   * 울리는 곡을 바꾸고 바뀌었을 때만 알린다.
+   * 같은 곡으로 다시 대입될 때까지 알리면 듣는 쪽이 쓸데없이 다시 그린다.
+   */
+  private setActiveBgm(next: ActiveBgm | null): void {
+    const previousTrackId = this.bgm?.trackId ?? null;
+    this.bgm = next;
+    const nextTrackId = next?.trackId ?? null;
+    if (previousTrackId !== nextTrackId) {
+      this.onBgmTrackChange?.(nextTrackId);
+    }
   }
 
   private async playOneShot(
