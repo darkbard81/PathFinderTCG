@@ -44,8 +44,6 @@ function bgmTrack(overrides: Record<string, unknown> = {}) {
     file: 'intro.mp3',
     gainDb: -1.1,
     durationSec: 239.261,
-    loopStart: null,
-    loopEnd: null,
     ...overrides,
   };
 }

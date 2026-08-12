@@ -3,13 +3,19 @@ import {
   createStageView,
   type StageEntryModel,
   type StageView,
+  type StageBgmOption,
 } from '../../dom/screens/stage-view';
 import {
   createGameSession,
   createSaveSlotStateFromGameSession,
   type GameSession,
 } from '../../game/save/session';
-import { isStageUnlocked, listStageDefinitions } from '../../game/stage/stage-definitions';
+import { resolveStageBgmId, withStageBgmId } from '../../game/stage/stage-bgm';
+import {
+  findStageDefinition,
+  isStageUnlocked,
+  listStageDefinitions,
+} from '../../game/stage/stage-definitions';
 import type { StageBattleResult, StageDefinition } from '../../game/stage/types';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
@@ -27,6 +33,8 @@ export type StageSceneOptions = {
   onBack: (session: GameSession) => void;
   /** 세션을 먼저 저장한 뒤 호출한다. 전투 중 이탈해도 스테이지 선택이 남는다. */
   onStartBattle: (session: GameSession, stageId: string) => void;
+  /** 전투 BGM으로 고를 수 있는 곡이다. 소리를 못 켜면 넘기지 않는다. */
+  bgmTracks?: StageBgmOption[];
   view?: StageView;
 };
 
@@ -71,6 +79,7 @@ export class StageScene implements Scene {
         onStartBattle: () => {
           void this.handleStartBattle();
         },
+        onSelectBgm: (stageId, trackId) => void this.saveStageBgm(stageId, trackId),
       });
     this.element = this.stageView.element;
     this.view.addChild(this.backdrop, this.shade);
@@ -104,7 +113,63 @@ export class StageScene implements Scene {
       status,
       statusIsError,
       busy: this.isStartingBattle,
+      bgmOptions: this.options.bgmTracks ?? [],
+      selectedBgmId: this.resolveSelectedBgmId(),
     });
+  }
+
+  /** 지금 고른 스테이지가 흘릴 곡이다. 사용자가 고른 것이 없으면 스테이지 기본값이다. */
+  private resolveSelectedBgmId(): string | null {
+    const tracks = this.options.bgmTracks;
+    if (!tracks) {
+      return null;
+    }
+
+    const playable = new Set(tracks.map((track) => track.id));
+    return resolveStageBgmId(this.getSelectedStageDefinition(), this.session.stageProgress, (id) =>
+      playable.has(id),
+    );
+  }
+
+  /**
+   * 고른 곡을 저장한다. 깬 스테이지에서만 받는다.
+   *
+   * 화면에서도 드롭다운을 잠가 두지만 여기서 한 번 더 본다. 저장 규칙을 화면 상태에
+   * 기대면 화면이 낡았을 때 안 깬 스테이지의 곡이 바뀐다.
+   */
+  private async saveStageBgm(stageId: string, trackId: string): Promise<void> {
+    const stageDefinition = findStageDefinition(stageId);
+    if (!stageDefinition || !this.session.stageProgress.clearedStageIds.includes(stageId)) {
+      return;
+    }
+
+    const previousProgress = this.session.stageProgress;
+    this.session = {
+      ...this.session,
+      stageProgress: withStageBgmId(previousProgress, stageDefinition, trackId),
+    };
+    this.renderView('전투 BGM을 저장하는 중입니다...');
+
+    try {
+      const savedState = await this.options.services.saveSlots.save(
+        createSaveSlotStateFromGameSession(this.session),
+      );
+      if (!this.active) {
+        return;
+      }
+
+      this.session = createGameSession(savedState);
+      this.renderView('전투 BGM을 바꿨습니다.');
+    } catch (error: unknown) {
+      if (!this.active) {
+        return;
+      }
+
+      // 저장에 실패했으면 화면도 되돌린다. 남겨 두면 바뀐 것처럼 보인다.
+      this.session = { ...this.session, stageProgress: previousProgress };
+      const message = error instanceof Error ? error.message : String(error);
+      this.renderView(`전투 BGM을 저장하지 못했습니다: ${message}`, true);
+    }
   }
 
   /** 잠금·클리어 판정을 여기서 끝내 뷰가 도메인 규칙을 부르지 않게 한다. */

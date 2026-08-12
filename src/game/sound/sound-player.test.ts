@@ -70,8 +70,6 @@ function bgm(id: string, gainDb = 0): SoundTrackSource<BgmTrack> {
     file: `${id}.mp3`,
     gainDb,
     durationSec: 100,
-    loopStart: null,
-    loopEnd: null,
     url: `/tcg/sound/bgm/${id}.mp3`,
   };
 }

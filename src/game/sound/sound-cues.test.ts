@@ -11,8 +11,6 @@ function track(id: string, sortSeq: number): SoundTrackSource<BgmTrack> {
     file: `${id}.mp3`,
     gainDb: 0,
     durationSec: 100,
-    loopStart: null,
-    loopEnd: null,
     url: `/tcg/sound/bgm/${id}.mp3`,
   };
 }

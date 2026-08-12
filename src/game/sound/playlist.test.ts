@@ -15,8 +15,6 @@ function bgmTrack(overrides: Record<string, unknown> = {}) {
     file: 'intro.mp3',
     gainDb: -1.1,
     durationSec: 239.261,
-    loopStart: null,
-    loopEnd: null,
     ...overrides,
   };
 }
@@ -47,8 +45,6 @@ describe('normalizeBgmPlaylist', () => {
           file: 'intro.mp3',
           gainDb: -1.1,
           durationSec: 239.261,
-          loopStart: null,
-          loopEnd: null,
         },
       ],
     });
@@ -95,27 +91,6 @@ describe('normalizeBgmPlaylist', () => {
         bgmPlaylist([bgmTrack(), bgmTrack({ id: 'other', title: '01. Another' })]),
       ),
     ).toThrow('sortSeq must be unique');
-  });
-
-  it('루프 구간은 둘 다 있거나 둘 다 없어야 한다', () => {
-    expect(() => normalizeBgmPlaylist(bgmPlaylist([bgmTrack({ loopStart: 8 })]))).toThrow(
-      'both loopStart and loopEnd',
-    );
-    expect(
-      normalizeBgmPlaylist(bgmPlaylist([bgmTrack({ loopStart: 8, loopEnd: 72 })])).tracks[0],
-    ).toMatchObject({ loopStart: 8, loopEnd: 72 });
-  });
-
-  it('뒤집히거나 길이를 넘는 루프 구간을 거부한다', () => {
-    expect(() =>
-      normalizeBgmPlaylist(bgmPlaylist([bgmTrack({ loopStart: 72, loopEnd: 8 })])),
-    ).toThrow('less than loopEnd');
-    expect(() =>
-      normalizeBgmPlaylist(bgmPlaylist([bgmTrack({ loopStart: -1, loopEnd: 8 })])),
-    ).toThrow('not be negative');
-    expect(() =>
-      normalizeBgmPlaylist(bgmPlaylist([bgmTrack({ loopStart: 8, loopEnd: 999 })])),
-    ).toThrow('exceed durationSec');
   });
 
   it('구조가 어긋난 값을 거부한다', () => {

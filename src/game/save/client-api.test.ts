@@ -40,6 +40,7 @@ function createValidSaveSlotState(): SaveSlotState {
     stageProgress: {
       clearedStageIds: [],
       lastSelectedStageId: null,
+      stageBgmIds: {},
     },
     lobby: {
       ownedBackgroundIds: ['background_01'],
@@ -213,6 +214,7 @@ describe('save slot client api', () => {
             stageProgress: {
               clearedStageIds: [],
               lastSelectedStageId: null,
+              stageBgmIds: {},
             },
             lobby: {
               ownedBackgroundIds: ['background_01'],

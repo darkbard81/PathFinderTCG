@@ -1,3 +1,4 @@
+import { canChooseStageBgm } from '../../game/stage/stage-bgm';
 import type {
   StageBattleResult,
   StageDefeatCondition,
@@ -18,6 +19,12 @@ export type StageEntryModel = {
   cleared: boolean;
 };
 
+/** 전투 BGM 드롭다운에 올릴 곡 하나다. */
+export type StageBgmOption = {
+  id: string;
+  title: string;
+};
+
 export type StageViewModel = {
   stages: StageEntryModel[];
   selectedStageId: string;
@@ -25,12 +32,21 @@ export type StageViewModel = {
   status: string;
   statusIsError: boolean;
   busy: boolean;
+  /** 고를 수 있는 곡이다. 비면 BGM 구역을 감춘다. */
+  bgmOptions: StageBgmOption[];
+  /**
+   * 지금 고른 곡 id다. 스테이지 기본값이 적용된 결과여서 화면은 그대로 보여 주기만 한다.
+   * null이면 이 스테이지에 전투 곡이 없다는 뜻이고, 들어올 때 흐르던 곡이 이어진다.
+   */
+  selectedBgmId: string | null;
 };
 
 export type StageViewOptions = {
   onSelectStage: (stageId: string) => void;
   onBack: () => void;
   onStartBattle: () => void;
+  /** 깬 스테이지에서 곡을 바꿨을 때 부른다. */
+  onSelectBgm: (stageId: string, trackId: string) => void;
 };
 
 /** Stage 선택 화면 DOM 루트와 갱신 API다. */
@@ -97,7 +113,33 @@ export function createStageView(options: StageViewOptions): StageView {
 
   const detailRows = document.createElement('div');
   detailRows.className = 'pf-stage__detail-rows';
-  detailScroll.append(detailTitle, detailRows);
+
+  /*
+   * 전투 BGM 선택. 승리·패배 조건 아래에 따로 구역을 둔다.
+   *
+   * 조건은 스테이지가 정해 둔 규칙이고 이쪽은 사용자가 고르는 값이라 성격이 다르다.
+   * 같은 줄 목록에 이어 붙이면 조건도 고칠 수 있는 것처럼 보인다.
+   *
+   * 깬 스테이지에서만 고를 수 있다. 아직 안 깬 스테이지는 데이터가 정한 곡을
+   * 잠근 채로 보여 준다. 무엇이 나올지는 미리 알려 주되 바꾸지는 못하게 한다.
+   */
+  const bgmSection = document.createElement('div');
+  bgmSection.className = 'pf-stage__bgm';
+  bgmSection.dataset.interactive = 'true';
+
+  const bgmLabel = document.createElement('label');
+  bgmLabel.className = 'pf-stage__bgm-label';
+  bgmLabel.textContent = '전투 BGM';
+
+  const bgmSelect = document.createElement('select');
+  bgmSelect.className = 'pf-stage__bgm-select';
+  bgmLabel.append(bgmSelect);
+
+  const bgmHint = document.createElement('p');
+  bgmHint.className = 'pf-stage__bgm-hint';
+
+  bgmSection.append(bgmLabel, bgmHint);
+  detailScroll.append(detailTitle, detailRows, bgmSection);
   detailPanel.append(detailScroll);
 
   body.append(listPanel, detailPanel);
@@ -137,6 +179,46 @@ export function createStageView(options: StageViewOptions): StageView {
   let currentBusy = false;
   let startEnabled = false;
 
+  bgmSelect.addEventListener('change', () => {
+    options.onSelectBgm(bgmSelect.dataset.stageId ?? '', bgmSelect.value);
+  });
+
+  /**
+   * 전투 BGM 구역을 그린다.
+   *
+   * 깬 스테이지만 고를 수 있다. 그 밖에는 잠그되 어떤 곡이 나올지는 보여 준다.
+   * 저장에 남은 곡이 자산에서 사라졌으면 목록에 없으므로, 그때는 잠긴 것처럼 다룬다.
+   */
+  function renderBgmSection(selected: StageEntryModel, model: StageViewModel): void {
+    if (model.bgmOptions.length === 0) {
+      bgmSection.hidden = true;
+      return;
+    }
+
+    bgmSection.hidden = false;
+    bgmSelect.dataset.stageId = selected.definition.id;
+    bgmSelect.replaceChildren(
+      ...model.bgmOptions.map((option) => {
+        const element = document.createElement('option');
+        element.value = option.id;
+        element.textContent = option.title;
+        return element;
+      }),
+    );
+
+    const hasTrack = model.selectedBgmId !== null;
+    if (hasTrack) {
+      bgmSelect.value = model.selectedBgmId ?? '';
+    }
+
+    bgmSelect.disabled = currentBusy || !canChooseStageBgm(selected.cleared, model.selectedBgmId);
+    bgmHint.textContent = !hasTrack
+      ? '이 스테이지는 전투 곡이 정해져 있지 않습니다. 흐르던 곡이 이어집니다.'
+      : selected.cleared
+        ? '깬 스테이지라 곡을 바꿀 수 있습니다.'
+        : '스테이지를 깨면 곡을 바꿀 수 있습니다.';
+  }
+
   const applyBusy = (): void => {
     for (const button of actionButtons) {
       if (button === startButton) {
@@ -174,6 +256,8 @@ export function createStageView(options: StageViewOptions): StageView {
           selected.definition.defeatConditions.map(formatDefeatCondition).join('\n'),
         ),
       );
+
+      renderBgmSection(selected, model);
 
       if (model.lastBattleResult) {
         resultPanel.hidden = false;

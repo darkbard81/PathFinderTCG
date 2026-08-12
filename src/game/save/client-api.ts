@@ -165,7 +165,10 @@ function isStageProgressState(value: unknown): value is StageProgressState {
     isRecord(value) &&
     Array.isArray(value.clearedStageIds) &&
     value.clearedStageIds.every((stageId) => typeof stageId === 'string') &&
-    (typeof value.lastSelectedStageId === 'string' || value.lastSelectedStageId === null)
+    (typeof value.lastSelectedStageId === 'string' || value.lastSelectedStageId === null) &&
+    isRecord(value.stageBgmIds) &&
+    !Array.isArray(value.stageBgmIds) &&
+    Object.values(value.stageBgmIds).every((trackId) => typeof trackId === 'string')
   );
 }
 

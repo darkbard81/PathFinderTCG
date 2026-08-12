@@ -3,7 +3,7 @@ import type { LobbyState } from '../lobby/lobby-state';
 import type { ResourceState } from '../resources/resource-state';
 import type { StageProgressState } from '../stage/types';
 
-export const SAVE_SLOT_SCHEMA_VERSION = 10 as const;
+export const SAVE_SLOT_SCHEMA_VERSION = 11 as const;
 
 export type SaveSlotId = 1 | 2 | 3;
 

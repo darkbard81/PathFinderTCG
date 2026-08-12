@@ -34,11 +34,14 @@ export type SoundTrack = {
   durationSec: number;
 };
 
-/** bgm 트랙이다. 루프 구간은 작곡 쪽에서 받아 적는다. 없으면 파일 전체를 반복한다. */
-export type BgmTrack = SoundTrack & {
-  loopStart: number | null;
-  loopEnd: number | null;
-};
+/**
+ * bgm 트랙이다. 지금은 공통 필드만 쓴다.
+ *
+ * 루프 구간(`loopStart`/`loopEnd`)을 두었다가 걷어냈다. 구간 반복은
+ * `AudioBufferSourceNode`에서만 되는데 BGM은 WebKit 때문에 media element로 흘려
+ * 받기로 했다. 쓸 수 없는 값을 저장에 남겨 두면 채울 수 있는 것처럼 보인다.
+ */
+export type BgmTrack = SoundTrack;
 
 /** voice 트랙이다. 화자와 자막은 아직 비어 있을 수 있다. */
 export type VoiceTrack = SoundTrack & {
@@ -67,7 +70,7 @@ const TITLE_SEQUENCE_PREFIX = /^(\d+)\.\s+/;
 
 /** bgm 플레이리스트를 정규화한다. */
 export function normalizeBgmPlaylist(value: unknown): SoundPlaylist<BgmTrack> {
-  return normalizeSoundPlaylist(value, 'bgm', readBgmTrack);
+  return normalizeSoundPlaylist(value, 'bgm', readSoundTrack);
 }
 
 /** voice 플레이리스트를 정규화한다. */
@@ -180,31 +183,6 @@ function readSoundTrack(track: JsonRecord, label: string): SoundTrack {
   };
 }
 
-function readBgmTrack(track: JsonRecord, label: string): BgmTrack {
-  const base = readSoundTrack(track, label);
-  const loopStart = readNullableFiniteNumber(track.loopStart, `${label}.loopStart`);
-  const loopEnd = readNullableFiniteNumber(track.loopEnd, `${label}.loopEnd`);
-
-  // 한쪽만 있으면 어디서 어디까지 반복할지 정해지지 않는다. 조용히 무시하지 않는다.
-  if ((loopStart === null) !== (loopEnd === null)) {
-    throw new Error(`${label} must set both loopStart and loopEnd, or neither`);
-  }
-
-  if (loopStart !== null && loopEnd !== null) {
-    if (loopStart < 0) {
-      throw new Error(`${label}.loopStart must not be negative`);
-    }
-    if (loopStart >= loopEnd) {
-      throw new Error(`${label}.loopStart must be less than loopEnd`);
-    }
-    if (loopEnd > base.durationSec) {
-      throw new Error(`${label}.loopEnd must not exceed durationSec`);
-    }
-  }
-
-  return { ...base, loopStart, loopEnd };
-}
-
 function readVoiceTrack(track: JsonRecord, label: string): VoiceTrack {
   return {
     ...readSoundTrack(track, label),
@@ -253,14 +231,6 @@ function readFiniteNumber(value: unknown, field: string): number {
   }
 
   return value;
-}
-
-function readNullableFiniteNumber(value: unknown, field: string): number | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  return readFiniteNumber(value, field);
 }
 
 function readPositiveInteger(value: unknown, field: string): number {

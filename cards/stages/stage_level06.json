@@ -26,5 +26,6 @@
   "unlock": {
     "type": "STAGE_CLEARED",
     "stageId": "level05"
-  }
+  },
+  "battleBgmId": "neon-thunder-short"
 }

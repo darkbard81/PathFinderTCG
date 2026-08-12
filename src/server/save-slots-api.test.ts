@@ -148,6 +148,7 @@ describe('save slots api', () => {
     expect(initBody.state.stageProgress).toEqual({
       clearedStageIds: [],
       lastSelectedStageId: null,
+      stageBgmIds: {},
     });
     expect(initBody.summary.isEmpty).toBe(false);
     expect(initBody.summary.leaderName).toBe('미네르바');
@@ -163,6 +164,7 @@ describe('save slots api', () => {
       stageProgress: {
         clearedStageIds: ['test-stage-dark'],
         lastSelectedStageId: 'test-stage-dark',
+        stageBgmIds: {},
       },
       lobby: {
         ...initBody.state.lobby,
@@ -335,6 +337,7 @@ describe('save slots api', () => {
     expect(body.stageProgress).toEqual({
       clearedStageIds: [],
       lastSelectedStageId: null,
+      stageBgmIds: {},
     });
     expect(body.resources).toEqual({ gold: 0, manaStone: 0, summonTicket: 0 });
   });
@@ -502,6 +505,28 @@ describe('save slots api', () => {
       bgmTrackIds: [],
       bgmPlayMode: 'sequential',
     });
+  });
+
+  it('schemaVersion 10 진행 상태에 없던 스테이지 BGM 표를 기본값으로 승격한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+    await fs.mkdir(slotsRoot, { recursive: true });
+    const state = await createInitialSaveState({ slotId: 1 });
+    const legacy = {
+      ...state,
+      schemaVersion: 10,
+      stageProgress: {
+        clearedStageIds: state.stageProgress.clearedStageIds,
+        lastSelectedStageId: state.stageProgress.lastSelectedStageId,
+      },
+    };
+    await fs.writeFile(path.join(slotsRoot, 'slot-1.json'), JSON.stringify(legacy), 'utf8');
+
+    const response = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), response.response, () => undefined);
+
+    expect(response.statusCode()).toBe(200);
+    expect((response.json() as SaveSlotState).stageProgress.stageBgmIds).toEqual({});
   });
 
   it('rejects a resource balance that is not a count', async () => {

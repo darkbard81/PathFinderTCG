@@ -41,6 +41,7 @@ function normalizeStageDefinition(value: unknown, stagePath: string): StageDefin
     defeatConditions: readDefeatConditions(record.defeatConditions, stagePath),
     rewards: readRewards(record.rewards, stagePath),
     unlock: readUnlockCondition(record.unlock, stagePath),
+    battleBgmId: readNullableString(record, 'battleBgmId', stagePath),
   };
 }
 
@@ -175,6 +176,25 @@ function readString(record: JsonRecord, key: string, path: string): string {
   const value = record[key];
   if (typeof value !== 'string' || value.length === 0) {
     throw new Error(`${path}.${key} must be a non-empty string`);
+  }
+
+  return value;
+}
+
+/**
+ * 비워 둘 수 있는 문자열을 읽는다.
+ *
+ * 없거나 null이면 null이다. 빈 문자열은 거부한다. 값을 지운 것인지 오타인지
+ * 구분할 수 없어, 지울 때는 null을 쓰게 한다.
+ */
+function readNullableString(record: JsonRecord, key: string, path: string): string | null {
+  const value = record[key];
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error(`${path}.${key} must be a non-empty string or null`);
   }
 
   return value;

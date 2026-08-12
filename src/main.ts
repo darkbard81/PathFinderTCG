@@ -14,6 +14,8 @@ import { SoundPlayer } from './game/sound/sound-player';
 import { unlockSoundOnGesture } from './game/sound/unlock-on-gesture';
 import { loadVolumeState, saveVolumeState } from './game/sound/volume-storage';
 import { WebAudioBackend } from './game/sound/web-audio-backend';
+import { resolveStageBgmId } from './game/stage/stage-bgm';
+import { findStageDefinition } from './game/stage/stage-definitions';
 import type { StageBattleResult } from './game/stage/types';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
@@ -330,12 +332,35 @@ void (async (): Promise<void> => {
     );
   }
 
+  /**
+   * 전투에서 흘릴 곡을 건다.
+   *
+   * 스테이지가 정한 곡이 없으면 아무것도 하지 않는다. 흐르던 곡이 그대로 이어진다.
+   * 한 곡을 반복하므로 로비 목록과 달리 `requestBgm`을 쓴다.
+   */
+  function requestStageBattleBgm(session: GameSession, stageId: string): void {
+    const stage = findStageDefinition(stageId);
+    if (!stage || bgmTracks.length === 0) {
+      return;
+    }
+
+    const playable = new Set(bgmTracks.map((track) => track.id));
+    const trackId = resolveStageBgmId(stage, session.stageProgress, (id) => playable.has(id));
+    const track = bgmTracks.find((candidate) => candidate.id === trackId);
+    if (track) {
+      soundPlayer?.requestBgm(track);
+    }
+  }
+
   function showStage(session: GameSession, lastBattleResult?: StageBattleResult): Promise<void> {
+    // 스테이지 선택은 아직 전투 밖이다. 로비에서 흐르던 것으로 돌아간다.
+    requestLobbyBgm(session);
     return router.goto(
       new StageScene({
         services,
         backgroundImageUrl,
         session,
+        bgmTracks: bgmTracks.map((track) => ({ id: track.id, title: track.title })),
         ...(lastBattleResult ? { lastBattleResult } : {}),
         onBack: (currentSession) => {
           void showLobby(currentSession);
@@ -391,6 +416,7 @@ void (async (): Promise<void> => {
   }
 
   function showBattlefield(session: GameSession, stageId: string): Promise<void> {
+    requestStageBattleBgm(session, stageId);
     return router.goto(
       new BattlefieldScene({
         services,

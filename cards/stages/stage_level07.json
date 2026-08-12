@@ -26,5 +26,6 @@
   "unlock": {
     "type": "STAGE_CLEARED",
     "stageId": "level06"
-  }
+  },
+  "battleBgmId": "neon-velocity"
 }
