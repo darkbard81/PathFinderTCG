@@ -344,6 +344,17 @@
   color: var(--pf-battlefield-rail-value-color);
 }
 
+.pf-battlefield__playback-rate {
+  min-height: 36px;
+  padding: 4px 8px;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 5px;
+  background: var(--pf-surface-modal);
+  color: var(--pf-battlefield-rail-value-color);
+  font: inherit;
+  font-weight: 700;
+}
+
 .pf-battlefield__rail-spacer {
   flex: 1;
   min-height: 0;

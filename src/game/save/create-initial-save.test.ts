@@ -4,6 +4,12 @@ import { createInitialSaveState } from './create-initial-save';
 import { SAVE_SLOT_SCHEMA_VERSION } from './types';
 
 describe('createInitialSaveState', () => {
+  it('사용자가 정한 저장 이름을 공백 없이 보존한다', async () => {
+    const state = await createInitialSaveState({ slotId: 1, saveName: '  첫 모험  ' });
+
+    expect(state.saveName).toBe('첫 모험');
+  });
+
   it('creates a leader, 29 repeated unit cards, and starter equipment', async () => {
     const state = await createInitialSaveState({ slotId: 1 });
     const starterEquipmentIds = CARD_DEFINITIONS.filter(

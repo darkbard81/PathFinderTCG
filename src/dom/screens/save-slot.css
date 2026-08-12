@@ -168,7 +168,9 @@
   color: var(--pf-text-slot-title-color);
   font-weight: 700;
   line-height: 1.25;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pf-save-slot__card--empty .pf-save-slot__card-title {
@@ -227,4 +229,72 @@
 .pf-save-slot__retry[hidden],
 .pf-save-slot__delete[hidden] {
   display: none;
+}
+
+.pf-save-slot__name-dialog {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pf-space-lg);
+  box-sizing: border-box;
+  background: var(--pf-surface-modal-backdrop);
+}
+
+.pf-save-slot__name-dialog[hidden] {
+  display: none;
+}
+
+.pf-save-slot__name-panel {
+  display: grid;
+  gap: var(--pf-space-md);
+  width: min(440px, 100%);
+  padding: var(--pf-space-lg);
+  box-sizing: border-box;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 8px;
+  background: var(--pf-surface-modal);
+  box-shadow: var(--pf-card-workbench-panel-shadow);
+  pointer-events: auto;
+}
+
+.pf-save-slot__name-title,
+.pf-save-slot__name-error {
+  margin: 0;
+}
+
+.pf-save-slot__name-title {
+  color: var(--pf-color-primary-warm);
+  font-size: var(--pf-text-panel-title-size);
+}
+
+.pf-save-slot__name-label {
+  display: grid;
+  gap: var(--pf-space-xs);
+  color: var(--pf-color-secondary);
+}
+
+.pf-save-slot__name-input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--pf-space-xs) var(--pf-space-sm);
+  box-sizing: border-box;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 6px;
+  background: var(--pf-surface-panel);
+  color: var(--pf-color-primary);
+  font: inherit;
+}
+
+.pf-save-slot__name-error {
+  min-height: 1.4em;
+  color: var(--pf-color-danger);
+}
+
+.pf-save-slot__name-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--pf-space-sm);
 }

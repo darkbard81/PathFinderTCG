@@ -8,9 +8,12 @@ import {
 } from './deck-instancing';
 import { createRuntimeId } from './runtime-id';
 import { createDefaultStageProgressState } from '../stage/progress';
+import { createDefaultSaveName, normalizeSaveName } from './save-name';
 
 type CreateInitialSaveStateOptions = {
   slotId: SaveSlotId;
+  /** 사용자가 최초 생성 화면에서 정한 이름이다. 생략하면 기존 기본 이름을 쓴다. */
+  saveName?: string;
   projectRoot?: string;
   now?: Date;
 };
@@ -24,13 +27,14 @@ export async function createInitialSaveState(
 ): Promise<SaveSlotState> {
   const now = options.now ?? new Date();
   const timestamp = now.toISOString();
+  const saveName = normalizeSaveName(options.saveName ?? createDefaultSaveName(options.slotId));
 
   return {
     schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
     slotId: options.slotId,
     createdAt: timestamp,
     updatedAt: timestamp,
-    saveName: `Slot ${options.slotId}`,
+    saveName,
     deck: createDeckInstanceFromDefinitions({
       deckId: `deck-${options.slotId}-${createRuntimeId()}`,
       cardDefinitions: CARD_DEFINITIONS,

@@ -67,6 +67,8 @@ export type BattlefieldViewModel = {
   status: string;
   statusIsError: boolean;
   canEndTurn: boolean;
+  /** 전장 연출 시간축에 적용 중인 배속이다. */
+  playbackRate: number;
   /** 최근 줄이 마지막에 오는 순서다. 뷰가 아래로 스크롤해 최신 줄을 보여준다. */
   log: string[];
   blockPrompt: BattleBlockPromptModel | null;
@@ -91,8 +93,10 @@ export type BattleResultModel = {
 };
 
 export type BattlefieldViewOptions = {
+  playbackRates: readonly number[];
   onEndTurn: () => void;
   onLeave: () => void;
+  onPlaybackRateChange: (playbackRate: number) => void;
   /** 막을 유닛을 고르거나, null로 막지 않기를 고른다. */
   onBlock: (blockerInstanceId: string | null) => void;
   /**
@@ -265,6 +269,18 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   rightRail.className = 'pf-battlefield__rail pf-battlefield__rail--right';
   rightRail.dataset.interactive = 'true';
   const enemyHandValue = createRailValue();
+  const playbackRateSelect = document.createElement('select');
+  playbackRateSelect.className = 'pf-battlefield__playback-rate';
+  playbackRateSelect.setAttribute('aria-label', '연출 배속');
+  for (const playbackRate of options.playbackRates) {
+    const option = document.createElement('option');
+    option.value = `${playbackRate}`;
+    option.textContent = `${playbackRate}×`;
+    playbackRateSelect.append(option);
+  }
+  playbackRateSelect.addEventListener('change', () => {
+    options.onPlaybackRateChange(Number(playbackRateSelect.value));
+  });
   const status = document.createElement('p');
   status.className = 'pf-battlefield__status';
   const spacer = document.createElement('div');
@@ -276,6 +292,8 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
   rightRail.append(
     createRailLabel('적 손패'),
     enemyHandValue,
+    createRailLabel('연출 배속'),
+    playbackRateSelect,
     status,
     spacer,
     endTurnButton,
@@ -319,6 +337,7 @@ export function createBattlefieldView(options: BattlefieldViewOptions): Battlefi
     roundValue.textContent = `${model.turnNumber}`;
     phaseValue.textContent = model.phaseLabel;
     enemyHandValue.textContent = `${model.enemy.handCount}장`;
+    playbackRateSelect.value = `${model.playbackRate}`;
     status.textContent = model.status;
     status.classList.toggle('is-error', model.statusIsError);
     endTurnButton.disabled = !model.canEndTurn;

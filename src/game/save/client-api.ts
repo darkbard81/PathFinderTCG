@@ -6,6 +6,12 @@ import {
   type SaveSlotSummary,
 } from './types';
 import { RESOURCE_KEYS } from '../resources/resource-state';
+import {
+  isLobbyStandingMediaType,
+  LOBBY_STANDING_POSITION_X_RANGE,
+  LOBBY_STANDING_POSITION_Y_RANGE,
+  LOBBY_STANDING_SCALE_RANGE,
+} from '../lobby/lobby-state';
 import type { StageProgressState } from '../stage/types';
 import type { ApiFetch } from '../auth/client';
 
@@ -28,9 +34,12 @@ export class SaveSlotsClient {
     return saveSlotState(this.request, state);
   }
 
-  /** 현재 계정의 빈 슬롯을 초기 상태로 생성한다. */
-  initialize(slotId: SaveSlotId): Promise<{ state: SaveSlotState; summary: SaveSlotSummary }> {
-    return initializeSaveSlot(this.request, slotId);
+  /** 현재 계정의 빈 슬롯을 사용자가 정한 이름으로 생성한다. */
+  initialize(
+    slotId: SaveSlotId,
+    saveName: string,
+  ): Promise<{ state: SaveSlotState; summary: SaveSlotSummary }> {
+    return initializeSaveSlot(this.request, slotId, saveName);
   }
 
   /** 현재 계정의 지정 슬롯을 삭제하고 빈 슬롯 요약을 반환한다. */
@@ -132,7 +141,18 @@ function isLobbyState(value: unknown): boolean {
     isRecord(value) &&
     Array.isArray(value.ownedBackgroundIds) &&
     value.ownedBackgroundIds.every((backgroundId) => typeof backgroundId === 'string') &&
-    typeof value.selectedBackgroundId === 'string'
+    typeof value.selectedBackgroundId === 'string' &&
+    typeof value.standingVisible === 'boolean' &&
+    isLobbyStandingMediaType(value.standingMediaType) &&
+    isNumberInRange(value.standingPositionX, LOBBY_STANDING_POSITION_X_RANGE) &&
+    isNumberInRange(value.standingPositionY, LOBBY_STANDING_POSITION_Y_RANGE) &&
+    isNumberInRange(value.standingScale, LOBBY_STANDING_SCALE_RANGE)
+  );
+}
+
+function isNumberInRange(value: unknown, range: { min: number; max: number }): boolean {
+  return (
+    typeof value === 'number' && Number.isFinite(value) && value >= range.min && value <= range.max
   );
 }
 
@@ -212,9 +232,14 @@ async function saveSlotState(request: ApiFetch, state: SaveSlotState): Promise<S
 async function initializeSaveSlot(
   request: ApiFetch,
   slotId: SaveSlotId,
+  saveName: string,
 ): Promise<{ state: SaveSlotState; summary: SaveSlotSummary }> {
   const response = await request(`/api/save-slots/${slotId}/initialize`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ saveName }),
   });
   if (!response.ok) {
     throw new Error(await response.text());

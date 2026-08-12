@@ -164,6 +164,25 @@ describe('SequenceRunner 스케줄링', () => {
     expect(order).toEqual(['done']);
   });
 
+  it('진행 중에 바꾼 재생속도를 다음 프레임부터 반영한다', async () => {
+    const ticker = createFakeTicker();
+    const runner = new SequenceRunner({ ticker });
+    const playing = runner.play([{ timer: 0, action: 'wait', duration: 300 }]);
+    let settled = false;
+    void playing.then(() => {
+      settled = true;
+    });
+
+    await ticker.advance(100);
+    runner.setPlaybackRate(2);
+    await ticker.advance(99);
+    expect(settled).toBe(false);
+
+    await ticker.advance(1);
+    await playing;
+    expect(settled).toBe(true);
+  });
+
   it('재생속도는 0보다 큰 유한한 숫자만 받는다', () => {
     const runner = new SequenceRunner({ ticker: createFakeTicker() });
 

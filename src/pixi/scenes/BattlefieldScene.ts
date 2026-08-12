@@ -73,6 +73,18 @@ import type { Scene } from './scene';
 
 const TITLE_BACKGROUND_ALIAS = 'ui.title-screen';
 
+/** 전장 HUD에서 고를 수 있는 연출 배속이다. */
+export const BATTLEFIELD_PLAYBACK_RATES = [1, 1.5, 2] as const;
+export type BattlefieldPlaybackRate = (typeof BATTLEFIELD_PLAYBACK_RATES)[number];
+/** 전장 연출 배속의 앱 메모리 기본값이다. */
+export const DEFAULT_BATTLEFIELD_PLAYBACK_RATE: BattlefieldPlaybackRate =
+  BATTLEFIELD_PLAYBACK_RATES[0];
+
+/** HUD select와 앱 메모리에서 들어온 값이 고를 수 있는 배속인지 확인한다. */
+export function isBattlefieldPlaybackRate(value: unknown): value is BattlefieldPlaybackRate {
+  return BATTLEFIELD_PLAYBACK_RATES.some((rate) => rate === value);
+}
+
 /** 적 행동 하나를 보여주고 다음으로 넘어가기 전까지 두는 간격이다. */
 const ENEMY_STEP_DELAY_MS = 620;
 
@@ -107,6 +119,10 @@ export type BattlefieldSceneOptions = {
   assetBaseUrl: string;
   session: GameSession;
   stageId: string;
+  /** 앱 메모리에서 이어받은 연출 배속이다. 저장 데이터에는 넣지 않는다. */
+  playbackRate?: number;
+  /** HUD에서 고른 배속을 다음 전투에도 쓸 수 있게 앱 메모리로 돌려준다. */
+  onPlaybackRateChange?: (playbackRate: number) => void;
   /** 전투가 끝났으면 보상까지 반영해 저장한 세션과 결과를 함께 넘긴다. */
   onLeave: (session: GameSession, result: StageBattleResult | null) => void;
   view?: BattlefieldView;
@@ -163,6 +179,11 @@ export class BattlefieldScene implements Scene {
   });
 
   public constructor(private readonly options: BattlefieldSceneOptions) {
+    this.sequence.setPlaybackRate(
+      isBattlefieldPlaybackRate(options.playbackRate)
+        ? options.playbackRate
+        : DEFAULT_BATTLEFIELD_PLAYBACK_RATE,
+    );
     this.effects = options.effects ?? null;
     this.stageDefinition = requireStageDefinition(options.stageId);
     this.savedSession = options.session;
@@ -175,8 +196,10 @@ export class BattlefieldScene implements Scene {
     this.battlefieldView =
       options.view ??
       createBattlefieldView({
+        playbackRates: BATTLEFIELD_PLAYBACK_RATES,
         onEndTurn: () => this.endTurn(),
         onLeave: () => this.leave(),
+        onPlaybackRateChange: (playbackRate) => this.setPlaybackRate(playbackRate),
         onBlock: (blockerInstanceId) => this.resolveBlock(blockerInstanceId),
         resolveTargets: (source) => this.resolveTargets(source),
         onDrop: (source, slotId) => this.applyDrop(source, slotId),
@@ -221,6 +244,7 @@ export class BattlefieldScene implements Scene {
       const effects = await createBattleEffectsLayer({
         host: this.battlefieldView.effectsHost,
         resolveSlotCenter: (slotId) => this.battlefieldView.getSlotCenter(slotId),
+        getPlaybackRate: () => this.sequence.getPlaybackRate(),
       });
 
       if (!this.active) {
@@ -435,6 +459,17 @@ export class BattlefieldScene implements Scene {
       .play();
   }
 
+  private setPlaybackRate(playbackRate: number): void {
+    // 모르는 값은 기본값으로 접지 않고 무시한다. HUD 오작동이 배속을 되돌리면 더 헷갈린다.
+    if (!isBattlefieldPlaybackRate(playbackRate)) {
+      return;
+    }
+
+    this.sequence.setPlaybackRate(playbackRate);
+    this.options.onPlaybackRateChange?.(playbackRate);
+    this.renderView();
+  }
+
   /** 내 행동의 연출이다. 기다리지 않는다. 내 조작은 곧바로 이어질 수 있어야 한다. */
   private playEffect(kind: BattleEffectKind, slotId: BattleSlotId, value: number): void {
     void this.effects?.play({ kind, slotId, value });
@@ -641,6 +676,7 @@ export class BattlefieldScene implements Scene {
       status,
       statusIsError,
       canEndTurn: this.canEndTurn(),
+      playbackRate: this.sequence.getPlaybackRate(),
       log: this.log,
       blockPrompt: this.buildBlockPrompt(),
       result: this.buildResult(),

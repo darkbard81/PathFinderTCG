@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { createDefaultLobbyState } from '../../game/lobby/lobby-state';
 import {
+  buildStandingStyleVariables,
   filterUsableStandingSources,
   formatResourceAmount,
+  readStandingMediaType,
   resolveStandingPlaybackTime,
   supportsAlphaWebm,
 } from './lobby-view';
@@ -91,6 +94,60 @@ describe('filterUsableStandingSources', () => {
       'a/leader.mov',
       'a/leader.webp',
     ]);
+  });
+
+  it('동영상과 이미지 선택에 맞는 후보만 남긴다', () => {
+    expect(filterUsableStandingSources(sources, AGENTS.steamOsChrome, 'video')).toEqual([
+      'a/leader.webm',
+      'a/leader.mov',
+    ]);
+    expect(filterUsableStandingSources(sources, AGENTS.steamOsChrome, 'image')).toEqual([
+      'a/leader.webp',
+    ]);
+  });
+
+  it('Safari의 동영상 선택에서도 지원하지 않는 webm을 제외한다', () => {
+    expect(filterUsableStandingSources(sources, AGENTS.macSafari, 'video')).toEqual([
+      'a/leader.mov',
+    ]);
+  });
+});
+
+describe('readStandingMediaType', () => {
+  it('select가 돌려준 동영상과 이미지 값을 그대로 옮긴다', () => {
+    expect(readStandingMediaType('video')).toBe('video');
+    expect(readStandingMediaType('image')).toBe('image');
+    expect(readStandingMediaType('auto')).toBe('auto');
+  });
+
+  it('모르는 값은 자동으로 접는다', () => {
+    expect(readStandingMediaType('')).toBe('auto');
+    expect(readStandingMediaType('audio')).toBe('auto');
+  });
+});
+
+describe('buildStandingStyleVariables', () => {
+  it('기본 설정은 저장 데이터로 올라오기 전 하드코딩과 같은 배치를 낸다', () => {
+    expect(buildStandingStyleVariables(createDefaultLobbyState())).toEqual({
+      '--pf-lobby-standing-position-x': '56%',
+      '--pf-lobby-standing-position-y': '0%',
+      '--pf-lobby-standing-height': '100%',
+    });
+  });
+
+  it('음수 세로 위치도 부호를 살려 백분율로 낸다', () => {
+    expect(
+      buildStandingStyleVariables({
+        ...createDefaultLobbyState(),
+        standingPositionX: 20,
+        standingPositionY: -100,
+        standingScale: 25,
+      }),
+    ).toEqual({
+      '--pf-lobby-standing-position-x': '20%',
+      '--pf-lobby-standing-position-y': '-100%',
+      '--pf-lobby-standing-height': '25%',
+    });
   });
 });
 

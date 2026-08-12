@@ -117,7 +117,11 @@ describe('save slots api', () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
     const { handler, request, slotsRoot } = await createTestContext(tempRoot);
 
-    const initReq = request('POST', '/api/save-slots/1/initialize');
+    const initReq = request(
+      'POST',
+      '/api/save-slots/1/initialize',
+      JSON.stringify({ saveName: '첫 모험' }),
+    );
     const initRes = createResponse();
     await handler(initReq, initRes.response, () => undefined);
 
@@ -127,6 +131,7 @@ describe('save slots api', () => {
       summary: { isEmpty: boolean; leaderName: string | null };
     };
     expect(initBody.state.slotId).toBe(1);
+    expect(initBody.state.saveName).toBe('첫 모험');
     expect(initBody.state.deck.cards).toHaveLength(29);
     expect(initBody.state.deck.leader.id).toBe('leader_minerva');
     expect(initBody.state.deck.leader.name).toBe('미네르바');
@@ -158,6 +163,10 @@ describe('save slots api', () => {
       stageProgress: {
         clearedStageIds: ['test-stage-dark'],
         lastSelectedStageId: 'test-stage-dark',
+      },
+      lobby: {
+        ...initBody.state.lobby,
+        standingPositionY: -100,
       },
       deck: {
         ...initBody.state.deck,
@@ -195,13 +204,52 @@ describe('save slots api', () => {
     });
   });
 
+  it('rejects an empty or overlong initialize save name', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+
+    const empty = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: '   ' })),
+      empty.response,
+      () => undefined,
+    );
+    expect(empty.statusCode()).toBe(400);
+    expect(empty.text()).toContain('non-empty');
+
+    const overlong = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'a'.repeat(41) })),
+      overlong.response,
+      () => undefined,
+    );
+    expect(overlong.statusCode()).toBe(400);
+    expect(overlong.text()).toContain('exceed');
+  });
+
+  it('본문 없는 initialize는 기본 이름으로 만들지 않고 거절한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+
+    const response = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize'),
+      response.response,
+      () => undefined,
+    );
+
+    expect(response.statusCode()).toBe(400);
+    expect(response.text()).toContain('must be an object');
+    await expect(fs.access(path.join(slotsRoot, 'slot-1.json'))).rejects.toThrow();
+  });
+
   it('deletes an initialized slot and returns an empty summary', async () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
     const { handler, request, slotsRoot } = await createTestContext(tempRoot);
 
     const initRes = createResponse();
     await handler(
-      request('POST', '/api/save-slots/2/initialize'),
+      request('POST', '/api/save-slots/2/initialize', JSON.stringify({ saveName: 'Slot 2' })),
       initRes.response,
       () => undefined,
     );
@@ -299,7 +347,7 @@ describe('save slots api', () => {
     // schemaVersion 5에는 resources가 없다. 없는 필드는 기본값으로 채워 열려야 한다.
     const initialize = createResponse();
     await handler(
-      request('POST', '/api/save-slots/1/initialize'),
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'Slot 1' })),
       initialize.response,
       () => undefined,
     );
@@ -344,12 +392,94 @@ describe('save slots api', () => {
     });
   });
 
+  it('schemaVersion 6 로비에 없던 standing 설정을 기본값으로 승격한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+    await fs.mkdir(slotsRoot, { recursive: true });
+    const state = await createInitialSaveState({ slotId: 1 });
+    const legacy = {
+      ...state,
+      schemaVersion: 6,
+      lobby: {
+        ownedBackgroundIds: state.lobby.ownedBackgroundIds,
+        selectedBackgroundId: state.lobby.selectedBackgroundId,
+      },
+    };
+    await fs.writeFile(path.join(slotsRoot, 'slot-1.json'), JSON.stringify(legacy), 'utf8');
+
+    const response = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), response.response, () => undefined);
+
+    expect(response.statusCode()).toBe(200);
+    expect((response.json() as SaveSlotState).lobby).toMatchObject({
+      standingVisible: true,
+      standingMediaType: 'auto',
+      standingPositionX: 56,
+      standingPositionY: 0,
+      standingScale: 100,
+    });
+  });
+
+  it('schemaVersion 7 로비에 없던 standing 세로 위치를 기본값으로 승격한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+    await fs.mkdir(slotsRoot, { recursive: true });
+    const state = await createInitialSaveState({ slotId: 1 });
+    const legacy = {
+      ...state,
+      schemaVersion: 7,
+      lobby: {
+        ownedBackgroundIds: state.lobby.ownedBackgroundIds,
+        selectedBackgroundId: state.lobby.selectedBackgroundId,
+        standingVisible: state.lobby.standingVisible,
+        standingPositionX: state.lobby.standingPositionX,
+        standingScale: state.lobby.standingScale,
+      },
+    };
+    await fs.writeFile(path.join(slotsRoot, 'slot-1.json'), JSON.stringify(legacy), 'utf8');
+
+    const response = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), response.response, () => undefined);
+
+    expect(response.statusCode()).toBe(200);
+    expect((response.json() as SaveSlotState).lobby).toMatchObject({
+      standingMediaType: 'auto',
+      standingPositionY: 0,
+    });
+  });
+
+  it('schemaVersion 8 로비에 없던 standing 미디어 선택을 자동으로 승격한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request, slotsRoot } = await createTestContext(tempRoot);
+    await fs.mkdir(slotsRoot, { recursive: true });
+    const state = await createInitialSaveState({ slotId: 1 });
+    const legacy = {
+      ...state,
+      schemaVersion: 8,
+      lobby: {
+        ownedBackgroundIds: state.lobby.ownedBackgroundIds,
+        selectedBackgroundId: state.lobby.selectedBackgroundId,
+        standingVisible: state.lobby.standingVisible,
+        standingPositionX: state.lobby.standingPositionX,
+        standingPositionY: state.lobby.standingPositionY,
+        standingScale: state.lobby.standingScale,
+      },
+    };
+    await fs.writeFile(path.join(slotsRoot, 'slot-1.json'), JSON.stringify(legacy), 'utf8');
+
+    const response = createResponse();
+    await handler(request('GET', '/api/save-slots/1'), response.response, () => undefined);
+
+    expect(response.statusCode()).toBe(200);
+    expect((response.json() as SaveSlotState).lobby.standingMediaType).toBe('auto');
+  });
+
   it('rejects a resource balance that is not a count', async () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
     const { handler, request } = await createTestContext(tempRoot);
     const initialize = createResponse();
     await handler(
-      request('POST', '/api/save-slots/1/initialize'),
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'Slot 1' })),
       initialize.response,
       () => undefined,
     );
@@ -376,7 +506,11 @@ describe('save slots api', () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
     const { handler, request } = await createTestContext(tempRoot);
 
-    const initReq = request('POST', '/api/save-slots/1/initialize');
+    const initReq = request(
+      'POST',
+      '/api/save-slots/1/initialize',
+      JSON.stringify({ saveName: 'Slot 1' }),
+    );
     const initRes = createResponse();
     await handler(initReq, initRes.response, () => undefined);
     const initBody = initRes.json() as { state: SaveSlotState };
@@ -405,7 +539,11 @@ describe('save slots api', () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
     const { handler, request } = await createTestContext(tempRoot);
 
-    const initReq = request('POST', '/api/save-slots/1/initialize');
+    const initReq = request(
+      'POST',
+      '/api/save-slots/1/initialize',
+      JSON.stringify({ saveName: 'Slot 1' }),
+    );
     const initRes = createResponse();
     await handler(initReq, initRes.response, () => undefined);
     const initBody = initRes.json() as { state: SaveSlotState };
@@ -491,7 +629,12 @@ describe('save slots api', () => {
 
     const firstInit = createResponse();
     await handler(
-      authenticatedRequest(first.token, 'POST', '/api/save-slots/1/initialize'),
+      authenticatedRequest(
+        first.token,
+        'POST',
+        '/api/save-slots/1/initialize',
+        JSON.stringify({ saveName: 'Slot 1' }),
+      ),
       firstInit.response,
       () => undefined,
     );
