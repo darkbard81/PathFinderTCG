@@ -18,7 +18,12 @@ import {
 import { createInitialSaveState } from '../../game/save/create-initial-save';
 import { createGameSession, type GameSession } from '../../game/save/session';
 import { listStageDefinitions } from '../../game/stage/stage-definitions';
-import { BattlefieldScene } from './BattlefieldScene';
+import {
+  BATTLEFIELD_PLAYBACK_RATES,
+  BattlefieldScene,
+  DEFAULT_BATTLEFIELD_PLAYBACK_RATE,
+  isBattlefieldPlaybackRate,
+} from './BattlefieldScene';
 
 /** 전투 시작 상태를 매번 같게 만들어 슬롯·손패 검증이 셔플에 흔들리지 않게 한다. */
 function fixedRandom(): number {
@@ -40,6 +45,7 @@ type BattlefieldHarness = Pick<BattlefieldScene, 'resize' | 'update' | 'enter'> 
   pendingBlock: { decision: BattleBlockDecision; actionCount: number } | null;
   leave: () => void;
   battleResult: StageBattleResult | null;
+  setPlaybackRate: (playbackRate: number) => void;
 };
 
 function createHarness(session: GameSession) {
@@ -57,6 +63,7 @@ function createHarness(session: GameSession) {
     destroy: vi.fn(),
   };
   const onLeave = vi.fn();
+  const onPlaybackRateChange = vi.fn();
   const save = vi.fn((state: unknown) => Promise.resolve(state));
   const scene = new BattlefieldScene({
     services: { auth: {} as never, saveSlots: { save } as never },
@@ -65,6 +72,7 @@ function createHarness(session: GameSession) {
     session,
     stageId: listStageDefinitions()[0]!.id,
     onLeave,
+    onPlaybackRateChange,
     view,
     effects,
     random: fixedRandom,
@@ -72,7 +80,14 @@ function createHarness(session: GameSession) {
 
   scene.resize({ width: 1024, height: 768, scale: 1 });
 
-  return { scene: scene as unknown as BattlefieldHarness, view, effects, onLeave, save };
+  return {
+    scene: scene as unknown as BattlefieldHarness,
+    view,
+    effects,
+    onLeave,
+    onPlaybackRateChange,
+    save,
+  };
 }
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -229,6 +244,24 @@ describe('BattlefieldScene', () => {
     expect(model.currentSide).toBe('player');
     expect(model.phaseLabel).toBe('메인');
     expect(model.turnNumber).toBe(1);
+  });
+
+  it('HUD에서 고른 배속을 공용 시간축과 앱 메모리 콜백에 반영한다', async () => {
+    const { scene, view, onPlaybackRateChange } = createHarness(await createSession());
+
+    scene.setPlaybackRate(2);
+
+    expect(onPlaybackRateChange).toHaveBeenCalledWith(2);
+    expect(lastModel(view).playbackRate).toBe(2);
+  });
+
+  it('고를 수 없는 배속은 시간축도 앱 메모리도 건드리지 않는다', async () => {
+    const { scene, view, onPlaybackRateChange } = createHarness(await createSession());
+
+    scene.setPlaybackRate(3);
+
+    expect(onPlaybackRateChange).not.toHaveBeenCalled();
+    expect(lastModel(view).playbackRate).toBe(DEFAULT_BATTLEFIELD_PLAYBACK_RATE);
   });
 
   it('뷰포트가 바뀌면 카드 크기를 다시 계산해 넘긴다', async () => {
@@ -844,5 +877,23 @@ describe('BattlefieldScene 전투 결과', () => {
 
     expect(save).not.toHaveBeenCalled();
     expect(onLeave).toHaveBeenCalledWith(session, null);
+  });
+});
+
+describe('isBattlefieldPlaybackRate', () => {
+  it('HUD가 내놓는 배속만 통과시킨다', () => {
+    for (const rate of BATTLEFIELD_PLAYBACK_RATES) {
+      expect(isBattlefieldPlaybackRate(rate)).toBe(true);
+    }
+  });
+
+  it('목록 밖의 값과 숫자가 아닌 값을 거른다', () => {
+    for (const value of [0, 3, 1.25, -1, Number.NaN, '2', null, undefined]) {
+      expect(isBattlefieldPlaybackRate(value)).toBe(false);
+    }
+  });
+
+  it('기본 배속은 고를 수 있는 값이다', () => {
+    expect(isBattlefieldPlaybackRate(DEFAULT_BATTLEFIELD_PLAYBACK_RATE)).toBe(true);
   });
 });

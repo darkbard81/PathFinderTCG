@@ -54,7 +54,7 @@ export class SequenceRunner {
 
   /**
    * 연출 전역 재생속도를 정한다. `1`이 기본이고 0보다 큰 유한한 숫자만 받는다.
-   * 값은 이후 시작되는 시퀀스부터 적용된다.
+   * 값은 진행 중인 Ticker 기반 대기와 흔들림에도 다음 프레임부터 적용된다.
    */
   public setPlaybackRate(rate: number): void {
     if (!isPositiveFiniteNumber(rate)) {
@@ -81,13 +81,12 @@ export class SequenceRunner {
 
     const groups = groupStepsByTimer(steps);
     const detached: Array<Promise<void>> = [];
-    const playbackRate = this.playbackRate;
 
     // 그룹 timer는 시퀀스 시작 기준 절대 시각이다.
     // 지연이 Ticker로 흐르므로 경과 시간도 같은 시계에서 재야 어긋나지 않는다.
     let elapsed = 0;
     const clock = (ticker: SequenceTickerFrame): void => {
-      elapsed += ticker.deltaMS;
+      elapsed += ticker.deltaMS * this.playbackRate;
     };
     this.frameCallbacks.add(clock);
     this.options.ticker.add(clock);
@@ -102,14 +101,13 @@ export class SequenceRunner {
           break;
         }
 
-        const scaledTimer = this.scaleDuration(group.timer, playbackRate);
-        await this.delay(Math.max(0, scaledTimer - elapsed));
+        await this.delay(Math.max(0, group.timer - elapsed));
 
         if (!this.canRun()) {
           break;
         }
 
-        await this.runStepGroup(group.steps, detached, playbackRate);
+        await this.runStepGroup(group.steps, detached);
       }
 
       await Promise.allSettled(detached);
@@ -142,34 +140,33 @@ export class SequenceRunner {
     this.pendingResolvers.clear();
   }
 
-  private runStep(step: SequenceStep, playbackRate: number): Promise<void> {
+  private runStep(step: SequenceStep): Promise<void> {
     if (!this.canRun()) {
       return Promise.resolve();
     }
 
     if (step.action === 'wait') {
-      return this.delay(this.scaleDuration(step.duration ?? 0, playbackRate));
+      return this.delay(step.duration ?? 0);
     }
 
     if (step.action === 'video') {
-      return this.playVideo(step, playbackRate);
+      return this.playVideo(step);
     }
 
     if (step.action === 'custom') {
       return Promise.resolve(step.run?.());
     }
 
-    return this.playShake(step, playbackRate);
+    return this.playShake(step);
   }
 
   private runStepBatch(
     steps: readonly SequenceStep[],
     detached: Array<Promise<void>>,
-    playbackRate: number,
   ): Promise<void> {
     const blocking: Array<Promise<void>> = [];
     for (const step of steps) {
-      const runningStep = this.runStep(step, playbackRate);
+      const runningStep = this.runStep(step);
       if ((step.mode ?? 'blocking') === 'detached') {
         detached.push(runningStep);
       } else {
@@ -183,7 +180,6 @@ export class SequenceRunner {
   private async runStepGroup(
     steps: readonly SequenceStep[],
     detached: Array<Promise<void>>,
-    playbackRate: number,
   ): Promise<void> {
     let parallelBatch: SequenceStep[] = [];
 
@@ -194,14 +190,14 @@ export class SequenceRunner {
       }
 
       if (parallelBatch.length > 0) {
-        await this.runStepBatch(parallelBatch, detached, playbackRate);
+        await this.runStepBatch(parallelBatch, detached);
         parallelBatch = [];
       }
-      await this.runStepBatch([step], detached, playbackRate);
+      await this.runStepBatch([step], detached);
     }
 
     if (parallelBatch.length > 0) {
-      await this.runStepBatch(parallelBatch, detached, playbackRate);
+      await this.runStepBatch(parallelBatch, detached);
     }
   }
 
@@ -233,7 +229,7 @@ export class SequenceRunner {
           return;
         }
 
-        remaining -= ticker.deltaMS;
+        remaining -= ticker.deltaMS * this.playbackRate;
         if (remaining <= 0) {
           settle();
         }
@@ -246,16 +242,13 @@ export class SequenceRunner {
   }
 
   /** 사인/코사인 흔들림이다. 끝나면 대상을 원래 좌표로 되돌린다. */
-  private playShake(step: SequenceStep, playbackRate: number): Promise<void> {
+  private playShake(step: SequenceStep): Promise<void> {
     const target = step.target;
     if (!target || !this.canUseTarget(target)) {
       return Promise.resolve();
     }
 
-    const duration = this.scaleDuration(
-      Math.max(0, step.duration ?? DEFAULT_SHAKE.durationMs),
-      playbackRate,
-    );
+    const duration = Math.max(0, step.duration ?? DEFAULT_SHAKE.durationMs);
     const intensity = Math.max(0, step.intensity ?? DEFAULT_SHAKE.intensity);
     const repeat = Math.max(0, step.repeat ?? DEFAULT_SHAKE.repeat);
     if (duration === 0 || intensity === 0 || repeat === 0) {
@@ -294,7 +287,7 @@ export class SequenceRunner {
           return;
         }
 
-        elapsed += ticker.deltaMS;
+        elapsed += ticker.deltaMS * this.playbackRate;
         const progress = ease(Math.min(1, elapsed / duration));
         target.x = originalX + Math.sin(progress * Math.PI * repeat * 2) * intensity;
         target.y = originalY + Math.cos(progress * Math.PI * repeat * 4) * 0.35 * intensity;
@@ -314,7 +307,7 @@ export class SequenceRunner {
    * 주입된 재생기로 비디오를 틀고, 자연 종료와 시간 초과 중 먼저 오는 쪽에서 끝낸다.
    * 타이밍은 이 클래스가, 실제 렌더링은 재생기가 맡는다.
    */
-  private playVideo(step: SequenceStep, playbackRate: number): Promise<void> {
+  private playVideo(step: SequenceStep): Promise<void> {
     const play = this.options.playVideo;
     const assetId = step.assetId;
     if (!play || !assetId) {
@@ -327,22 +320,15 @@ export class SequenceRunner {
       y: step.y ?? 0,
       ...(isPositiveFiniteNumber(step.width) ? { width: step.width } : {}),
       ...(isPositiveFiniteNumber(step.height) ? { height: step.height } : {}),
-      playbackRate,
+      playbackRate: this.playbackRate,
     });
 
-    const timeoutMs = this.scaleDuration(
-      Math.max(0, step.duration ?? DEFAULT_VIDEO_TIMEOUT_MS),
-      playbackRate,
-    );
+    const timeoutMs = Math.max(0, step.duration ?? DEFAULT_VIDEO_TIMEOUT_MS);
 
     return Promise.race([handle.done, this.delay(timeoutMs)]).then(
       () => handle.stop(),
       () => handle.stop(),
     );
-  }
-
-  private scaleDuration(durationMs: number, playbackRate: number): number {
-    return Math.max(0, durationMs / playbackRate);
   }
 
   private canRun(): boolean {

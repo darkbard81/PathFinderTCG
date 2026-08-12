@@ -5,6 +5,11 @@ import {
   type SaveSlotView,
 } from '../../dom/screens/save-slot-view';
 import { createGameSession, type GameSession } from '../../game/save/session';
+import {
+  createDefaultSaveName,
+  normalizeSaveName,
+  SAVE_NAME_MAX_LENGTH,
+} from '../../game/save/save-name';
 import type { SaveSlotSummary } from '../../game/save/types';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
@@ -51,6 +56,7 @@ export class SaveSlotScene implements Scene {
   private busy = false;
   private retryVisible = false;
   private deleteButtonVisible = true;
+  private createNameError = '';
   private isSlotActionPending = false;
   private isLoggingOut = false;
   private active = true;
@@ -59,6 +65,7 @@ export class SaveSlotScene implements Scene {
     this.saveSlotView =
       options.view ??
       createSaveSlotView({
+        saveNameMaxLength: SAVE_NAME_MAX_LENGTH,
         onBack: () => this.options.onBack(),
         onLogout: () => {
           void this.logout();
@@ -73,6 +80,9 @@ export class SaveSlotScene implements Scene {
           if (slot) {
             void this.handleSlotSelection(slot);
           }
+        },
+        onCreateSlot: (slotId, saveName) => {
+          void this.initializeSlot(slotId, saveName);
         },
       });
     this.element = this.saveSlotView.element;
@@ -102,6 +112,7 @@ export class SaveSlotScene implements Scene {
 
   public exit(): void {
     this.active = false;
+    this.saveSlotView.closeSaveNameDialog();
   }
 
   /** 논리 영역에 맞춰 배경 Sprite와 딤 레이어를 다시 깐다. */
@@ -162,6 +173,8 @@ export class SaveSlotScene implements Scene {
     this.slotSummaries = [];
     this.busy = true;
     this.retryVisible = false;
+    this.createNameError = '';
+    this.saveSlotView.closeSaveNameDialog();
     this.setStatus('Loading save slots...');
   }
 
@@ -223,6 +236,7 @@ export class SaveSlotScene implements Scene {
       statusTone: this.statusTone,
       retryVisible: this.retryVisible,
       deleteButtonVisible: this.deleteButtonVisible,
+      createNameError: this.createNameError,
     });
   }
 
@@ -256,23 +270,18 @@ export class SaveSlotScene implements Scene {
       return;
     }
 
+    if (slot.isEmpty) {
+      this.createNameError = '';
+      this.saveSlotView.requestSaveName(slot.slotId, createDefaultSaveName(slot.slotId));
+      this.renderView();
+      return;
+    }
+
     this.isSlotActionPending = true;
     this.busy = true;
     this.renderView();
 
     try {
-      if (slot.isEmpty) {
-        this.setStatus(`Initializing Slot ${slot.slotId}...`);
-        const result = await this.options.services.saveSlots.initialize(slot.slotId);
-
-        if (!this.active || this.isLoggingOut) {
-          return;
-        }
-
-        this.options.onSessionReady(createGameSession(result.state));
-        return;
-      }
-
       this.setStatus(`Loading Slot ${slot.slotId}...`);
       const state = await this.options.services.saveSlots.fetch(slot.slotId);
 
@@ -287,6 +296,46 @@ export class SaveSlotScene implements Scene {
       }
 
       this.showFailureState(error);
+    } finally {
+      this.isSlotActionPending = false;
+    }
+  }
+
+  private async initializeSlot(slotId: SaveSlotSummary['slotId'], value: string): Promise<void> {
+    if (this.isSlotActionPending || this.isLoggingOut || !this.active) {
+      return;
+    }
+
+    let saveName: string;
+    try {
+      saveName = normalizeSaveName(value);
+    } catch (error: unknown) {
+      this.createNameError = error instanceof Error ? error.message : String(error);
+      this.setStatus(this.createNameError, 'error');
+      return;
+    }
+
+    this.isSlotActionPending = true;
+    this.busy = true;
+    this.createNameError = '';
+    this.setStatus(`Initializing Slot ${slotId}...`);
+
+    try {
+      const result = await this.options.services.saveSlots.initialize(slotId, saveName);
+      if (!this.active || this.isLoggingOut) {
+        return;
+      }
+
+      this.saveSlotView.closeSaveNameDialog();
+      this.options.onSessionReady(createGameSession(result.state));
+    } catch (error: unknown) {
+      if (!this.active || this.isLoggingOut) {
+        return;
+      }
+
+      this.busy = false;
+      this.createNameError = error instanceof Error ? error.message : String(error);
+      this.setStatus(`Failed to initialize Slot ${slotId}: ${this.createNameError}`, 'error');
     } finally {
       this.isSlotActionPending = false;
     }

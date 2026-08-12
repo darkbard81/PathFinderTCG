@@ -33,12 +33,19 @@ type SaveSlotSceneHarness = {
   isSlotActionPending: boolean;
   toggleDeleteMode: () => void;
   handleSlotSelection: (slot: SaveSlotSummary) => Promise<void>;
+  initializeSlot: (slotId: 1 | 2 | 3, saveName: string) => Promise<void>;
 };
 
-function createMockView(): SaveSlotView & { render: ReturnType<typeof vi.fn> } {
+function createMockView(): SaveSlotView & {
+  render: ReturnType<typeof vi.fn>;
+  requestSaveName: ReturnType<typeof vi.fn>;
+  closeSaveNameDialog: ReturnType<typeof vi.fn>;
+} {
   return {
     element: {} as HTMLElement,
     render: vi.fn(),
+    requestSaveName: vi.fn(),
+    closeSaveNameDialog: vi.fn(),
   };
 }
 
@@ -130,6 +137,46 @@ describe('SaveSlotScene delete mode', () => {
     expect(lastModel(mockView)).toMatchObject({
       status: 'Slot 2 is already empty.',
       statusTone: 'danger',
+    });
+  });
+});
+
+describe('SaveSlotScene save name', () => {
+  beforeEach(() => {
+    initialize.mockReset();
+  });
+
+  it('빈 슬롯을 고르면 API 호출 전에 이름 입력을 요청한다', async () => {
+    const { scene, mockView } = createHarness();
+
+    await scene.handleSlotSelection(emptySlot);
+
+    expect(mockView.requestSaveName).toHaveBeenCalledWith(2, 'Slot 2');
+    expect(initialize).not.toHaveBeenCalled();
+  });
+
+  it('입력한 이름을 정규화해 슬롯 초기화 API에 넘긴다', async () => {
+    const state = await import('../../game/save/create-initial-save').then(
+      ({ createInitialSaveState }) => createInitialSaveState({ slotId: 2, saveName: '첫 모험' }),
+    );
+    initialize.mockResolvedValue({ state, summary: { ...occupiedSlot, slotId: 2 } });
+    const { scene, mockView } = createHarness();
+
+    await scene.initializeSlot(2, '  첫 모험  ');
+
+    expect(initialize).toHaveBeenCalledWith(2, '첫 모험');
+    expect(mockView.closeSaveNameDialog).toHaveBeenCalled();
+  });
+
+  it('공백뿐인 이름은 API에 보내지 않고 입력 오류로 남긴다', async () => {
+    const { scene, mockView } = createHarness();
+
+    await scene.initializeSlot(2, '   ');
+
+    expect(initialize).not.toHaveBeenCalled();
+    expect(lastModel(mockView)).toMatchObject({
+      statusTone: 'error',
+      createNameError: expect.stringContaining('non-empty'),
     });
   });
 });

@@ -9,6 +9,7 @@ import {
   type CardDefinition,
 } from '../game/save/card-catalog';
 import { migrateLegacyCardTraits, needsCardTraitMigration } from '../game/save/migrate-card-traits';
+import { normalizeSaveName } from '../game/save/save-name';
 import {
   SAVE_SLOT_IDS,
   SAVE_SLOT_SCHEMA_VERSION,
@@ -109,7 +110,9 @@ export function createSaveSlotsApiHandler(
           return true;
         }
 
-        const initialState = await createInitialSaveState({ slotId, projectRoot });
+        // 저장 이름은 필수값이다. 본문이 없으면 기본 이름으로 만들지 않고 거절한다.
+        const saveName = readInitializeSaveName(await readRequestJson(request));
+        const initialState = await createInitialSaveState({ slotId, saveName, projectRoot });
         await writeSaveSlotState(saveSlotsRoot, initialState);
         sendJson(response, {
           state: initialState,
@@ -256,7 +259,10 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     value.schemaVersion !== 2 &&
     value.schemaVersion !== 3 &&
     value.schemaVersion !== 4 &&
-    value.schemaVersion !== 5
+    value.schemaVersion !== 5 &&
+    value.schemaVersion !== 6 &&
+    value.schemaVersion !== 7 &&
+    value.schemaVersion !== 8
   ) {
     throw new Error(`Invalid schemaVersion: ${String(value.schemaVersion)}`);
   }
@@ -271,9 +277,7 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     throw new Error('createdAt and updatedAt must be strings');
   }
 
-  if (typeof value.saveName !== 'string' || value.saveName.trim().length === 0) {
-    throw new Error('saveName must be a non-empty string');
-  }
+  const saveName = normalizeSaveName(value.saveName);
 
   if (!isDeckInstance(value.deck)) {
     throw new Error('deck must be a deck instance');
@@ -295,7 +299,7 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
     slotId,
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
-    saveName: value.saveName,
+    saveName,
     deck,
     collection,
     equipment,
@@ -550,6 +554,14 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
 }
 
+function readInitializeSaveName(value: unknown): string {
+  if (!isRecord(value)) {
+    throw new Error('Save slot initialize body must be an object');
+  }
+
+  return normalizeSaveName(value.saveName);
+}
+
 function isFileNotFoundError(error: unknown): boolean {
   return (
     error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT'
@@ -567,7 +579,8 @@ function getErrorStatusCode(error: unknown): number {
       error.message.startsWith('Invalid schemaVersion:') ||
       error.message.startsWith('slotId mismatch:') ||
       error.message.startsWith('createdAt and updatedAt must be strings') ||
-      error.message.startsWith('saveName must be a non-empty string') ||
+      error.message.startsWith('saveName must') ||
+      error.message.startsWith('Save slot initialize body must be an object') ||
       error.message.startsWith('deck must be a deck instance') ||
       error.message.startsWith('collection must be a card collection') ||
       error.message.startsWith('equipment must be an equipment state') ||

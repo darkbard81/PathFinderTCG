@@ -8,14 +8,14 @@
   display: grid;
   /*
    * 왼쪽 열이 메뉴 버튼의 폭을 정한다. 26%만 두면 창을 넓힐수록 버튼이 끝없이 늘어나서
-   * min()으로 상한을 건다. 헤더·계정도 같은 열이라 함께 묶여 세로줄이 맞는다.
+   * min()으로 상한을 건다. 헤더도 같은 열이라 메뉴와 세로줄이 맞는다.
    */
   grid-template-columns: minmax(280px, min(26%, 400px)) 1fr;
   grid-template-rows: auto 1fr auto auto;
   grid-template-areas:
     'header topbar'
     'menu .'
-    'account .'
+    '. customize'
     'status status';
   gap: clamp(10px, 1.6vh, 20px);
   width: 100%;
@@ -136,8 +136,36 @@
   white-space: nowrap;
 }
 
-/* 설정 다이얼로그. 로비 전체를 덮고 가운데 패널만 입력을 받는다. */
-.pf-lobby__settings {
+/*
+ * 설정과 분리한 로비 꾸미기 진입점이다. 일반 9슬라이스 버튼을 쓴다.
+ * 오른쪽 열 끝에 붙인다. 메뉴 열에 두면 자주 쓰는 메뉴 버튼들과 같은 세로줄에 섞여
+ * 목록의 연장처럼 보였다. 우상단 설정 버튼과 같은 오른쪽 가장자리에 세워 짝을 맞춘다.
+ * 폭은 글자에 맞춘다. 오른쪽 열은 standing이 서는 자리라 100%로 늘리면 인물을 가린다.
+ */
+.pf-lobby__customize-button {
+  grid-area: customize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pf-space-sm);
+  justify-self: end;
+  min-height: clamp(46px, 5.8vh, 54px);
+  padding-inline: clamp(14px, 1.6vw, 22px);
+  font-size: clamp(15px, 1.7vw, 19px);
+}
+
+.pf-lobby__customize-icon {
+  width: clamp(30px, 3.4vw, 40px);
+  height: clamp(30px, 3.4vw, 40px);
+  flex: none;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 설정과 로비 꾸미기 다이얼로그는 로비를 덮고 가운데 패널만 입력을 받는다. */
+.pf-lobby__settings,
+.pf-lobby__customization {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -149,14 +177,15 @@
   background: var(--pf-license-dialog-overlay-background);
 }
 
-.pf-lobby__settings[hidden] {
+.pf-lobby__settings[hidden],
+.pf-lobby__customization[hidden] {
   display: none;
 }
 
-.pf-lobby__settings-panel {
+.pf-lobby__settings-panel,
+.pf-lobby__customization-panel {
   display: flex;
   flex-direction: column;
-  width: min(420px, 100%);
   max-height: calc(100% - 16px);
   overflow: hidden;
   box-sizing: border-box;
@@ -169,7 +198,16 @@
   pointer-events: auto;
 }
 
-.pf-lobby__settings-header {
+.pf-lobby__settings-panel {
+  width: min(420px, 100%);
+}
+
+.pf-lobby__customization-panel {
+  width: min(560px, 100%);
+}
+
+.pf-lobby__settings-header,
+.pf-lobby__customization-header {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
@@ -179,13 +217,15 @@
   padding-bottom: var(--pf-space-md);
 }
 
-.pf-lobby__settings-title {
+.pf-lobby__settings-title,
+.pf-lobby__customization-title {
   margin: 0;
   font-size: var(--pf-license-dialog-title-font-size);
   line-height: 1.2;
 }
 
-.pf-lobby__settings-close {
+.pf-lobby__settings-close,
+.pf-lobby__customization-close {
   flex: none;
   width: 36px;
   height: 36px;
@@ -195,16 +235,87 @@
 }
 
 /* 버튼은 세로로 쌓는다. 좁은 화면에서도 손가락 표적이 줄지 않는다. */
-.pf-lobby__settings-body {
+.pf-lobby__settings-body,
+.pf-lobby__customization-body {
   display: flex;
   flex-direction: column;
   gap: var(--pf-space-sm);
   padding: var(--pf-license-dialog-panel-padding);
   padding-top: 0;
+  overflow-y: auto;
 }
 
-.pf-lobby__settings-body .pf-lobby__account-button {
-  flex: none;
+.pf-lobby__settings-section {
+  display: grid;
+  gap: var(--pf-space-sm);
+  padding: var(--pf-space-md);
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 8px;
+  background: var(--pf-surface-panel);
+}
+
+.pf-lobby__settings-section-title {
+  margin: 0;
+  color: var(--pf-color-primary-warm);
+  font-size: var(--pf-text-panel-subtitle-size);
+}
+
+.pf-lobby__settings-field {
+  display: grid;
+  gap: var(--pf-space-xs);
+  color: var(--pf-color-secondary);
+  font-size: 14px;
+}
+
+.pf-lobby__settings-input {
+  width: 100%;
+  min-height: 42px;
+  padding: var(--pf-space-xs) var(--pf-space-sm);
+  box-sizing: border-box;
+  border: var(--pf-battlefield-rail-border);
+  border-radius: 6px;
+  background: var(--pf-surface-modal);
+  color: var(--pf-color-primary);
+  font: inherit;
+}
+
+.pf-lobby__settings-check {
+  display: flex;
+  align-items: center;
+  gap: var(--pf-space-xs);
+  color: var(--pf-color-primary);
+}
+
+.pf-lobby__settings-check input {
+  width: 20px;
+  height: 20px;
+}
+
+.pf-lobby__settings-range-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--pf-space-sm);
+}
+
+.pf-lobby__settings-range {
+  width: 100%;
+}
+
+.pf-lobby__settings-account-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--pf-space-sm);
+}
+
+.pf-lobby__settings-status {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--pf-text-status-color);
+  text-align: center;
+}
+
+.pf-lobby__settings-body .pf-lobby__account-button,
+.pf-lobby__customization-body .pf-lobby__account-button {
   width: 100%;
 }
 
@@ -275,40 +386,10 @@
   color: var(--pf-color-disabled-text);
 }
 
-.pf-lobby__account {
-  grid-area: account;
-  display: flex;
-  gap: clamp(8px, 1.2vw, 14px);
-}
-
 .pf-lobby__account-button {
   flex: 1 1 0;
   min-height: clamp(40px, 5.5vh, 52px);
   font-size: clamp(14px, 1.6vw, 18px);
-}
-
-.pf-lobby__standing-toggle {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: var(--pf-space-xs);
-  min-height: clamp(40px, 5.5vh, 52px);
-  padding: var(--pf-space-xs) var(--pf-space-sm);
-  font-size: clamp(12px, 1.4vw, 16px);
-  white-space: nowrap;
-}
-
-.pf-lobby__standing-toggle-icon {
-  width: clamp(24px, 3vw, 34px);
-  height: clamp(24px, 3vw, 34px);
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-}
-
-.pf-lobby__standing-toggle[aria-pressed='false'] {
-  opacity: 0.68;
 }
 
 .pf-lobby__status {
@@ -322,8 +403,8 @@
 
 /*
  * 리더 standing.
- * 브라우저가 애니메이션을 알아서 재생한다. 바닥에 세우고 세로를 논리 영역 높이에
- * 맞추면 가로는 비율을 따라온다. 크롬보다 뒤에 두되 z-index를 음수로 주지는 않는다.
+ * 브라우저가 애니메이션을 알아서 재생한다. 바닥 기준 세로 오프셋과 논리 영역 높이를
+ * 적용하면 가로는 비율을 따라온다. 크롬보다 뒤에 두되 z-index를 음수로 주지는 않는다.
  * 음수로 주면 조상 쌓임 맥락을 빠져나가 캔버스 뒤로 숨는다.
  *
  * 원본 standing은 2:3으로 만든다. 비율을 명시해 두는 것은 <video>가 메타데이터를
@@ -332,9 +413,9 @@
 .pf-lobby__standing {
   position: absolute;
   z-index: 0;
-  bottom: 0;
-  left: 56%;
-  height: 100%;
+  bottom: var(--pf-lobby-standing-position-y);
+  left: var(--pf-lobby-standing-position-x);
+  height: var(--pf-lobby-standing-height);
   width: auto;
   aspect-ratio: 2 / 3;
   transform: translateX(-50%);
@@ -346,7 +427,7 @@
 .pf-lobby__header,
 .pf-lobby__topbar,
 .pf-lobby__menu,
-.pf-lobby__account,
+.pf-lobby__customize-button,
 .pf-lobby__status {
   position: relative;
   z-index: 1;

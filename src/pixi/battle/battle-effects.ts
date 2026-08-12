@@ -77,6 +77,8 @@ export type BattleEffectsLayerOptions = {
   host: HTMLElement;
   /** 칸 가운데의 논리 좌표를 돌려준다. 못 찾으면 연출을 건너뛴다. */
   resolveSlotCenter: (slotId: BattleSlotId) => { x: number; y: number } | null;
+  /** 공용 연출 시간축이 검증한 현재 재생 배속을 돌려준다. */
+  getPlaybackRate: () => number;
 };
 
 const BURST_DURATION_MS = 360;
@@ -150,7 +152,7 @@ export async function createBattleEffectsLayer(
     label.anchor.set(0.5);
     group.addChild(burst, label);
 
-    return animate(app, (elapsed) => {
+    return animate(app, options.getPlaybackRate, (elapsed) => {
       const burstProgress = Math.min(1, elapsed / BURST_DURATION_MS);
       burst.scale.set(0.45 + burstProgress * 1.15);
       burst.alpha = 1 - burstProgress;
@@ -182,11 +184,15 @@ export async function createBattleEffectsLayer(
  * 매 프레임 진행률을 넘기고, 콜백이 true를 돌려주면 끝낸다.
  * 화면이 사라져 ticker가 멈추면 resolve되지 않으므로 호출자가 destroy로 정리해야 한다.
  */
-function animate(app: Application, step: (elapsedMs: number) => boolean): Promise<void> {
+function animate(
+  app: Application,
+  getPlaybackRate: () => number,
+  step: (elapsedMs: number) => boolean,
+): Promise<void> {
   return new Promise((resolve) => {
     let elapsed = 0;
     const onFrame = (): void => {
-      elapsed += app.ticker.deltaMS;
+      elapsed += app.ticker.deltaMS * getPlaybackRate();
       if (step(elapsed)) {
         app.ticker.remove(onFrame);
         resolve();

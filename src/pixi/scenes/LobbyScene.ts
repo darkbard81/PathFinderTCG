@@ -1,13 +1,30 @@
 import { Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import {
   createLobbyView,
+  type LobbyCustomizationModel,
   type LobbyMenuItem,
   type LobbyStandingPlayback,
   type LobbyView,
 } from '../../dom/screens/lobby-view';
 import { joinAssetUrl } from '../../game/assets/manifest';
-import { findLobbyBackground } from '../../game/lobby/backgrounds';
-import type { GameSession } from '../../game/save/session';
+import { findLobbyBackground, LOBBY_BACKGROUNDS } from '../../game/lobby/backgrounds';
+import {
+  DEFAULT_LOBBY_STANDING_POSITION_X,
+  DEFAULT_LOBBY_STANDING_POSITION_Y,
+  DEFAULT_LOBBY_STANDING_SCALE,
+  LOBBY_STANDING_POSITION_X_RANGE,
+  LOBBY_STANDING_POSITION_Y_RANGE,
+  LOBBY_STANDING_SCALE_RANGE,
+  normalizeLobbyState,
+  type LobbyState,
+} from '../../game/lobby/lobby-state';
+import { normalizeSaveName, SAVE_NAME_MAX_LENGTH } from '../../game/save/save-name';
+import {
+  createGameSession,
+  createSaveSlotStateFromGameSession,
+  type GameSession,
+} from '../../game/save/session';
+import type { SaveSlotState } from '../../game/save/types';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
@@ -51,10 +68,6 @@ export type LobbySceneOptions = {
   onLoggedOut: (statusMessage: string) => void;
   /** Lobby를 다시 열 때 standing 영상의 마지막 위치를 복원한다. */
   standingPlayback?: LobbyStandingPlayback;
-  /** Lobby를 다시 열 때 standing 캐릭터 표시 상태를 복원한다. */
-  standingVisible?: boolean;
-  /** standing 캐릭터 표시 상태를 앱 임시 상태에 반영한다. */
-  onStandingVisibilityChange?: (visible: boolean) => void;
   view?: LobbyView;
 };
 
@@ -71,14 +84,17 @@ export class LobbyScene implements Scene {
   private readonly lobbyView: LobbyView;
   private readonly shade = new Graphics({ label: 'lobby-shade', eventMode: 'none' });
   private background: Sprite | null = null;
+  private backgroundId: string | null = null;
+  /** 비동기 배경 로딩 중 마지막 요청만 씬 그래프에 반영하기 위한 세대 번호다. */
+  private backgroundRequestGeneration = 0;
   private layout: ViewportLayout | null = null;
   private isLoggingOut = false;
+  private isSavingSettings = false;
   private active = true;
 
   public constructor(private readonly options: LobbySceneOptions) {
     this.lobbyView =
-      options.view ??
-      createLobbyView(this.buildViewOptions(options.standingPlayback, options.standingVisible));
+      options.view ?? createLobbyView(this.buildViewOptions(options.standingPlayback));
     this.element = this.lobbyView.element;
     this.view.addChild(this.shade);
   }
@@ -86,6 +102,7 @@ export class LobbyScene implements Scene {
   public async enter(): Promise<void> {
     this.active = true;
     this.isLoggingOut = false;
+    this.isSavingSettings = false;
     this.lobbyView.setStatus('');
     this.lobbyView.setBusy(false);
 
@@ -110,7 +127,7 @@ export class LobbyScene implements Scene {
     this.layoutCanvas(layout);
   }
 
-  private buildViewOptions(standingPlayback?: LobbyStandingPlayback, standingVisible?: boolean) {
+  private buildViewOptions(standingPlayback?: LobbyStandingPlayback) {
     const guard = (run: () => void) => () => {
       if (!this.isLoggingOut) {
         run();
@@ -159,15 +176,27 @@ export class LobbyScene implements Scene {
           `${STANDING_PATH_PREFIX}/${leaderId}/${STANDING_FILE_STEM}${suffix}`,
         ),
       ),
+      saveNameMaxLength: SAVE_NAME_MAX_LENGTH,
       saveName: this.options.session.saveName,
       leaderName: this.options.session.deck.leader.definition.name,
       resources: this.options.session.resources,
       menuItems,
+      backgroundOptions: LOBBY_BACKGROUNDS.filter((background) =>
+        this.options.session.lobby.ownedBackgroundIds.includes(background.id),
+      ).map((background) => ({ id: background.id, name: background.name })),
+      customization: this.toCustomizationModel(),
+      standingPositionRange: LOBBY_STANDING_POSITION_X_RANGE,
+      standingPositionYRange: LOBBY_STANDING_POSITION_Y_RANGE,
+      standingScaleRange: LOBBY_STANDING_SCALE_RANGE,
+      standingDefaults: {
+        standingPositionX: DEFAULT_LOBBY_STANDING_POSITION_X,
+        standingPositionY: DEFAULT_LOBBY_STANDING_POSITION_Y,
+        standingScale: DEFAULT_LOBBY_STANDING_SCALE,
+      },
       ...(standingPlayback ? { standingPlayback } : {}),
-      ...(standingVisible !== undefined ? { standingVisible } : {}),
-      ...(this.options.onStandingVisibilityChange
-        ? { onStandingVisibilityChange: this.options.onStandingVisibilityChange }
-        : {}),
+      onSaveName: (saveName: string) => void this.saveName(saveName),
+      onSaveCustomization: (customization: LobbyCustomizationModel) =>
+        void this.saveCustomization(customization),
       onBack: guard(() => this.options.onBack()),
       onLogout: () => void this.logout(),
     };
@@ -175,25 +204,41 @@ export class LobbyScene implements Scene {
 
   /** 저장 데이터가 고른 배경을 깐다. 카탈로그에 없으면 배경 없이 진행한다. */
   private async ensureBackground(): Promise<void> {
-    if (this.background) {
-      return;
+    await this.replaceBackground(this.options.session.lobby.selectedBackgroundId);
+  }
+
+  private async replaceBackground(backgroundId: string): Promise<boolean> {
+    const requestGeneration = ++this.backgroundRequestGeneration;
+    if (this.background && this.backgroundId === backgroundId) {
+      return true;
     }
 
-    const definition = findLobbyBackground(this.options.session.lobby.selectedBackgroundId);
+    const definition = findLobbyBackground(backgroundId);
     if (!definition) {
-      return;
+      return false;
     }
 
     const texture = await this.loadAsset<Texture>(
       `lobby.background.${definition.id}`,
       joinAssetUrl(this.options.assetBaseUrl, definition.path),
     );
-    if (!texture || !this.active) {
-      return;
+    if (!texture || !this.active || requestGeneration !== this.backgroundRequestGeneration) {
+      return false;
     }
 
-    this.background = new Sprite({ texture, label: 'lobby-background', eventMode: 'none' });
-    this.view.addChildAt(this.background, 0);
+    const nextBackground = new Sprite({ texture, label: 'lobby-background', eventMode: 'none' });
+    const previousBackground = this.background;
+    this.background = nextBackground;
+    this.backgroundId = backgroundId;
+    this.view.addChildAt(nextBackground, 0);
+    if (this.layout) {
+      this.layoutCanvas(this.layout);
+    }
+    if (previousBackground) {
+      this.view.removeChild(previousBackground);
+      previousBackground.destroy();
+    }
+    return true;
   }
 
   private async loadAsset<T>(alias: string, src: string, data?: unknown): Promise<T | null> {
@@ -215,6 +260,123 @@ export class LobbyScene implements Scene {
       .clear()
       .rect(0, 0, layout.width, layout.height)
       .fill({ color: screenShade.fill.canvas, alpha: screenShade.fillAlpha });
+  }
+
+  private toCustomizationModel(): LobbyCustomizationModel {
+    const {
+      selectedBackgroundId,
+      standingVisible,
+      standingMediaType,
+      standingPositionX,
+      standingPositionY,
+      standingScale,
+    } = this.options.session.lobby;
+    return {
+      selectedBackgroundId,
+      standingVisible,
+      standingMediaType,
+      standingPositionX,
+      standingPositionY,
+      standingScale,
+    };
+  }
+
+  private applySavedState(state: SaveSlotState): void {
+    Object.assign(this.options.session, createGameSession(state));
+  }
+
+  private async saveName(value: string): Promise<void> {
+    if (this.isSavingSettings || this.isLoggingOut || !this.active) {
+      return;
+    }
+
+    let saveName: string;
+    try {
+      saveName = normalizeSaveName(value);
+    } catch (error: unknown) {
+      this.lobbyView.setSettingsStatus(error instanceof Error ? error.message : String(error));
+      return;
+    }
+    if (saveName === this.options.session.saveName) {
+      this.lobbyView.setSettingsStatus('저장 이름이 이미 같습니다.');
+      return;
+    }
+
+    const previousSaveName = this.options.session.saveName;
+    this.isSavingSettings = true;
+    this.lobbyView.setBusy(true);
+    this.lobbyView.setSettingsStatus('저장 이름을 저장하는 중입니다...');
+    this.options.session.saveName = saveName;
+
+    try {
+      const savedState = await this.options.services.saveSlots.save(
+        createSaveSlotStateFromGameSession(this.options.session),
+      );
+      if (!this.active) {
+        return;
+      }
+
+      this.applySavedState(savedState);
+      this.lobbyView.setSaveName(this.options.session.saveName);
+      this.lobbyView.setSettingsStatus('저장 이름을 바꿨습니다.');
+    } catch (error: unknown) {
+      this.options.session.saveName = previousSaveName;
+      this.lobbyView.setSaveName(previousSaveName);
+      this.lobbyView.setSettingsStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      this.isSavingSettings = false;
+      if (!this.isLoggingOut) {
+        this.lobbyView.setBusy(false);
+      }
+    }
+  }
+
+  private async saveCustomization(customization: LobbyCustomizationModel): Promise<void> {
+    if (this.isSavingSettings || this.isLoggingOut || !this.active) {
+      return;
+    }
+
+    const previousLobby = structuredClone(this.options.session.lobby);
+    let nextLobby: LobbyState;
+    try {
+      nextLobby = normalizeLobbyState({ ...previousLobby, ...customization });
+    } catch (error: unknown) {
+      this.lobbyView.setCustomization(this.toCustomizationModel());
+      this.lobbyView.setCustomizationStatus(error instanceof Error ? error.message : String(error));
+      return;
+    }
+
+    this.isSavingSettings = true;
+    this.lobbyView.setBusy(true);
+    this.lobbyView.setCustomizationStatus('로비 설정을 저장하는 중입니다...');
+
+    try {
+      if (!(await this.replaceBackground(nextLobby.selectedBackgroundId))) {
+        throw new Error('선택한 로비 배경을 불러오지 못했습니다.');
+      }
+
+      this.options.session.lobby = nextLobby;
+      const savedState = await this.options.services.saveSlots.save(
+        createSaveSlotStateFromGameSession(this.options.session),
+      );
+      if (!this.active) {
+        return;
+      }
+
+      this.applySavedState(savedState);
+      this.lobbyView.setCustomization(this.toCustomizationModel());
+      this.lobbyView.setCustomizationStatus('로비 설정을 저장했습니다.');
+    } catch (error: unknown) {
+      this.options.session.lobby = previousLobby;
+      this.lobbyView.setCustomization(this.toCustomizationModel());
+      await this.replaceBackground(previousLobby.selectedBackgroundId);
+      this.lobbyView.setCustomizationStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      this.isSavingSettings = false;
+      if (!this.isLoggingOut) {
+        this.lobbyView.setBusy(false);
+      }
+    }
   }
 
   private async logout(): Promise<void> {

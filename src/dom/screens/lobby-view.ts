@@ -19,6 +19,7 @@ import shieldIconUrl from '../../assets/ui/icons/lobby/shield.webp';
 import goldIconUrl from '../../assets/ui/icons/resource/gold.webp';
 import manaStoneIconUrl from '../../assets/ui/icons/resource/mana-stone.webp';
 import summonTicketIconUrl from '../../assets/ui/icons/resource/summon-ticket.webp';
+import type { LobbyStandingMediaType } from '../../game/lobby/lobby-state';
 import type { ResourceKey, ResourceState } from '../../game/resources/resource-state';
 
 const LOBBY_ICON_URLS = {
@@ -53,6 +54,29 @@ export type LobbyMenuItem = {
   onSelect?: () => void;
 };
 
+/** 로비 꾸미기 다이얼로그의 배경 선택기에 보여 줄 보유 배경 하나다. */
+export type LobbyBackgroundOption = {
+  id: string;
+  name: string;
+};
+
+/** 꾸미기 다이얼로그의 초기화 버튼이 슬라이더를 되돌릴 값이다. */
+export type LobbyStandingDefaults = {
+  standingPositionX: number;
+  standingPositionY: number;
+  standingScale: number;
+};
+
+/** DOM이 표시하고 입력으로 돌려주는 로비 standing 설정값이다. */
+export type LobbyCustomizationModel = {
+  selectedBackgroundId: string;
+  standingVisible: boolean;
+  standingMediaType: LobbyStandingMediaType;
+  standingPositionX: number;
+  standingPositionY: number;
+  standingScale: number;
+};
+
 export type LobbyViewOptions = {
   /**
    * 리더 standing 후보 URL이다. 앞에서부터 시도하고 받지 못하면 다음으로 넘어간다.
@@ -62,6 +86,7 @@ export type LobbyViewOptions = {
    * 위에 있어서, 인물 앞에 캔버스 연출을 둘 수는 없다.
    */
   standingSources: string[];
+  saveNameMaxLength: number;
   /** 저장 슬롯 이름이다. 헤더 첫 줄에 쓴다. */
   saveName: string;
   /** 현재 덱 리더 이름이다. 헤더 둘째 줄에 쓴다. */
@@ -69,12 +94,16 @@ export type LobbyViewOptions = {
   /** 보유 재화다. 우상단 리소스 바에 쓴다. */
   resources: ResourceState;
   menuItems: LobbyMenuItem[];
+  backgroundOptions: LobbyBackgroundOption[];
+  customization: LobbyCustomizationModel;
+  standingPositionRange: { min: number; max: number };
+  standingPositionYRange: { min: number; max: number };
+  standingScaleRange: { min: number; max: number };
+  standingDefaults: LobbyStandingDefaults;
   /** Lobby를 잠시 떠날 때 복원할 standing 영상의 일시 재생 상태다. */
   standingPlayback?: LobbyStandingPlayback;
-  /** standing 캐릭터 표시 여부다. 저장 데이터가 아닌 임시 UI 상태다. */
-  standingVisible?: boolean;
-  /** standing 캐릭터 표시 여부가 바뀔 때 호출한다. */
-  onStandingVisibilityChange?: (visible: boolean) => void;
+  onSaveName: (saveName: string) => void;
+  onSaveCustomization: (customization: LobbyCustomizationModel) => void;
   onBack: () => void;
   onLogout: () => void;
 };
@@ -82,8 +111,14 @@ export type LobbyViewOptions = {
 export type LobbyView = {
   element: HTMLElement;
   readStandingPlayback: () => LobbyStandingPlayback | null;
-  setStandingVisible: (visible: boolean) => void;
+  setSaveName: (saveName: string) => void;
+  setCustomization: (customization: LobbyCustomizationModel) => void;
+  /** 로비 본판에 표시할 화면 전역 상태를 바꾼다. */
   setStatus: (message: string) => void;
+  /** 일반 설정 다이얼로그 안의 상태를 바꾼다. */
+  setSettingsStatus: (message: string) => void;
+  /** 로비 꾸미기 다이얼로그 안의 상태를 바꾼다. */
+  setCustomizationStatus: (message: string) => void;
   setBusy: (busy: boolean) => void;
 };
 
@@ -102,9 +137,38 @@ export type LobbyStandingPlayback = {
 export function createLobbyView(options: LobbyViewOptions): LobbyView {
   const element = document.createElement('section');
   element.className = 'pf-lobby';
-  let standingVisible = options.standingVisible ?? true;
+  let customization = { ...options.customization };
+  let previewCustomization = { ...customization };
+  let standingPlayback = options.standingPlayback ? { ...options.standingPlayback } : undefined;
 
-  mountStanding(element, options.standingSources, options.standingPlayback, () => standingVisible);
+  applyStandingCustomization(element, customization);
+  mountStanding(
+    element,
+    options.standingSources,
+    standingPlayback,
+    () => previewCustomization.standingVisible,
+    previewCustomization.standingMediaType,
+  );
+
+  const previewLobbyCustomization = (nextCustomization: LobbyCustomizationModel): void => {
+    const mediaTypeChanged =
+      previewCustomization.standingMediaType !== nextCustomization.standingMediaType;
+    previewCustomization = { ...nextCustomization };
+
+    if (mediaTypeChanged) {
+      standingPlayback = readMountedStandingPlayback(element) ?? standingPlayback;
+      element.querySelector('.pf-lobby__standing')?.remove();
+      mountStanding(
+        element,
+        options.standingSources,
+        standingPlayback,
+        () => previewCustomization.standingVisible,
+        previewCustomization.standingMediaType,
+      );
+    }
+
+    applyStandingCustomization(element, previewCustomization);
+  };
 
   const header = document.createElement('header');
   header.className = 'pf-lobby__header';
@@ -128,16 +192,6 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
     menu.append(button);
     return button;
   });
-
-  const account = document.createElement('div');
-  account.className = 'pf-lobby__account';
-
-  const standingToggle = createStandingToggleButton(standingVisible, (visible) => {
-    standingVisible = visible;
-    applyStandingVisibility(element, visible);
-    options.onStandingVisibilityChange?.(visible);
-  });
-  account.append(standingToggle);
 
   // 우상단. 재화 오른쪽에 설정 버튼을 둔다.
   const topbar = document.createElement('div');
@@ -164,6 +218,9 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
   settingsButton.append(settingsIcon, settingsLabel);
 
   const settings = createSettingsDialog({
+    saveName: options.saveName,
+    saveNameMaxLength: options.saveNameMaxLength,
+    onSaveName: options.onSaveName,
     onBack: options.onBack,
     onLogout: options.onLogout,
     onOpenChange: (open) => settingsButton.setAttribute('aria-expanded', String(open)),
@@ -172,36 +229,72 @@ export function createLobbyView(options: LobbyViewOptions): LobbyView {
   settingsButton.addEventListener('click', () => settings.open());
   topbar.append(createResourceBar(options.resources), settingsButton);
 
+  const customizationButton = document.createElement('button');
+  customizationButton.type = 'button';
+  customizationButton.className = 'pf-btn9 pf-btn9--standard pf-lobby__customize-button';
+  customizationButton.setAttribute('aria-haspopup', 'dialog');
+  customizationButton.setAttribute('aria-expanded', 'false');
+
+  const customizationIcon = document.createElement('img');
+  customizationIcon.className = 'pf-lobby__customize-icon';
+  customizationIcon.src = LOBBY_ICON_URLS.card;
+  customizationIcon.alt = '';
+  customizationIcon.setAttribute('aria-hidden', 'true');
+
+  const customizationLabel = document.createElement('span');
+  customizationLabel.textContent = '로비 꾸미기';
+  customizationButton.append(customizationIcon, customizationLabel);
+
+  const customizationDialog = createCustomizationDialog({
+    backgroundOptions: options.backgroundOptions,
+    customization,
+    standingPositionRange: options.standingPositionRange,
+    standingPositionYRange: options.standingPositionYRange,
+    standingScaleRange: options.standingScaleRange,
+    standingDefaults: options.standingDefaults,
+    onSaveCustomization: options.onSaveCustomization,
+    onPreviewCustomization: previewLobbyCustomization,
+    onOpenChange: (open) => customizationButton.setAttribute('aria-expanded', String(open)),
+  });
+  customizationButton.addEventListener('click', () => customizationDialog.open());
+
   const status = document.createElement('p');
   status.className = 'pf-lobby__status';
   status.setAttribute('role', 'status');
 
-  element.append(header, topbar, menu, account, status, settings.root);
+  element.append(
+    header,
+    topbar,
+    menu,
+    customizationButton,
+    status,
+    settings.root,
+    customizationDialog.root,
+  );
 
   return {
     element,
-    readStandingPlayback: () => {
-      const standing = element.querySelector('.pf-lobby__standing');
-      if (!(standing instanceof HTMLVideoElement) || !Number.isFinite(standing.currentTime)) {
-        return null;
-      }
-
-      return {
-        source: standing.dataset.source ?? standing.src,
-        currentTime: Math.max(0, standing.currentTime),
-      };
+    readStandingPlayback: () => readMountedStandingPlayback(element) ?? standingPlayback ?? null,
+    setSaveName: (value) => {
+      saveName.textContent = value;
+      settings.setSaveName(value);
     },
-    setStandingVisible: (visible) => {
-      standingVisible = visible;
-      applyStandingVisibility(element, visible);
+    setCustomization: (value) => {
+      customization = { ...value };
+      previewLobbyCustomization(customization);
+      customizationDialog.setCustomization(customization);
     },
     setStatus: (message) => {
       status.textContent = message;
     },
+    setSettingsStatus: settings.setStatus,
+    setCustomizationStatus: customizationDialog.setStatus,
     setBusy: (busy) => {
-      for (const button of [...buttons, standingToggle, settingsButton, ...settings.buttons]) {
+      for (const button of [...buttons, settingsButton, customizationButton]) {
         button.disabled = busy;
       }
+      settings.setBusy(busy);
+      customizationDialog.setBusy(busy);
     },
   };
 }
@@ -236,9 +329,14 @@ export function supportsAlphaWebm(agent: UserAgentInfo): boolean {
 export function filterUsableStandingSources(
   sources: readonly string[],
   agent: UserAgentInfo = readUserAgent(),
+  mediaType: LobbyStandingMediaType = 'auto',
 ): string[] {
   const allowWebm = supportsAlphaWebm(agent);
-  return sources.filter((url) => allowWebm || !url.toLowerCase().includes('.webm'));
+  return sources.filter((url) => {
+    const video = isVideoSource(url);
+    const matchesMediaType = mediaType === 'auto' || (mediaType === 'video' ? video : !video);
+    return matchesMediaType && (allowWebm || !url.toLowerCase().includes('.webm'));
+  });
 }
 
 /** 같은 standing 영상에만 저장된 재생 위치를 적용한다. */
@@ -274,8 +372,9 @@ function mountStanding(
   sources: readonly string[],
   playback: LobbyStandingPlayback | undefined,
   getStandingVisibility: () => boolean,
+  mediaType: LobbyStandingMediaType,
 ): void {
-  const usable = filterUsableStandingSources(sources);
+  const usable = filterUsableStandingSources(sources, readUserAgent(), mediaType);
   const [url, ...rest] = usable;
   if (!url) {
     return;
@@ -284,8 +383,11 @@ function mountStanding(
   const element = createStandingElement(url);
   element.className = 'pf-lobby__standing';
   element.addEventListener('error', () => {
+    if (element.parentElement !== parent) {
+      return;
+    }
     element.remove();
-    mountStanding(parent, rest, playback, getStandingVisibility);
+    mountStanding(parent, rest, playback, getStandingVisibility, mediaType);
   });
   if (element instanceof HTMLVideoElement) {
     // video.src는 브라우저가 절대 URL로 정규화하므로 후보 URL을 별도로 보존한다.
@@ -301,6 +403,18 @@ function mountStanding(
   }
   parent.append(element);
   element.hidden = !getStandingVisibility();
+}
+
+function readMountedStandingPlayback(parent: HTMLElement): LobbyStandingPlayback | null {
+  const standing = parent.querySelector('.pf-lobby__standing');
+  if (!(standing instanceof HTMLVideoElement) || !Number.isFinite(standing.currentTime)) {
+    return null;
+  }
+
+  return {
+    source: standing.dataset.source ?? standing.src,
+    currentTime: Math.max(0, standing.currentTime),
+  };
 }
 
 /** 영상 확장자면 video로, 아니면 img로 만든다. 둘 다 브라우저가 알아서 재생한다. */
@@ -325,41 +439,32 @@ function createStandingElement(url: string): HTMLImageElement | HTMLVideoElement
   return video;
 }
 
-function createStandingToggleButton(
-  initialVisible: boolean,
-  onChange: (visible: boolean) => void,
-): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'pf-btn-plain pf-lobby__standing-toggle';
-  button.setAttribute('aria-label', '캐릭터 표시');
-
-  const icon = document.createElement('img');
-  icon.className = 'pf-lobby__standing-toggle-icon';
-  icon.src = LOBBY_ICON_URLS.notice;
-  icon.alt = '';
-  icon.setAttribute('aria-hidden', 'true');
-
-  const label = document.createElement('span');
-  label.className = 'pf-lobby__standing-toggle-label';
-
-  const update = (visible: boolean): void => {
-    button.setAttribute('aria-pressed', String(visible));
-    label.textContent = visible ? '캐릭터 ON' : '캐릭터 OFF';
+/**
+ * standing 배치를 CSS 커스텀 속성 값으로 옮긴다.
+ *
+ * 기본값은 설정이 저장 데이터로 올라오기 전 하드코딩과 같은 56% / 0% / 100%다.
+ * 옛 저장 파일이 승격돼도 로비 그림이 그대로여야 하므로 이 대응은 테스트로 고정한다.
+ */
+export function buildStandingStyleVariables(
+  customization: LobbyCustomizationModel,
+): Record<string, string> {
+  return {
+    '--pf-lobby-standing-position-x': `${customization.standingPositionX}%`,
+    '--pf-lobby-standing-position-y': `${customization.standingPositionY}%`,
+    '--pf-lobby-standing-height': `${customization.standingScale}%`,
   };
-
-  update(initialVisible);
-  button.append(icon, label);
-  button.addEventListener('click', () => {
-    const visible = button.getAttribute('aria-pressed') !== 'true';
-    update(visible);
-    onChange(visible);
-  });
-  return button;
 }
 
-function applyStandingVisibility(parent: HTMLElement, visible: boolean): void {
-  parent.querySelector<HTMLElement>('.pf-lobby__standing')?.toggleAttribute('hidden', !visible);
+function applyStandingCustomization(
+  parent: HTMLElement,
+  customization: LobbyCustomizationModel,
+): void {
+  for (const [name, value] of Object.entries(buildStandingStyleVariables(customization))) {
+    parent.style.setProperty(name, value);
+  }
+  parent
+    .querySelector<HTMLElement>('.pf-lobby__standing')
+    ?.toggleAttribute('hidden', !customization.standingVisible);
 }
 
 /**
@@ -368,21 +473,26 @@ function applyStandingVisibility(parent: HTMLElement, visible: boolean): void {
  * 저장 슬롯으로 돌아가기와 로그아웃은 자주 쓰지 않는데 로비 아래를 계속 차지했다.
  * 우상단 설정 버튼 뒤로 넣어 본판에서 치운다.
  *
- * 닫기는 × 버튼과 Escape 둘 다 받는다. 배경을 눌러 닫는 길은 두지 않았다.
- * 오버레이 루트가 pointer-events:none 이라 배경이 클릭을 받으려면 따로 열어야 하는데,
- * 로그아웃이 걸린 패널이라 실수로 닫히는 쪽보다 명시적으로 닫는 쪽이 낫다.
+ * 닫기는 × 버튼과 Escape 둘 다 받는다. 배경 클릭은 뒤쪽 UI로 통과시키지 않되
+ * 닫기 동작으로도 쓰지 않는다. 로그아웃이 걸린 패널은 명시적으로 닫아야 한다.
  */
 function createSettingsDialog(options: {
+  saveName: string;
+  saveNameMaxLength: number;
+  onSaveName: (saveName: string) => void;
   onBack: () => void;
   onLogout: () => void;
   onOpenChange: (open: boolean) => void;
 }): {
   root: HTMLDivElement;
-  buttons: HTMLButtonElement[];
   open: () => void;
+  setSaveName: (saveName: string) => void;
+  setStatus: (message: string) => void;
+  setBusy: (busy: boolean) => void;
 } {
   const root = document.createElement('div');
   root.className = 'pf-lobby__settings';
+  root.dataset.interactive = 'true';
   root.hidden = true;
   root.tabIndex = -1;
   root.setAttribute('role', 'dialog');
@@ -411,17 +521,50 @@ function createSettingsDialog(options: {
   const body = document.createElement('div');
   body.className = 'pf-lobby__settings-body';
 
+  const nameForm = document.createElement('form');
+  nameForm.className = 'pf-lobby__settings-section';
+  const nameTitle = document.createElement('h3');
+  nameTitle.className = 'pf-lobby__settings-section-title';
+  nameTitle.textContent = '저장 슬롯 이름';
+  const nameLabel = document.createElement('label');
+  nameLabel.className = 'pf-lobby__settings-field';
+  nameLabel.textContent = `이름 (${options.saveNameMaxLength}자 이내)`;
+  const nameInput = document.createElement('input');
+  nameInput.className = 'pf-lobby__settings-input';
+  nameInput.type = 'text';
+  nameInput.required = true;
+  nameInput.maxLength = options.saveNameMaxLength;
+  nameInput.value = options.saveName;
+  nameLabel.append(nameInput);
+  const saveNameButton = createAccountButton('이름 저장', () => undefined);
+  saveNameButton.type = 'submit';
+  nameForm.append(nameTitle, nameLabel, saveNameButton);
+
   const backButton = createAccountButton('뒤로', options.onBack);
   const logoutButton = createAccountButton('Logout', options.onLogout);
-  body.append(backButton, logoutButton);
+  const accountActions = document.createElement('div');
+  accountActions.className = 'pf-lobby__settings-account-actions';
+  accountActions.append(backButton, logoutButton);
+  const settingsStatus = document.createElement('p');
+  settingsStatus.className = 'pf-lobby__settings-status';
+  settingsStatus.setAttribute('role', 'status');
+  settingsStatus.setAttribute('aria-live', 'polite');
+  body.append(nameForm, settingsStatus, accountActions);
 
   panel.append(header, body);
   root.append(panel);
 
   // 다이얼로그를 연 버튼을 기억해 두고 닫을 때 초점을 돌려준다.
   let opener: HTMLElement | null = null;
+  /**
+   * 저장에 성공한 마지막 이름이다.
+   * 닫을 때 입력을 여기로 되돌린다. 남겨 두면 저장하지 않은 값이 다시 열었을 때
+   * 저장된 이름처럼 보인다. 로비 꾸미기 다이얼로그도 같은 규칙으로 닫는다.
+   */
+  let committedSaveName = options.saveName;
 
   function close(): void {
+    nameInput.value = committedSaveName;
     root.hidden = true;
     options.onOpenChange(false);
     opener?.focus();
@@ -436,15 +579,314 @@ function createSettingsDialog(options: {
     }
   });
 
+  nameForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    options.onSaveName(nameInput.value);
+  });
+
+  const controls: Array<HTMLInputElement | HTMLSelectElement | HTMLButtonElement> = [
+    nameInput,
+    closeButton,
+    saveNameButton,
+    backButton,
+    logoutButton,
+  ];
+
   return {
     root,
-    buttons: [closeButton, backButton, logoutButton],
     open: () => {
       opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       root.hidden = false;
       options.onOpenChange(true);
       root.focus();
     },
+    setSaveName: (saveName) => {
+      committedSaveName = saveName;
+      nameInput.value = saveName;
+    },
+    setStatus: (message) => {
+      settingsStatus.textContent = message;
+    },
+    setBusy: (busy) => {
+      for (const control of controls) {
+        control.disabled = busy;
+      }
+    },
+  };
+}
+
+/** 배경과 standing 표시·위치·크기를 조정하는 로비 전용 다이얼로그다. */
+function createCustomizationDialog(options: {
+  backgroundOptions: LobbyBackgroundOption[];
+  customization: LobbyCustomizationModel;
+  standingPositionRange: { min: number; max: number };
+  standingPositionYRange: { min: number; max: number };
+  standingScaleRange: { min: number; max: number };
+  standingDefaults: LobbyStandingDefaults;
+  onSaveCustomization: (customization: LobbyCustomizationModel) => void;
+  onPreviewCustomization: (customization: LobbyCustomizationModel) => void;
+  onOpenChange: (open: boolean) => void;
+}): {
+  root: HTMLDivElement;
+  open: () => void;
+  setCustomization: (customization: LobbyCustomizationModel) => void;
+  setStatus: (message: string) => void;
+  setBusy: (busy: boolean) => void;
+} {
+  const root = document.createElement('div');
+  root.className = 'pf-lobby__customization';
+  root.dataset.interactive = 'true';
+  root.hidden = true;
+  root.tabIndex = -1;
+  root.setAttribute('role', 'dialog');
+  root.setAttribute('aria-modal', 'true');
+  root.setAttribute('aria-labelledby', 'pf-lobby-customization-title');
+
+  const panel = document.createElement('section');
+  panel.className = 'pf-lobby__customization-panel';
+
+  const header = document.createElement('div');
+  header.className = 'pf-lobby__customization-header';
+
+  const title = document.createElement('h2');
+  title.id = 'pf-lobby-customization-title';
+  title.className = 'pf-lobby__customization-title';
+  title.textContent = '로비 꾸미기';
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'pf-btn-plain pf-lobby__customization-close';
+  closeButton.textContent = '×';
+  closeButton.setAttribute('aria-label', '닫기');
+  header.append(title, closeButton);
+
+  const body = document.createElement('div');
+  body.className = 'pf-lobby__customization-body';
+
+  const form = document.createElement('form');
+  form.className = 'pf-lobby__settings-section';
+
+  const backgroundLabel = document.createElement('label');
+  backgroundLabel.className = 'pf-lobby__settings-field';
+  backgroundLabel.textContent = '배경';
+  const backgroundSelect = document.createElement('select');
+  backgroundSelect.className = 'pf-lobby__settings-input';
+  for (const background of options.backgroundOptions) {
+    const option = document.createElement('option');
+    option.value = background.id;
+    option.textContent = background.name;
+    backgroundSelect.append(option);
+  }
+  backgroundLabel.append(backgroundSelect);
+
+  const mediaTypeLabel = document.createElement('label');
+  mediaTypeLabel.className = 'pf-lobby__settings-field';
+  mediaTypeLabel.textContent = '스탠딩 형식';
+  const mediaTypeSelect = document.createElement('select');
+  mediaTypeSelect.className = 'pf-lobby__settings-input';
+  const mediaTypeOptions: readonly { value: LobbyStandingMediaType; label: string }[] = [
+    { value: 'auto', label: '자동 (동영상 우선)' },
+    { value: 'video', label: '동영상' },
+    { value: 'image', label: '이미지' },
+  ];
+  for (const mediaType of mediaTypeOptions) {
+    const option = document.createElement('option');
+    option.value = mediaType.value;
+    option.textContent = mediaType.label;
+    mediaTypeSelect.append(option);
+  }
+  mediaTypeLabel.append(mediaTypeSelect);
+
+  const visibleLabel = document.createElement('label');
+  visibleLabel.className = 'pf-lobby__settings-check';
+  const visibleInput = document.createElement('input');
+  visibleInput.type = 'checkbox';
+  const visibleText = document.createElement('span');
+  visibleText.textContent = '리더 standing 표시';
+  visibleLabel.append(visibleInput, visibleText);
+
+  const positionXControl = createRangeControl('가로 위치', options.standingPositionRange, '%');
+  const positionYControl = createRangeControl('세로 위치', options.standingPositionYRange, '%');
+  const scaleControl = createRangeControl('크기', options.standingScaleRange, '%');
+
+  /*
+   * 슬라이더만 기본값으로 되돌린다. 저장하지는 않는다.
+   * 눌러 보고 마음에 들지 않으면 그대로 닫아 되돌릴 수 있어야 하고,
+   * 배경과 형식은 슬라이더로 어긋난 배치와 무관하므로 건드리지 않는다.
+   */
+  const resetButton = createAccountButton('위치·크기 초기화', () => {
+    positionXControl.setValue(options.standingDefaults.standingPositionX);
+    positionYControl.setValue(options.standingDefaults.standingPositionY);
+    scaleControl.setValue(options.standingDefaults.standingScale);
+    preview();
+  });
+  const saveButton = createAccountButton('로비 꾸미기 저장', () => undefined);
+  saveButton.type = 'submit';
+  const formActions = document.createElement('div');
+  formActions.className = 'pf-lobby__settings-account-actions';
+  formActions.append(resetButton, saveButton);
+  form.append(
+    backgroundLabel,
+    mediaTypeLabel,
+    visibleLabel,
+    positionXControl.label,
+    positionYControl.label,
+    scaleControl.label,
+    formActions,
+  );
+
+  const customizationStatus = document.createElement('p');
+  customizationStatus.className = 'pf-lobby__settings-status';
+  customizationStatus.setAttribute('role', 'status');
+  customizationStatus.setAttribute('aria-live', 'polite');
+  body.append(form, customizationStatus);
+  panel.append(header, body);
+  root.append(panel);
+
+  let opener: HTMLElement | null = null;
+  let currentCustomization = { ...options.customization };
+
+  const readCustomization = (): LobbyCustomizationModel => ({
+    selectedBackgroundId: backgroundSelect.value,
+    standingVisible: visibleInput.checked,
+    standingMediaType: readStandingMediaType(mediaTypeSelect.value),
+    standingPositionX: Number(positionXControl.input.value),
+    standingPositionY: Number(positionYControl.input.value),
+    standingScale: Number(scaleControl.input.value),
+  });
+
+  const setCustomization = (customization: LobbyCustomizationModel): void => {
+    currentCustomization = { ...customization };
+    backgroundSelect.value = customization.selectedBackgroundId;
+    visibleInput.checked = customization.standingVisible;
+    mediaTypeSelect.value = customization.standingMediaType;
+    positionXControl.setValue(customization.standingPositionX);
+    positionYControl.setValue(customization.standingPositionY);
+    scaleControl.setValue(customization.standingScale);
+    options.onPreviewCustomization(currentCustomization);
+  };
+
+  const preview = (): void => {
+    positionXControl.refreshOutput();
+    positionYControl.refreshOutput();
+    scaleControl.refreshOutput();
+    options.onPreviewCustomization(readCustomization());
+  };
+
+  function close(): void {
+    setCustomization(currentCustomization);
+    root.hidden = true;
+    options.onOpenChange(false);
+    opener?.focus();
+    opener = null;
+  }
+
+  closeButton.addEventListener('click', close);
+  root.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      close();
+    }
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    options.onSaveCustomization(readCustomization());
+  });
+  for (const control of [
+    backgroundSelect,
+    mediaTypeSelect,
+    visibleInput,
+    positionXControl.input,
+    positionYControl.input,
+    scaleControl.input,
+  ]) {
+    control.addEventListener('input', preview);
+  }
+
+  setCustomization(options.customization);
+
+  const controls: Array<HTMLInputElement | HTMLSelectElement | HTMLButtonElement> = [
+    backgroundSelect,
+    mediaTypeSelect,
+    visibleInput,
+    positionXControl.input,
+    positionYControl.input,
+    scaleControl.input,
+    closeButton,
+    resetButton,
+    saveButton,
+  ];
+
+  return {
+    root,
+    open: () => {
+      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      root.hidden = false;
+      options.onOpenChange(true);
+      root.focus();
+    },
+    setCustomization,
+    setStatus: (message) => {
+      customizationStatus.textContent = message;
+    },
+    setBusy: (busy) => {
+      for (const control of controls) {
+        control.disabled = busy;
+      }
+    },
+  };
+}
+
+/**
+ * select가 돌려준 문자열을 standing 미디어 형식으로 옮긴다.
+ * 모르는 값은 저장 경계에서 거절당하기 전에 기본값으로 접는다.
+ */
+export function readStandingMediaType(value: string): LobbyStandingMediaType {
+  if (value === 'video' || value === 'image') {
+    return value;
+  }
+  return 'auto';
+}
+
+function createRangeControl(
+  text: string,
+  range: { min: number; max: number },
+  suffix: string,
+): {
+  label: HTMLLabelElement;
+  input: HTMLInputElement;
+  setValue: (value: number) => void;
+  refreshOutput: () => void;
+} {
+  const label = document.createElement('label');
+  label.className = 'pf-lobby__settings-field';
+  const heading = document.createElement('span');
+  heading.className = 'pf-lobby__settings-range-heading';
+  const name = document.createElement('span');
+  name.textContent = text;
+  const output = document.createElement('output');
+  heading.append(name, output);
+
+  const input = document.createElement('input');
+  input.className = 'pf-lobby__settings-range';
+  input.type = 'range';
+  input.min = `${range.min}`;
+  input.max = `${range.max}`;
+  input.step = '1';
+  label.append(heading, input);
+
+  const refreshOutput = (): void => {
+    output.value = `${input.value}${suffix}`;
+  };
+
+  return {
+    label,
+    input,
+    setValue: (value) => {
+      input.value = `${value}`;
+      refreshOutput();
+    },
+    refreshOutput,
   };
 }
 

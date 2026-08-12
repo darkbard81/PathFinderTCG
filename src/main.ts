@@ -5,7 +5,10 @@ import type { GameSession } from './game/save/session';
 import type { StageBattleResult } from './game/stage/types';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
-import { BattlefieldScene } from './pixi/scenes/BattlefieldScene';
+import {
+  BattlefieldScene,
+  DEFAULT_BATTLEFIELD_PLAYBACK_RATE,
+} from './pixi/scenes/BattlefieldScene';
 import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { EquipmentScene } from './pixi/scenes/EquipmentScene';
 import { GrowthScene } from './pixi/scenes/GrowthScene';
@@ -55,7 +58,7 @@ void (async (): Promise<void> => {
     source: '',
     currentTime: 0,
   };
-  let lobbyStandingVisible = true;
+  let battlePlaybackRate: number = DEFAULT_BATTLEFIELD_PLAYBACK_RATE;
   const services = createGameServices({
     onSessionExpired: (message) => {
       void showTitle(message);
@@ -143,10 +146,6 @@ void (async (): Promise<void> => {
           void showGrowth(currentSession);
         },
         standingPlayback: lobbyStandingPlayback,
-        standingVisible: lobbyStandingVisible,
-        onStandingVisibilityChange: (visible) => {
-          lobbyStandingVisible = visible;
-        },
         onLoggedOut: (message) => {
           void showTitle(message);
         },
@@ -222,6 +221,10 @@ void (async (): Promise<void> => {
         assetBaseUrl: ASSET_BASE_URL,
         session,
         stageId,
+        playbackRate: battlePlaybackRate,
+        onPlaybackRateChange: (playbackRate) => {
+          battlePlaybackRate = playbackRate;
+        },
         // 전투가 끝났으면 보상까지 반영해 저장한 세션이 돌아온다. 결과는 Stage가 요약으로 보여준다.
         onLeave: (nextSession, result) => {
           void showStage(nextSession, result ?? undefined);

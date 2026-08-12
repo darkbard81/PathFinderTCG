@@ -4,11 +4,13 @@ import './save-slot.css';
 export type SaveSlotStatusTone = 'normal' | 'danger' | 'error';
 
 export type SaveSlotViewOptions = {
+  saveNameMaxLength: number;
   onBack: () => void;
   onLogout: () => void;
   onRetry: () => void;
   onToggleDelete: () => void;
   onSelectSlot: (slotId: SaveSlotId) => void;
+  onCreateSlot: (slotId: SaveSlotId, saveName: string) => void;
 };
 
 export type SaveSlotViewModel = {
@@ -19,12 +21,17 @@ export type SaveSlotViewModel = {
   statusTone: SaveSlotStatusTone;
   retryVisible: boolean;
   deleteButtonVisible: boolean;
+  createNameError: string;
 };
 
 /** 저장 슬롯 화면의 DOM 루트와 갱신 API다. */
 export type SaveSlotView = {
   element: HTMLElement;
   render: (model: SaveSlotViewModel) => void;
+  /** 빈 슬롯을 고른 사건에 맞춰 이름 입력 다이얼로그를 연다. */
+  requestSaveName: (slotId: SaveSlotId, initialName: string) => void;
+  /** 생성이 끝났거나 화면을 떠날 때 이름 입력 다이얼로그를 닫는다. */
+  closeSaveNameDialog: () => void;
 };
 
 /**
@@ -89,9 +96,20 @@ export function createSaveSlotView(options: SaveSlotViewOptions): SaveSlotView {
   deleteButton.addEventListener('click', () => options.onToggleDelete());
   footer.append(deleteButton);
 
-  element.append(top, body, footer);
+  const nameDialog = createSaveNameDialog({
+    maxLength: options.saveNameMaxLength,
+    onSubmit: options.onCreateSlot,
+  });
 
-  const interactiveButtons = [backButton, logoutButton, retryButton, deleteButton];
+  element.append(top, body, footer, nameDialog.root);
+
+  const interactiveButtons = [
+    backButton,
+    logoutButton,
+    retryButton,
+    deleteButton,
+    ...nameDialog.buttons,
+  ];
 
   return {
     element,
@@ -101,6 +119,7 @@ export function createSaveSlotView(options: SaveSlotViewOptions): SaveSlotView {
       deleteButton.textContent = model.deleteMode ? 'Cancel Delete' : 'Delete';
       deleteButton.hidden = !model.deleteButtonVisible;
       retryButton.hidden = !model.retryVisible;
+      nameDialog.setError(model.createNameError);
 
       // 카드를 먼저 다시 만들고 나서 잠근다. 순서가 바뀌면 새 카드가 잠기지 않는다.
       slots.replaceChildren(
@@ -112,10 +131,113 @@ export function createSaveSlotView(options: SaveSlotViewOptions): SaveSlotView {
       for (const button of interactiveButtons) {
         button.disabled = model.busy;
       }
+      nameDialog.input.disabled = model.busy;
 
       for (const card of slots.querySelectorAll<HTMLButtonElement>('button.pf-save-slot__card')) {
         card.disabled = model.busy;
       }
+    },
+    requestSaveName: nameDialog.open,
+    closeSaveNameDialog: nameDialog.close,
+  };
+}
+
+function createSaveNameDialog(options: {
+  maxLength: number;
+  onSubmit: (slotId: SaveSlotId, saveName: string) => void;
+}): {
+  root: HTMLDivElement;
+  input: HTMLInputElement;
+  buttons: HTMLButtonElement[];
+  open: (slotId: SaveSlotId, initialName: string) => void;
+  close: () => void;
+  setError: (message: string) => void;
+} {
+  const root = document.createElement('div');
+  root.className = 'pf-save-slot__name-dialog';
+  // 모달 바깥 클릭이 뒤쪽 슬롯·내비게이션 버튼으로 통과하지 않게 backdrop이 입력을 받는다.
+  root.dataset.interactive = 'true';
+  root.hidden = true;
+  root.setAttribute('role', 'dialog');
+  root.setAttribute('aria-modal', 'true');
+  root.setAttribute('aria-labelledby', 'pf-save-slot-name-title');
+
+  const form = document.createElement('form');
+  form.className = 'pf-save-slot__name-panel';
+
+  const title = document.createElement('h2');
+  title.id = 'pf-save-slot-name-title';
+  title.className = 'pf-save-slot__name-title';
+  title.textContent = '저장 이름';
+
+  const label = document.createElement('label');
+  label.className = 'pf-save-slot__name-label';
+  label.textContent = `이름 (${options.maxLength}자 이내)`;
+
+  const input = document.createElement('input');
+  input.className = 'pf-save-slot__name-input';
+  input.type = 'text';
+  input.required = true;
+  input.maxLength = options.maxLength;
+  input.autocomplete = 'off';
+  label.append(input);
+
+  const error = document.createElement('p');
+  error.className = 'pf-save-slot__name-error';
+  error.setAttribute('role', 'alert');
+
+  const actions = document.createElement('div');
+  actions.className = 'pf-save-slot__name-actions';
+  const cancelButton = createActionButton('취소');
+  const submitButton = createActionButton('생성');
+  submitButton.type = 'submit';
+  actions.append(cancelButton, submitButton);
+
+  form.append(title, label, error, actions);
+  root.append(form);
+
+  let slotId: SaveSlotId = 1;
+  // 다이얼로그를 연 슬롯 카드를 기억해 두고 닫을 때 초점을 돌려준다.
+  let opener: HTMLElement | null = null;
+  const close = (): void => {
+    root.hidden = true;
+    error.textContent = '';
+    opener?.focus();
+    opener = null;
+  };
+
+  cancelButton.addEventListener('click', close);
+  /*
+   * 생성 요청이 도는 동안에는 취소 버튼도 잠기므로 Escape를 유일한 탈출구로 남긴다.
+   * 요청이 늦게 끝나도 결과는 화면 아래 상태 문구로 남으니 닫아도 잃는 정보가 없다.
+   */
+  root.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      close();
+    }
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    options.onSubmit(slotId, input.value);
+  });
+
+  return {
+    root,
+    input,
+    buttons: [cancelButton, submitButton],
+    open: (nextSlotId, initialName) => {
+      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      slotId = nextSlotId;
+      input.value = initialName;
+      error.textContent = '';
+      root.hidden = false;
+      input.focus();
+      input.select();
+    },
+    close,
+    setError: (message) => {
+      error.textContent = message;
     },
   };
 }

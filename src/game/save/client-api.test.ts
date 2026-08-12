@@ -44,6 +44,11 @@ function createValidSaveSlotState(): SaveSlotState {
     lobby: {
       ownedBackgroundIds: ['background_01'],
       selectedBackgroundId: 'background_01',
+      standingVisible: true,
+      standingMediaType: 'auto',
+      standingPositionX: 56,
+      standingPositionY: -100,
+      standingScale: 100,
     },
     resources: {
       gold: 125_680,
@@ -179,65 +184,76 @@ describe('save slot client api', () => {
     await expect(client.save(state)).rejects.toThrow('Invalid save slot state response');
   });
 
-  it('loads initialized save slots', async () => {
-    const client = new SaveSlotsClient(
-      vi.fn(async () =>
-        createFakeResponse({
-          ok: true,
-          status: 200,
-          statusText: 'OK',
-          body: {
-            state: {
-              schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
-              slotId: 1,
-              createdAt: '2024-01-01T00:00:00.000Z',
-              updatedAt: '2024-01-01T00:00:00.000Z',
-              saveName: 'Slot 1',
-              deck: {
-                id: 'deck-1',
-                leader: createValidCardInstance({ zone: 'LEADER' }),
-                cards: [],
-              },
-              collection: {
-                cards: [],
-              },
-              equipment: {
-                equipped: [],
-              },
-              stageProgress: {
-                clearedStageIds: [],
-                lastSelectedStageId: null,
-              },
-              lobby: {
-                ownedBackgroundIds: ['background_01'],
-                selectedBackgroundId: 'background_01',
-              },
-              resources: {
-                gold: 0,
-                manaStone: 0,
-                summonTicket: 0,
-              },
+  it('initializes a save slot with the requested name', async () => {
+    const fetchSpy = vi.fn(async () =>
+      createFakeResponse({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        body: {
+          state: {
+            schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
+            slotId: 1,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+            saveName: 'Slot 1',
+            deck: {
+              id: 'deck-1',
+              leader: createValidCardInstance({ zone: 'LEADER' }),
+              cards: [],
             },
-            summary: {
-              slotId: 1,
-              saveName: 'Slot 1',
-              updatedAt: '2024-01-01T00:00:00.000Z',
-              deckCardCount: 0,
-              leaderName: '미네르바',
-              isEmpty: false,
+            collection: {
+              cards: [],
+            },
+            equipment: {
+              equipped: [],
+            },
+            stageProgress: {
+              clearedStageIds: [],
+              lastSelectedStageId: null,
+            },
+            lobby: {
+              ownedBackgroundIds: ['background_01'],
+              selectedBackgroundId: 'background_01',
+              standingVisible: true,
+              standingMediaType: 'auto',
+              standingPositionX: 56,
+              standingPositionY: 0,
+              standingScale: 100,
+            },
+            resources: {
+              gold: 0,
+              manaStone: 0,
+              summonTicket: 0,
             },
           },
-        }),
-      ),
+          summary: {
+            slotId: 1,
+            saveName: 'Slot 1',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+            deckCardCount: 0,
+            leaderName: '미네르바',
+            isEmpty: false,
+          },
+        },
+      }),
     );
+    const client = new SaveSlotsClient(fetchSpy);
 
-    await expect(client.initialize(1)).resolves.toMatchObject({
+    await expect(client.initialize(1, '첫 모험')).resolves.toMatchObject({
       state: {
         slotId: 1,
       },
       summary: {
         leaderName: '미네르바',
       },
+    });
+    expect(fetchSpy).toHaveBeenCalledWith('/api/save-slots/1/initialize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ saveName: '첫 모험' }),
     });
   });
 
