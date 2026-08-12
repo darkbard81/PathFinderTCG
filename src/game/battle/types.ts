@@ -11,6 +11,22 @@ export type BattlefieldZone = 'FR' | 'FC' | 'FL' | 'BR' | 'BC' | 'BL';
 
 export type BattleSlotId = `${BattleSide}:${BattlefieldZone}`;
 
+export const BATTLE_SIDES = ['player', 'enemy'] as const satisfies readonly BattleSide[];
+
+export const BATTLEFIELD_ZONES = [
+  'FR',
+  'FC',
+  'FL',
+  'BR',
+  'BC',
+  'BL',
+] as const satisfies readonly BattlefieldZone[];
+
+/** 전장 칸 12개다. 화면 배치와 무관한 목록이라 어느 쪽에서 읽어도 같다. */
+export const ALL_BATTLE_SLOT_IDS: readonly BattleSlotId[] = BATTLE_SIDES.flatMap((side) =>
+  BATTLEFIELD_ZONES.map((zone): BattleSlotId => `${side}:${zone}`),
+);
+
 export const PLAYER_INITIAL_LEADER_SLOT = 'player:BC' as const satisfies BattleSlotId;
 
 export const ENEMY_INITIAL_LEADER_SLOT = 'enemy:BC' as const satisfies BattleSlotId;
@@ -140,6 +156,21 @@ export type BattleTurnEvent =
       type: 'ACTION';
       side: BattleSide;
       action: BattleAutomationAction;
+    }
+  | {
+      /**
+       * 활성 스킬을 썼다. 자동 턴은 스킬을 쓰지 않아 전투 세션만 낸다.
+       * `ACTION`과 나눠 둔다. 자동 턴 판정이 좁혀 쓰는 행동 종류를 넓히지 않기 위해서다.
+       */
+      type: 'ACTIVE_SKILL';
+      side: BattleSide;
+      action: ActiveSkillBattleAction;
+    }
+  | {
+      /** 선언된 공격을 대신 맞았다. `side`는 막은 쪽이다. */
+      type: 'BLOCK';
+      side: BattleSide;
+      action: BlockBattleAction;
     }
   | {
       type: 'TURN_END';

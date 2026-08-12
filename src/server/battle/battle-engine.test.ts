@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialSaveState } from '../save/create-initial-save';
-import { equipCollectionEquipmentToDeckUnit } from '../save/equipment';
-import { createGameSession } from '../save/session';
-import { requireStageDefinition } from '../stage/stage-definitions';
+import { createInitialSaveState } from '../../game/save/create-initial-save';
+import { equipCollectionEquipmentToDeckUnit } from '../../game/save/equipment';
+import { createGameSession } from '../../game/save/session';
+import { requireStageDefinition } from '../../game/stage/stage-definitions';
 import {
   applyActiveSkillAction,
   applyAttackAction,
@@ -27,14 +27,14 @@ import {
   runAutomatedTurn,
   runAutomatedTurnUntilBlockDecision,
 } from './battle-engine';
-import { createInitialBattleRuntime } from './create-battle-runtime';
+import { createTestBattleRuntime } from './__fixtures__/create-test-battle-runtime';
 import {
   INITIAL_HAND_SIZE,
   type BattleCardRuntimeState,
   type BattleRuntimeState,
   type BattleSide,
   type BattleSlotId,
-} from './types';
+} from '../../game/battle/types';
 
 const TEST_STAGE_DEFINITION = requireStageDefinition('test-stage-dark');
 const PRESERVE_DECK_ORDER = () => 0.999_999;
@@ -480,7 +480,7 @@ describe('battle engine', () => {
     const equipment = session.collection.cards.find(
       (card) => card.definition.id === 'equipment_rapier_001',
     )!;
-    const runtime = createInitialBattleRuntime(
+    const runtime = createTestBattleRuntime(
       equipCollectionEquipmentToDeckUnit(session, {
         targetDeckCardInstanceId: target.instance.instanceId,
         equipmentCardInstanceId: equipment.instance.instanceId,
@@ -1027,7 +1027,7 @@ describe('battle engine', () => {
 
 async function createRuntime(turnNumber = 2): Promise<BattleRuntimeState> {
   const state = await createInitialSaveState({ slotId: 1 });
-  const runtime = createInitialBattleRuntime(
+  const runtime = createTestBattleRuntime(
     createGameSession(state),
     TEST_STAGE_DEFINITION,
     PRESERVE_DECK_ORDER,

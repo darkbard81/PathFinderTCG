@@ -1,9 +1,15 @@
-import type { CardDefinition, CardDefinitionFile } from './card-catalog';
+import { mergeCardDefinitions, type CardDefinition, type CardDefinitionFile } from './card-catalog';
 
 type ViteGlobImportMeta = ImportMeta & {
   glob<T>(pattern: string, options: { eager: true; import: 'default' }): Record<string, T>;
 };
 
+/**
+ * 덱 파일을 모으는 일은 번들러가 한다.
+ *
+ * 그래서 이 모듈은 브라우저 번들 안에서만 import 할 수 있다. 번들 밖의 Node 서버는
+ * `src/server/card-definition-catalog.ts`가 같은 파일들을 디스크에서 읽어 같은 규칙으로 합친다.
+ */
 const deckDefinitionData = (import.meta as ViteGlobImportMeta).glob<unknown>(
   '../../../cards/deck_*.json',
   {
@@ -18,15 +24,3 @@ export const ALL_CARD_DEFINITIONS: readonly CardDefinition[] = mergeCardDefiniti
     .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
     .map(([, definition]) => (definition as CardDefinitionFile).cards),
 );
-
-/** 여러 덱의 카드 정의를 ID 기준으로 합치고 뒤에 발견된 정의를 우선한다. */
-function mergeCardDefinitions(definitionGroups: CardDefinition[][]): CardDefinition[] {
-  const definitions = new Map<string, CardDefinition>();
-  for (const group of definitionGroups) {
-    for (const definition of group) {
-      definitions.set(definition.id, definition);
-    }
-  }
-
-  return Array.from(definitions.values());
-}

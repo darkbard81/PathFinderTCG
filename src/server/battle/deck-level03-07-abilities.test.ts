@@ -5,8 +5,8 @@ import deckLevel05Data from '../../../cards/deck_level05.json';
 import deckLevel06Data from '../../../cards/deck_level06.json';
 import deckLevel07Data from '../../../cards/deck_level07.json';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { CardDefinitionFile } from '../save/card-catalog';
-import type { CardInstance } from '../save/types';
+import type { CardDefinitionFile } from '../../game/save/card-catalog';
+import type { CardInstance } from '../../game/save/types';
 import {
   applyActiveSkillAction,
   applyAttackAction,
@@ -28,7 +28,7 @@ import type {
   BattleRuntimeZone,
   BattleSide,
   BattleSlotId,
-} from './types';
+} from '../../game/battle/types';
 
 const DECK_FILES = [
   deckLevel02Data,

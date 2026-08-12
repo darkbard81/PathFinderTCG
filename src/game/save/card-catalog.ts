@@ -87,7 +87,7 @@ export function requireCardDefinition(
   return definition;
 }
 
-function mergeCardDefinitions(definitionGroups: CardDefinition[][]): CardDefinition[] {
+export function mergeCardDefinitions(definitionGroups: CardDefinition[][]): CardDefinition[] {
   const definitions = new Map<string, CardDefinition>();
   for (const group of definitionGroups) {
     for (const definition of group) {

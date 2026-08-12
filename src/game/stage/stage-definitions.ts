@@ -1,12 +1,13 @@
 import type { CardDefinitionFile } from '../save/card-catalog';
 import { loadStageDefinitions } from './stage-loader';
-import type { StageDefinition, StageEnemyDeckPath, StageProgressState } from './types';
+import type {
+  StageDefinition,
+  StageEnemyDeckDefinition,
+  StageEnemyDeckPath,
+  StageProgressState,
+} from './types';
 
-export type StageEnemyDeckDefinition = {
-  deckId: string;
-  deckPath: StageEnemyDeckPath;
-  cardDefinitionFile: CardDefinitionFile;
-};
+export type { StageEnemyDeckDefinition };
 
 const enemyDeckDefinitionData = import.meta.glob<unknown>('../../../cards/deck_*.json', {
   eager: true,

@@ -71,6 +71,7 @@ function createHarness(view = createMockView()): {
         initialize,
         fetch: fetchSlot,
       } as never,
+      battle: {} as never,
     },
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     onBack: vi.fn(),

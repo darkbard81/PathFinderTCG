@@ -35,6 +35,7 @@ function createHarness(session: GameSession, view = createMockView()) {
     services: {
       auth: { logout } as never,
       saveSlots: { save } as never,
+      battle: {} as never,
     },
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     session,

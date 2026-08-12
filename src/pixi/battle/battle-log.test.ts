@@ -1,21 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { BattleRuntimeState, BattleTurnEvent } from '../../game/battle/types';
+import type { BattleTurnEvent } from '../../game/battle/types';
 import { MAX_BATTLE_LOG_LINES, appendBattleLogLines, formatBattleTurnEvents } from './battle-log';
 import { formatSlotLabel } from '../../dom/screens/battlefield-layout';
 
-/** 이름 조회만 하면 되므로 필요한 Zone 배열만 갖춘 최소 런타임을 만든다. */
-function createRuntime(cards: Record<string, string>): BattleRuntimeState {
-  const battlefield = Object.entries(cards).map(([instanceId, name]) => ({
-    card: { instance: { instanceId, name } },
-  }));
-
-  return {
-    battlefield,
-    drop: [],
-    exile: [],
-    player: { hand: [], deck: [] },
-    enemy: { hand: [], deck: [] },
-  } as unknown as BattleRuntimeState;
+/** 서버가 이벤트와 함께 내려 주는 이름 표를 대신한다. */
+function createNames(cards: Record<string, string>): Record<string, string> {
+  return cards;
 }
 
 describe('formatSlotLabel', () => {
@@ -29,7 +19,7 @@ describe('formatSlotLabel', () => {
 
 describe('formatBattleTurnEvents', () => {
   it('턴 시작에 뽑은 카드 이름과 남은 덱을 적는다', () => {
-    const runtime = createRuntime({ 'card-1': '숲의 감시자' });
+    const names = createNames({ 'card-1': '숲의 감시자' });
     const event: BattleTurnEvent = {
       type: 'TURN_START',
       side: 'player',
@@ -37,13 +27,13 @@ describe('formatBattleTurnEvents', () => {
       deckRemaining: 18,
     };
 
-    expect(formatBattleTurnEvents(runtime, [event])[0]).toBe(
+    expect(formatBattleTurnEvents(names, [event])[0]).toBe(
       '나 차례 시작 · 숲의 감시자을(를) 뽑았다 (덱 18)',
     );
   });
 
   it('덱이 비었으면 뽑지 못했다고 적는다', () => {
-    const runtime = createRuntime({});
+    const names = createNames({});
     const event: BattleTurnEvent = {
       type: 'TURN_START',
       side: 'enemy',
@@ -51,13 +41,13 @@ describe('formatBattleTurnEvents', () => {
       deckRemaining: 0,
     };
 
-    expect(formatBattleTurnEvents(runtime, [event])[0]).toBe(
+    expect(formatBattleTurnEvents(names, [event])[0]).toBe(
       '적 차례 시작 · 뽑을 카드가 없다 (덱 0)',
     );
   });
 
   it('배치와 이동은 대상 칸을 우리말로 적는다', () => {
-    const runtime = createRuntime({ 'card-1': '잉걸불 기사' });
+    const names = createNames({ 'card-1': '잉걸불 기사' });
     const events: BattleTurnEvent[] = [
       {
         type: 'ACTION',
@@ -83,14 +73,14 @@ describe('formatBattleTurnEvents', () => {
       },
     ];
 
-    expect(formatBattleTurnEvents(runtime, events)).toEqual([
+    expect(formatBattleTurnEvents(names, events)).toEqual([
       '적: 잉걸불 기사을(를) 적 전위 가운데에 냈다',
       '적: 잉걸불 기사을(를) 적 전위 오른쪽(으)로 옮겼다',
     ]);
   });
 
   it('공격은 양쪽 이름과 피해량을 적는다', () => {
-    const runtime = createRuntime({ 'card-1': '그림자 발톱', 'card-2': '철벽 수호자' });
+    const names = createNames({ 'card-1': '그림자 발톱', 'card-2': '철벽 수호자' });
     const event: BattleTurnEvent = {
       type: 'ACTION',
       side: 'enemy',
@@ -104,20 +94,70 @@ describe('formatBattleTurnEvents', () => {
       },
     };
 
-    expect(formatBattleTurnEvents(runtime, [event])[0]).toBe(
+    expect(formatBattleTurnEvents(names, [event])[0]).toBe(
       '적: 그림자 발톱이(가) 철벽 수호자을(를) 4 피해로 쳤다',
     );
   });
 
+  it('막은 이벤트는 누가 대신 맞았는지 적는다', () => {
+    const names = createNames({
+      'card-1': '그림자 발톱',
+      'card-2': '철벽 수호자',
+      'card-3': '방패병',
+    });
+    const event: BattleTurnEvent = {
+      type: 'BLOCK',
+      side: 'player',
+      action: {
+        type: 'BLOCK',
+        attackAction: {
+          type: 'ATTACK',
+          attackerInstanceId: 'card-1',
+          targetInstanceId: 'card-2',
+          fromSlotId: 'enemy:FC',
+          toSlotId: 'player:FC',
+          attack: 4,
+        },
+        blockerInstanceId: 'card-3',
+        blockerSlotId: 'player:FL',
+      },
+    };
+
+    expect(formatBattleTurnEvents(names, [event])[0]).toBe(
+      '나: 방패병이(가) 철벽 수호자 대신 맞았다',
+    );
+  });
+
+  it('활성 스킬은 쓴 카드와 대상과 값을 적는다', () => {
+    const names = createNames({ 'card-1': '별빛 사제', 'card-2': '숲의 감시자' });
+    const event: BattleTurnEvent = {
+      type: 'ACTIVE_SKILL',
+      side: 'player',
+      action: {
+        type: 'ACTIVE_SKILL',
+        cardInstanceId: 'card-1',
+        skillId: 'starlight_mend',
+        targetInstanceId: 'card-2',
+        targetSlotId: 'player:FR',
+        effect: 'HEAL',
+        value: 2,
+      },
+    };
+
+    expect(formatBattleTurnEvents(names, [event])[0]).toBe(
+      '나: 별빛 사제이(가) 숲의 감시자에게 스킬을 2만큼 썼다',
+    );
+  });
+
   it('턴 종료 이유를 구분해 적는다', () => {
-    const runtime = createRuntime({});
+    const names = createNames({});
     const events: BattleTurnEvent[] = [
       { type: 'TURN_END', side: 'player', nextSide: 'enemy', reason: 'MANUAL' },
       { type: 'TURN_END', side: 'enemy', nextSide: 'player', reason: 'STALLED' },
       { type: 'ACTION_LIMIT', side: 'enemy', actionCount: 20 },
     ];
 
-    expect(formatBattleTurnEvents(runtime, events)).toEqual([
+    expect(formatBattleTurnEvents(names, events)).toEqual([
       '나: 턴을 넘겼다',
       '적: 할 수 있는 행동이 없어 턴이 넘어갔다',
       '적: 한 턴 행동 20회에 도달했다',
@@ -125,7 +165,7 @@ describe('formatBattleTurnEvents', () => {
   });
 
   it('어느 Zone에서도 못 찾은 카드는 일반 이름으로 적는다', () => {
-    const runtime = createRuntime({});
+    const names = createNames({});
     const event: BattleTurnEvent = {
       type: 'TURN_START',
       side: 'player',
@@ -133,7 +173,7 @@ describe('formatBattleTurnEvents', () => {
       deckRemaining: 1,
     };
 
-    expect(formatBattleTurnEvents(runtime, [event])[0]).toContain('카드을(를) 뽑았다');
+    expect(formatBattleTurnEvents(names, [event])[0]).toContain('카드을(를) 뽑았다');
   });
 });
 

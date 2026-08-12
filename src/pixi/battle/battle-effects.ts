@@ -1,22 +1,13 @@
 import { Application, Container, Graphics, Text, type TextStyleOptions } from 'pixi.js';
-import type {
-  ActiveSkillBattleAction,
-  ActiveSkillBattleEffect,
-  BattleAutomationAction,
-  BattleSlotId,
-  BattleTurnEvent,
-} from '../../game/battle/types';
+import type { BattleEffectRequest } from '../../game/battle/protocol';
+import type { BattleSlotId } from '../../game/battle/types';
 import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
 
 /** 연출 종류다. 색과 부호만 다르고 움직임은 같다. */
-export type BattleEffectKind = 'damage' | 'heal' | 'buff';
+export type BattleEffectKind = BattleEffectRequest['kind'];
 
-export type BattleEffectRequest = {
-  kind: BattleEffectKind;
-  slotId: BattleSlotId;
-  value: number;
-};
+export type { BattleEffectRequest };
 
 /**
  * 전장 연출을 내보내는 창구다.
@@ -27,50 +18,6 @@ export type BattleEffects = {
   resize: (layout: ViewportLayout) => void;
   destroy: () => void;
 };
-
-const SKILL_EFFECT_KINDS: Record<ActiveSkillBattleEffect, BattleEffectKind> = {
-  HEAL: 'heal',
-  DAMAGE: 'damage',
-  BUFF_ATTACK: 'buff',
-};
-
-/**
- * 액션 하나가 어떤 연출을 내야 하는지 정한다.
- * 배치와 이동은 카드가 나타나거나 자리를 옮기는 것 자체가 이미 피드백이라 연출을 내지 않는다.
- */
-export function toBattleEffectRequest(
-  action: BattleAutomationAction | ActiveSkillBattleAction,
-): BattleEffectRequest | null {
-  if (action.type === 'ATTACK') {
-    return { kind: 'damage', slotId: action.toSlotId, value: action.attack };
-  }
-
-  if (action.type === 'ACTIVE_SKILL') {
-    return {
-      kind: SKILL_EFFECT_KINDS[action.effect],
-      slotId: action.targetSlotId,
-      value: action.value,
-    };
-  }
-
-  return null;
-}
-
-/** 한 걸음이 낸 이벤트 중 연출할 것을 고른다. 한 걸음은 행동 하나이므로 많아야 하나다. */
-export function readBattleEffectRequest(
-  events: readonly BattleTurnEvent[],
-): BattleEffectRequest | null {
-  for (const event of events) {
-    if (event.type === 'ACTION') {
-      const request = toBattleEffectRequest(event.action);
-      if (request) {
-        return request;
-      }
-    }
-  }
-
-  return null;
-}
 
 export type BattleEffectsLayerOptions = {
   /** 캔버스를 붙일 곳이다. 카드 위에 겹치고 입력은 통과시킨다. */

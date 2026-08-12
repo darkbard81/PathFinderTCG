@@ -1,10 +1,10 @@
 import deckLevel01Data from '../../../cards/deck_level01.json';
 import deckLevel02Data from '../../../cards/deck_level02.json';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { requireCardDefinition, type CardDefinitionFile } from '../save/card-catalog';
-import { ALL_CARD_DEFINITIONS } from '../save/auto-card-catalog';
+import { requireCardDefinition, type CardDefinitionFile } from '../../game/save/card-catalog';
+import { ALL_CARD_DEFINITIONS } from '../../game/save/auto-card-catalog';
 import { hasMonsterCoreData, loadMonsterCoreData } from './__fixtures__/monster-core';
-import type { CardInstance } from '../save/types';
+import type { CardInstance } from '../../game/save/types';
 import {
   applyActiveSkillAction,
   applyAttackAction,
@@ -23,7 +23,7 @@ import type {
   BattleRuntimeZone,
   BattleSide,
   BattleSlotId,
-} from './types';
+} from '../../game/battle/types';
 
 const LEVEL01_DECK = deckLevel01Data as unknown as CardDefinitionFile;
 const LEVEL02_DECK = deckLevel02Data as unknown as CardDefinitionFile;

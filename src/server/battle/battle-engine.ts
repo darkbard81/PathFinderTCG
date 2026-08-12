@@ -1,5 +1,8 @@
-import { hasAnyTrait as hasAnyCardTrait, hasTrait as hasCardTrait } from '../cards/trait-catalog';
-import type { AbilityCategory, CardAbility } from '../save/card-catalog';
+import {
+  hasAnyTrait as hasAnyCardTrait,
+  hasTrait as hasCardTrait,
+} from '../../game/cards/trait-catalog';
+import type { AbilityCategory, CardAbility } from '../../game/save/card-catalog';
 import {
   ACTIVE_SKILL_DEFINITIONS,
   AFTER_ATTACK_BUFF_ABILITY_IDS,
@@ -42,7 +45,7 @@ import type {
   BlockBattleAction,
   MoveBattleAction,
   PlaceBattleAction,
-} from './types';
+} from '../../game/battle/types';
 
 export const MAX_AUTOMATED_ACTIONS_PER_TURN = 20 as const;
 

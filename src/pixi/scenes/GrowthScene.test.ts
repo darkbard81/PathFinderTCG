@@ -24,7 +24,7 @@ function createHarness(session: GameSession) {
     render: vi.fn(),
   };
   const scene = new GrowthScene({
-    services: { auth: {} as never, saveSlots: { save } as never },
+    services: { auth: {} as never, saveSlots: { save } as never, battle: {} as never },
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     assetBaseUrl: '/tcg',
     session,

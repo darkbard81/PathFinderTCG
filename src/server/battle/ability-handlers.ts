@@ -1,6 +1,10 @@
-import { readSizeRank as readTraitSizeRank } from '../cards/trait-catalog';
-import type { CardAbility } from '../save/card-catalog';
-import type { ActiveSkillBattleEffect, BattleCardRuntimeState, BattleRuntimeState } from './types';
+import { readSizeRank as readTraitSizeRank } from '../../game/cards/trait-catalog';
+import type { CardAbility } from '../../game/save/card-catalog';
+import type {
+  ActiveSkillBattleEffect,
+  BattleCardRuntimeState,
+  BattleRuntimeState,
+} from '../../game/battle/types';
 
 export type BattleRuntimeEffectStat = 'attack' | 'hp' | 'dominance';
 

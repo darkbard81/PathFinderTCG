@@ -146,6 +146,23 @@ export async function listSaveSlotSummaries(
   return { slots };
 }
 
+/**
+ * 계정이 소유한 저장 슬롯을 디스크에서 읽는다.
+ *
+ * 전투를 시작할 때 서버가 덱을 직접 읽는 통로다. 브라우저가 보낸 덱을 그대로 쓰면
+ * 아무 수치나 적어 보낼 수 있어, 전투에 들어가는 카드는 저장된 것만 쓴다.
+ */
+export async function readAccountSaveSlotState(options: {
+  dataRoot: string;
+  accountId: string;
+  slotId: SaveSlotId;
+}): Promise<SaveSlotState | null> {
+  return readSaveSlotState(
+    getAccountSaveSlotsRoot(options.dataRoot, options.accountId),
+    options.slotId,
+  );
+}
+
 /** 첫 계정 생성 시 기존 공용 슬롯을 검증한 뒤 개인 저장소에 복사한다. */
 export async function migrateLegacySaveSlots(options: {
   legacySaveSlotsRoot: string;
