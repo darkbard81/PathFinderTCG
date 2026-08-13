@@ -162,7 +162,8 @@ describe('save slots api', () => {
       updatedAt: '2024-01-02T03:04:05.000Z',
       saveName: 'Manual Save',
       stageProgress: {
-        clearedStageIds: ['test-stage-dark'],
+        // 클리어 목록은 서버가 지킨다. 본문에 적어 보내도 디스크 값이 그대로 남는다.
+        clearedStageIds: [],
         lastSelectedStageId: 'test-stage-dark',
         stageBgmIds: {},
       },
@@ -363,6 +364,7 @@ describe('save slots api', () => {
       summonTicket: 0,
     });
 
+    // 재화는 서버가 늘린다. 본문에 적어 보내도 디스크 값이 그대로 남는다.
     const spent = createResponse();
     await handler(
       request(
@@ -378,14 +380,19 @@ describe('save slots api', () => {
     );
 
     expect(spent.statusCode()).toBe(200);
+    expect((spent.json() as SaveSlotState).resources).toEqual({
+      gold: 0,
+      manaStone: 0,
+      summonTicket: 0,
+    });
 
     const reloaded = createResponse();
     await handler(request('GET', '/api/save-slots/1'), reloaded.response, () => undefined);
 
     expect((reloaded.json() as SaveSlotState).resources).toEqual({
-      gold: 125_680,
-      manaStone: 8_420,
-      summonTicket: 12,
+      gold: 0,
+      manaStone: 0,
+      summonTicket: 0,
     });
   });
 
@@ -768,6 +775,160 @@ describe('save slots api', () => {
 
     expect(putRes.statusCode()).toBe(400);
     expect(putRes.text()).toContain('Unknown card id');
+  });
+
+  it('진행도는 본문에서 읽지 않고 디스크 값을 지킨다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+    const initRes = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'T' })),
+      initRes.response,
+      () => undefined,
+    );
+    const initial = (initRes.json() as { state: SaveSlotState }).state;
+
+    const tampered: SaveSlotState = {
+      ...initial,
+      resources: { gold: 999_999, manaStone: 999, summonTicket: 99 },
+      stageProgress: {
+        ...initial.stageProgress,
+        clearedStageIds: ['level01', 'level07'],
+      },
+      deck: {
+        ...initial.deck,
+        leader: { ...initial.deck.leader, exp: 999_999 },
+        cards: initial.deck.cards.map((card, index) =>
+          index === 0 ? { ...card, exp: 999_999 } : card,
+        ),
+      },
+    };
+    const putRes = createResponse();
+    await handler(
+      request('PUT', '/api/save-slots/1', JSON.stringify(tampered)),
+      putRes.response,
+      () => undefined,
+    );
+
+    expect(putRes.statusCode()).toBe(200);
+    const stored = putRes.json() as SaveSlotState;
+    expect(stored.resources).toEqual(initial.resources);
+    expect(stored.stageProgress.clearedStageIds).toEqual([]);
+    expect(stored.deck.leader.exp).toBe(0);
+    expect(stored.deck.cards[0]!.exp).toBe(0);
+    // EXP를 못 올렸으니 레벨과 수치도 그대로다.
+    expect(stored.deck.cards[0]!.level).toBe(1);
+    expect(stored.deck.cards[0]!.hp).toBe(initial.deck.cards[0]!.hp);
+  });
+
+  it('사용자가 정하는 값은 그대로 저장한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+    const initRes = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'T' })),
+      initRes.response,
+      () => undefined,
+    );
+    const initial = (initRes.json() as { state: SaveSlotState }).state;
+
+    // 덱에서 카드 한 장을 보유함으로 옮기고 로비와 이름도 바꾼다. 전부 사용자가 정하는 값이다.
+    const moved = { ...initial.deck.cards[0]!, zone: 'COLLECTION' as const };
+    const edited: SaveSlotState = {
+      ...initial,
+      saveName: '내 저장',
+      deck: { ...initial.deck, cards: initial.deck.cards.slice(1) },
+      collection: { cards: [...initial.collection.cards, moved] },
+      lobby: { ...initial.lobby, standingVisible: !initial.lobby.standingVisible },
+      stageProgress: { ...initial.stageProgress, lastSelectedStageId: 'level01' },
+    };
+    const putRes = createResponse();
+    await handler(
+      request('PUT', '/api/save-slots/1', JSON.stringify(edited)),
+      putRes.response,
+      () => undefined,
+    );
+
+    expect(putRes.statusCode()).toBe(200);
+    const stored = putRes.json() as SaveSlotState;
+    expect(stored.saveName).toBe('내 저장');
+    expect(stored.deck.cards).toHaveLength(initial.deck.cards.length - 1);
+    expect(stored.collection.cards.map((card) => card.instanceId)).toContain(moved.instanceId);
+    expect(stored.lobby.standingVisible).toBe(edited.lobby.standingVisible);
+    expect(stored.stageProgress.lastSelectedStageId).toBe('level01');
+  });
+
+  it('재료 성장은 전용 API에서 서버가 계산한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+    const initRes = createResponse();
+    await handler(
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'T' })),
+      initRes.response,
+      () => undefined,
+    );
+    const initial = (initRes.json() as { state: SaveSlotState }).state;
+    const target = initial.deck.cards.find((card) => card.type === 'UNIT')!;
+    const material = initial.collection.cards.find((card) => card.type === 'UNIT');
+    if (!material) {
+      // 초기 보유함에 UNIT이 없으면 이 시나리오를 세울 수 없다.
+      return;
+    }
+
+    const growRes = createResponse();
+    await handler(
+      request(
+        'POST',
+        '/api/save-slots/1/growth',
+        JSON.stringify({
+          growths: [
+            {
+              targetDeckCardInstanceId: target.instanceId,
+              materialCollectionCardInstanceIds: [material.instanceId],
+            },
+          ],
+        }),
+      ),
+      growRes.response,
+      () => undefined,
+    );
+
+    expect(growRes.statusCode()).toBe(200);
+    const grown = growRes.json() as SaveSlotState;
+    const grownTarget = grown.deck.cards.find((card) => card.instanceId === target.instanceId)!;
+    expect(grownTarget.exp).toBeGreaterThan(0);
+    // 재료는 보유함에서 빠진다.
+    expect(grown.collection.cards.map((card) => card.instanceId)).not.toContain(
+      material.instanceId,
+    );
+  });
+
+  it('덱에 없는 카드를 성장 대상으로 보내면 거절한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+    await handler(
+      request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'T' })),
+      createResponse().response,
+      () => undefined,
+    );
+
+    const growRes = createResponse();
+    await handler(
+      request(
+        'POST',
+        '/api/save-slots/1/growth',
+        JSON.stringify({
+          growths: [
+            { targetDeckCardInstanceId: 'nope', materialCollectionCardInstanceIds: ['nope-2'] },
+          ],
+        }),
+      ),
+      growRes.response,
+      () => undefined,
+    );
+
+    expect(growRes.statusCode()).toBe(400);
+    expect(growRes.text()).toContain('Deck growth target not found');
   });
 
   it('isolates the same slot id between authenticated accounts', async () => {

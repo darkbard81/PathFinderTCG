@@ -1,5 +1,6 @@
 import {
   SAVE_SLOT_SCHEMA_VERSION,
+  type CardGrowthRequest,
   type CardInstance,
   type SaveSlotId,
   type SaveSlotState,
@@ -33,6 +34,15 @@ export class SaveSlotsClient {
   /** 현재 계정의 지정 슬롯을 검증된 상태로 덮어쓴다. */
   save(state: SaveSlotState): Promise<SaveSlotState> {
     return saveSlotState(this.request, state);
+  }
+
+  /**
+   * 재료 성장을 서버에 요청한다.
+   *
+   * 성장 결과가 아니라 '어느 카드에 어떤 재료를'만 보낸다. EXP 계산과 재료 소모는 서버가 한다.
+   */
+  grow(slotId: SaveSlotId, growths: readonly CardGrowthRequest[]): Promise<SaveSlotState> {
+    return growSaveSlotCards(this.request, slotId, growths);
   }
 
   /** 현재 계정의 빈 슬롯을 사용자가 정한 이름으로 생성한다. */
@@ -219,6 +229,34 @@ async function saveSlotState(request: ApiFetch, state: SaveSlotState): Promise<S
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(state),
+  });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const data = (await response.json()) as unknown;
+  if (!isSaveSlotState(data)) {
+    throw new Error('Invalid save slot state response');
+  }
+
+  return data;
+}
+
+/**
+ * 재료 성장을 서버에서 실행하고 반영된 저장 상태를 돌려받는다.
+ * 브라우저가 계산한 EXP는 화면 미리보기일 뿐이라 보내지 않는다.
+ */
+async function growSaveSlotCards(
+  request: ApiFetch,
+  slotId: SaveSlotId,
+  growths: readonly CardGrowthRequest[],
+): Promise<SaveSlotState> {
+  const response = await request(`/api/save-slots/${slotId}/growth`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ growths }),
   });
   if (!response.ok) {
     throw new Error(await response.text());

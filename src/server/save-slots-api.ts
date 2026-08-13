@@ -8,7 +8,13 @@ import {
   requireCardDefinition,
   type CardDefinition,
 } from '../game/save/card-catalog';
+import { consumeCollectionMaterialsForDeckGrowth } from '../game/save/card-growth';
 import { canonicalizeCardInstance } from '../game/save/card-stats';
+import {
+  createGameSession,
+  createSaveSlotStateFromGameSession,
+  type GameSession,
+} from '../game/save/session-core';
 import { readServerCardDefinitions } from './card-definition-catalog';
 import { migrateLegacyCardTraits, needsCardTraitMigration } from '../game/save/migrate-card-traits';
 import { normalizeSaveName } from '../game/save/save-name';
@@ -16,6 +22,7 @@ import {
   SAVE_SLOT_IDS,
   SAVE_SLOT_SCHEMA_VERSION,
   type CardCollection,
+  type CardGrowthRequest,
   type CardInstance,
   type DeckInstance,
   type EquipmentState,
@@ -101,7 +108,13 @@ export function createSaveSlotsApiHandler(
       }
 
       if (request.method === 'PUT') {
-        const body = validateSaveSlotState(await readRequestJson(request), slotId);
+        // 진행도는 디스크에 적힌 것이 정답이다. 본문에서는 사용자가 정하는 것만 읽는다.
+        const previous = await readSaveSlotState(saveSlotsRoot, slotId);
+        const body = validateSaveSlotState(
+          await readRequestJson(request),
+          slotId,
+          previous ? readServerOwnedState(previous) : null,
+        );
         await writeSaveSlotState(saveSlotsRoot, body);
         sendJson(response, body);
         return true;
@@ -110,6 +123,20 @@ export function createSaveSlotsApiHandler(
       if (request.method === 'DELETE' && url.pathname === `/api/save-slots/${slotId}`) {
         await deleteSaveSlotState(saveSlotsRoot, slotId);
         sendJson(response, { summary: createEmptySummary(slotId) });
+        return true;
+      }
+
+      if (request.method === 'POST' && url.pathname.endsWith('/growth')) {
+        const state = await readSaveSlotState(saveSlotsRoot, slotId);
+        if (!state) {
+          response.statusCode = 404;
+          sendJson(response, { empty: true, slotId });
+          return true;
+        }
+
+        const grown = applyCardGrowths(state, readGrowthRequests(await readRequestJson(request)));
+        await writeSaveSlotState(saveSlotsRoot, grown);
+        sendJson(response, grown);
         return true;
       }
 
@@ -273,8 +300,52 @@ function getAccountSaveSlotsRoot(dataRoot: string, accountId: string): string {
   return path.join(dataRoot, 'users', accountId, 'save-slots');
 }
 
+/**
+ * 재료 성장을 서버에서 실행한다.
+ *
+ * EXP 계산과 재료 소모를 브라우저가 하면 결과를 아무 값이나 적어 보낼 수 있다.
+ * 브라우저는 '어느 카드에 어떤 재료를'만 보내고, 서버가 자기 저장본 위에서 같은 규칙을 다시 돌린다.
+ */
+function applyCardGrowths(
+  state: SaveSlotState,
+  growths: readonly CardGrowthRequest[],
+): SaveSlotState {
+  let session: GameSession = createGameSession(state, readCanonicalCardDefinitions());
+  for (const growth of growths) {
+    session = consumeCollectionMaterialsForDeckGrowth(session, {
+      targetDeckCardInstanceId: growth.targetDeckCardInstanceId,
+      materialCollectionCardInstanceIds: growth.materialCollectionCardInstanceIds,
+    }).session;
+  }
+
+  // 서버가 만든 상태라 진행도를 지킬 이전 값을 넘기지 않는다. 이 결과가 곧 새 진행도다.
+  return validateSaveSlotState(createSaveSlotStateFromGameSession(session), state.slotId);
+}
+
+function readGrowthRequests(value: unknown): CardGrowthRequest[] {
+  if (!isRecord(value) || !Array.isArray(value.growths) || value.growths.length === 0) {
+    throw new Error('growth body must contain a non-empty growths array');
+  }
+
+  return value.growths.map((entry) => {
+    if (
+      !isRecord(entry) ||
+      typeof entry.targetDeckCardInstanceId !== 'string' ||
+      !Array.isArray(entry.materialCollectionCardInstanceIds) ||
+      !entry.materialCollectionCardInstanceIds.every((id) => typeof id === 'string')
+    ) {
+      throw new Error('growth entry must name a target card and material cards');
+    }
+
+    return {
+      targetDeckCardInstanceId: entry.targetDeckCardInstanceId,
+      materialCollectionCardInstanceIds: [...entry.materialCollectionCardInstanceIds],
+    };
+  });
+}
+
 function parseSlotId(pathname: string): SaveSlotId | null {
-  const match = pathname.match(/^\/api\/save-slots\/([123])(?:\/initialize)?$/);
+  const match = pathname.match(/^\/api\/save-slots\/([123])(?:\/initialize|\/growth)?$/);
   if (!match) {
     return null;
   }
@@ -296,7 +367,39 @@ async function readRequestJson(request: IncomingMessage): Promise<unknown> {
   return raw.length > 0 ? JSON.parse(raw) : null;
 }
 
-function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotState {
+/**
+ * 저장된 상태 중 브라우저가 정하지 못하는 값이다.
+ *
+ * 이 값들이 있으면 본문에 뭐라고 적혀 있든 무시하고 이쪽을 쓴다.
+ * 브라우저가 보낸 저장 요청에만 넘긴다. 디스크를 읽거나 서버가 스스로 쓸 때는 그 값이 곧 정답이다.
+ */
+type ServerOwnedSaveSlotState = {
+  createdAt: string;
+  /** instanceId별 누적 EXP다. 레벨과 수치가 여기서 나오므로 브라우저가 정할 수 없다. */
+  expByInstanceId: ReadonlyMap<string, number>;
+  resources: SaveSlotState['resources'];
+  clearedStageIds: readonly string[];
+};
+
+function readServerOwnedState(state: SaveSlotState): ServerOwnedSaveSlotState {
+  const expByInstanceId = new Map<string, number>();
+  for (const card of [state.deck.leader, ...state.deck.cards, ...state.collection.cards]) {
+    expByInstanceId.set(card.instanceId, card.exp ?? 0);
+  }
+
+  return {
+    createdAt: state.createdAt,
+    expByInstanceId,
+    resources: structuredClone(state.resources),
+    clearedStageIds: [...state.stageProgress.clearedStageIds],
+  };
+}
+
+function validateSaveSlotState(
+  value: unknown,
+  slotId: SaveSlotId,
+  serverOwned: ServerOwnedSaveSlotState | null = null,
+): SaveSlotState {
   if (!isRecord(value)) {
     throw new Error('Save slot body must be an object');
   }
@@ -332,8 +435,8 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
   if (!isDeckInstance(value.deck)) {
     throw new Error('deck must be a deck instance');
   }
-  const deck = normalizeDeckInstance(value.deck);
-  const collection = normalizeCardCollection(value.collection, isLegacySchema);
+  const deck = normalizeDeckInstance(value.deck, serverOwned);
+  const collection = normalizeCardCollection(value.collection, isLegacySchema, serverOwned);
   const equipment = normalizeEquipmentState(
     value.equipment,
     isPreEquipmentSchema,
@@ -347,15 +450,22 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
   return {
     schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
     slotId,
-    createdAt: value.createdAt,
+    createdAt: serverOwned?.createdAt ?? value.createdAt,
     updatedAt: value.updatedAt,
     saveName,
     deck,
     collection,
     equipment,
-    stageProgress,
+    stageProgress: {
+      ...stageProgress,
+      // 스테이지를 깼는지는 서버가 만든 전투 결과에서만 늘어난다.
+      clearedStageIds: serverOwned
+        ? [...serverOwned.clearedStageIds]
+        : stageProgress.clearedStageIds,
+    },
     lobby,
-    resources,
+    // 재화도 서버가 늘린다. 지금은 늘리는 경로가 없어 이전 값이 그대로 유지된다.
+    resources: serverOwned ? structuredClone(serverOwned.resources) : resources,
   };
 }
 
@@ -372,15 +482,22 @@ function isDeckInstance(value: unknown): value is DeckInstance {
   );
 }
 
-function normalizeDeckInstance(deck: DeckInstance): DeckInstance {
+function normalizeDeckInstance(
+  deck: DeckInstance,
+  serverOwned: ServerOwnedSaveSlotState | null,
+): DeckInstance {
   return {
     id: deck.id,
-    leader: normalizeCardInstance(deck.leader, 'LEADER'),
-    cards: deck.cards.map((card) => normalizeCardInstance(card, 'DECK')),
+    leader: normalizeCardInstance(deck.leader, 'LEADER', serverOwned),
+    cards: deck.cards.map((card) => normalizeCardInstance(card, 'DECK', serverOwned)),
   };
 }
 
-function normalizeCardCollection(value: unknown, allowMissing: boolean): CardCollection {
+function normalizeCardCollection(
+  value: unknown,
+  allowMissing: boolean,
+  serverOwned: ServerOwnedSaveSlotState | null,
+): CardCollection {
   if (value === undefined && allowMissing) {
     return { cards: [] };
   }
@@ -390,7 +507,7 @@ function normalizeCardCollection(value: unknown, allowMissing: boolean): CardCol
   }
 
   return {
-    cards: value.cards.map((card) => normalizeCardInstance(card, 'COLLECTION')),
+    cards: value.cards.map((card) => normalizeCardInstance(card, 'COLLECTION', serverOwned)),
   };
 }
 
@@ -521,18 +638,27 @@ function validateEquipmentCardsForTarget(
  * 공격력 9999짜리 카드를 저장해 두고 전투를 열 수 있다. 전투 엔진이 서버에 있어도 입력이 오염된다.
  * 읽을 때도 같은 함수를 지나므로 이미 조작된 저장본도 다음에 읽힐 때 제자리로 돌아온다.
  */
-function normalizeCardInstance(instance: CardInstance, zone: CardInstance['zone']): CardInstance {
+function normalizeCardInstance(
+  instance: CardInstance,
+  zone: CardInstance['zone'],
+  serverOwned: ServerOwnedSaveSlotState | null,
+): CardInstance {
   if (isSchemaCardInstance(instance, zone)) {
-    return canonicalizeSchemaCardInstance(migrateCardInstanceTraits(instance), zone);
+    return canonicalizeSchemaCardInstance(migrateCardInstanceTraits(instance), zone, serverOwned);
   }
 
   const legacy = instance as unknown as JsonRecord;
   const definition = requireCardDefinition(String(legacy.definitionId));
+  const instanceId = String(legacy.instanceId);
   return canonicalizeCardInstance(
     {
       ...structuredClone(definition),
-      exp: readIntegerOrDefault(legacy.exp, definition.exp ?? 0),
-      instanceId: String(legacy.instanceId),
+      exp: readOwnedExp(
+        instanceId,
+        readIntegerOrDefault(legacy.exp, definition.exp ?? 0),
+        serverOwned,
+      ),
+      instanceId,
       owner: legacy.owner as CardInstance['owner'],
       zone,
     },
@@ -543,6 +669,7 @@ function normalizeCardInstance(instance: CardInstance, zone: CardInstance['zone'
 function canonicalizeSchemaCardInstance(
   instance: CardInstance,
   zone: CardInstance['zone'],
+  serverOwned: ServerOwnedSaveSlotState | null,
 ): CardInstance {
   const definition = findCardDefinition(instance.id, readCanonicalCardDefinitions());
   if (!definition) {
@@ -550,7 +677,28 @@ function canonicalizeSchemaCardInstance(
     throw new Error(`Unknown card id in ${zone} zone: ${instance.id}`);
   }
 
-  return canonicalizeCardInstance(instance, definition);
+  return canonicalizeCardInstance(
+    { ...instance, exp: readOwnedExp(instance.instanceId, instance.exp ?? 0, serverOwned) },
+    definition,
+  );
+}
+
+/**
+ * 카드 한 장의 누적 EXP를 정한다.
+ *
+ * 브라우저가 보낸 저장 요청이면 디스크에 적혀 있던 값을 쓴다. 카드가 덱과 보유함을 오가도
+ * `instanceId`가 그대로라 EXP가 카드를 따라간다. 서버가 모르는 카드는 처음 보는 것이므로 0에서 시작한다.
+ */
+function readOwnedExp(
+  instanceId: string,
+  requestedExp: number,
+  serverOwned: ServerOwnedSaveSlotState | null,
+): number {
+  if (!serverOwned) {
+    return requestedExp;
+  }
+
+  return serverOwned.expByInstanceId.get(instanceId) ?? 0;
 }
 
 /** schemaVersion 3 이하로 저장된 카드의 rarity 필드와 구 특성 표현을 canonical ID로 옮긴다. */
@@ -657,6 +805,14 @@ function getErrorStatusCode(error: unknown): number {
       error.message.startsWith('Equipment ') ||
       error.message.startsWith('Duplicate equipment ability:') ||
       error.message.startsWith('Unknown card id in') ||
+      error.message.startsWith('growth body must') ||
+      error.message.startsWith('growth entry must') ||
+      error.message.startsWith('Growth target') ||
+      error.message.startsWith('Material card') ||
+      error.message.startsWith('Collection material card not found:') ||
+      error.message.startsWith('Deck growth target not found:') ||
+      error.message.startsWith('At least one material card') ||
+      error.message.startsWith('Material cards must be unique') ||
       error.message.startsWith('stageProgress') ||
       error.message.startsWith('lobby') ||
       error.message.startsWith('resources') ||

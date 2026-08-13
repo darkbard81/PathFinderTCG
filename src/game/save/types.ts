@@ -69,3 +69,9 @@ export type SaveSlotSummary = {
 export type SaveSlotsResponse = {
   slots: SaveSlotSummary[];
 };
+
+/** 재료 성장 요청 하나다. 클라이언트는 대상과 재료만 보내고 EXP 계산은 서버가 한다. */
+export type CardGrowthRequest = {
+  targetDeckCardInstanceId: string;
+  materialCollectionCardInstanceIds: string[];
+};

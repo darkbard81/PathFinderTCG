@@ -161,6 +161,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 자산 URL과 manifest 호환 처리는 `src/game/assets/manifest.ts`, 정적 제공은 `src/server/assets-middleware.ts`를 확장한다.
 - 저장 슬롯 HTTP 흐름은 `src/game/save/client-api.ts`와 `src/server/save-slots-api.ts`의 validation·오류 계약을 따른다.
 - 카드 수치는 저장본을 믿지 않는다. 새 필드를 카드에 넣으면 `src/game/save/card-stats.ts`의 canonical 규칙에도 함께 반영한다.
+- 저장 스키마에 진행도 성격의 필드를 더하면 `save-slots-api.ts`의 `ServerOwnedSaveSlotState`에 넣고, 늘리는 경로를 서버에 만든다. 브라우저가 PUT으로 보내게 두지 않는다.
 - 전투는 `src/game/battle/protocol.ts`의 형태로만 오간다. 화면은 `services.battle`만 부르고 전투 엔진을 직접 import 하지 않는다.
 - 같은 계산이나 정책이 두 곳 이상에서 필요하면 책임이 맞는 `src/game`, `src/pixi`, `src/server` 모듈로 올리고 공개 API와 테스트를 함께 추가한다.
 
