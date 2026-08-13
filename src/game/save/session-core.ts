@@ -44,8 +44,8 @@ export type GameSession = {
 /**
  * 저장 슬롯 상태를 화면과 전투가 쓰는 런타임 세션으로 만든다.
  *
- * 카드 정의를 받아서 쓴다. 어디서 모은 정의인지는 부르는 쪽이 정한다.
- * 브라우저는 저장 인스턴스에서 만든 정의를, 서버는 카탈로그에서 읽은 정의를 넘긴다.
+ * 서버와 카탈로그 검증 테스트가 전달한 카드 정의를 쓴다.
+ * 브라우저는 아래의 `createGameSessionFromSaveInstances()`를 사용한다.
  */
 export function createGameSession(
   state: SaveSlotState,
@@ -53,6 +53,33 @@ export function createGameSession(
 ): GameSession {
   const cardDefinitionMap = createCardDefinitionMap(cardDefinitions);
 
+  return createGameSessionWithDefinitionResolver(state, (instance, allowInstanceFallback) => {
+    const definition = cardDefinitionMap.get(instance.id);
+    if (definition) {
+      return definition;
+    }
+    if (allowInstanceFallback) {
+      return createCardDefinitionFromInstance(instance);
+    }
+
+    throw new Error(`Unknown card definitionId: ${instance.id}`);
+  });
+}
+
+/**
+ * 저장 인스턴스 각각의 표시·수치 필드로 브라우저용 세션을 만든다.
+ * 같은 카드 id가 여러 장이어도 서로 다른 성장값이 definition 사이에서 섞이지 않는다.
+ */
+export function createGameSessionFromSaveInstances(state: SaveSlotState): GameSession {
+  return createGameSessionWithDefinitionResolver(state, (instance) =>
+    createCardDefinitionFromInstance(instance),
+  );
+}
+
+function createGameSessionWithDefinitionResolver(
+  state: SaveSlotState,
+  resolveDefinition: (instance: CardInstance, allowInstanceFallback: boolean) => CardDefinition,
+): GameSession {
   return {
     schemaVersion: state.schemaVersion,
     slotId: state.slotId,
@@ -61,14 +88,17 @@ export function createGameSession(
     saveName: state.saveName,
     deck: {
       id: state.deck.id,
-      leader: createRuntimeCardInstance(state.deck.leader, cardDefinitionMap),
+      leader: createRuntimeCardInstance(
+        state.deck.leader,
+        resolveDefinition(state.deck.leader, false),
+      ),
       cards: state.deck.cards.map((instance) =>
-        createRuntimeCardInstance(instance, cardDefinitionMap),
+        createRuntimeCardInstance(instance, resolveDefinition(instance, false)),
       ),
     },
     collection: {
       cards: state.collection.cards.map((instance) =>
-        createRuntimeCollectionCardInstance(instance, cardDefinitionMap),
+        createRuntimeCardInstance(instance, resolveDefinition(instance, true)),
       ),
     },
     equipment: structuredClone(state.equipment),
@@ -111,30 +141,13 @@ export function createSaveSlotStateFromGameSession(
 
 function createRuntimeCardInstance(
   instance: CardInstance,
-  cardDefinitions: Map<string, CardDefinition>,
+  definition: CardDefinition,
 ): RuntimeCardInstance {
-  const definition = cardDefinitions.get(instance.id);
-  if (!definition) {
-    throw new Error(`Unknown card definitionId: ${instance.id}`);
-  }
-
   const runtimeInstance = structuredClone(instance);
 
   return {
     instance: runtimeInstance,
     definition,
-  };
-}
-
-function createRuntimeCollectionCardInstance(
-  instance: CardInstance,
-  cardDefinitions: Map<string, CardDefinition>,
-): RuntimeCardInstance {
-  const runtimeInstance = structuredClone(instance);
-
-  return {
-    instance: runtimeInstance,
-    definition: cardDefinitions.get(instance.id) ?? createCardDefinitionFromInstance(instance),
   };
 }
 
@@ -186,7 +199,7 @@ function createSavedCardInstance(instance: CardInstance, zone: CardInstance['zon
  * 카탈로그 JSON이 없을 때 화면이 쓰는 경로다. 성장이 반영된 현재 값이므로
  * 레벨 1 기준 수치와 비교해야 하면 서버 카탈로그를 써야 한다.
  */
-export function createCardDefinitionFromInstance(instance: CardInstance): CardDefinition {
+function createCardDefinitionFromInstance(instance: CardInstance): CardDefinition {
   const definition: CardDefinition = {
     id: instance.id,
     name: instance.name,

@@ -1,10 +1,5 @@
-import type { CardDefinition } from './card-catalog';
-import {
-  createCardDefinitionFromInstance,
-  createGameSession as createGameSessionWithCatalog,
-  type GameSession,
-} from './session-core';
-import type { CardInstance, SaveSlotState } from './types';
+import { createGameSessionFromSaveInstances, type GameSession } from './session-core';
+import type { SaveSlotState } from './types';
 
 /**
  * 저장 인스턴스에서 카드 정의를 만들어 세션을 연다.
@@ -14,15 +9,7 @@ import type { CardInstance, SaveSlotState } from './types';
  * `session-core.ts`를 직접 쓰고 카탈로그 정의를 넘긴다.
  */
 export function createGameSession(state: SaveSlotState): GameSession {
-  return createGameSessionWithCatalog(state, createCardDefinitionsFromSaveState(state));
-}
-
-function createCardDefinitionsFromSaveState(state: SaveSlotState): CardDefinition[] {
-  return collectSaveCardInstances(state).map(createCardDefinitionFromInstance);
-}
-
-function collectSaveCardInstances(state: SaveSlotState): CardInstance[] {
-  return [state.deck.leader, ...state.deck.cards, ...state.collection.cards];
+  return createGameSessionFromSaveInstances(state);
 }
 
 export { createSaveSlotStateFromGameSession, findSessionCard } from './session-core';
