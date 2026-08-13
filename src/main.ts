@@ -297,8 +297,8 @@ void (async (): Promise<void> => {
                 listTracks: () => bgmTracks.map((track) => ({ id: track.id, title: track.title })),
                 play: (trackIds, mode) =>
                   soundPlayer.requestBgmPlaylist(resolveBgmTracks(trackIds), mode),
-                // 미리듣기를 멈추면 저장된 로비 설정으로 되돌린다.
-                stop: () => requestLobbyBgm(session),
+                // 미리듣기를 멈추면 현재 BGM을 끈다. 다시 로비에 들어오면 저장된 설정으로 시작한다.
+                stop: () => soundPlayer.requestBgm(null),
                 skip: (delta) => soundPlayer.skipBgm(delta),
                 getPlayingTrackId: () => soundPlayer.getPlayingBgmId(),
                 subscribe: (listener) => {

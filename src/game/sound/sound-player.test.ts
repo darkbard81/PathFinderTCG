@@ -164,6 +164,18 @@ describe('SoundPlayer BGM', () => {
     expect(player.getPlayingBgmId()).toBeNull();
   });
 
+  it('플레이리스트 재생 중 null을 요청해도 음악을 끈다', () => {
+    const fake = createFakeBackend();
+    const player = new SoundPlayer({ backend: fake.backend });
+
+    player.requestBgmPlaylist([bgm('intro'), bgm('comic')], 'sequential');
+    player.requestBgm(null);
+
+    expect(fake.streams[0]?.handle.stop).toHaveBeenCalled();
+    expect(player.getPlayingBgmId()).toBeNull();
+    expect(player.getPlaylistTrackIds()).toBeNull();
+  });
+
   it('비동기 BGM 재생이 실패하면 알리고 같은 곡을 다시 요청할 수 있다', () => {
     const fake = createFakeBackend();
     const onError = vi.fn();

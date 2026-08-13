@@ -69,7 +69,7 @@ export type LobbyBgmControl = {
   listTracks: () => LobbyBgmTrackOption[];
   /** 지금 짜고 있는 목록을 그대로 들려준다. */
   play: (trackIds: string[], mode: LobbyBgmPlayMode) => void;
-  /** 미리듣기를 멈추고 원래 흐르던 것으로 돌린다. */
+  /** 미리듣기를 멈추고 현재 BGM을 끈다. */
   stop: () => void;
   /** 목록에서 한 곡 건너뛴다. -1이면 이전 곡이다. */
   skip: (delta: 1 | -1) => void;
