@@ -16,6 +16,7 @@ import {
   type BattleSlotId,
   type BattleTurnEvent,
 } from '../../game/battle/types';
+import type { SaveSlotState } from '../../game/save/types';
 import type { StageBattleResult } from '../../game/stage/types';
 import { ACTIVE_SKILL_DEFINITIONS } from './ability-handlers';
 import {
@@ -38,6 +39,8 @@ export type ProjectBattleStateOptions = {
   automationPending: boolean;
   automationStalled: boolean;
   result: StageBattleResult | null;
+  savedState: SaveSlotState | null;
+  saveError: string | null;
 };
 
 /**
@@ -133,6 +136,8 @@ export function projectBattleState(options: ProjectBattleStateOptions): BattlePu
     automationPending: options.automationPending,
     automationStalled: options.automationStalled,
     result: options.result,
+    savedState: options.savedState,
+    saveError: options.saveError,
   };
 }
 

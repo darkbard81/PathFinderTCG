@@ -7,6 +7,7 @@ import type {
   BattleTurnEvent,
 } from '../../game/battle/types';
 import type { GameSession } from '../../game/save/session';
+import type { SaveSlotId, SaveSlotState } from '../../game/save/types';
 import { createStageBattleResult } from '../../game/stage/result';
 import type {
   StageBattleResult,
@@ -78,6 +79,10 @@ export class BattleSession {
   private automationStalled = false;
   /** 전투가 끝나면 한 번만 만든다. 두 번 만들면 보상 추첨이 다시 돌아 결과가 바뀐다. */
   private result: StageBattleResult | null = null;
+  /** 결과를 아직 저장 슬롯에 반영하지 못했으면 true다. 반영에 성공할 때까지 남는다. */
+  private resultPendingSave = false;
+  private savedState: SaveSlotState | null = null;
+  private saveError: string | null = null;
 
   public constructor(private readonly options: BattleSessionOptions) {
     this.random = options.random ?? Math.random;
@@ -92,6 +97,33 @@ export class BattleSession {
 
   public get battleId(): string {
     return this.options.battleId;
+  }
+
+  /** 결과를 반영할 저장 슬롯이다. 전투를 연 그 슬롯이다. */
+  public get slotId(): SaveSlotId {
+    return this.options.session.slotId;
+  }
+
+  /**
+   * 아직 저장 슬롯에 반영하지 못한 결과를 돌려준다.
+   *
+   * 반영은 디스크를 만지는 일이라 이 클래스가 하지 않는다. 호출자가 반영한 뒤 결과를 알려 준다.
+   * 실패하면 계속 남아 다음 요청에서 다시 시도한다.
+   */
+  public readUnsavedResult(): StageBattleResult | null {
+    return this.resultPendingSave ? this.result : null;
+  }
+
+  /** 저장 슬롯 반영이 끝났음을 알린다. 저장된 상태는 공개 상태에 실려 브라우저로 간다. */
+  public completeResultSave(savedState: SaveSlotState): void {
+    this.resultPendingSave = false;
+    this.savedState = savedState;
+    this.saveError = null;
+  }
+
+  /** 저장 슬롯 반영이 실패했음을 알린다. 다음 요청에서 다시 시도한다. */
+  public failResultSave(message: string): void {
+    this.saveError = message;
   }
 
   /** 전투를 시작하고 첫 상태를 만든다. 첫 턴부터 둘 수 없는 배치면 여기서 바로 턴을 넘긴다. */
@@ -349,6 +381,7 @@ export class BattleSession {
     this.pendingBlock = null;
     // 보상 추첨은 전투 셔플과 다른 난수를 쓴다. 셔플을 고정한 테스트가 보상까지 고정하지 않게 한다.
     this.result = createStageBattleResult(this.runtime, this.options.stageDefinition);
+    this.resultPendingSave = true;
   }
 
   private projectState(): BattlePublicState {
@@ -360,6 +393,8 @@ export class BattleSession {
       automationPending: this.automationPending,
       automationStalled: this.automationStalled,
       result: this.result,
+      savedState: this.savedState,
+      saveError: this.saveError,
     });
   }
 

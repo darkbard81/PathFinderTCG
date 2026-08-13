@@ -57,9 +57,16 @@ type BattlefieldHarness = Pick<BattlefieldScene, 'resize' | 'update' | 'enter'> 
 async function createHarness(
   session: GameSession,
   prepare?: (runtime: BattleRuntimeState) => void,
+  options: { failResultSave?: string } = {},
 ) {
   const runtime = createTestBattleRuntime(session, requireStageDefinition(STAGE_ID), fixedRandom);
   prepare?.(runtime);
+  const battleService = new LocalBattleService({
+    session,
+    runtime,
+    random: fixedRandom,
+    ...(options.failResultSave === undefined ? {} : { failResultSave: options.failResultSave }),
+  });
 
   const view: BattlefieldView & { render: ReturnType<typeof vi.fn> } = {
     element: {} as HTMLElement,
@@ -79,7 +86,7 @@ async function createHarness(
   const save = vi.fn((state: unknown) => Promise.resolve(state));
   const scene = new BattlefieldScene({
     services: { auth: {} as never, saveSlots: { save } as never, battle: {} as never },
-    battleService: new LocalBattleService({ session, runtime, random: fixedRandom }),
+    battleService,
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     assetBaseUrl: '/tcg',
     session,
@@ -95,7 +102,16 @@ async function createHarness(
   const harness = scene as unknown as BattlefieldHarness;
   await harness.enter();
 
-  return { scene: harness, view, effects, onLeave, onPlaybackRateChange, save, runtime };
+  return {
+    scene: harness,
+    view,
+    effects,
+    onLeave,
+    onPlaybackRateChange,
+    save,
+    runtime,
+    battleService,
+  };
 }
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -854,13 +870,19 @@ describe('BattlefieldScene 전투 결과', () => {
     expect(model.result?.body).toContain('성장:');
   });
 
-  it('결과가 나면 보상을 반영한 세션을 저장한다', async () => {
-    const { scene, view, save } = await createHarness(await createSession());
+  it('보상 반영은 서버가 한다. 화면은 저장 API를 부르지 않는다', async () => {
+    const { scene, view, save, battleService } = await createHarness(await createSession());
 
-    await playUntilResult(scene, view);
+    const model = await playUntilResult(scene, view);
     await flush();
 
-    expect(save).toHaveBeenCalledTimes(1);
+    // 승패도 보상도 서버가 정한다. 장부까지 서버가 적으므로 화면이 저장을 보낼 일이 없다.
+    expect(save).not.toHaveBeenCalled();
+    expect(model.result).not.toBeNull();
+
+    // 서버 저장 슬롯이 실제로 갱신돼 있어야 한다. 진 판이라 EXP는 없고 진행 기록만 남는다.
+    // 보상과 EXP 반영 자체는 apply-battle-result.test.ts가 이긴 판으로 덮는다.
+    expect(battleService.storedSaveSlotState.stageProgress.lastSelectedStageId).toBe(STAGE_ID);
   });
 
   it('저장이 끝나면 저장된 세션과 결과를 함께 넘긴다', async () => {
@@ -879,16 +901,18 @@ describe('BattlefieldScene 전투 결과', () => {
     expect(model.result?.body).not.toContain('저장에 실패');
   });
 
-  it('저장에 실패하면 결과에 알리고 돌아갈 수는 있게 둔다', async () => {
-    const { scene, view, save, onLeave } = await createHarness(await createSession());
-    save.mockImplementation(() => Promise.reject(new Error('디스크가 가득 찼습니다')));
+  it('서버가 결과를 저장하지 못하면 결과에 알리고 돌아갈 수는 있게 둔다', async () => {
+    const { scene, view, onLeave } = await createHarness(await createSession(), undefined, {
+      failResultSave: '디스크가 가득 찼습니다',
+    });
 
     await playUntilResult(scene, view);
     await flush();
 
     const model = lastModel(view);
+    // 전투 판정은 이미 끝났다. 저장만 실패한 것이라 결과 자체는 보여 준다.
+    expect(model.result).not.toBeNull();
     expect(model.result?.body).toContain('디스크가 가득 찼습니다');
-    expect(model.result?.busy).toBe(false);
 
     scene.leave();
     expect(onLeave).toHaveBeenCalledTimes(1);

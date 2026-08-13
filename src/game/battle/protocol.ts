@@ -1,5 +1,5 @@
 import type { RuntimeCardInstance } from '../save/session';
-import type { SaveSlotId } from '../save/types';
+import type { SaveSlotId, SaveSlotState } from '../save/types';
 import type { StageBattleResult } from '../stage/types';
 import type {
   ActiveSkillBattleEffect,
@@ -120,6 +120,15 @@ export type BattlePublicState = {
   automationStalled: boolean;
   /** 승패가 났을 때만 있다. 보상 추첨도 서버가 끝낸 결과다. */
   result: StageBattleResult | null;
+  /**
+   * 결과까지 반영해 서버가 저장한 슬롯 상태다.
+   *
+   * 보상과 EXP를 적는 일도 서버가 한다. 브라우저는 이 상태를 받아 화면과 다음 화면에 넘길 뿐이고,
+   * 저장 API로 진행도를 다시 보내지 않는다.
+   */
+  savedState: SaveSlotState | null;
+  /** 결과를 저장하지 못했으면 이유다. 전투 판정 자체는 이미 끝나 있다. */
+  saveError: string | null;
 };
 
 /** 연출 하나다. 어떤 칸에서 어떤 수치를 띄울지는 서버가 정한다. */

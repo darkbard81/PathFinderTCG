@@ -32,12 +32,7 @@ import type {
   BattleUpdate,
 } from '../../game/battle/protocol';
 import type { ActiveSkillBattleEffect, BattlePhase, BattleSlotId } from '../../game/battle/types';
-import {
-  createGameSession,
-  createSaveSlotStateFromGameSession,
-  type GameSession,
-} from '../../game/save/session';
-import { applyStageBattleResultToSession } from '../../game/stage/result';
+import { createGameSession, type GameSession } from '../../game/save/session';
 import { requireStageDefinition } from '../../game/stage/stage-definitions';
 import type { StageBattleResult, StageDefinition } from '../../game/stage/types';
 import type { GameServices } from '../../services/game-services';
@@ -122,11 +117,10 @@ export class BattlefieldScene implements Scene {
   private readonly battle: BattleService;
   /** 서버가 준 공개 상태다. 전투가 열리기 전에는 null이다. */
   private state: BattlePublicState | null = null;
-  /** 전투가 끝나면 서버가 결과를 한 번만 만든다. 그 결과를 저장에 쓴다. */
+  /** 전투가 끝나면 서버가 결과를 한 번만 만든다. */
   private battleResult: StageBattleResult | null = null;
+  /** 서버가 결과까지 반영해 저장한 세션이다. 저장 전에는 들어올 때 세션 그대로다. */
   private savedSession: GameSession;
-  private savingResult = false;
-  private saveError: string | null = null;
   private background: Sprite | null = null;
   private layout: ViewportLayout | null = null;
   private active = true;
@@ -586,60 +580,28 @@ export class BattlefieldScene implements Scene {
     return this.state?.slots.find((slot) => slot.card?.instanceId === cardInstanceId) ?? null;
   }
 
-  /** 승패가 났으면 서버가 만든 결과를 받아 저장을 시작한다. 이미 받았으면 아무것도 하지 않는다. */
+  /**
+   * 승패가 났으면 서버가 만든 결과와 서버가 저장한 세션을 받는다.
+   *
+   * 보상과 참여 EXP를 적는 일도 서버가 한다. 화면은 반영된 결과를 그리고 다음 화면에 넘길 뿐이다.
+   */
   private finishBattleIfOver(): void {
-    const result = this.state?.result;
-    if (this.battleResult || !result) {
+    const state = this.state;
+    if (!state?.result) {
       return;
     }
 
-    this.battleResult = result;
-    void this.persistResult(result);
-  }
-
-  /**
-   * 보상과 참여 EXP를 세션에 반영해 저장한다.
-   * 저장이 끝나기 전에는 돌아가기를 막는다. 저장 전 세션으로 Stage에 돌아가면 보상이 사라진다.
-   */
-  private async persistResult(result: StageBattleResult): Promise<void> {
-    this.savingResult = true;
-    this.saveError = null;
-    this.renderView();
-
-    try {
-      const savedState = await this.options.services.saveSlots.save(
-        createSaveSlotStateFromGameSession(
-          applyStageBattleResultToSession(this.options.session, result),
-        ),
-      );
-
-      if (!this.active) {
-        return;
-      }
-
-      this.savedSession = createGameSession(savedState);
-      this.savingResult = false;
-    } catch (error: unknown) {
-      if (!this.active) {
-        return;
-      }
-
-      this.savingResult = false;
-      this.saveError = readErrorMessage(error);
+    this.battleResult = state.result;
+    if (state.savedState) {
+      this.savedSession = createGameSession(state.savedState);
     }
-
-    this.renderView();
   }
 
   /**
-   * Stage로 돌아간다. 결과 저장 중에는 막는다.
+   * Stage로 돌아간다.
    * 서버 전투를 접는 일은 `exit`가 맡는다. 여기서 상태를 비우면 화면이 넘어가기 전에 판이 사라진다.
    */
   private leave(): void {
-    if (this.savingResult) {
-      return;
-    }
-
     this.options.onLeave(this.savedSession, this.battleResult);
   }
 
@@ -702,15 +664,15 @@ export class BattlefieldScene implements Scene {
           ? '없음'
           : `참여한 ${result.growth.cardInstanceIds.length}장에 +${result.growth.expPerCard} EXP`
       }`,
-      this.savingResult ? '결과를 저장하는 중입니다...' : null,
-      this.saveError === null ? null : `저장에 실패했습니다: ${this.saveError}`,
+      this.state?.saveError == null ? null : `저장에 실패했습니다: ${this.state.saveError}`,
     ];
 
     return {
       title: isWin ? '승리' : '패배',
       body: lines.filter((line): line is string => line !== null).join('\n'),
       isWin,
-      busy: this.savingResult,
+      // 저장은 서버가 전투 결과와 같은 요청에서 끝낸다. 화면이 기다릴 구간이 없다.
+      busy: false,
     };
   }
 

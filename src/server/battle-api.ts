@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { BattleCommand, CreateBattleRequest } from '../game/battle/protocol';
+import type { BattleCommand, BattleUpdate, CreateBattleRequest } from '../game/battle/protocol';
 import type { BattleSlotId } from '../game/battle/types';
 import { ALL_BATTLE_SLOT_IDS } from '../game/battle/types';
 import { createRuntimeId } from '../game/save/runtime-id';
@@ -10,7 +10,8 @@ import { authenticateHttpRequest } from './auth-api';
 import type { AuthService } from './auth-service';
 import { BattleCommandError, BattleSession } from './battle/battle-session';
 import { BattleStore } from './battle/battle-store';
-import { readAccountSaveSlotState } from './save-slots-api';
+import { applyBattleResultToSaveSlot } from './battle/apply-battle-result';
+import { readAccountSaveSlotState, writeAccountSaveSlotState } from './save-slots-api';
 import { StageCatalog } from './stage-catalog';
 
 type BattleApiOptions = {
@@ -72,7 +73,8 @@ export function createBattleApiHandler(
           random: options.random,
         });
         store.add(account.accountId, session);
-        sendJson(response, session.start());
+        const update = session.start();
+        sendJson(response, await withPersistedResult(update, session, account.accountId));
         return true;
       }
 
@@ -89,6 +91,8 @@ export function createBattleApiHandler(
       }
 
       if (request.method === 'GET' && url.pathname === `/api/battles/${battleId}`) {
+        // 결과 반영에 실패해 남아 있으면 여기서 다시 시도한다.
+        await persistResultIfNeeded(session, account.accountId);
         sendJson(response, { state: session.state });
         return true;
       }
@@ -101,7 +105,8 @@ export function createBattleApiHandler(
 
       if (request.method === 'POST' && url.pathname === `/api/battles/${battleId}/actions`) {
         const command = readBattleCommand(await readRequestJson(request));
-        sendJson(response, session.apply(command));
+        const update = session.apply(command);
+        sendJson(response, await withPersistedResult(update, session, account.accountId));
         return true;
       }
 
@@ -113,6 +118,56 @@ export function createBattleApiHandler(
       return true;
     }
   };
+
+  /**
+   * 승패가 났으면 그 결과를 저장 슬롯에 반영한다.
+   *
+   * 승패도 보상 추첨도 서버가 정하므로 장부도 서버가 적는다. 브라우저는 반영된 저장 상태를 받기만 하고,
+   * 진행도를 저장 API로 되돌려 보내지 않는다.
+   */
+  async function persistResultIfNeeded(
+    session: BattleSession,
+    accountId: string,
+  ): Promise<boolean> {
+    const result = session.readUnsavedResult();
+    if (!result) {
+      return false;
+    }
+
+    try {
+      const state = await readAccountSaveSlotState({
+        dataRoot: options.dataRoot,
+        accountId,
+        slotId: session.slotId,
+      });
+      if (!state) {
+        throw new Error(`Save slot ${session.slotId} is empty`);
+      }
+
+      session.completeResultSave(
+        await writeAccountSaveSlotState({
+          dataRoot: options.dataRoot,
+          accountId,
+          state: applyBattleResultToSaveSlot({ state, result, cardDefinitions }),
+        }),
+      );
+    } catch (error) {
+      // 전투 판정은 이미 끝났다. 저장만 실패한 것이라 요청 전체를 실패로 만들지 않고 이유만 함께 내려보낸다.
+      session.failResultSave(error instanceof Error ? error.message : String(error));
+    }
+
+    return true;
+  }
+
+  /** 결과를 반영했으면 그 사실이 담긴 상태로 갈아 끼운다. */
+  async function withPersistedResult(
+    update: BattleUpdate,
+    session: BattleSession,
+    accountId: string,
+  ): Promise<BattleUpdate> {
+    const persisted = await persistResultIfNeeded(session, accountId);
+    return persisted ? { ...update, state: session.state } : update;
+  }
 }
 
 /** 요청 자체가 잘못됐을 때 던진다. 상태 코드를 함께 들고 간다. */

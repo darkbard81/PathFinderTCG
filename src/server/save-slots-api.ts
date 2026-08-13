@@ -177,6 +177,23 @@ export async function readAccountSaveSlotState(options: {
   );
 }
 
+/**
+ * 계정이 소유한 저장 슬롯을 덮어쓴다.
+ *
+ * 전투 결과처럼 서버가 스스로 진행도를 적을 때 쓴다. HTTP 본문으로 들어온 것과 같은 검증을 지나므로
+ * 서버가 쓰는 값도 카드 수치 canonical 규칙을 벗어나지 않는다.
+ */
+export async function writeAccountSaveSlotState(options: {
+  dataRoot: string;
+  accountId: string;
+  state: SaveSlotState;
+}): Promise<SaveSlotState> {
+  const validated = validateSaveSlotState(options.state, options.state.slotId);
+  await writeSaveSlotState(getAccountSaveSlotsRoot(options.dataRoot, options.accountId), validated);
+
+  return validated;
+}
+
 /** 첫 계정 생성 시 기존 공용 슬롯을 검증한 뒤 개인 저장소에 복사한다. */
 export async function migrateLegacySaveSlots(options: {
   legacySaveSlotsRoot: string;

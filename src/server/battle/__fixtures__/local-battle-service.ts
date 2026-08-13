@@ -6,8 +6,11 @@ import type {
   CreateBattleRequest,
 } from '../../../game/battle/protocol';
 import type { BattleRuntimeState } from '../../../game/battle/types';
+import { ALL_CARD_DEFINITIONS } from '../../../game/save/auto-card-catalog';
 import { createRuntimeId } from '../../../game/save/runtime-id';
-import type { GameSession } from '../../../game/save/session';
+import { createSaveSlotStateFromGameSession, type GameSession } from '../../../game/save/session';
+import type { SaveSlotState } from '../../../game/save/types';
+import { applyBattleResultToSaveSlot } from '../apply-battle-result';
 import {
   requireStageDefinition,
   resolveStageEnemyDeck,
@@ -20,6 +23,8 @@ export type LocalBattleServiceOptions = {
   random?: (() => number) | undefined;
   /** 테스트가 미리 세워 둔 전투 런타임이다. 넣으면 그 상태부터 시작한다. */
   runtime?: BattleRuntimeState | undefined;
+  /** 결과 저장을 실패하게 만든다. 저장 실패 화면을 검증할 때 쓴다. */
+  failResultSave?: string | undefined;
 };
 
 /**
@@ -30,8 +35,17 @@ export type LocalBattleServiceOptions = {
  */
 export class LocalBattleService implements BattleService {
   private readonly sessions = new Map<string, BattleSession>();
+  /** 서버의 저장 슬롯을 대신하는 메모리 저장소다. */
+  private saveSlotState: SaveSlotState;
 
-  public constructor(private readonly options: LocalBattleServiceOptions) {}
+  public constructor(private readonly options: LocalBattleServiceOptions) {
+    this.saveSlotState = createSaveSlotStateFromGameSession(options.session);
+  }
+
+  /** 지금까지 반영된 저장 슬롯 상태다. 테스트가 보상 반영 결과를 확인할 때 읽는다. */
+  public get storedSaveSlotState(): SaveSlotState {
+    return this.saveSlotState;
+  }
 
   public createBattle(request: CreateBattleRequest): Promise<BattleUpdate> {
     const stageDefinition = requireStageDefinition(request.stageId);
@@ -44,16 +58,48 @@ export class LocalBattleService implements BattleService {
       runtime: this.options.runtime,
     });
     this.sessions.set(session.battleId, session);
+    const update = session.start();
 
-    return Promise.resolve(session.start());
+    return Promise.resolve(
+      this.persistResultIfNeeded(session) ? { ...update, state: session.state } : update,
+    );
+  }
+
+  /** 서버 핸들러가 하는 결과 반영을 메모리 위에서 그대로 흉내 낸다. */
+  private persistResultIfNeeded(session: BattleSession): boolean {
+    const result = session.readUnsavedResult();
+    if (!result) {
+      return false;
+    }
+
+    if (this.options.failResultSave) {
+      session.failResultSave(this.options.failResultSave);
+      return true;
+    }
+
+    this.saveSlotState = applyBattleResultToSaveSlot({
+      state: this.saveSlotState,
+      result,
+      cardDefinitions: ALL_CARD_DEFINITIONS,
+    });
+    session.completeResultSave(this.saveSlotState);
+    return true;
   }
 
   public applyCommand(battleId: string, command: BattleCommand): Promise<BattleUpdate> {
-    return Promise.resolve(this.require(battleId).apply(command));
+    const session = this.require(battleId);
+    const update = session.apply(command);
+
+    return Promise.resolve(
+      this.persistResultIfNeeded(session) ? { ...update, state: session.state } : update,
+    );
   }
 
   public readBattle(battleId: string): Promise<BattlePublicState> {
-    return Promise.resolve(this.require(battleId).state);
+    const session = this.require(battleId);
+    this.persistResultIfNeeded(session);
+
+    return Promise.resolve(session.state);
   }
 
   public endBattle(battleId: string): Promise<void> {
