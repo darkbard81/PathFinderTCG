@@ -6,8 +6,8 @@ import {
   isStageUnlocked,
   listStageDefinitions,
   requireStageDefinition,
-  resolveStageEnemyDeck,
 } from './stage-definitions';
+import { resolveStageEnemyDeck } from './stage-enemy-decks';
 import type { StageDefinition } from './types';
 
 const TEST_STAGE_DATA = {

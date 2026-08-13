@@ -1,11 +1,10 @@
-import type { GameSession, RuntimeCardInstance } from '../save/session';
+import type { GameSession, RuntimeCardInstance } from '../../game/save/session';
 import {
   createRuntimeDeckInstanceFromDefinitions,
   readCardDefinitionFile,
-} from '../save/deck-instancing';
-import { createRuntimeDeckWithEquipment } from '../save/equipment';
-import { resolveStageEnemyDeck } from '../stage/stage-definitions';
-import type { StageDefinition } from '../stage/types';
+} from '../../game/save/deck-instancing';
+import { createRuntimeDeckWithEquipment } from '../../game/save/equipment';
+import type { StageEnemyDeckDefinition } from '../../game/stage/types';
 import {
   ENEMY_INITIAL_LEADER_SLOT,
   INITIAL_HAND_SIZE,
@@ -16,7 +15,19 @@ import {
   type BattleRuntimeZone,
   type BattleSide,
   type BattleSlotId,
-} from './types';
+} from '../../game/battle/types';
+
+export type CreateInitialBattleRuntimeOptions = {
+  session: GameSession;
+  /**
+   * Stage가 지정한 적 덱이다. 호출자가 읽어서 넣는다.
+   *
+   * 여기서 Stage 정의를 직접 찾지 않는다. Stage 카탈로그는 브라우저 번들러 기능으로 파일을 모으는데,
+   * 이 모듈은 그 번들러 밖의 Node 서버에서 돈다.
+   */
+  enemyDeck: StageEnemyDeckDefinition;
+  random?: (() => number) | undefined;
+};
 
 /**
  * 저장 슬롯의 플레이어 덱과 Stage가 지정한 적 덱을 전투 중에만 쓰는 런타임 Zone 상태로 변환한다.
@@ -24,21 +35,19 @@ import {
  * 양측 일반 카드는 원본 순서를 보존한 채 전투용 복사본만 섞은 뒤 초기 손패를 나눈다.
  */
 export function createInitialBattleRuntime(
-  session: GameSession,
-  stageDefinition: StageDefinition,
-  random: () => number = Math.random,
+  options: CreateInitialBattleRuntimeOptions,
 ): BattleRuntimeState {
-  const playerDeck = createRuntimeDeckWithEquipment(session);
+  const random = options.random ?? Math.random;
+  const playerDeck = createRuntimeDeckWithEquipment(options.session);
   const player = createBattleParticipantRuntimeState(
     'player',
     playerDeck,
     PLAYER_INITIAL_LEADER_SLOT,
     random,
   );
-  const enemyDeckDefinition = resolveStageEnemyDeck(stageDefinition);
   const enemyDeck = createRuntimeDeckInstanceFromDefinitions({
-    deckId: enemyDeckDefinition.deckId,
-    cardDefinitions: readCardDefinitionFile(enemyDeckDefinition.cardDefinitionFile).cards,
+    deckId: options.enemyDeck.deckId,
+    cardDefinitions: readCardDefinitionFile(options.enemyDeck.cardDefinitionFile).cards,
     owner: 'ENEMY',
     unitCount: 29,
   });

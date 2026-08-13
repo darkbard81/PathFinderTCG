@@ -17,11 +17,11 @@ import {
 } from '../../game/save/card-growth';
 import {
   createGameSession,
-  createSaveSlotStateFromGameSession,
   type GameSession,
   type RuntimeCardInstance,
   findSessionCard,
 } from '../../game/save/session';
+import type { CardGrowthRequest } from '../../game/save/types';
 import type { GameServices } from '../../services/game-services';
 import { UI_THEME } from '../../theme';
 import type { ViewportLayout } from '../app/viewport';
@@ -40,7 +40,10 @@ export type GrowthSceneOptions = {
 
 /**
  * 성장 화면이다. 덱 유닛 하나를 고르고 보유 유닛을 재료로 흡수시켜 EXP를 올린다.
+ *
  * 재료는 소모되므로 성장 실행은 draft에만 반영하고 저장을 눌러야 확정된다.
+ * draft는 미리보기일 뿐이다. 저장할 때는 계산 결과가 아니라 '어느 카드에 어떤 재료를' 목록만 보내고,
+ * EXP 계산과 재료 소모는 서버가 자기 저장본 위에서 다시 한다.
  */
 export class GrowthScene implements Scene {
   public readonly view = new Container({
@@ -58,6 +61,8 @@ export class GrowthScene implements Scene {
   private draftSession: GameSession;
   private selectedTargetId: string | null;
   private selectedMaterialIds: ReadonlySet<string> = new Set();
+  /** 저장할 때 서버로 보낼 성장 요청이다. 누른 순서대로 쌓고 서버가 그대로 다시 실행한다. */
+  private pendingGrowths: CardGrowthRequest[] = [];
   private materialCostFilters: ReadonlySet<number> = new Set();
   private isDirty = false;
   private isSaving = false;
@@ -151,12 +156,15 @@ export class GrowthScene implements Scene {
     }
 
     try {
-      const result = consumeCollectionMaterialsForDeckGrowth(this.draftSession, {
+      const growth: CardGrowthRequest = {
         targetDeckCardInstanceId: targetId,
         materialCollectionCardInstanceIds: [...this.selectedMaterialIds],
-      });
+      };
+      // 화면에 보여 줄 미리보기다. 저장에 쓰이는 값은 아니다.
+      const result = consumeCollectionMaterialsForDeckGrowth(this.draftSession, growth);
 
       this.draftSession = result.session;
+      this.pendingGrowths = [...this.pendingGrowths, growth];
       this.selectedMaterialIds = new Set();
       this.isDirty = true;
 
@@ -181,8 +189,9 @@ export class GrowthScene implements Scene {
     this.renderView('성장 결과를 저장하는 중입니다...');
 
     try {
-      const savedState = await this.options.services.saveSlots.save(
-        createSaveSlotStateFromGameSession(this.draftSession),
+      const savedState = await this.options.services.saveSlots.grow(
+        this.savedSession.slotId,
+        this.pendingGrowths,
       );
 
       if (!this.active) {
@@ -192,6 +201,7 @@ export class GrowthScene implements Scene {
       const savedSession = createGameSession(savedState);
       this.savedSession = savedSession;
       this.draftSession = savedSession;
+      this.pendingGrowths = [];
       this.isDirty = false;
       this.isSaving = false;
       this.renderView('성장 결과를 저장했습니다.');

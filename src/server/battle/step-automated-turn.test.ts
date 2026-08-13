@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialSaveState } from '../save/create-initial-save';
-import { createGameSession, type GameSession } from '../save/session';
-import { requireStageDefinition } from '../stage/stage-definitions';
+import { createInitialSaveState } from '../../game/save/create-initial-save';
+import { createGameSession, type GameSession } from '../../game/save/session';
+import { requireStageDefinition } from '../../game/stage/stage-definitions';
 import {
   applyTurnEnd,
   runAutomatedTurnUntilBlockDecision,
   stepAutomatedTurn,
 } from './battle-engine';
-import { createInitialBattleRuntime } from './create-battle-runtime';
-import type { BattleRuntimeState, BattleTurnEvent } from './types';
+import { createTestBattleRuntime } from './__fixtures__/create-test-battle-runtime';
+import type { BattleRuntimeState, BattleTurnEvent } from '../../game/battle/types';
 
 const TEST_STAGE_DEFINITION = requireStageDefinition('test-stage-dark');
 const PRESERVE_DECK_ORDER = () => 0.999_999;
@@ -22,7 +22,7 @@ async function createSession(): Promise<GameSession> {
  * 세션을 새로 만들면 카드마다 새 id가 붙어 이벤트 비교가 id 차이만으로 어긋난다.
  */
 function createEnemyTurnRuntime(session: GameSession): BattleRuntimeState {
-  const runtime = createInitialBattleRuntime(session, TEST_STAGE_DEFINITION, PRESERVE_DECK_ORDER);
+  const runtime = createTestBattleRuntime(session, TEST_STAGE_DEFINITION, PRESERVE_DECK_ORDER);
   // 내 차례에는 자동 진행이 없다. 적 차례로 넘겨 놓고 검증한다.
   applyTurnEnd(runtime, 'MANUAL');
 
@@ -100,7 +100,7 @@ describe('stepAutomatedTurn', () => {
   });
 
   it('내 차례에는 아무것도 하지 않고 끝났다고 알린다', async () => {
-    const runtime = createInitialBattleRuntime(
+    const runtime = createTestBattleRuntime(
       await createSession(),
       TEST_STAGE_DEFINITION,
       PRESERVE_DECK_ORDER,

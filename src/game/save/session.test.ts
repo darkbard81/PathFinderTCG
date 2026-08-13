@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_DEFINITIONS } from './card-catalog';
+import { CARD_DEFINITIONS } from './card-catalog-data';
 import { createInitialSaveState } from './create-initial-save';
 import { createGameSession, createSaveSlotStateFromGameSession } from './session';
+import { createGameSession as createGameSessionWithCatalog } from './session-core';
 import { SAVE_SLOT_SCHEMA_VERSION } from './types';
 
 describe('createGameSession', () => {
@@ -26,7 +27,49 @@ describe('createGameSession', () => {
     });
   });
 
-  it('throws when a definitionId cannot be resolved', async () => {
+  it('builds card definitions from saved instances', async () => {
+    const state = await createInitialSaveState({ slotId: 1 });
+    state.deck.leader.name = '인스턴스 이름';
+
+    const session = createGameSession(state);
+
+    expect(session.deck.leader.definition.id).toBe(state.deck.leader.id);
+    expect(session.deck.leader.definition.name).toBe('인스턴스 이름');
+    expect(session.deck.leader.definition.hp).toBe(state.deck.leader.hp);
+  });
+
+  it('keeps definitions separate for repeated card instances', async () => {
+    const state = await createInitialSaveState({ slotId: 1 });
+    const first = state.deck.cards[0]!;
+    const repeated = state.deck.cards.filter((card) => card.id === first.id);
+    const last = repeated.at(-1)!;
+    first.level = 2;
+    first.exp = 100;
+    first.hp = (first.hp ?? 0) + 1;
+
+    const session = createGameSession(state);
+    const runtimeFirst = session.deck.cards.find(
+      (card) => card.instance.instanceId === first.instanceId,
+    )!;
+    const runtimeLast = session.deck.cards.find(
+      (card) => card.instance.instanceId === last.instanceId,
+    )!;
+
+    expect(repeated.length).toBeGreaterThan(1);
+    expect(runtimeFirst.definition).not.toBe(runtimeLast.definition);
+    expect(runtimeFirst.definition).toMatchObject({
+      level: first.level,
+      exp: first.exp,
+      hp: first.hp,
+    });
+    expect(runtimeLast.definition).toMatchObject({
+      level: last.level,
+      exp: last.exp,
+      hp: last.hp,
+    });
+  });
+
+  it('throws when a catalog cannot resolve a definitionId', async () => {
     const state = await createInitialSaveState({ slotId: 1 });
     const brokenState = {
       ...state,
@@ -39,7 +82,7 @@ describe('createGameSession', () => {
       },
     };
 
-    expect(() => createGameSession(brokenState)).toThrow(
+    expect(() => createGameSessionWithCatalog(brokenState, CARD_DEFINITIONS)).toThrow(
       'Unknown card definitionId: missing_definition',
     );
   });

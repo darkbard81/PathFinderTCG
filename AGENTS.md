@@ -34,7 +34,8 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - `src/pixi/assets/`: `assets.json` manifest를 Pixi `Assets` 번들로 등록하는 경계
 - `src/dom/`: DOM UI 오버레이(View). 전장 보드와 카드를 포함한 화면 전체와 스케일 동기화를 담당한다
 - `src/theme.ts`: Canvas UI와 DOM UI가 공유하는 semantic 색상·텍스트·surface 토큰
-- `src/server/`: `/tcg` 자산과 `/api/save-slots` 서버 미들웨어
+- `src/server/`: `/tcg` 자산, `/api/save-slots`, `/api/battles` 서버 미들웨어
+- `src/server/battle/`: **전투 엔진과 authoritative 전투 상태.** 브라우저 코드는 이 아래를 import 하지 않는다
 - `src/tools/card-text/`, `tools/card-text/`: 카드 텍스트 도구의 서버·클라이언트와 별도 HTML 진입점
 - `src/config.ts`: `PATHFINDER_TCG_*` 환경 변수와 서버·캡처·자산 기본 설정
 - `cards/`: 카드·덱 정의, 스테이지 JSON, `card.schema.json`, `stage.schema.json`
@@ -159,6 +160,9 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - 서버·자산 설정은 `src/config.ts`를 사용하고 환경 변수를 다른 파일에서 다시 파싱하지 않는다.
 - 자산 URL과 manifest 호환 처리는 `src/game/assets/manifest.ts`, 정적 제공은 `src/server/assets-middleware.ts`를 확장한다.
 - 저장 슬롯 HTTP 흐름은 `src/game/save/client-api.ts`와 `src/server/save-slots-api.ts`의 validation·오류 계약을 따른다.
+- 카드 수치는 저장본을 믿지 않는다. 새 필드를 카드에 넣으면 `src/game/save/card-stats.ts`의 canonical 규칙에도 함께 반영한다.
+- 저장 스키마에 진행도 성격의 필드를 더하면 `save-slots-api.ts`의 `ServerOwnedSaveSlotState`에 넣고, 늘리는 경로를 서버에 만든다. 브라우저가 PUT으로 보내게 두지 않는다.
+- 전투는 `src/game/battle/protocol.ts`의 형태로만 오간다. 화면은 `services.battle`만 부르고 전투 엔진을 직접 import 하지 않는다.
 - 같은 계산이나 정책이 두 곳 이상에서 필요하면 책임이 맞는 `src/game`, `src/pixi`, `src/server` 모듈로 올리고 공개 API와 테스트를 함께 추가한다.
 
 ## Engineering Conventions
@@ -206,7 +210,8 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 변경과 가장 가까운 테스트를 실행하고 위험 경계에 따라 검증을 확장한다.
 
-- 전투·턴·카드 효과: `src/game/battle/*.test.ts`. **게임 규칙의 정답이다.**
+- 전투·턴·카드 효과: `src/server/battle/*.test.ts`. **게임 규칙의 정답이다.**
+- 전투 서버 경계: `src/server/battle/battle-session.test.ts`, `src/server/battle-api.test.ts`, `src/server/battle/client-boundary.test.ts`
 - 저장·덱·장비·성장: 관련 save 모듈 테스트와 필요 시 save-slot API 테스트
 - UI 경계와 테마 토큰: `src/dom/**/*.test.ts`, `src/theme.test.ts`
 - 연출: `src/pixi/sequence/*.test.ts`

@@ -59,7 +59,7 @@ console.log(bad===0 ? 'OK' : bad+' violations');
 
 게임 규칙과 저장 가능한 상태를 단독으로 소유한다. 렌더러를 알지 않으며, 규칙의 정답은 이 계층의 테스트다.
 
-- `battle/` — 전투 엔진. 합법 수 계산(`list*Actions`)과 적용(`apply*Action`)이 분리돼 있다
+- `battle/` — 전투 경계의 공유 타입(`types.ts`), 서버와 주고받는 형태(`protocol.ts`), 브라우저 클라이언트(`client-api.ts`). **전투 엔진은 여기 없다. `src/server/battle/`에 있다**
 - `save/` — 저장 슬롯, 덱, 장비, 성장
 - `stage/` — 스테이지 정의, 진행도, 전투 결과와 보상
 - `assets/` — manifest 해석
@@ -201,9 +201,18 @@ UI_THEME.surfaces.modal                →  --pf-surface-modal  (rgba로 합침)
 
 가장 복잡한 화면이라 별도로 적는다.
 
-### 규칙은 엔진이 전부 갖고 있다
+### 규칙은 서버 엔진이 전부 갖고 있다
 
-`battle-engine.ts`가 합법 수를 전부 계산해 준다. 뷰·Presenter는 규칙을 다시 구현하지 않는다.
+전투 판정은 브라우저에 없다. `src/server/battle/battle-engine.ts`가 합법 수를 전부 계산하고 적용하며, 브라우저는 **행동 의도만 보낸다.**
+
+```
+Browser                          Server
+BattlefieldScene                 battle-api.ts
+  ↓ 행동 의도                     ↓
+services.battle  ──POST /api/battles/:id/actions──▶  BattleSession
+  ◀── events + 공개 상태 ─────────────────────────      battle-engine.ts
+연출 · 기록 · 뷰 모델                                   ability-handlers.ts / AI / RNG
+```
 
 ```
 listPlaceActions / listMoveActions / listAttackActions
@@ -214,6 +223,17 @@ applyAutoTurnEndIfStalled                        → 둘 수 없으면 턴 종�
 ```
 
 `runAutomatedTurnUntilBlockDecision`은 `stepAutomatedTurn`을 반복하는 얇은 래퍼다. 연출이 한 수씩 보여줄 수 있도록 쪼갠 것이며, 둘이 갈라지지 않도록 위에 얹었다.
+
+**서버가 유일한 판정자다.** 서버는 `BattleRuntimeState`를 소유하고, 요청이 올 때마다 지금 상태에서 합법성을 다시 계산한다. 클라이언트가 보낸 본문에서 읽는 값은 행동 종류·카드 id·칸 id뿐이라(`readBattleCommand`) HP·턴·필드를 실어 보내도 판정에 닿지 않는다.
+
+브라우저가 받는 것은 런타임이 아니라 **공개 상태**(`BattlePublicState`)다. 적 손패와 양측 덱 내용은 빠지고, 서버가 이미 판정한 합법 수가 칸마다 붙어 온다. 그래서 화면은 규칙을 다시 세지 않는다.
+
+| 명령 | 뜻 |
+| --- | --- |
+| `PLACE` / `MOVE` / `ATTACK` / `ACTIVE_SKILL` | 내가 시도한 수. 카드와 칸만 보낸다 |
+| `END_TURN` | 내 턴을 넘긴다 |
+| `ADVANCE` | 적 자동 턴을 한 수만 진행한다. 연출을 한 수씩 보여주려고 쪼갠다 |
+| `RESOLVE_BLOCK` | 방어 선택을 마감한다 |
 
 ### 조작: 잡는 곳으로 모호성을 없앤다
 
@@ -245,16 +265,83 @@ onDrop(source, slotId)                    // 드래그가 끝난 뒤에야 rende
 
 카드 타일이 칸을 꽉 채우므로 칸의 `border`·`background`로는 카드가 선 칸을 강조할 수 없다. `.pf-battlefield__slot::after` 오버레이(`z-index: 5`, `pointer-events: none`)에 `inset` 그림자로 그린다.
 
+### 전투 결과도 서버가 적는다
+
+승패·보상 추첨·참여 EXP는 서버가 정한다. **적는 것까지 서버가 한다.**
+
+```text
+전투 종료 → BattleSession이 결과를 만든다
+          → battle-api가 저장 슬롯을 읽어 반영하고 쓴다
+          → BattlePublicState.savedState로 브라우저에 내려간다
+브라우저   → 결과를 그리고 Stage 화면에 넘긴다. 저장 API를 부르지 않는다
+```
+
+반영에 실패하면 요청 전체를 실패로 만들지 않고 `saveError`만 함께 내려보낸다.
+전투 판정은 이미 끝나 있어 결과 화면은 보여 줘야 하고, 다음 요청에서 다시 시도한다.
+
+### 저장 API는 사용자가 정하는 것만 받는다
+
+`PUT /api/save-slots/:slotId`는 문서 전체를 받지만 **본문에서 읽는 필드가 정해져 있다.**
+
+```
+본문에서 읽는다     saveName · deck · equipment · lobby
+                    stageProgress.lastSelectedStageId / stageBgmIds
+디스크에서 가져온다  createdAt · exp · resources · stageProgress.clearedStageIds
+```
+
+허용 목록이라 저장 스키마에 필드를 더해도 기본값이 '서버 소유'다. 보호를 깜빡할 자리가 없다.
+
+EXP는 `instanceId`별로 지킨다. 카드가 덱과 보유함을 오가도 EXP가 카드를 따라가고,
+덱 편성은 그대로 저장된다.
+
+**갖고 있는 카드도 바꿀 수 없다.** 브라우저가 할 수 있는 일은 카드를 덱과 보유함 사이로 옮기는 것뿐이라,
+저장 요청 앞뒤로 `instanceId` 목록이 같아야 한다. 카드가 생기고 없어지는 것은 전투 보상과 재료 성장뿐이고
+둘 다 서버가 쓴다. 여기서 막지 않으면 보유함에 강한 장비를 적어 넣을 수 있고, 장비는 전투 유닛에 붙어
+전투에 들어간다.
+
+덱 편성 규칙도 서버가 지킨다. 리더 자리는 LEADER 카드, 덱은 UNIT 카드만이다.
+
+진행도를 늘리는 경로는 서버에만 있다.
+
+| 무엇 | 어디서 |
+| --- | --- |
+| 전투 보상·참여 EXP·스테이지 클리어 | `battle-api`가 전투 종료 시 직접 쓴다 |
+| 재료 성장 EXP | `POST /api/save-slots/:slotId/growth` |
+
+성장 API도 결과가 아니라 '어느 카드에 어떤 재료를'만 받는다. 브라우저가 만든 성장 결과는
+화면 미리보기일 뿐이고, 서버가 자기 저장본 위에서 같은 규칙을 다시 돌린다.
+
+### 저장본은 서버가 되돌린다
+
+전투 엔진이 서버에 있어도 **입력이 오염되면 소용없다.** 저장 슬롯 API는 브라우저가 보낸 본문을 받으므로,
+공격력 9999짜리 카드를 저장해 두면 서버가 그 수치로 전투를 만든다.
+
+그래서 `canonicalizeCardInstance`가 저장·조회 양쪽에서 카드 한 장을 카탈로그 기준으로 되돌린다.
+
+```
+소유자가 정하는 값   instanceId · owner · zone · exp
+정의에서 나오는 값   name · type · traits · abilities · cost · growth · description · note
+레벨에서 나오는 값   level(=EXP로 계산) · hp · attack · dominance · slot
+```
+
+거절하지 않고 다시 계산해 덮는다. 카드 데이터를 고치면 기존 저장본이 정당하게 어긋나는데
+그때마다 저장을 막으면 판을 못 이어 가고, 이미 조작된 저장본도 다음 저장에서 저절로 제자리로 온다.
+카탈로그에 없는 카드 id만 400으로 거절한다. 되돌릴 기준이 없어서다.
+
 ## 6. 알려진 부채
 
 이 문서가 서술하는 규칙과 실제 코드가 어긋나는 지점이다.
+
+(비어 있다.)
 
 
 ## 7. 테스트 경계
 
 | 대상 | 위치 | 성격 |
 | --- | --- | --- |
-| 전투 규칙 | `src/game/battle/*.test.ts` | 게임 규칙의 정답 |
+| 전투 규칙 | `src/server/battle/*.test.ts` | 게임 규칙의 정답 |
+| 전투 서버 경계 | `src/server/battle/battle-session.test.ts`, `src/server/battle-api.test.ts` | 합법성 재계산과 조작 거절 |
+| 판정의 클라이언트 유출 | `src/server/battle/client-boundary.test.ts` | 브라우저 코드가 서버 모듈을 부르지 않는지 |
 | 저장·덱·장비·성장 | `src/game/save/*.test.ts` | 도메인 |
 | 레이아웃 계산 | `src/dom/screens/battlefield-layout.test.ts` | 순수 함수 |
 | 드래그 기하 | `src/dom/screens/battle-drag.test.ts` | 순수 함수. DOM 배선은 제외 |

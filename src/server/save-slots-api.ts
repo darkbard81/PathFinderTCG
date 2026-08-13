@@ -8,12 +8,21 @@ import {
   requireCardDefinition,
   type CardDefinition,
 } from '../game/save/card-catalog';
+import { consumeCollectionMaterialsForDeckGrowth } from '../game/save/card-growth';
+import { canonicalizeCardInstance } from '../game/save/card-stats';
+import {
+  createGameSession,
+  createSaveSlotStateFromGameSession,
+  type GameSession,
+} from '../game/save/session-core';
+import { readServerCardDefinitions } from './card-definition-catalog';
 import { migrateLegacyCardTraits, needsCardTraitMigration } from '../game/save/migrate-card-traits';
 import { normalizeSaveName } from '../game/save/save-name';
 import {
   SAVE_SLOT_IDS,
   SAVE_SLOT_SCHEMA_VERSION,
   type CardCollection,
+  type CardGrowthRequest,
   type CardInstance,
   type DeckInstance,
   type EquipmentState,
@@ -38,6 +47,18 @@ type JsonRecord = Record<string, unknown>;
 const defaultProjectRoot = fileURLToPath(new URL('../..', import.meta.url));
 const defaultDataRoot = path.join(defaultProjectRoot, '.data');
 const defaultSaveSlotsRoot = path.join(defaultDataRoot, 'save-slots');
+/**
+ * 저장본의 카드 수치를 되돌릴 때 기준이 되는 카드 정의다.
+ *
+ * `cards/deck_*.json` 전체를 쓴다. 좁은 카탈로그만 보면 다른 덱에서 얻은 보상 카드를
+ * 모르는 카드로 취급하게 된다. 파일을 한 번만 읽고 재사용한다.
+ */
+let cachedCardDefinitions: readonly CardDefinition[] | null = null;
+
+function readCanonicalCardDefinitions(): readonly CardDefinition[] {
+  cachedCardDefinitions ??= readServerCardDefinitions();
+  return cachedCardDefinitions;
+}
 
 /**
  * `/api/save-slots/...` 요청을 처리하는 공용 API 핸들러를 만든다.
@@ -87,7 +108,13 @@ export function createSaveSlotsApiHandler(
       }
 
       if (request.method === 'PUT') {
-        const body = validateSaveSlotState(await readRequestJson(request), slotId);
+        // 진행도는 디스크에 적힌 것이 정답이다. 본문에서는 사용자가 정하는 것만 읽는다.
+        const previous = await readSaveSlotState(saveSlotsRoot, slotId);
+        const body = validateSaveSlotState(
+          await readRequestJson(request),
+          slotId,
+          previous ? readServerOwnedState(previous) : null,
+        );
         await writeSaveSlotState(saveSlotsRoot, body);
         sendJson(response, body);
         return true;
@@ -96,6 +123,20 @@ export function createSaveSlotsApiHandler(
       if (request.method === 'DELETE' && url.pathname === `/api/save-slots/${slotId}`) {
         await deleteSaveSlotState(saveSlotsRoot, slotId);
         sendJson(response, { summary: createEmptySummary(slotId) });
+        return true;
+      }
+
+      if (request.method === 'POST' && url.pathname.endsWith('/growth')) {
+        const state = await readSaveSlotState(saveSlotsRoot, slotId);
+        if (!state) {
+          response.statusCode = 404;
+          sendJson(response, { empty: true, slotId });
+          return true;
+        }
+
+        const grown = applyCardGrowths(state, readGrowthRequests(await readRequestJson(request)));
+        await writeSaveSlotState(saveSlotsRoot, grown);
+        sendJson(response, grown);
         return true;
       }
 
@@ -144,6 +185,40 @@ export async function listSaveSlotSummaries(
   );
 
   return { slots };
+}
+
+/**
+ * 계정이 소유한 저장 슬롯을 디스크에서 읽는다.
+ *
+ * 전투를 시작할 때 서버가 덱을 직접 읽는 통로다. 브라우저가 보낸 덱을 그대로 쓰면
+ * 아무 수치나 적어 보낼 수 있어, 전투에 들어가는 카드는 저장된 것만 쓴다.
+ */
+export async function readAccountSaveSlotState(options: {
+  dataRoot: string;
+  accountId: string;
+  slotId: SaveSlotId;
+}): Promise<SaveSlotState | null> {
+  return readSaveSlotState(
+    getAccountSaveSlotsRoot(options.dataRoot, options.accountId),
+    options.slotId,
+  );
+}
+
+/**
+ * 계정이 소유한 저장 슬롯을 덮어쓴다.
+ *
+ * 전투 결과처럼 서버가 스스로 진행도를 적을 때 쓴다. HTTP 본문으로 들어온 것과 같은 검증을 지나므로
+ * 서버가 쓰는 값도 카드 수치 canonical 규칙을 벗어나지 않는다.
+ */
+export async function writeAccountSaveSlotState(options: {
+  dataRoot: string;
+  accountId: string;
+  state: SaveSlotState;
+}): Promise<SaveSlotState> {
+  const validated = validateSaveSlotState(options.state, options.state.slotId);
+  await writeSaveSlotState(getAccountSaveSlotsRoot(options.dataRoot, options.accountId), validated);
+
+  return validated;
 }
 
 /** 첫 계정 생성 시 기존 공용 슬롯을 검증한 뒤 개인 저장소에 복사한다. */
@@ -202,7 +277,7 @@ function createEmptySummary(slotId: SaveSlotId) {
 }
 
 function toSaveSlotSummary(state: SaveSlotState) {
-  const leaderDefinition = findCardDefinition(state.deck.leader.id);
+  const leaderDefinition = findCardDefinition(state.deck.leader.id, readCanonicalCardDefinitions());
 
   return {
     slotId: state.slotId,
@@ -225,8 +300,52 @@ function getAccountSaveSlotsRoot(dataRoot: string, accountId: string): string {
   return path.join(dataRoot, 'users', accountId, 'save-slots');
 }
 
+/**
+ * 재료 성장을 서버에서 실행한다.
+ *
+ * EXP 계산과 재료 소모를 브라우저가 하면 결과를 아무 값이나 적어 보낼 수 있다.
+ * 브라우저는 '어느 카드에 어떤 재료를'만 보내고, 서버가 자기 저장본 위에서 같은 규칙을 다시 돌린다.
+ */
+function applyCardGrowths(
+  state: SaveSlotState,
+  growths: readonly CardGrowthRequest[],
+): SaveSlotState {
+  let session: GameSession = createGameSession(state, readCanonicalCardDefinitions());
+  for (const growth of growths) {
+    session = consumeCollectionMaterialsForDeckGrowth(session, {
+      targetDeckCardInstanceId: growth.targetDeckCardInstanceId,
+      materialCollectionCardInstanceIds: growth.materialCollectionCardInstanceIds,
+    }).session;
+  }
+
+  // 서버가 만든 상태라 진행도를 지킬 이전 값을 넘기지 않는다. 이 결과가 곧 새 진행도다.
+  return validateSaveSlotState(createSaveSlotStateFromGameSession(session), state.slotId);
+}
+
+function readGrowthRequests(value: unknown): CardGrowthRequest[] {
+  if (!isRecord(value) || !Array.isArray(value.growths) || value.growths.length === 0) {
+    throw new Error('growth body must contain a non-empty growths array');
+  }
+
+  return value.growths.map((entry) => {
+    if (
+      !isRecord(entry) ||
+      typeof entry.targetDeckCardInstanceId !== 'string' ||
+      !Array.isArray(entry.materialCollectionCardInstanceIds) ||
+      !entry.materialCollectionCardInstanceIds.every((id) => typeof id === 'string')
+    ) {
+      throw new Error('growth entry must name a target card and material cards');
+    }
+
+    return {
+      targetDeckCardInstanceId: entry.targetDeckCardInstanceId,
+      materialCollectionCardInstanceIds: [...entry.materialCollectionCardInstanceIds],
+    };
+  });
+}
+
 function parseSlotId(pathname: string): SaveSlotId | null {
-  const match = pathname.match(/^\/api\/save-slots\/([123])(?:\/initialize)?$/);
+  const match = pathname.match(/^\/api\/save-slots\/([123])(?:\/initialize|\/growth)?$/);
   if (!match) {
     return null;
   }
@@ -248,7 +367,97 @@ async function readRequestJson(request: IncomingMessage): Promise<unknown> {
   return raw.length > 0 ? JSON.parse(raw) : null;
 }
 
-function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotState {
+/**
+ * 저장된 상태 중 브라우저가 정하지 못하는 값이다.
+ *
+ * 이 값들이 있으면 본문에 뭐라고 적혀 있든 무시하고 이쪽을 쓴다.
+ * 브라우저가 보낸 저장 요청에만 넘긴다. 디스크를 읽거나 서버가 스스로 쓸 때는 그 값이 곧 정답이다.
+ */
+type ServerOwnedSaveSlotState = {
+  createdAt: string;
+  /** instanceId별 누적 EXP다. 레벨과 수치가 여기서 나오므로 브라우저가 정할 수 없다. */
+  expByInstanceId: ReadonlyMap<string, number>;
+  /** 지금 갖고 있는 카드다. `instanceId → 카드 정의 id`. 브라우저는 이 목록을 바꿀 수 없다. */
+  cardIdByInstanceId: ReadonlyMap<string, string>;
+  resources: SaveSlotState['resources'];
+  clearedStageIds: readonly string[];
+};
+
+function listAllCards(state: SaveSlotState): CardInstance[] {
+  return [state.deck.leader, ...state.deck.cards, ...state.collection.cards];
+}
+
+function readServerOwnedState(state: SaveSlotState): ServerOwnedSaveSlotState {
+  const expByInstanceId = new Map<string, number>();
+  const cardIdByInstanceId = new Map<string, string>();
+  for (const card of listAllCards(state)) {
+    expByInstanceId.set(card.instanceId, card.exp ?? 0);
+    cardIdByInstanceId.set(card.instanceId, card.id);
+  }
+
+  return {
+    createdAt: state.createdAt,
+    expByInstanceId,
+    cardIdByInstanceId,
+    resources: structuredClone(state.resources),
+    clearedStageIds: [...state.stageProgress.clearedStageIds],
+  };
+}
+
+/**
+ * 브라우저가 보낸 저장본이 갖고 있는 카드를 바꾸지 않았는지 확인한다.
+ *
+ * 브라우저가 할 수 있는 일은 카드를 덱과 보유함 사이로 옮기는 것뿐이다. 카드가 생기고 없어지는 것은
+ * 전투 보상과 재료 성장뿐이고 둘 다 서버가 쓴다. 그래서 저장 요청 앞뒤로 카드 목록은 같아야 한다.
+ *
+ * 여기서 막지 않으면 보유함에 강한 장비를 적어 넣을 수 있다. 장비는 전투 유닛에 붙어 전투에 들어간다.
+ */
+function assertCardsUnchanged(
+  cards: readonly CardInstance[],
+  owned: ServerOwnedSaveSlotState,
+): void {
+  const seen = new Set<string>();
+  for (const card of cards) {
+    if (seen.has(card.instanceId)) {
+      throw new Error(`Duplicate card instanceId: ${card.instanceId}`);
+    }
+    seen.add(card.instanceId);
+
+    const ownedCardId = owned.cardIdByInstanceId.get(card.instanceId);
+    if (ownedCardId === undefined) {
+      throw new Error(`Card was not obtained: ${card.instanceId}`);
+    }
+    if (ownedCardId !== card.id) {
+      throw new Error(`Card id changed for ${card.instanceId}: expected ${ownedCardId}`);
+    }
+  }
+
+  if (seen.size !== owned.cardIdByInstanceId.size) {
+    // 카드를 버리는 방법은 재료 성장뿐이고 그건 서버가 한다. 조용히 사라지면 되돌릴 방법이 없다.
+    throw new Error(
+      `Card is missing from the save: expected ${owned.cardIdByInstanceId.size} cards`,
+    );
+  }
+}
+
+/** 리더 자리에는 LEADER 카드만, 덱에는 UNIT 카드만 둘 수 있다. 덱 편성 화면이 지키는 규칙과 같다. */
+function assertDeckCardTypes(deck: DeckInstance): void {
+  if (deck.leader.type !== 'LEADER') {
+    throw new Error(`Deck leader must be a LEADER card: ${deck.leader.instanceId}`);
+  }
+
+  for (const card of deck.cards) {
+    if (card.type !== 'UNIT') {
+      throw new Error(`Deck card must be a UNIT card: ${card.instanceId}`);
+    }
+  }
+}
+
+function validateSaveSlotState(
+  value: unknown,
+  slotId: SaveSlotId,
+  serverOwned: ServerOwnedSaveSlotState | null = null,
+): SaveSlotState {
   if (!isRecord(value)) {
     throw new Error('Save slot body must be an object');
   }
@@ -284,14 +493,19 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
   if (!isDeckInstance(value.deck)) {
     throw new Error('deck must be a deck instance');
   }
-  const deck = normalizeDeckInstance(value.deck);
-  const collection = normalizeCardCollection(value.collection, isLegacySchema);
+  const deck = normalizeDeckInstance(value.deck, serverOwned);
+  const collection = normalizeCardCollection(value.collection, isLegacySchema, serverOwned);
   const equipment = normalizeEquipmentState(
     value.equipment,
     isPreEquipmentSchema,
     deck,
     collection,
   );
+  assertDeckCardTypes(deck);
+  if (serverOwned) {
+    assertCardsUnchanged([deck.leader, ...deck.cards, ...collection.cards], serverOwned);
+  }
+
   const stageProgress = normalizeStageProgressState(value.stageProgress);
   const lobby = normalizeLobbyState(value.lobby);
   const resources = normalizeResourceState(value.resources);
@@ -299,15 +513,22 @@ function validateSaveSlotState(value: unknown, slotId: SaveSlotId): SaveSlotStat
   return {
     schemaVersion: SAVE_SLOT_SCHEMA_VERSION,
     slotId,
-    createdAt: value.createdAt,
+    createdAt: serverOwned?.createdAt ?? value.createdAt,
     updatedAt: value.updatedAt,
     saveName,
     deck,
     collection,
     equipment,
-    stageProgress,
+    stageProgress: {
+      ...stageProgress,
+      // 스테이지를 깼는지는 서버가 만든 전투 결과에서만 늘어난다.
+      clearedStageIds: serverOwned
+        ? [...serverOwned.clearedStageIds]
+        : stageProgress.clearedStageIds,
+    },
     lobby,
-    resources,
+    // 재화도 서버가 늘린다. 지금은 늘리는 경로가 없어 이전 값이 그대로 유지된다.
+    resources: serverOwned ? structuredClone(serverOwned.resources) : resources,
   };
 }
 
@@ -324,15 +545,22 @@ function isDeckInstance(value: unknown): value is DeckInstance {
   );
 }
 
-function normalizeDeckInstance(deck: DeckInstance): DeckInstance {
+function normalizeDeckInstance(
+  deck: DeckInstance,
+  serverOwned: ServerOwnedSaveSlotState | null,
+): DeckInstance {
   return {
     id: deck.id,
-    leader: normalizeCardInstance(deck.leader, 'LEADER'),
-    cards: deck.cards.map((card) => normalizeCardInstance(card, 'DECK')),
+    leader: normalizeCardInstance(deck.leader, 'LEADER', serverOwned),
+    cards: deck.cards.map((card) => normalizeCardInstance(card, 'DECK', serverOwned)),
   };
 }
 
-function normalizeCardCollection(value: unknown, allowMissing: boolean): CardCollection {
+function normalizeCardCollection(
+  value: unknown,
+  allowMissing: boolean,
+  serverOwned: ServerOwnedSaveSlotState | null,
+): CardCollection {
   if (value === undefined && allowMissing) {
     return { cards: [] };
   }
@@ -342,7 +570,7 @@ function normalizeCardCollection(value: unknown, allowMissing: boolean): CardCol
   }
 
   return {
-    cards: value.cards.map((card) => normalizeCardInstance(card, 'COLLECTION')),
+    cards: value.cards.map((card) => normalizeCardInstance(card, 'COLLECTION', serverOwned)),
   };
 }
 
@@ -466,23 +694,77 @@ function validateEquipmentCardsForTarget(
   }
 }
 
-function normalizeCardInstance(instance: CardInstance, zone: CardInstance['zone']): CardInstance {
+/**
+ * 저장된 카드 한 장을 카탈로그 정의 기준으로 되돌린다.
+ *
+ * 저장 API는 브라우저가 보낸 본문을 그대로 받는다. 그래서 카드 수치를 여기서 다시 계산하지 않으면
+ * 공격력 9999짜리 카드를 저장해 두고 전투를 열 수 있다. 전투 엔진이 서버에 있어도 입력이 오염된다.
+ * 읽을 때도 같은 함수를 지나므로 이미 조작된 저장본도 다음에 읽힐 때 제자리로 돌아온다.
+ */
+function normalizeCardInstance(
+  instance: CardInstance,
+  zone: CardInstance['zone'],
+  serverOwned: ServerOwnedSaveSlotState | null,
+): CardInstance {
   if (isSchemaCardInstance(instance, zone)) {
-    return migrateCardInstanceTraits(instance);
+    return canonicalizeSchemaCardInstance(migrateCardInstanceTraits(instance), zone, serverOwned);
   }
 
   const legacy = instance as unknown as JsonRecord;
-  const definition = requireCardDefinition(String(legacy.definitionId));
-  return {
-    ...structuredClone(definition),
-    level: readIntegerOrDefault(legacy.level, definition.level ?? 1),
-    exp: readIntegerOrDefault(legacy.exp, definition.exp ?? 0),
-    hp: readIntegerOrDefault(legacy.currentHp, definition.hp ?? 0),
-    attack: readIntegerOrDefault(legacy.currentAttack, definition.attack ?? 0),
-    instanceId: String(legacy.instanceId),
-    owner: legacy.owner as CardInstance['owner'],
-    zone,
-  };
+  const definition = requireCardDefinition(
+    String(legacy.definitionId),
+    readCanonicalCardDefinitions(),
+  );
+  const instanceId = String(legacy.instanceId);
+  return canonicalizeCardInstance(
+    {
+      ...structuredClone(definition),
+      exp: readOwnedExp(
+        instanceId,
+        readIntegerOrDefault(legacy.exp, definition.exp ?? 0),
+        serverOwned,
+      ),
+      instanceId,
+      owner: legacy.owner as CardInstance['owner'],
+      zone,
+    },
+    definition,
+  );
+}
+
+function canonicalizeSchemaCardInstance(
+  instance: CardInstance,
+  zone: CardInstance['zone'],
+  serverOwned: ServerOwnedSaveSlotState | null,
+): CardInstance {
+  const definition = findCardDefinition(instance.id, readCanonicalCardDefinitions());
+  if (!definition) {
+    // 카탈로그에 없는 카드는 수치를 되돌릴 기준이 없다. 어느 덱에도 없는 id라 정상 경로로는 생기지 않는다.
+    throw new Error(`Unknown card id in ${zone} zone: ${instance.id}`);
+  }
+
+  return canonicalizeCardInstance(
+    { ...instance, exp: readOwnedExp(instance.instanceId, instance.exp ?? 0, serverOwned) },
+    definition,
+  );
+}
+
+/**
+ * 카드 한 장의 누적 EXP를 정한다.
+ *
+ * 브라우저가 보낸 저장 요청이면 디스크에 적혀 있던 값을 쓴다. 카드가 덱과 보유함을 오가도
+ * `instanceId`가 그대로라 EXP가 카드를 따라간다. 서버가 모르는 카드는 처음 보는 것이므로 0에서 시작한다.
+ */
+function readOwnedExp(
+  instanceId: string,
+  requestedExp: number,
+  serverOwned: ServerOwnedSaveSlotState | null,
+): number {
+  if (!serverOwned) {
+    return requestedExp;
+  }
+
+  return serverOwned.expByInstanceId.get(instanceId) ?? 0;
 }
 
 /** schemaVersion 3 이하로 저장된 카드의 rarity 필드와 구 특성 표현을 canonical ID로 옮긴다. */
@@ -588,6 +870,21 @@ function getErrorStatusCode(error: unknown): number {
       error.message.startsWith('equipment must be an equipment state') ||
       error.message.startsWith('Equipment ') ||
       error.message.startsWith('Duplicate equipment ability:') ||
+      error.message.startsWith('Unknown card id in') ||
+      error.message.startsWith('Duplicate card instanceId:') ||
+      error.message.startsWith('Card was not obtained:') ||
+      error.message.startsWith('Card id changed for') ||
+      error.message.startsWith('Card is missing from the save:') ||
+      error.message.startsWith('Deck leader must be a') ||
+      error.message.startsWith('Deck card must be a') ||
+      error.message.startsWith('growth body must') ||
+      error.message.startsWith('growth entry must') ||
+      error.message.startsWith('Growth target') ||
+      error.message.startsWith('Material card') ||
+      error.message.startsWith('Collection material card not found:') ||
+      error.message.startsWith('Deck growth target not found:') ||
+      error.message.startsWith('At least one material card') ||
+      error.message.startsWith('Material cards must be unique') ||
       error.message.startsWith('stageProgress') ||
       error.message.startsWith('lobby') ||
       error.message.startsWith('resources') ||

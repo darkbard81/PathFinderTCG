@@ -1,4 +1,12 @@
+import type { CardDefinitionFile } from '../save/card-catalog';
 import type { CardInstance } from '../save/types';
+
+/** Stage가 참조하는 적 덱 파일을 실제 정의와 함께 묶은 값이다. */
+export type StageEnemyDeckDefinition = {
+  deckId: string;
+  deckPath: StageEnemyDeckPath;
+  cardDefinitionFile: CardDefinitionFile;
+};
 
 export type StageVictoryCondition =
   { type: 'DEFEAT_ENEMY_LEADER' } | { type: 'SURVIVE_TURNS'; turns: number };

@@ -46,6 +46,7 @@ function createHarness(
         logout,
       } as never,
       saveSlots: {} as never,
+      battle: {} as never,
     },
     backgroundImageUrl: '/tcg/ui/title-screen.png',
     loadedCount: 10,

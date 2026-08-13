@@ -7,6 +7,7 @@ import { createCardTextApiHandler } from '../tools/card-text/server/api';
 import { createAssetsMiddleware } from './assets-middleware';
 import { authenticateHttpRequest, createAuthApiHandler } from './auth-api';
 import { AuthService } from './auth-service';
+import { createBattleApiHandler } from './battle-api';
 import { createSaveSlotsApiHandler, migrateLegacySaveSlots } from './save-slots-api';
 
 type HttpServerLike = {
@@ -51,6 +52,8 @@ function registerMiddlewares(
 
   const handleAuthApi = createAuthApiHandler(authService);
   const handleSaveSlotsApi = createSaveSlotsApiHandler({ authService, dataRoot });
+  // 전투 판정은 이 핸들러 뒤에서만 돈다. 브라우저 번들에는 전투 엔진이 들어가지 않는다.
+  const handleBattleApi = createBattleApiHandler({ authService, dataRoot });
   const handleCardTextApi = options.enableCardTextTool
     ? createCardTextApiHandler({
         authorize: (request, response) => authorizeCardTextTool(authService, request, response),
@@ -69,6 +72,10 @@ function registerMiddlewares(
       }
 
       if (await handleSaveSlotsApi(request, response, next)) {
+        return;
+      }
+
+      if (await handleBattleApi(request, response)) {
         return;
       }
 

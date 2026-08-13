@@ -51,6 +51,7 @@ function createHarness(
     services: {
       auth: { logout: vi.fn() } as never,
       saveSlots: { save } as never,
+      battle: {} as never,
     },
     assetBaseUrl: '/tcg',
     session,

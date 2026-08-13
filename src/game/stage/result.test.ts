@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialBattleRuntime } from '../battle/create-battle-runtime';
+import { createTestBattleRuntime } from '../../server/battle/__fixtures__/create-test-battle-runtime';
 import type { BattleCardRuntimeState, BattleRuntimeState } from '../battle/types';
-import { CARD_DEFINITIONS } from '../save/card-catalog';
+import { CARD_DEFINITIONS } from '../save/card-catalog-data';
 import { createInitialSaveState } from '../save/create-initial-save';
 import { createGameSession, createSaveSlotStateFromGameSession } from '../save/session';
 import type { CardInstance } from '../save/types';
@@ -256,7 +256,7 @@ describe('stage battle result', () => {
   it('does not apply battle participation exp after a defeat', async () => {
     const state = await createInitialSaveState({ slotId: 1 });
     const session = createGameSession(state);
-    const runtime = createInitialBattleRuntime(session, TEST_STAGE_DEFINITION);
+    const runtime = createTestBattleRuntime(session, TEST_STAGE_DEFINITION);
     runtime.phase = 'GAME_OVER';
     runtime.outcome = {
       winner: 'enemy',
@@ -293,7 +293,7 @@ describe('stage battle result', () => {
       cost: session.deck.cards[0]!.instance.cost,
       dominance: session.deck.cards[0]!.instance.dominance,
     };
-    const runtime = createInitialBattleRuntime(session, TEST_STAGE_DEFINITION);
+    const runtime = createTestBattleRuntime(session, TEST_STAGE_DEFINITION);
 
     runtime.player.leader.card.instance.hp = 1;
     runtime.player.leader.card.instance.attack = 1;
@@ -373,7 +373,7 @@ describe('stage battle result', () => {
 
 async function createRuntime(): Promise<BattleRuntimeState> {
   const state = await createInitialSaveState({ slotId: 1 });
-  return createInitialBattleRuntime(
+  return createTestBattleRuntime(
     createGameSession(state),
     TEST_STAGE_DEFINITION,
     PRESERVE_DECK_ORDER,

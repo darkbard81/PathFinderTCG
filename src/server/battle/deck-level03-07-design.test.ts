@@ -8,8 +8,8 @@ import deckLevel05Data from '../../../cards/deck_level05.json';
 import deckLevel06Data from '../../../cards/deck_level06.json';
 import deckLevel07Data from '../../../cards/deck_level07.json';
 import { describe, expect, it } from 'vitest';
-import { requireCardDefinition, type CardDefinitionFile } from '../save/card-catalog';
-import { ALL_CARD_DEFINITIONS } from '../save/auto-card-catalog';
+import { requireCardDefinition, type CardDefinitionFile } from '../../game/save/card-catalog';
+import { ALL_CARD_DEFINITIONS } from '../../game/save/auto-card-catalog';
 import { hasMonsterCoreData, loadMonsterCoreData } from './__fixtures__/monster-core';
 
 /** PF2E 원본 자산은 git 추적 대상이 아니므로 없는 환경에서는 출처 검증을 건너뛴다. */
