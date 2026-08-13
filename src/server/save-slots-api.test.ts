@@ -13,6 +13,7 @@ import {
   createSaveSlotsApiHandler,
   listSaveSlotSummaries,
   migrateLegacySaveSlots,
+  writeAccountSaveSlotState,
 } from './save-slots-api';
 
 function createRequest(method: string, url: string, body?: string): IncomingMessage {
@@ -27,6 +28,8 @@ async function createTestContext(tempRoot: string): Promise<{
   handler: ReturnType<typeof createSaveSlotsApiHandler>;
   request(method: string, url: string, body?: string): IncomingMessage;
   slotsRoot: string;
+  dataRoot: string;
+  accountId: string;
 }> {
   const dataRoot = path.join(tempRoot, 'data');
   const authService = new AuthService({ dataRoot, startCleanupTimer: false });
@@ -43,6 +46,8 @@ async function createTestContext(tempRoot: string): Promise<{
       return request;
     },
     slotsRoot: path.join(dataRoot, 'users', issued.accountId, 'save-slots'),
+    dataRoot,
+    accountId: issued.accountId,
   };
 }
 
@@ -929,6 +934,182 @@ describe('save slots api', () => {
 
     expect(growRes.statusCode()).toBe(400);
     expect(growRes.text()).toContain('Deck growth target not found');
+  });
+
+  describe('카드 구성 검증', () => {
+    async function createSlot() {
+      const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+      const context = await createTestContext(tempRoot);
+      const initRes = createResponse();
+      await context.handler(
+        context.request('POST', '/api/save-slots/1/initialize', JSON.stringify({ saveName: 'T' })),
+        initRes.response,
+        () => undefined,
+      );
+
+      return { ...context, initial: (initRes.json() as { state: SaveSlotState }).state };
+    }
+
+    async function put(
+      context: Awaited<ReturnType<typeof createSlot>>,
+      state: SaveSlotState,
+    ): Promise<{ status: number | undefined; text: string }> {
+      const res = createResponse();
+      await context.handler(
+        context.request('PUT', '/api/save-slots/1', JSON.stringify(state)),
+        res.response,
+        () => undefined,
+      );
+
+      return { status: res.statusCode(), text: res.text() };
+    }
+
+    it('얻지 않은 카드를 보유함에 적어 넣으면 거절한다', async () => {
+      // 보유함의 장비는 전투 유닛에 붙어 전투에 들어간다. 수치가 정직해도 가질 자격은 별개다.
+      const context = await createSlot();
+      const forged = {
+        ...structuredClone(context.initial.deck.cards[0]!),
+        instanceId: 'forged-1',
+        zone: 'COLLECTION' as const,
+      };
+      const result = await put(context, {
+        ...context.initial,
+        collection: { cards: [...context.initial.collection.cards, forged] },
+      });
+
+      expect(result.status).toBe(400);
+      expect(result.text).toContain('Card was not obtained');
+    });
+
+    it('카드를 몰래 지우면 거절한다', async () => {
+      const context = await createSlot();
+      const result = await put(context, {
+        ...context.initial,
+        deck: { ...context.initial.deck, cards: context.initial.deck.cards.slice(1) },
+      });
+
+      expect(result.status).toBe(400);
+      expect(result.text).toContain('Card is missing from the save');
+    });
+
+    it('같은 카드를 두 번 적어 넣으면 거절한다', async () => {
+      const context = await createSlot();
+      const result = await put(context, {
+        ...context.initial,
+        deck: {
+          ...context.initial.deck,
+          cards: [...context.initial.deck.cards, context.initial.deck.cards[0]!],
+        },
+      });
+
+      expect(result.status).toBe(400);
+      expect(result.text).toContain('Duplicate card instanceId');
+    });
+
+    it('instanceId는 그대로 두고 다른 카드로 바꿔치기하면 거절한다', async () => {
+      const context = await createSlot();
+      const other = context.initial.deck.cards.find(
+        (card) => card.id !== context.initial.deck.cards[0]!.id,
+      )!;
+      const result = await put(context, {
+        ...context.initial,
+        deck: {
+          ...context.initial.deck,
+          cards: context.initial.deck.cards.map((card, index) =>
+            index === 0 ? { ...card, id: other.id } : card,
+          ),
+        },
+      });
+
+      expect(result.status).toBe(400);
+      expect(result.text).toContain('Card id changed');
+    });
+
+    it('덱과 보유함 사이 이동은 그대로 통과한다', async () => {
+      const context = await createSlot();
+      const moved = { ...context.initial.deck.cards[0]!, zone: 'COLLECTION' as const };
+      const result = await put(context, {
+        ...context.initial,
+        deck: { ...context.initial.deck, cards: context.initial.deck.cards.slice(1) },
+        collection: { cards: [...context.initial.collection.cards, moved] },
+      });
+
+      expect(result.status).toBe(200);
+    });
+
+    it('리더 자리에는 LEADER 카드만 둘 수 있다', async () => {
+      const context = await createSlot();
+      const unit = context.initial.deck.cards[0]!;
+      const result = await put(context, {
+        ...context.initial,
+        deck: {
+          ...context.initial.deck,
+          leader: { ...unit, zone: 'LEADER' as const },
+          cards: [
+            ...context.initial.deck.cards.slice(1),
+            { ...context.initial.deck.leader, zone: 'DECK' as const },
+          ],
+        },
+      });
+
+      expect(result.status).toBe(400);
+      expect(result.text).toContain('Deck leader must be a LEADER card');
+    });
+
+    it('덱에는 UNIT 카드만 둘 수 있다', async () => {
+      const context = await createSlot();
+      const equipment = context.initial.collection.cards.find((card) => card.type === 'EQUIPMENT');
+      if (!equipment) {
+        return;
+      }
+
+      const result = await put(context, {
+        ...context.initial,
+        deck: {
+          ...context.initial.deck,
+          cards: [...context.initial.deck.cards, { ...equipment, zone: 'DECK' as const }],
+        },
+        collection: {
+          cards: context.initial.collection.cards.filter(
+            (card) => card.instanceId !== equipment.instanceId,
+          ),
+        },
+      });
+
+      expect(result.status).toBe(400);
+      expect(result.text).toContain('Deck card must be a UNIT card');
+    });
+
+    it('서버가 지급한 카드는 다음 저장에서 정상으로 통과한다', async () => {
+      const context = await createSlot();
+      const granted = {
+        ...structuredClone(context.initial.deck.cards[0]!),
+        instanceId: 'granted-1',
+        zone: 'COLLECTION' as const,
+      };
+
+      // 전투 보상처럼 서버가 직접 쓴다. 이 경로에는 보존 검사를 걸지 않는다.
+      await writeAccountSaveSlotState({
+        dataRoot: context.dataRoot,
+        accountId: context.accountId,
+        state: {
+          ...context.initial,
+          collection: { cards: [...context.initial.collection.cards, granted] },
+        },
+      });
+
+      const getRes = createResponse();
+      await context.handler(
+        context.request('GET', '/api/save-slots/1'),
+        getRes.response,
+        () => undefined,
+      );
+      const withReward = getRes.json() as SaveSlotState;
+      expect(withReward.collection.cards.map((card) => card.instanceId)).toContain('granted-1');
+
+      // 브라우저가 그 상태를 그대로 되돌려 보내면 통과해야 한다.
+      expect((await put(context, withReward)).status).toBe(200);
+    });
   });
 
   it('isolates the same slot id between authenticated accounts', async () => {

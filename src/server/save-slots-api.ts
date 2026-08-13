@@ -377,22 +377,80 @@ type ServerOwnedSaveSlotState = {
   createdAt: string;
   /** instanceId별 누적 EXP다. 레벨과 수치가 여기서 나오므로 브라우저가 정할 수 없다. */
   expByInstanceId: ReadonlyMap<string, number>;
+  /** 지금 갖고 있는 카드다. `instanceId → 카드 정의 id`. 브라우저는 이 목록을 바꿀 수 없다. */
+  cardIdByInstanceId: ReadonlyMap<string, string>;
   resources: SaveSlotState['resources'];
   clearedStageIds: readonly string[];
 };
 
+function listAllCards(state: SaveSlotState): CardInstance[] {
+  return [state.deck.leader, ...state.deck.cards, ...state.collection.cards];
+}
+
 function readServerOwnedState(state: SaveSlotState): ServerOwnedSaveSlotState {
   const expByInstanceId = new Map<string, number>();
-  for (const card of [state.deck.leader, ...state.deck.cards, ...state.collection.cards]) {
+  const cardIdByInstanceId = new Map<string, string>();
+  for (const card of listAllCards(state)) {
     expByInstanceId.set(card.instanceId, card.exp ?? 0);
+    cardIdByInstanceId.set(card.instanceId, card.id);
   }
 
   return {
     createdAt: state.createdAt,
     expByInstanceId,
+    cardIdByInstanceId,
     resources: structuredClone(state.resources),
     clearedStageIds: [...state.stageProgress.clearedStageIds],
   };
+}
+
+/**
+ * 브라우저가 보낸 저장본이 갖고 있는 카드를 바꾸지 않았는지 확인한다.
+ *
+ * 브라우저가 할 수 있는 일은 카드를 덱과 보유함 사이로 옮기는 것뿐이다. 카드가 생기고 없어지는 것은
+ * 전투 보상과 재료 성장뿐이고 둘 다 서버가 쓴다. 그래서 저장 요청 앞뒤로 카드 목록은 같아야 한다.
+ *
+ * 여기서 막지 않으면 보유함에 강한 장비를 적어 넣을 수 있다. 장비는 전투 유닛에 붙어 전투에 들어간다.
+ */
+function assertCardsUnchanged(
+  cards: readonly CardInstance[],
+  owned: ServerOwnedSaveSlotState,
+): void {
+  const seen = new Set<string>();
+  for (const card of cards) {
+    if (seen.has(card.instanceId)) {
+      throw new Error(`Duplicate card instanceId: ${card.instanceId}`);
+    }
+    seen.add(card.instanceId);
+
+    const ownedCardId = owned.cardIdByInstanceId.get(card.instanceId);
+    if (ownedCardId === undefined) {
+      throw new Error(`Card was not obtained: ${card.instanceId}`);
+    }
+    if (ownedCardId !== card.id) {
+      throw new Error(`Card id changed for ${card.instanceId}: expected ${ownedCardId}`);
+    }
+  }
+
+  if (seen.size !== owned.cardIdByInstanceId.size) {
+    // 카드를 버리는 방법은 재료 성장뿐이고 그건 서버가 한다. 조용히 사라지면 되돌릴 방법이 없다.
+    throw new Error(
+      `Card is missing from the save: expected ${owned.cardIdByInstanceId.size} cards`,
+    );
+  }
+}
+
+/** 리더 자리에는 LEADER 카드만, 덱에는 UNIT 카드만 둘 수 있다. 덱 편성 화면이 지키는 규칙과 같다. */
+function assertDeckCardTypes(deck: DeckInstance): void {
+  if (deck.leader.type !== 'LEADER') {
+    throw new Error(`Deck leader must be a LEADER card: ${deck.leader.instanceId}`);
+  }
+
+  for (const card of deck.cards) {
+    if (card.type !== 'UNIT') {
+      throw new Error(`Deck card must be a UNIT card: ${card.instanceId}`);
+    }
+  }
 }
 
 function validateSaveSlotState(
@@ -443,6 +501,11 @@ function validateSaveSlotState(
     deck,
     collection,
   );
+  assertDeckCardTypes(deck);
+  if (serverOwned) {
+    assertCardsUnchanged([deck.leader, ...deck.cards, ...collection.cards], serverOwned);
+  }
+
   const stageProgress = normalizeStageProgressState(value.stageProgress);
   const lobby = normalizeLobbyState(value.lobby);
   const resources = normalizeResourceState(value.resources);
@@ -805,6 +868,12 @@ function getErrorStatusCode(error: unknown): number {
       error.message.startsWith('Equipment ') ||
       error.message.startsWith('Duplicate equipment ability:') ||
       error.message.startsWith('Unknown card id in') ||
+      error.message.startsWith('Duplicate card instanceId:') ||
+      error.message.startsWith('Card was not obtained:') ||
+      error.message.startsWith('Card id changed for') ||
+      error.message.startsWith('Card is missing from the save:') ||
+      error.message.startsWith('Deck leader must be a') ||
+      error.message.startsWith('Deck card must be a') ||
       error.message.startsWith('growth body must') ||
       error.message.startsWith('growth entry must') ||
       error.message.startsWith('Growth target') ||
