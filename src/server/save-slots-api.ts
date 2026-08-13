@@ -8,6 +8,8 @@ import {
   requireCardDefinition,
   type CardDefinition,
 } from '../game/save/card-catalog';
+import { canonicalizeCardInstance } from '../game/save/card-stats';
+import { readServerCardDefinitions } from './card-definition-catalog';
 import { migrateLegacyCardTraits, needsCardTraitMigration } from '../game/save/migrate-card-traits';
 import { normalizeSaveName } from '../game/save/save-name';
 import {
@@ -38,6 +40,18 @@ type JsonRecord = Record<string, unknown>;
 const defaultProjectRoot = fileURLToPath(new URL('../..', import.meta.url));
 const defaultDataRoot = path.join(defaultProjectRoot, '.data');
 const defaultSaveSlotsRoot = path.join(defaultDataRoot, 'save-slots');
+/**
+ * 저장본의 카드 수치를 되돌릴 때 기준이 되는 카드 정의다.
+ *
+ * `cards/deck_*.json` 전체를 쓴다. 좁은 카탈로그만 보면 다른 덱에서 얻은 보상 카드를
+ * 모르는 카드로 취급하게 된다. 파일을 한 번만 읽고 재사용한다.
+ */
+let cachedCardDefinitions: readonly CardDefinition[] | null = null;
+
+function readCanonicalCardDefinitions(): readonly CardDefinition[] {
+  cachedCardDefinitions ??= readServerCardDefinitions();
+  return cachedCardDefinitions;
+}
 
 /**
  * `/api/save-slots/...` 요청을 처리하는 공용 API 핸들러를 만든다.
@@ -483,23 +497,43 @@ function validateEquipmentCardsForTarget(
   }
 }
 
+/**
+ * 저장된 카드 한 장을 카탈로그 정의 기준으로 되돌린다.
+ *
+ * 저장 API는 브라우저가 보낸 본문을 그대로 받는다. 그래서 카드 수치를 여기서 다시 계산하지 않으면
+ * 공격력 9999짜리 카드를 저장해 두고 전투를 열 수 있다. 전투 엔진이 서버에 있어도 입력이 오염된다.
+ * 읽을 때도 같은 함수를 지나므로 이미 조작된 저장본도 다음에 읽힐 때 제자리로 돌아온다.
+ */
 function normalizeCardInstance(instance: CardInstance, zone: CardInstance['zone']): CardInstance {
   if (isSchemaCardInstance(instance, zone)) {
-    return migrateCardInstanceTraits(instance);
+    return canonicalizeSchemaCardInstance(migrateCardInstanceTraits(instance), zone);
   }
 
   const legacy = instance as unknown as JsonRecord;
   const definition = requireCardDefinition(String(legacy.definitionId));
-  return {
-    ...structuredClone(definition),
-    level: readIntegerOrDefault(legacy.level, definition.level ?? 1),
-    exp: readIntegerOrDefault(legacy.exp, definition.exp ?? 0),
-    hp: readIntegerOrDefault(legacy.currentHp, definition.hp ?? 0),
-    attack: readIntegerOrDefault(legacy.currentAttack, definition.attack ?? 0),
-    instanceId: String(legacy.instanceId),
-    owner: legacy.owner as CardInstance['owner'],
-    zone,
-  };
+  return canonicalizeCardInstance(
+    {
+      ...structuredClone(definition),
+      exp: readIntegerOrDefault(legacy.exp, definition.exp ?? 0),
+      instanceId: String(legacy.instanceId),
+      owner: legacy.owner as CardInstance['owner'],
+      zone,
+    },
+    definition,
+  );
+}
+
+function canonicalizeSchemaCardInstance(
+  instance: CardInstance,
+  zone: CardInstance['zone'],
+): CardInstance {
+  const definition = findCardDefinition(instance.id, readCanonicalCardDefinitions());
+  if (!definition) {
+    // 카탈로그에 없는 카드는 수치를 되돌릴 기준이 없다. 어느 덱에도 없는 id라 정상 경로로는 생기지 않는다.
+    throw new Error(`Unknown card id in ${zone} zone: ${instance.id}`);
+  }
+
+  return canonicalizeCardInstance(instance, definition);
 }
 
 /** schemaVersion 3 이하로 저장된 카드의 rarity 필드와 구 특성 표현을 canonical ID로 옮긴다. */
@@ -605,6 +639,7 @@ function getErrorStatusCode(error: unknown): number {
       error.message.startsWith('equipment must be an equipment state') ||
       error.message.startsWith('Equipment ') ||
       error.message.startsWith('Duplicate equipment ability:') ||
+      error.message.startsWith('Unknown card id in') ||
       error.message.startsWith('stageProgress') ||
       error.message.startsWith('lobby') ||
       error.message.startsWith('resources') ||

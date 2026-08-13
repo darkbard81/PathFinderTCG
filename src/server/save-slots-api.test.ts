@@ -170,13 +170,6 @@ describe('save slots api', () => {
         ...initBody.state.lobby,
         standingPositionY: -100,
       },
-      deck: {
-        ...initBody.state.deck,
-        leader: {
-          ...initBody.state.deck.leader,
-          hp: initBody.state.deck.leader.hp! - 1,
-        },
-      },
     };
     const putReq = request('PUT', '/api/save-slots/1', JSON.stringify(savedState));
     const putRes = createResponse();
@@ -326,7 +319,8 @@ describe('save slots api', () => {
       id: 'leader_minerva',
       name: '미네르바',
       instanceId: 'leader-legacy',
-      hp: 17,
+      // 저장본이 들고 온 currentHp가 아니라 카탈로그 정의에서 다시 계산한 값이다.
+      hp: 18,
       attack: 2,
     });
     expect(body.schemaVersion).toBe(SAVE_SLOT_SCHEMA_VERSION);
@@ -658,6 +652,122 @@ describe('save slots api', () => {
 
     expect(res.statusCode()).toBe(404);
     expect(res.text()).toBe('Not found');
+  });
+
+  it('조작한 카드 수치는 저장되지 않고 카탈로그 값으로 되돌아온다', async () => {
+    // 전투 엔진이 서버에 있어도 저장본이 오염되면 서버가 그 수치로 전투를 만든다. 그 입구를 막는다.
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+
+    const initReq = request(
+      'POST',
+      '/api/save-slots/1/initialize',
+      JSON.stringify({ saveName: 'T' }),
+    );
+    const initRes = createResponse();
+    await handler(initReq, initRes.response, () => undefined);
+    const initial = (initRes.json() as { state: SaveSlotState }).state;
+    const originalHp = initial.deck.leader.hp;
+    const originalAttack = initial.deck.cards[0]!.attack;
+
+    const tampered: SaveSlotState = {
+      ...initial,
+      deck: {
+        ...initial.deck,
+        leader: { ...initial.deck.leader, hp: 9999, attack: 9999 },
+        cards: initial.deck.cards.map((card, index) =>
+          index === 0 ? { ...card, attack: 9999, dominance: 99, level: 9 } : card,
+        ),
+      },
+    };
+    const putReq = request('PUT', '/api/save-slots/1', JSON.stringify(tampered));
+    const putRes = createResponse();
+    await handler(putReq, putRes.response, () => undefined);
+
+    expect(putRes.statusCode()).toBe(200);
+    const stored = putRes.json() as SaveSlotState;
+    expect(stored.deck.leader.hp).toBe(originalHp);
+    expect(stored.deck.leader.attack).toBe(initial.deck.leader.attack);
+    expect(stored.deck.cards[0]!.attack).toBe(originalAttack);
+    expect(stored.deck.cards[0]!.level).toBe(1);
+
+    // 디스크에 남은 것도 되돌린 값이어야 한다. 다시 읽어 전투를 열 때 쓰이는 값이다.
+    const getReq = request('GET', '/api/save-slots/1');
+    const getRes = createResponse();
+    await handler(getReq, getRes.response, () => undefined);
+    expect((getRes.json() as SaveSlotState).deck.leader.hp).toBe(originalHp);
+  });
+
+  it('조작한 능력과 이름도 카탈로그 정의로 되돌린다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+
+    const initReq = request(
+      'POST',
+      '/api/save-slots/1/initialize',
+      JSON.stringify({ saveName: 'T' }),
+    );
+    const initRes = createResponse();
+    await handler(initReq, initRes.response, () => undefined);
+    const initial = (initRes.json() as { state: SaveSlotState }).state;
+    const original = initial.deck.cards[0]!;
+
+    const tampered: SaveSlotState = {
+      ...initial,
+      deck: {
+        ...initial.deck,
+        cards: initial.deck.cards.map((card, index) =>
+          index === 0
+            ? {
+                ...card,
+                cost: 0,
+                abilities: [
+                  {
+                    id: 'guardian_block',
+                    category: 'GLOBAL' as const,
+                    name: '훔친 능력',
+                    text: '',
+                  },
+                ],
+              }
+            : card,
+        ),
+      },
+    };
+    const putReq = request('PUT', '/api/save-slots/1', JSON.stringify(tampered));
+    const putRes = createResponse();
+    await handler(putReq, putRes.response, () => undefined);
+
+    const stored = (putRes.json() as SaveSlotState).deck.cards[0]!;
+    expect(stored.cost).toBe(original.cost);
+    expect(stored.abilities).toEqual(original.abilities);
+  });
+
+  it('카탈로그에 없는 카드 id는 거절한다', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'save-slots-'));
+    const { handler, request } = await createTestContext(tempRoot);
+
+    const initReq = request(
+      'POST',
+      '/api/save-slots/1/initialize',
+      JSON.stringify({ saveName: 'T' }),
+    );
+    const initRes = createResponse();
+    await handler(initReq, initRes.response, () => undefined);
+    const initial = (initRes.json() as { state: SaveSlotState }).state;
+
+    const forged: SaveSlotState = {
+      ...initial,
+      collection: {
+        cards: [{ ...initial.deck.cards[0]!, id: 'unit_forged_999', zone: 'COLLECTION' as const }],
+      },
+    };
+    const putReq = request('PUT', '/api/save-slots/1', JSON.stringify(forged));
+    const putRes = createResponse();
+    await handler(putReq, putRes.response, () => undefined);
+
+    expect(putRes.statusCode()).toBe(400);
+    expect(putRes.text()).toContain('Unknown card id');
   });
 
   it('isolates the same slot id between authenticated accounts', async () => {
