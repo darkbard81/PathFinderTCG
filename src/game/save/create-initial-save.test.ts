@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_DEFINITIONS } from './card-catalog';
+import { CARD_DEFINITIONS } from './card-catalog-data';
 import { createInitialSaveState } from './create-initial-save';
 import { SAVE_SLOT_SCHEMA_VERSION } from './types';
 

@@ -1,5 +1,5 @@
 import type { GameSession } from '../../../game/save/session';
-import { resolveStageEnemyDeck } from '../../../game/stage/stage-definitions';
+import { resolveStageEnemyDeck } from '../../../game/stage/stage-enemy-decks';
 import type { StageDefinition } from '../../../game/stage/types';
 import type { BattleRuntimeState } from '../../../game/battle/types';
 import { createInitialBattleRuntime } from '../create-battle-runtime';

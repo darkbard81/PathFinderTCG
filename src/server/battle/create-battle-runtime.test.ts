@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import level01DeckData from '../../../cards/deck_level01.json';
 import { requireCardDefinition } from '../../game/save/card-catalog';
+import { KNOWN_CARD_DEFINITIONS } from '../../game/save/card-catalog-data';
 import { createInitialSaveState } from '../../game/save/create-initial-save';
 import { createCardInstanceFromDefinition } from '../../game/save/deck-instancing';
 import {
@@ -96,7 +97,7 @@ describe('createInitialBattleRuntime', () => {
     const state = await createInitialSaveState({ slotId: 1 });
     state.collection.cards.push(
       createCardInstanceFromDefinition({
-        definition: requireCardDefinition('unit_elf_assassin_001'),
+        definition: requireCardDefinition('unit_elf_assassin_001', KNOWN_CARD_DEFINITIONS),
         owner: 'PLAYER',
         zone: 'COLLECTION',
         createId: () => 'collection-card-1',
@@ -128,7 +129,7 @@ describe('createInitialBattleRuntime', () => {
     const state = await createInitialSaveState({ slotId: 1 });
     state.collection.cards.push(
       createCardInstanceFromDefinition({
-        definition: requireCardDefinition('leader_dark_empress'),
+        definition: requireCardDefinition('leader_dark_empress', KNOWN_CARD_DEFINITIONS),
         owner: 'PLAYER',
         zone: 'COLLECTION',
         createId: () => 'leader-reward-1',

@@ -277,7 +277,7 @@ function createEmptySummary(slotId: SaveSlotId) {
 }
 
 function toSaveSlotSummary(state: SaveSlotState) {
-  const leaderDefinition = findCardDefinition(state.deck.leader.id);
+  const leaderDefinition = findCardDefinition(state.deck.leader.id, readCanonicalCardDefinitions());
 
   return {
     slotId: state.slotId,
@@ -711,7 +711,10 @@ function normalizeCardInstance(
   }
 
   const legacy = instance as unknown as JsonRecord;
-  const definition = requireCardDefinition(String(legacy.definitionId));
+  const definition = requireCardDefinition(
+    String(legacy.definitionId),
+    readCanonicalCardDefinitions(),
+  );
   const instanceId = String(legacy.instanceId);
   return canonicalizeCardInstance(
     {

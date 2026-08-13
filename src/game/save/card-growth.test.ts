@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { requireCardDefinition } from './card-catalog';
+import { KNOWN_CARD_DEFINITIONS } from './card-catalog-data';
 import {
   BATTLE_PARTICIPATION_EXP,
   applyBattleParticipationExpToSession,
@@ -184,7 +185,7 @@ async function createSessionWithCollectionCards(
   const state = await createInitialSaveState({ slotId: 1 });
   state.collection.cards = cards.map(([definitionId, instanceId]) =>
     createCardInstanceFromDefinition({
-      definition: requireCardDefinition(definitionId),
+      definition: requireCardDefinition(definitionId, KNOWN_CARD_DEFINITIONS),
       owner: 'PLAYER',
       zone: 'COLLECTION',
       createId: () => instanceId,

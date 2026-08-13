@@ -7,8 +7,9 @@ type ViteGlobImportMeta = ImportMeta & {
 /**
  * 덱 파일을 모으는 일은 번들러가 한다.
  *
- * 그래서 이 모듈은 브라우저 번들 안에서만 import 할 수 있다. 번들 밖의 Node 서버는
- * `src/server/card-definition-catalog.ts`가 같은 파일들을 디스크에서 읽어 같은 규칙으로 합친다.
+ * 서버·테스트 전용이다. 브라우저는 저장 인스턴스에서 정의를 만들므로 이 모듈을 import 하지 않는다.
+ * 번들 밖의 Node 서버는 `src/server/card-definition-catalog.ts`가 같은 파일들을 디스크에서 읽어
+ * 같은 규칙으로 합친다.
  */
 const deckDefinitionData = (import.meta as ViteGlobImportMeta).glob<unknown>(
   '../../../cards/deck_*.json',

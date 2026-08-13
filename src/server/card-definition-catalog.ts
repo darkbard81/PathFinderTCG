@@ -12,8 +12,8 @@ const defaultProjectRoot = fileURLToPath(new URL('../..', import.meta.url));
 /**
  * `cards/deck_*.json`을 디스크에서 모아 서버가 쓸 카드 정의를 만든다.
  *
- * 브라우저는 같은 파일을 번들러가 모아 준다. 서버는 그 번들 밖에서 돌아 직접 읽어야 하고,
- * 합치는 규칙은 같은 함수를 써서 양쪽이 다른 카드를 보지 않게 한다.
+ * 브라우저는 카드 JSON을 번들에 넣지 않는다. 서버는 번들 밖에서 돌아 직접 읽어야 하고,
+ * 합치는 규칙은 테스트용 `auto-card-catalog.ts`와 같은 함수를 써서 다른 카드를 보지 않게 한다.
  */
 export function readServerCardDefinitions(
   projectRoot: string = defaultProjectRoot,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTestBattleRuntime } from '../../server/battle/__fixtures__/create-test-battle-runtime';
 import type { BattleCardRuntimeState, BattleRuntimeState } from '../battle/types';
-import { CARD_DEFINITIONS } from '../save/card-catalog';
+import { CARD_DEFINITIONS } from '../save/card-catalog-data';
 import { createInitialSaveState } from '../save/create-initial-save';
 import { createGameSession, createSaveSlotStateFromGameSession } from '../save/session';
 import type { CardInstance } from '../save/types';

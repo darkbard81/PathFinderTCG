@@ -11,10 +11,8 @@ import { createRuntimeId } from '../../../game/save/runtime-id';
 import { createSaveSlotStateFromGameSession, type GameSession } from '../../../game/save/session';
 import type { SaveSlotState } from '../../../game/save/types';
 import { applyBattleResultToSaveSlot } from '../apply-battle-result';
-import {
-  requireStageDefinition,
-  resolveStageEnemyDeck,
-} from '../../../game/stage/stage-definitions';
+import { requireStageDefinition } from '../../../game/stage/stage-definitions';
+import { resolveStageEnemyDeck } from '../../../game/stage/stage-enemy-decks';
 import { BattleSession } from '../battle-session';
 
 export type LocalBattleServiceOptions = {

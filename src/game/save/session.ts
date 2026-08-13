@@ -1,22 +1,28 @@
-import { ALL_CARD_DEFINITIONS } from './auto-card-catalog';
 import type { CardDefinition } from './card-catalog';
 import {
+  createCardDefinitionFromInstance,
   createGameSession as createGameSessionWithCatalog,
   type GameSession,
 } from './session-core';
-import type { SaveSlotState } from './types';
+import type { CardInstance, SaveSlotState } from './types';
 
 /**
- * 번들러가 모은 카드 정의를 기본값으로 쓰는 세션 생성기다.
+ * 저장 인스턴스에서 카드 정의를 만들어 세션을 연다.
  *
- * 규칙과 변환은 전부 `session-core.ts`에 있고 여기서는 기본 카탈로그만 붙인다.
- * 번들 밖에서 도는 서버는 이 모듈 대신 `session-core.ts`를 직접 쓰고 정의를 넘긴다.
+ * 규칙과 변환은 `session-core.ts`에 있다. 브라우저는 카드 JSON을 번들에 넣지 않고,
+ * 서버가 맞춰 둔 인스턴스 필드만 화면 정의로 쓴다. 번들 밖에서 도는 서버는 이 모듈 대신
+ * `session-core.ts`를 직접 쓰고 카탈로그 정의를 넘긴다.
  */
-export function createGameSession(
-  state: SaveSlotState,
-  cardDefinitions: readonly CardDefinition[] = ALL_CARD_DEFINITIONS,
-): GameSession {
-  return createGameSessionWithCatalog(state, cardDefinitions);
+export function createGameSession(state: SaveSlotState): GameSession {
+  return createGameSessionWithCatalog(state, createCardDefinitionsFromSaveState(state));
+}
+
+function createCardDefinitionsFromSaveState(state: SaveSlotState): CardDefinition[] {
+  return collectSaveCardInstances(state).map(createCardDefinitionFromInstance);
+}
+
+function collectSaveCardInstances(state: SaveSlotState): CardInstance[] {
+  return [state.deck.leader, ...state.deck.cards, ...state.collection.cards];
 }
 
 export { createSaveSlotStateFromGameSession, findSessionCard } from './session-core';

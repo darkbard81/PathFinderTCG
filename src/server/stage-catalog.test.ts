@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { listStageDefinitions, resolveStageEnemyDeck } from '../game/stage/stage-definitions';
+import { listStageDefinitions } from '../game/stage/stage-definitions';
+import { resolveStageEnemyDeck } from '../game/stage/stage-enemy-decks';
 import { readServerCardDefinitions } from './card-definition-catalog';
 import { StageCatalog } from './stage-catalog';
 
 /**
- * 서버는 Stage와 카드 정의를 디스크에서 직접 읽는다. 브라우저는 번들러가 모아 준다.
- * 두 경로가 갈라지면 화면과 서버가 서로 다른 판을 보게 되므로 결과가 같은지 확인한다.
+ * 서버는 Stage와 카드 정의를 디스크에서 직접 읽는다. Stage 목록은 브라우저 번들과 같고,
+ * 적 덱은 테스트용 번들 카탈로그와 같아야 한다. 갈라지면 화면과 서버가 다른 판을 본다.
  */
 describe('StageCatalog', () => {
   const catalog = new StageCatalog();
@@ -14,7 +15,7 @@ describe('StageCatalog', () => {
     expect(catalog.listStages()).toEqual(listStageDefinitions());
   });
 
-  it('브라우저 카탈로그와 같은 적 덱을 찾는다', () => {
+  it('번들 적 덱 카탈로그와 같은 적 덱을 찾는다', () => {
     for (const stage of listStageDefinitions()) {
       expect(catalog.resolveEnemyDeck(stage)).toEqual(resolveStageEnemyDeck(stage));
     }

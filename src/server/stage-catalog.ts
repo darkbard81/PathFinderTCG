@@ -14,9 +14,9 @@ const defaultProjectRoot = fileURLToPath(new URL('../..', import.meta.url));
 /**
  * Stage 정의와 적 덱을 저장소 파일에서 직접 읽는다.
  *
- * 브라우저 쪽 `stage-definitions.ts`는 번들러가 파일을 모아 주지만, 이 코드는 그 번들 밖의
- * Node에서 돌아 같은 방법을 쓸 수 없다. 검증은 같은 `loadStageDefinitions`를 통과시켜
- * 양쪽이 서로 다른 규칙으로 Stage를 읽는 일이 없게 한다.
+ * 브라우저 쪽 `stage-definitions.ts`는 Stage 메타데이터만 번들러가 모아 준다. 적 덱 JSON은
+ * 이 카탈로그가 디스크에서 읽고, 테스트는 `stage-enemy-decks.ts`가 같은 파일을 번들로 모은다.
+ * Stage 목록 검증은 같은 `loadStageDefinitions`를 통과시켜 규칙이 갈라지지 않게 한다.
  */
 export class StageCatalog {
   private readonly stageDefinitions: readonly StageDefinition[];

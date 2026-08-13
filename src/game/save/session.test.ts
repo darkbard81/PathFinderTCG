@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_DEFINITIONS } from './card-catalog';
+import { CARD_DEFINITIONS } from './card-catalog-data';
 import { createInitialSaveState } from './create-initial-save';
 import { createGameSession, createSaveSlotStateFromGameSession } from './session';
+import { createGameSession as createGameSessionWithCatalog } from './session-core';
 import { SAVE_SLOT_SCHEMA_VERSION } from './types';
 
 describe('createGameSession', () => {
@@ -26,7 +27,18 @@ describe('createGameSession', () => {
     });
   });
 
-  it('throws when a definitionId cannot be resolved', async () => {
+  it('builds card definitions from saved instances', async () => {
+    const state = await createInitialSaveState({ slotId: 1 });
+    state.deck.leader.name = '인스턴스 이름';
+
+    const session = createGameSession(state);
+
+    expect(session.deck.leader.definition.id).toBe(state.deck.leader.id);
+    expect(session.deck.leader.definition.name).toBe('인스턴스 이름');
+    expect(session.deck.leader.definition.hp).toBe(state.deck.leader.hp);
+  });
+
+  it('throws when a catalog cannot resolve a definitionId', async () => {
     const state = await createInitialSaveState({ slotId: 1 });
     const brokenState = {
       ...state,
@@ -39,7 +51,7 @@ describe('createGameSession', () => {
       },
     };
 
-    expect(() => createGameSession(brokenState)).toThrow(
+    expect(() => createGameSessionWithCatalog(brokenState, CARD_DEFINITIONS)).toThrow(
       'Unknown card definitionId: missing_definition',
     );
   });

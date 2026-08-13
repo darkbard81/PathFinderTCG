@@ -45,7 +45,7 @@ export type GameSession = {
  * 저장 슬롯 상태를 화면과 전투가 쓰는 런타임 세션으로 만든다.
  *
  * 카드 정의를 받아서 쓴다. 어디서 모은 정의인지는 부르는 쪽이 정한다.
- * 브라우저는 번들러가 모은 것을, 서버는 저장소에서 직접 읽은 것을 넘긴다.
+ * 브라우저는 저장 인스턴스에서 만든 정의를, 서버는 카탈로그에서 읽은 정의를 넘긴다.
  */
 export function createGameSession(
   state: SaveSlotState,
@@ -180,7 +180,13 @@ function createSavedCardInstance(instance: CardInstance, zone: CardInstance['zon
   return saved;
 }
 
-function createCardDefinitionFromInstance(instance: CardInstance): CardDefinition {
+/**
+ * 저장 인스턴스에 이미 들어 있는 표시·수치 필드로 카드 정의를 만든다.
+ *
+ * 카탈로그 JSON이 없을 때 화면이 쓰는 경로다. 성장이 반영된 현재 값이므로
+ * 레벨 1 기준 수치와 비교해야 하면 서버 카탈로그를 써야 한다.
+ */
+export function createCardDefinitionFromInstance(instance: CardInstance): CardDefinition {
   const definition: CardDefinition = {
     id: instance.id,
     name: instance.name,

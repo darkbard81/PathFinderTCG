@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { requireCardDefinition, type CardDefinition } from './card-catalog';
+import { KNOWN_CARD_DEFINITIONS } from './card-catalog-data';
 import { createCardInstanceFromDefinition } from './deck-instancing';
 import { createInitialSaveState } from './create-initial-save';
 import {
@@ -146,7 +147,7 @@ describe('deck building card movement', () => {
       collection: {
         cards: [
           createRuntimeCard(
-            requireCardDefinition('leader_dark_empress'),
+            requireCardDefinition('leader_dark_empress', KNOWN_CARD_DEFINITIONS),
             'leader-reward-1',
             'COLLECTION',
           ),
@@ -183,7 +184,7 @@ async function createSessionWithCollectionCard(
   instanceId: string,
 ): Promise<GameSession> {
   const state = await createInitialSaveState({ slotId: 1 });
-  const definition = requireCardDefinition(definitionId);
+  const definition = requireCardDefinition(definitionId, KNOWN_CARD_DEFINITIONS);
   state.collection.cards = [
     createCardInstanceFromDefinition({
       definition,

@@ -3,7 +3,8 @@ import type { BattlePublicState } from '../../game/battle/protocol';
 import type { BattleRuntimeState, BattleSlotId } from '../../game/battle/types';
 import { createInitialSaveState } from '../../game/save/create-initial-save';
 import { createGameSession, type GameSession } from '../../game/save/session';
-import { requireStageDefinition, resolveStageEnemyDeck } from '../../game/stage/stage-definitions';
+import { requireStageDefinition } from '../../game/stage/stage-definitions';
+import { resolveStageEnemyDeck } from '../../game/stage/stage-enemy-decks';
 import { createTestBattleRuntime } from './__fixtures__/create-test-battle-runtime';
 import { BattleCommandError, BattleSession } from './battle-session';
 

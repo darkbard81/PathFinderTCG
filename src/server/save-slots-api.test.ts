@@ -4,7 +4,7 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, expect, it } from 'vitest';
-import { CARD_DEFINITIONS } from '../game/save/card-catalog';
+import { CARD_DEFINITIONS } from '../game/save/card-catalog-data';
 import { createInitialSaveState } from '../game/save/create-initial-save';
 import { SAVE_SLOT_SCHEMA_VERSION, type SaveSlotState } from '../game/save/types';
 import { AUTH_SESSION_COOKIE_NAME } from './auth-api';
