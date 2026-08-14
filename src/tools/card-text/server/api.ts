@@ -4,6 +4,11 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import {
+  readCardTextInclusionFromPayload,
+  writeCardTextInclusionToParams,
+  type CardTextInclusion,
+} from '../text-inclusion';
 import { launchCaptureBrowser } from './playwright-browser';
 
 const projectRoot = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -133,6 +138,7 @@ type SaveAreaPayload = {
   artImage?: string;
   referenceImage?: string;
   artOffsetY?: number;
+  inclusion: CardTextInclusion;
 };
 
 const defaultTextArea: TextAreaRegion = {
@@ -343,6 +349,7 @@ async function handleCardTextToolRequest(
           artImage,
           referenceImage,
           artOffsetY,
+          inclusion: payload.inclusion,
           captureOrigin: options.resolveCaptureOrigin(),
         });
 
@@ -507,6 +514,7 @@ async function renderCardByScreenshot(input: {
   artImage: string;
   referenceImage: string;
   artOffsetY: number;
+  inclusion: CardTextInclusion;
   captureOrigin: string;
 }): Promise<void> {
   const captureId = crypto.randomUUID();
@@ -528,6 +536,7 @@ async function renderCardByScreenshot(input: {
   captureUrl.searchParams.set('artImage', input.artImage);
   captureUrl.searchParams.set('referenceImage', input.referenceImage);
   captureUrl.searchParams.set('artOffsetY', String(input.artOffsetY));
+  writeCardTextInclusionToParams(captureUrl.searchParams, input.inclusion);
 
   // 브라우저 실행 자체가 실패해도 pendingCaptures 항목은 반드시 회수한다.
   // 남아 있는 captureId는 무인증 조회를 계속 통과시키는 열쇠가 된다.
@@ -874,6 +883,7 @@ function validateAreaPayload(value: unknown): SaveAreaPayload {
     ...(typeof value.artImage === 'string' ? { artImage: value.artImage } : {}),
     ...(typeof value.referenceImage === 'string' ? { referenceImage: value.referenceImage } : {}),
     ...(typeof value.artOffsetY === 'number' ? { artOffsetY: value.artOffsetY } : {}),
+    inclusion: readCardTextInclusionFromPayload(value),
   };
 }
 

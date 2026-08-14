@@ -102,6 +102,17 @@ select {
   cursor: grabbing;
 }
 
+/*
+ * 이미지에서 빠지는 영역. 편집기에서는 위치를 계속 잡을 수 있어야 하므로
+ * 지우지 않고 흐리게만 남기고, 캡처 화면에서만 통째로 감춘다.
+ */
+.text-area.excluded {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+  opacity: 0.42;
+}
+
 .name-text-area {
   display: flex;
   align-items: center;
@@ -191,6 +202,28 @@ select {
   border-color: #263b2a;
   background: #263b2a;
   color: white;
+}
+
+.toggles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #334231;
+  cursor: pointer;
+}
+
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #263b2a;
+  cursor: pointer;
 }
 
 .controls {
@@ -302,6 +335,10 @@ body.capture .panel {
 
 body.capture .text-area.active {
   outline: 0;
+}
+
+body.capture .text-area.excluded {
+  display: none;
 }
 
 body.capture .resize-handle {

@@ -1,4 +1,10 @@
 import './styles.css';
+import {
+  ABILITY_TEXT_INCLUSION_PARAM,
+  NAME_TEXT_INCLUSION_PARAM,
+  readCardTextInclusionFromParams,
+  type CardTextInclusion,
+} from '../text-inclusion';
 
 const RUNTIME_FONT_FAMILY = 'CardTextRuntime';
 const urlParams = new URLSearchParams(window.location.search);
@@ -165,6 +171,16 @@ app.innerHTML = `
         <button type="button" data-area-tab="ability" class="active">어빌리티</button>
         <button type="button" data-area-tab="name">이름</button>
       </div>
+      <div class="toggles" aria-label="이미지에 포함할 영역">
+        <label class="toggle">
+          <input type="checkbox" data-include="ability" checked />
+          어빌리티 텍스트 포함
+        </label>
+        <label class="toggle">
+          <input type="checkbox" data-include="name" checked />
+          이름 텍스트 포함
+        </label>
+      </div>
       <div class="controls">
         <div class="field">
           <label for="x">X</label>
@@ -221,6 +237,10 @@ const fields = {
   height: mustQuery<HTMLInputElement>('[data-field="height"]'),
 };
 const areaTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-area-tab]'));
+const includeToggles: Record<AreaKey, HTMLInputElement> = {
+  ability: mustQuery<HTMLInputElement>('[data-include="ability"]'),
+  name: mustQuery<HTMLInputElement>('[data-include="name"]'),
+};
 
 let editorData: EditorData | null = null;
 let abilityArea: TextAreaRegion | null = null;
@@ -235,6 +255,8 @@ let currentDeckId = INITIAL_DECK_ID ?? '';
 let currentCardId = INITIAL_CARD_ID ?? '';
 let activeAreaKey: AreaKey = 'ability';
 let dragState: DragState | null = null;
+/** 캡처 모드에서는 서버가 URL로 넘긴 값이, 편집 모드에서는 토글이 결정한다. */
+let textInclusion: CardTextInclusion = readCardTextInclusionFromParams(urlParams);
 
 void initialize();
 
@@ -245,6 +267,7 @@ void initialize();
 async function initialize(): Promise<void> {
   window.__CARD_TEXT_TOOL_READY = false;
   document.body.classList.toggle('capture', isCaptureMode);
+  renderIncludeToggles();
   setBusy(true);
   setStatus('데이터를 불러오는 중입니다.');
 
@@ -318,6 +341,14 @@ function bindEvents(): void {
       area.width = clamp(readNumber(fields.width), 120, editorData.canvas.width - area.x);
       area.height = clamp(readNumber(fields.height), 48, editorData.canvas.height - area.y);
       renderAreas();
+    });
+  });
+
+  (Object.keys(includeToggles) as AreaKey[]).forEach((key) => {
+    includeToggles[key].addEventListener('change', () => {
+      textInclusion = { ...textInclusion, [key]: includeToggles[key].checked };
+      renderIncludeToggles();
+      setStatus(describeTextInclusion());
     });
   });
 
@@ -590,6 +621,8 @@ async function generateCardImage(input: {
     artImage: input.artImage,
     referenceImage: input.referenceImage,
     artOffsetY: input.artOffsetY,
+    [ABILITY_TEXT_INCLUSION_PARAM]: textInclusion.ability,
+    [NAME_TEXT_INCLUSION_PARAM]: textInclusion.name,
   });
 
   return (await response.json()) as { outputPath: string; outputUrl: string };
@@ -856,6 +889,31 @@ function renderActiveAreaFields(): void {
     tab.classList.toggle('active', tab.dataset.areaTab === activeAreaKey);
   });
   textPreviewElement.textContent = getActiveTextPreview();
+}
+
+/**
+ * 포함 토글의 체크 상태와 미리보기 표시를 맞춘다.
+ * 빠지는 영역은 편집기에서 흐리게 남겨 위치를 계속 잡을 수 있게 두고,
+ * 실제 캡처 화면에서는 CSS가 통째로 감춘다.
+ */
+function renderIncludeToggles(): void {
+  includeToggles.ability.checked = textInclusion.ability;
+  includeToggles.name.checked = textInclusion.name;
+  textAreaElement.classList.toggle('excluded', !textInclusion.ability);
+  nameTextAreaElement.classList.toggle('excluded', !textInclusion.name);
+}
+
+function describeTextInclusion(): string {
+  const excluded = [
+    textInclusion.ability ? null : '어빌리티',
+    textInclusion.name ? null : '이름',
+  ].filter((label): label is string => label !== null);
+
+  if (excluded.length === 0) {
+    return '두 텍스트 영역을 모두 이미지에 넣습니다.';
+  }
+
+  return `${excluded.join(', ')} 텍스트를 이미지에서 뺍니다. 편집기에서는 위치를 잡을 수 있도록 흐리게 남습니다.`;
 }
 
 /**
@@ -1144,6 +1202,8 @@ function setBusy(isBusy: boolean): void {
   artSelect.disabled = isBusy;
   referenceSelect.disabled = isBusy;
   artOffsetYInput.disabled = isBusy;
+  includeToggles.ability.disabled = isBusy;
+  includeToggles.name.disabled = isBusy;
 }
 
 function setStatus(message: string): void {

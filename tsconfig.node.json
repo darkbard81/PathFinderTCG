@@ -22,6 +22,7 @@
     "src/game/**/*.ts",
     "src/testing/**/*.ts",
     "src/tools/card-text/access.ts",
+    "src/tools/card-text/text-inclusion.ts",
     "src/tools/card-text/server/**/*.ts",
     "cards/**/*.json",
     "vite.config.ts"
