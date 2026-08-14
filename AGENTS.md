@@ -52,7 +52,7 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 - `npm run test` / `npx vitest run <test-file...>`: 전체 또는 변경 범위 테스트
 - `npm run lint`, `npm run format`, `npm run format:check`
 - `npm run check`: typecheck, lint, format:check, test 최종 gate
-- `npm run assets:build`: **아직 없다.** `sharp` 의존이 필요하며, 현재는 준비된 자산 트리의 `assets.json`을 그대로 쓴다
+- `npm run assets:build`: `assets/` 아래 런타임 자산을 훑어 `assets.json`을 다시 쓴다. **자동으로 돌지 않는 수작업 단계다.** 카드 이미지를 다시 굽거나 자산을 갈아 끼웠으면 직접 돌린다
 
 무관한 파일까지 바꾸는 전체 포맷은 피한다. 필요하면 수정 파일만 Prettier로 정리하고 최종 gate에서 `npm run format:check`를 실행한다.
 
@@ -181,7 +181,8 @@ PixiJS API가 확실하지 않으면 기억으로 쓰지 말고 `pixijs-skills` 
 
 - 카드 변경은 `cards/card.schema.json`, 스테이지 변경은 `cards/stage.schema.json`과 기존 loader를 따른다. schema 변경은 사용자에게 확인한다.
 - 저장 데이터는 schema version과 validation을 유지한다. 전투 중 mutation을 위해 저장 세션의 카드 인스턴스 참조를 공유하지 않는다.
-- `assets/assets.json` 생성기는 아직 없다. 자산을 바꿔야 하면 준비된 자산 트리를 직접 갱신한다. `assets/assets.json`, 로컬 이미지·폰트·영상은 커밋 대상이 아니다.
+- `assets/assets.json`은 `npm run assets:build`가 만든다. 자산 파일을 바꾼 뒤 이 명령을 돌리는 것은 **수작업 단계이며, 아무도 대신 해주지 않는다.** 카드 텍스트 도구도 webp만 덮어쓰고 manifest는 건드리지 않는다. `assets/assets.json`, 로컬 이미지·폰트·영상은 커밋 대상이 아니다.
+- 자산 URL의 `?v=<revision>`은 `assets.json`의 내용 해시에서 나오고, 서버는 그 값이 맞을 때만 `immutable`을 준다(`src/server/assets-middleware.ts`). **manifest를 갱신하지 않으면 URL이 그대로여서 브라우저가 낡은 그림을 1년 동안 다시 묻지 않는다.** 자산을 바꿨는데 화면이 그대로면 이것부터 의심한다.
 - fresh clone에는 런타임 `assets/`와 `.data/`가 없을 수 있다. 존재한다고 가정하거나 임의 fixture로 커밋하지 않는다.
 - `/tcg`, `/api/save-slots`, `/api/card-text-tool` 또는 Vite middleware 순서를 바꾸면 해당 서버 테스트와 두 HTML build input을 모두 확인한다.
 - 경로, URL, JSON 입출력에는 Node·Web 표준 API를 사용하고 traversal, malformed input, 네트워크 실패를 명시적으로 처리한다.
