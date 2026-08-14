@@ -17,11 +17,33 @@ export type AssetsMiddleware = (
   next: () => void,
 ) => Promise<boolean>;
 
+export type AssetsMiddlewareOptions = {
+  /**
+   * 카드 자산을 내줘도 되는 요청인지 본다.
+   * 응답을 마감하지 않는다. 거절은 이 미들웨어가 401로 처리한다.
+   */
+  authorizeCardAssets: (request: IncomingMessage) => boolean;
+};
+
+/** 로그인한 요청에만 내주는 자산 경로다. */
+const SESSION_REQUIRED_PATH_PREFIX = 'cards/';
+
+/**
+ * 세션을 요구하는 자산인지 본다.
+ *
+ * 카드 그림에는 이름·수치·능력 텍스트가 그려져 있다. 카드 정의 JSON을 브라우저
+ * 번들에서 뺀 것과 같은 이유로 이쪽도 로그인 뒤에만 내준다.
+ * `ui/`와 `sound/`는 연다. 로그인 화면의 배경과 BGM이 세션 이전에 필요하다.
+ */
+export function requiresSessionForAsset(requestedPath: string): boolean {
+  return requestedPath.replace(/^\/+/, '').toLowerCase().startsWith(SESSION_REQUIRED_PATH_PREFIX);
+}
+
 /**
  * 자산 base URL 아래의 정적 자산과 `assets.json`을 처리하는 미들웨어를 만든다.
  * 경로 계산은 repo root 기준이므로 `assets/`가 `src/` 아래로 끌려가지 않는다.
  */
-export function createAssetsMiddleware(): AssetsMiddleware {
+export function createAssetsMiddleware(options: AssetsMiddlewareOptions): AssetsMiddleware {
   return async (request, response, next) => {
     const url = new URL(request.url ?? '/', 'http://localhost');
     const assetBaseUrl = normalizeAssetBaseUrl(appConfig.assets.assetBaseUrl);
@@ -46,6 +68,14 @@ export function createAssetsMiddleware(): AssetsMiddleware {
         response.statusCode = 404;
         response.end('Not found');
       }
+      return true;
+    }
+
+    // 파일을 찾기 전에 막는다. 없는 경로에까지 존재 여부를 알려 줄 이유가 없다.
+    if (requiresSessionForAsset(requestedPath) && !options.authorizeCardAssets(request)) {
+      response.statusCode = 401;
+      response.setHeader('Cache-Control', 'no-store');
+      response.end('Unauthorized');
       return true;
     }
 

@@ -3,9 +3,13 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 import { appConfig } from '../config';
 import { CARD_TEXT_TOOL_ACCOUNT_ID } from '../tools/card-text/access';
-import { createCardTextApiHandler } from '../tools/card-text/server/api';
+import {
+  CARD_TEXT_CAPTURE_HEADER,
+  createCardTextApiHandler,
+  hasPendingCapture,
+} from '../tools/card-text/server/api';
 import { createAssetsMiddleware } from './assets-middleware';
-import { authenticateHttpRequest, createAuthApiHandler } from './auth-api';
+import { authenticateHttpRequest, createAuthApiHandler, hasActiveSession } from './auth-api';
 import { AuthService } from './auth-service';
 import { createBattleApiHandler } from './battle-api';
 import { createSaveSlotsApiHandler, migrateLegacySaveSlots } from './save-slots-api';
@@ -38,7 +42,6 @@ function registerMiddlewares(
   options: { enableCardTextTool: boolean },
 ): void {
   const { dataRoot } = appConfig.storage;
-  const handleAssets = createAssetsMiddleware();
   const authService = new AuthService({
     dataRoot,
     migrateFirstAccount: async (targetSaveSlotsRoot) =>
@@ -49,6 +52,19 @@ function registerMiddlewares(
   });
 
   httpServer?.once('close', () => authService.dispose());
+
+  /*
+   * 카드 자산은 로그인한 요청에만 내준다.
+   *
+   * 카드 텍스트 도구의 캡처 브라우저는 세션 쿠키가 없는 새 컨텍스트라 두 번째 길을 둔다.
+   * 그 id는 인가된 generate만 발급하고 캡처가 끝나면 폐기되며, 도구를 닫아 둔
+   * preview 서버에서는 발급 자체가 없으므로 이 길도 함께 닫힌다.
+   */
+  const handleAssets = createAssetsMiddleware({
+    authorizeCardAssets: (request) =>
+      hasActiveSession(authService, request) ||
+      (options.enableCardTextTool && hasPendingCapture(readCaptureId(request))),
+  });
 
   const handleAuthApi = createAuthApiHandler(authService);
   const handleSaveSlotsApi = createSaveSlotsApiHandler({ authService, dataRoot });
@@ -89,6 +105,11 @@ function registerMiddlewares(
       next(error as Error);
     });
   });
+}
+
+function readCaptureId(request: IncomingMessage): string | undefined {
+  const header = request.headers[CARD_TEXT_CAPTURE_HEADER];
+  return Array.isArray(header) ? header[0] : header;
 }
 
 /**

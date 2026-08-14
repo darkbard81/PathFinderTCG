@@ -102,6 +102,18 @@ export function authenticateHttpRequest(
   return account;
 }
 
+/**
+ * 쿠키 세션이 살아 있는지만 본다. 응답을 건드리지 않고 만료도 늘리지 않는다.
+ *
+ * 자산 요청처럼 한 화면에 수십 번 오는 경로가 쓴다. 그때마다 쿠키를 다시 굽거나
+ * 세션을 연장할 이유가 없고, 오래 캐시되는 응답에 Set-Cookie가 섞이면 안 된다.
+ * 세션 연장은 게임 API와 heartbeat가 이미 맡고 있다.
+ */
+export function hasActiveSession(authService: AuthService, request: IncomingMessage): boolean {
+  const token = readSessionToken(request);
+  return token !== null && authService.authenticate(token, false) !== null;
+}
+
 async function readCredentials(request: IncomingMessage): Promise<AuthCredentials> {
   const body = await readRequestJson(request);
   if (!isRecord(body) || typeof body.id !== 'string' || typeof body.password !== 'string') {

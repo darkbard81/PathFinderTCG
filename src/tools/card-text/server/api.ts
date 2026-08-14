@@ -32,6 +32,15 @@ const pendingCaptures = new Map<
   }
 >();
 
+/**
+ * 캡처 브라우저가 자기 요청임을 밝히는 헤더다.
+ *
+ * 캡처 페이지는 세션 쿠키가 없는 새 컨텍스트라 `cards/` 아래 자산을 받지 못한다.
+ * 페이지가 받아 가는 그림마다 주소를 고쳐 다니는 대신, 그 컨텍스트의 모든 요청에
+ * 이 헤더를 달아 자산 미들웨어가 한 자리에서 판단하게 한다.
+ */
+export const CARD_TEXT_CAPTURE_HEADER = 'x-card-text-capture';
+
 type JsonRecord = Record<string, unknown>;
 
 type AssetsManifest = {
@@ -196,6 +205,16 @@ export type CardTextApiOptions = {
   /** 캡처 브라우저가 접속할 origin이다. 실제 리스닝 주소에서 만든다. */
   resolveCaptureOrigin: () => string;
 };
+
+/**
+ * 진행 중인 캡처가 발급받은 id인지 본다.
+ *
+ * 인가된 generate만 이 id를 만들고, 캡처가 끝나면 즉시 폐기된다. 그래서 이 값이
+ * 맞는 요청은 그 캡처가 보낸 것으로 보고 자산 미들웨어가 통과시킨다.
+ */
+export function hasPendingCapture(captureId: string | undefined): boolean {
+  return captureId !== undefined && captureId !== '' && pendingCaptures.has(captureId);
+}
 
 /**
  * `/api/card-text-tool/...` 요청을 처리하는 전용 API 핸들러를 만든다.
@@ -550,6 +569,8 @@ async function renderCardByScreenshot(input: {
           height: input.canvas.height,
         },
         deviceScaleFactor: 1,
+        // 이 컨텍스트에는 세션 쿠키가 없다. 카드 자산은 이 헤더로만 통과한다.
+        extraHTTPHeaders: { [CARD_TEXT_CAPTURE_HEADER]: captureId },
       });
 
       await page.goto(captureUrl.href, { waitUntil: 'networkidle' });
