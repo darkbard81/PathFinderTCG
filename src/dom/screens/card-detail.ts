@@ -28,11 +28,6 @@ export type CardDetailAbility = {
  */
 export type CardDetail = {
   tile: CardTile;
-  /**
-   * 확대해서 볼 원화다. 틀과 수치를 얹기 전의 그림이라 인물이 가리지 않는다.
-   * 타일이 쓰는 webp는 512x768에 틀까지 얹혀 있어 크게 띄울 그림이 아니다.
-   */
-  originalUrl: string;
   typeLabel: string;
   traits: CardDetailTrait[];
   abilities: CardDetailAbility[];
@@ -66,7 +61,6 @@ export function toCardDetail(card: RuntimeCardInstance, assetBaseUrl: string): C
 
   return {
     tile: toCardTile(card, assetBaseUrl),
-    originalUrl: `${assetBaseUrl}/cards/arts/${definition.id}.png`,
     typeLabel: TYPE_LABELS[definition.type] ?? definition.type,
     traits: definition.traits.map((traitId) => {
       const trait = findTraitDefinition(traitId);
@@ -132,7 +126,7 @@ export function createCardDetailView(options: CardDetailViewOptions): CardDetail
   const art = document.createElement('button');
   art.type = 'button';
   art.className = 'pf-card-detail__art';
-  art.setAttribute('aria-label', '원화 크게 보기');
+  art.setAttribute('aria-label', '카드 원본 크게 보기');
   art.setAttribute('aria-expanded', 'false');
 
   const artImage = document.createElement('img');
@@ -240,7 +234,7 @@ export function createCardDetailView(options: CardDetailViewOptions): CardDetail
       }
 
       artImage.src = detail.tile.artUrl;
-      overlay.setSource(detail.originalUrl, detail.tile.name);
+      overlay.setSource(detail.tile.artUrl, detail.tile.name);
       name.textContent = detail.tile.name;
       meta.textContent = [
         detail.typeLabel,
@@ -265,10 +259,11 @@ export function createCardDetailView(options: CardDetailViewOptions): CardDetail
 }
 
 /**
- * 원본 그림을 크게 띄우는 판을 만든다.
+ * 카드 원본을 크게 띄우는 판을 만든다.
  *
- * 원화는 장당 2~3MB다. 패널을 열 때마다 받으면 아무도 안 누르는 그림에 그 값을 치른다.
- * 그래서 처음 누를 때까지 주소를 걸지 않는다.
+ * 타일과 같은 카드 webp를 쓴다. 프리로드 번들에 들어 있어 누르는 즉시 뜨고,
+ * 틀과 수치까지 얹힌 완성 카드라 상세에서 읽고 싶은 것이 다 들어 있다.
+ * 주소는 처음 누를 때 건다. 열지도 않을 판에 큰 그림을 먼저 물릴 이유가 없다.
  *
  * 닫기는 판 아무 곳이나 누르면 된다. 원본을 확인하려고 잠깐 여는 자리라
  * 닫기 버튼을 찾아 누르게 할 이유가 없다. Escape도 함께 받는다.
@@ -318,7 +313,7 @@ function createOriginalOverlay(trigger: HTMLElement): {
     root,
     setSource: (nextUrl, name) => {
       url = nextUrl;
-      root.setAttribute('aria-label', `${name} 원화`);
+      root.setAttribute('aria-label', `${name} 카드 원본`);
     },
     open: () => {
       if (!url) {
