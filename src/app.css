@@ -1,0 +1,36 @@
+/*
+ * 앱 뿌리 상자. 캔버스와 DOM 오버레이가 모두 이 안에 들어간다.
+ *
+ * iPhone은 세로에서 상태표시줄 자리를 비워 두고 가로에서는 그 자리를 없앤다.
+ * 홈 화면 앱(standalone)에서는 그 자리를 브라우저가 아니라 페이지가 떠안는데,
+ * 회전 직후 WebKit이 예전 방향의 원점을 얼마간 그대로 들고 있어 화면 전체가
+ * 상태표시줄 높이만큼 내려간 채로 굳는다.
+ *
+ * 그래서 viewport-fit=cover로 화면 전체를 받아 두고, 비워 둘 자리는 여기서
+ * env()로 직접 잰다. 브라우저가 원점을 옮겨 주기를 기다리지 않으므로 회전 뒤
+ * 값이 늦게 와도 어긋난 채로 남지 않는다. iPad처럼 회전해도 안전영역이
+ * 그대로인 기기에서는 값이 안 바뀌므로 동작이 달라지지 않는다.
+ *
+ * 캔버스 크기는 이 상자의 clientWidth/clientHeight에서 나온다. 여기 값이 바뀌면
+ * 캔버스도 따라 바뀐다(`src/pixi/app/create-app.ts`).
+ */
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#app {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: env(safe-area-inset-left, 0px);
+  overflow: hidden;
+}
+
+/* 캔버스는 기본이 inline이라 baseline 아래 여백이 붙는다. 그만큼 상자를 넘긴다. */
+#app > canvas {
+  display: block;
+}

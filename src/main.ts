@@ -1,3 +1,4 @@
+import './app.css';
 import { DomLayer } from './dom/DomLayer';
 import { loadThemeFont } from './dom/theme-font';
 import { fetchAssetsManifest, joinAssetUrl } from './game/assets/manifest';
@@ -45,14 +46,9 @@ void (async (): Promise<void> => {
     throw new Error('#app element not found');
   }
 
-  document.body.style.margin = '0';
-  document.body.style.overflow = 'hidden';
   document.body.style.background = UI_THEME.colors.background.css;
-  mount.style.width = '100vw';
-  mount.style.height = '100vh';
-  mount.style.position = 'relative';
 
-  const pixi = await createPixiApp();
+  const pixi = await createPixiApp(mount);
   mount.replaceChildren(pixi.app.canvas);
 
   const domLayer = new DomLayer(mount);
