@@ -28,8 +28,22 @@ describe('selectPreloadAssets', () => {
     });
 
     expect(selectPreloadAssets(manifest)).toEqual([
-      { alias: 'ui.title', src: '/tcg/ui/title.webp', kind: 'texture' },
-      { alias: 'motion.attack', src: '/tcg/motion/attack/card.webm', kind: 'video' },
+      { alias: 'ui.title', src: '/tcg/ui/title.webp?v=a', kind: 'texture' },
+      { alias: 'motion.attack', src: '/tcg/motion/attack/card.webm?v=c', kind: 'video' },
+    ]);
+  });
+
+  it('카드 그림은 확장자가 맞아도 제외한다', () => {
+    const manifest = createManifest({
+      textures: [
+        { key: 'cards.art', path: 'cards/webp/card.webp', revision: 'a' },
+        { key: 'cards.badge', path: 'cards/badge/cost.webp', revision: 'b' },
+      ],
+    });
+
+    // 카드 그림은 DOM <img>가 그린다. Pixi에 올려 두면 아무도 안 쓰는 텍스처만 남는다.
+    expect(selectPreloadAssets(manifest)).toEqual([
+      { alias: 'cards.badge', src: '/tcg/cards/badge/cost.webp?v=b', kind: 'texture' },
     ]);
   });
 
@@ -47,7 +61,7 @@ describe('selectPreloadAssets', () => {
       textures: [{ key: 'ui.title', path: '/ui/title.webp', revision: 'a' }],
     });
 
-    expect(selectPreloadAssets(manifest)[0]?.src).toBe('/static/tcg/ui/title.webp');
+    expect(selectPreloadAssets(manifest)[0]?.src).toBe('/static/tcg/ui/title.webp?v=a');
   });
 
   it('대상이 없으면 빈 목록을 반환한다', () => {

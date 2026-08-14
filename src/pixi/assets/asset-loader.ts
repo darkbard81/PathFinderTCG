@@ -1,4 +1,5 @@
 import { Assets, type UnresolvedAsset } from 'pixi.js';
+import { rememberAssetRevisions } from '../../game/assets/asset-revisions';
 import { fetchAssetsManifest } from '../../game/assets/manifest';
 import { selectPreloadAssets, type PreloadAsset } from './preload-assets';
 
@@ -35,6 +36,8 @@ export async function preloadManifestAssets(
 ): Promise<PreloadResult> {
   callbacks.onStatus?.('Requesting assets.json');
   const manifest = await fetchAssetsManifest(assetBaseUrl);
+  // 프리로드에서 빠진 자산도 화면이 URL을 지을 때 revision을 붙일 수 있어야 한다.
+  rememberAssetRevisions(manifest);
   const assets = selectPreloadAssets(manifest);
 
   if (assets.length === 0) {

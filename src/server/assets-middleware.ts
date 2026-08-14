@@ -4,6 +4,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { appConfig } from '../config';
+import { ASSET_REVISION_QUERY_KEY } from '../game/assets/asset-revisions';
 import { normalizeAssetBaseUrl, type AssetsManifest } from '../game/assets/manifest';
 
 const projectRoot = fileURLToPath(new URL('../..', import.meta.url));
@@ -62,11 +63,14 @@ export function createAssetsMiddleware(): AssetsMiddleware {
         return true;
       }
 
-      const etag = buildETag(await findRevision(filePath), stats);
+      const revision = await findRevision(filePath);
+      const etag = buildETag(revision, stats);
 
       response.setHeader('Content-Type', getMimeType(filePath));
-      // max-age=0라 브라우저는 매번 물으러 온다. 그 물음에 ETag로 304를 준다.
-      response.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+      response.setHeader(
+        'Cache-Control',
+        resolveCacheControl(url.searchParams.get(ASSET_REVISION_QUERY_KEY), revision),
+      );
       response.setHeader('ETag', etag);
       // 비디오 요소는 Range로 받아 간다. 206을 돌려주지 않으면 탐색이 막힌다.
       response.setHeader('Accept-Ranges', 'bytes');
@@ -160,6 +164,29 @@ async function findRevision(filePath: string): Promise<string | undefined> {
 /** manifest가 쓰는 assets 루트 기준 슬래시 경로로 바꾼다. */
 function toManifestPath(filePath: string): string {
   return path.relative(assetsRoot, filePath).split(path.sep).join('/');
+}
+
+/**
+ * 이 응답을 얼마나 캐시해도 되는지 정한다.
+ *
+ * URL에 지금 revision이 박혀 있으면 그 URL은 다른 내용을 가리킬 수 없다. 자산을 다시
+ * 구우면 revision이 바뀌어 URL 자체가 달라지기 때문이다. 그때만 오래 캐시하게 둔다.
+ * 카드 그림은 화면을 옮길 때마다 `<img>`가 다시 붙어서, 재검증만 남겨 두면 캐시에
+ * 있어도 조건부 요청 왕복을 매번 치른다.
+ *
+ * 값이 없거나 어긋나면 오늘처럼 매번 물어보게 둔다. 손으로 친 주소나 낡은 목록을 든
+ * 클라이언트가 오래된 그림을 캐시에 굳히지 못하게 하는 쪽이 중요하다.
+ */
+export function resolveCacheControl(
+  requestedRevision: string | null,
+  revision: string | undefined,
+): string {
+  if (revision && requestedRevision === revision) {
+    return 'public, max-age=31536000, immutable';
+  }
+
+  // max-age=0라 브라우저는 매번 물으러 온다. 그 물음에 ETag로 304를 준다.
+  return 'public, max-age=0, must-revalidate';
 }
 
 /**

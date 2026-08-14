@@ -1,11 +1,40 @@
 import type { Stats } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildETag, getMimeType, isSoundAssetPath, matchesIfNoneMatch } from './assets-middleware';
+import {
+  buildETag,
+  getMimeType,
+  isSoundAssetPath,
+  matchesIfNoneMatch,
+  resolveCacheControl,
+} from './assets-middleware';
 
 function createStats(size: number, mtimeMs: number): Stats {
   return { size, mtimeMs } as Stats;
 }
+
+const IMMUTABLE = 'public, max-age=31536000, immutable';
+const REVALIDATE = 'public, max-age=0, must-revalidate';
+
+describe('assets middleware Cache-Control', () => {
+  it('caches for a year when the URL pins the current revision', () => {
+    expect(resolveCacheControl('d85add142f48', 'd85add142f48')).toBe(IMMUTABLE);
+  });
+
+  it('revalidates when the URL carries no revision', () => {
+    expect(resolveCacheControl(null, 'd85add142f48')).toBe(REVALIDATE);
+  });
+
+  it('revalidates when the pinned revision is stale', () => {
+    // 낡은 목록을 든 클라이언트가 지난 그림을 캐시에 굳히지 못하게 한다.
+    expect(resolveCacheControl('old', 'd85add142f48')).toBe(REVALIDATE);
+  });
+
+  it('revalidates assets that are not in the manifest', () => {
+    expect(resolveCacheControl('anything', undefined)).toBe(REVALIDATE);
+    expect(resolveCacheControl(null, undefined)).toBe(REVALIDATE);
+  });
+});
 
 describe('assets middleware ETag', () => {
   it('uses the manifest revision as a strong ETag', () => {

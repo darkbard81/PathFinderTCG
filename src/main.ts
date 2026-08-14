@@ -1,6 +1,8 @@
 import './app.css';
 import { DomLayer } from './dom/DomLayer';
+import { buildCardArtUrl } from './dom/screens/card-tile';
 import { loadThemeFont } from './dom/theme-font';
+import { warmImages } from './dom/warm-images';
 import { fetchAssetsManifest, joinAssetUrl } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
 import type { BgmTrack, VoiceTrack } from './game/sound/playlist';
@@ -274,10 +276,26 @@ void (async (): Promise<void> => {
           void showTitle(message);
         },
         onSessionReady: (session) => {
+          warmOwnedCardArt(session);
           void showLobby(session);
         },
       }),
     );
+  }
+
+  /**
+   * 슬롯을 고른 순간 보유 카드 그림을 배경에서 받아 둔다.
+   *
+   * 부팅 프리로드는 UI만 받는다. 어느 카드를 볼지는 슬롯을 골라야 정해지는데,
+   * 그 답이 나오는 자리가 여기다. 기다리지 않는다. 로비는 바로 열리고, 아직 안 온
+   * 그림은 카드 뒷면이 대신 지킨다.
+   *
+   * 덱의 리더는 컬렉션에 없을 수 있어 따로 넣는다. 같은 주소는 받는 쪽에서 한 번만 받는다.
+   */
+  function warmOwnedCardArt(session: GameSession): void {
+    const cards = [...session.collection.cards, session.deck.leader, ...session.deck.cards];
+
+    void warmImages(cards.map((card) => buildCardArtUrl(ASSET_BASE_URL, card.definition.id)));
   }
 
   function showLobby(session: GameSession): Promise<void> {

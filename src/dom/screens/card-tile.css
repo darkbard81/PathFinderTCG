@@ -9,6 +9,13 @@
   font-family: inherit;
   background: var(--pf-card-tile-fallback-background);
   /*
+   * 앞면이 오기 전까지 깔아 두는 카드 뒷면이다. 뷰가 --pf-card-tile-back에 번들 주소를 넣는다.
+   * 타일 안쪽 상자가 정확히 2:3이라 늘어나지 않는다. 변수가 비면 위의 그라디언트만 남는다.
+   */
+  background-image: var(--pf-card-tile-back, none);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  /*
    * 테두리를 border가 아니라 outline으로 그린다.
    * border는 안쪽 상자를 1px씩 깎는다. 그러면 이미지가 놓이는 칸이 2:3에서 어긋나고
    * object-fit: fill이 그 어긋난 칸에 맞춰 그림을 늘린다.
@@ -61,6 +68,23 @@
    */
   object-fit: fill;
   display: block;
+  /*
+   * 그림이 도착하기 전에는 감춘다. 아래에 깔린 카드 뒷면이 그 자리를 지킨다.
+   * 빈 칸이 번쩍였다가 한 장씩 채워지는 대신, 뒤집힌 카드가 앞면으로 바뀐다.
+   */
+  opacity: 0;
+}
+
+/* 페이드는 나타날 때만 건다. 지울 때 남으면 다음 그림이 오는 사이에 이전 것이 비친다. */
+.pf-card-tile__image.is-ready {
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-card-tile__image.is-ready {
+    transition: none;
+  }
 }
 
 .pf-card-tile__chip {

@@ -1,3 +1,5 @@
+import cardBackUrl from '../../assets/ui/card-back.webp';
+import { resolveAssetUrl } from '../../game/assets/asset-revisions';
 import type { RuntimeCardInstance } from '../../game/save/session';
 import './card-tile.css';
 
@@ -26,6 +28,14 @@ export type CardTile = {
 export const ORB_STATS = ['dominance', 'cost', 'hp', 'attack'] as const;
 
 export type OrbStat = (typeof ORB_STATS)[number];
+
+/**
+ * 카드 앞면 그림의 URL을 만든다.
+ * 미리 받아 두는 쪽과 화면에 붙이는 쪽이 같은 주소를 써야 캐시 항목이 갈리지 않는다.
+ */
+export function buildCardArtUrl(assetBaseUrl: string, cardId: string): string {
+  return resolveAssetUrl(assetBaseUrl, `cards/webp/${cardId}.webp`);
+}
 
 /** 수치 배지 하나의 이미지 URL을 만든다. */
 export function buildOrbBadgeUrl(badgeBaseUrl: string, stat: OrbStat): string {
@@ -60,6 +70,8 @@ export function createCardTileElement(
   // 썸네일 크기에서는 이미지 속 이름을 읽을 수 없다. 접근성 이름과 툴팁으로 보완한다.
   element.title = formatCardTileLabel(tile, options.note);
   element.setAttribute('aria-label', element.title);
+  // 뒷면 그림은 번들 자산이라 경로를 CSS에 적을 수 없다. 뒷면을 깐 뒤 앞면이 그 위에 뜬다.
+  element.style.setProperty('--pf-card-tile-back', `url("${cardBackUrl}")`);
 
   const image = document.createElement('img');
   image.className = 'pf-card-tile__image';
@@ -68,9 +80,15 @@ export function createCardTileElement(
   image.loading = 'lazy';
   // 이미지는 브라우저 기본 드래그 대상이다. 켜 두면 전장에서 우리 포인터 드래그가 pointercancel로 끊긴다.
   image.draggable = false;
-  // 이미지가 없으면 배경 그라디언트만 남긴다. 수치는 그대로 읽을 수 있다.
+  image.addEventListener('load', () => image.classList.add('is-ready'));
+  // 이미지가 없으면 뒷면만 남는다. 수치는 그 위에 그대로 읽을 수 있다.
   image.addEventListener('error', () => image.remove());
   element.append(image);
+
+  // 캐시에서 바로 온 그림은 load가 이미 끝나 있어 이벤트가 오지 않는다.
+  if (image.complete && image.naturalWidth > 0) {
+    image.classList.add('is-ready');
+  }
 
   if (options.chip) {
     const chip = document.createElement('span');
@@ -144,7 +162,7 @@ export function toCardTile(card: RuntimeCardInstance, assetBaseUrl: string): Car
     attack: readStat(instance.attack, definition.attack),
     hp: readStat(instance.hp, definition.hp),
     level: readStat(instance.level, definition.level),
-    artUrl: `${assetRoot}/cards/webp/${definition.id}.webp`,
+    artUrl: buildCardArtUrl(assetBaseUrl, definition.id),
     badgeBaseUrl: `${assetRoot}/cards/badge`,
   };
 }

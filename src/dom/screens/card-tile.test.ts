@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { forgetAssetRevisions, rememberAssetRevisions } from '../../game/assets/asset-revisions';
 import type { CardDefinition } from '../../game/save/card-catalog';
 import type { RuntimeCardInstance } from '../../game/save/session';
 import {
@@ -62,6 +63,29 @@ describe('toCardTile', () => {
 
     expect(result.artUrl).toBe('/tcg/cards/webp/leader_minerva.webp');
     expect(result.badgeBaseUrl).toBe('/tcg/cards/badge');
+  });
+
+  it('manifest를 읽어 둔 뒤에는 카드 이미지 URL에 revision이 붙는다', () => {
+    // 이 질의가 있어야 서버가 immutable을 준다. 없으면 화면을 옮길 때마다 재검증한다.
+    rememberAssetRevisions({
+      assetBaseUrl: '/tcg',
+      textures: [
+        { key: 'cards.minerva', path: 'cards/webp/leader_minerva.webp', revision: 'abc123' },
+      ],
+      videos: [],
+      audio: [],
+      manifestRevision: 'rev',
+      schemaVersion: 3,
+      revisionAlgorithm: 'sha1',
+    });
+
+    try {
+      expect(toCardTile(runtimeCard({ id: 'leader_minerva' }), '/tcg').artUrl).toBe(
+        '/tcg/cards/webp/leader_minerva.webp?v=abc123',
+      );
+    } finally {
+      forgetAssetRevisions();
+    }
   });
 });
 
