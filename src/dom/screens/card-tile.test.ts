@@ -1,11 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { forgetAssetRevisions, rememberAssetRevisions } from '../../game/assets/asset-revisions';
 import type { CardDefinition } from '../../game/save/card-catalog';
 import type { RuntimeCardInstance } from '../../game/save/session';
 import {
   ORB_STATS,
   buildOrbBadgeUrl,
+  forgetLoadedCardArt,
   formatCardTileLabel,
+  isCardArtLoaded,
+  rememberLoadedCardArt,
   toCardTile,
   type CardTile,
 } from './card-tile';
@@ -86,6 +89,27 @@ describe('toCardTile', () => {
     } finally {
       forgetAssetRevisions();
     }
+  });
+});
+
+describe('카드 그림 로딩 기억', () => {
+  afterEach(() => {
+    forgetLoadedCardArt();
+  });
+
+  it('받아 본 그림만 이미 본 것으로 센다', () => {
+    // 전장은 갱신마다 타일을 새로 만든다. 이 기억이 없으면 그때마다 페이드가 다시 걸린다.
+    expect(isCardArtLoaded('/tcg/cards/webp/a.webp?v=1')).toBe(false);
+
+    rememberLoadedCardArt('/tcg/cards/webp/a.webp?v=1');
+
+    expect(isCardArtLoaded('/tcg/cards/webp/a.webp?v=1')).toBe(true);
+  });
+
+  it('카드를 다시 구워 revision이 바뀌면 처음으로 돌아간다', () => {
+    rememberLoadedCardArt('/tcg/cards/webp/a.webp?v=1');
+
+    expect(isCardArtLoaded('/tcg/cards/webp/a.webp?v=2')).toBe(false);
   });
 });
 

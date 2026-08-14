@@ -53,6 +53,32 @@ export type CardTileOptions = {
 };
 
 /**
+ * 이번 세션에서 한 번이라도 다 받아진 카드 그림이다.
+ * 주소가 revision까지 포함하므로, 카드를 다시 구워 주소가 바뀌면 다시 처음으로 돌아간다.
+ */
+const loadedArtUrls = new Set<string>();
+
+/**
+ * 이 그림을 이미 본 적이 있는지 본다. 있으면 타일은 페이드 없이 바로 앞면을 보여 준다.
+ *
+ * 전장은 상태가 바뀔 때마다 손패와 보드 타일을 `replaceChildren`으로 새로 만든다.
+ * 새 `<img>`는 캐시에서 오더라도 `load`가 다음 틱에 오기 때문에, 그때마다 페이드를
+ * 처음부터 다시 걸면 카드 전체가 깜박인다. 뒷면은 아직 못 본 그림에만 필요하다.
+ */
+export function isCardArtLoaded(artUrl: string): boolean {
+  return loadedArtUrls.has(artUrl);
+}
+
+export function rememberLoadedCardArt(artUrl: string): void {
+  loadedArtUrls.add(artUrl);
+}
+
+/** 테스트가 상태를 되돌릴 때 쓴다. 런타임에서는 부를 일이 없다. */
+export function forgetLoadedCardArt(): void {
+  loadedArtUrls.clear();
+}
+
+/**
  * 카드 이미지를 통째로 깔고 수치만 얹은 타일을 만든다.
  * 수치가 없는 항목은 그리지 않아 비어 있는 수정구슬이 그대로 보이게 둔다.
  */
@@ -80,15 +106,15 @@ export function createCardTileElement(
   image.loading = 'lazy';
   // 이미지는 브라우저 기본 드래그 대상이다. 켜 두면 전장에서 우리 포인터 드래그가 pointercancel로 끊긴다.
   image.draggable = false;
-  image.addEventListener('load', () => image.classList.add('is-ready'));
+  // 이미 본 그림은 페이드 없이 처음부터 보여 준다. 왜인지는 isCardArtLoaded에 적었다.
+  image.classList.toggle('is-ready', isCardArtLoaded(tile.artUrl));
+  image.addEventListener('load', () => {
+    rememberLoadedCardArt(tile.artUrl);
+    image.classList.add('is-ready');
+  });
   // 이미지가 없으면 뒷면만 남는다. 수치는 그 위에 그대로 읽을 수 있다.
   image.addEventListener('error', () => image.remove());
   element.append(image);
-
-  // 캐시에서 바로 온 그림은 load가 이미 끝나 있어 이벤트가 오지 않는다.
-  if (image.complete && image.naturalWidth > 0) {
-    image.classList.add('is-ready');
-  }
 
   if (options.chip) {
     const chip = document.createElement('span');
