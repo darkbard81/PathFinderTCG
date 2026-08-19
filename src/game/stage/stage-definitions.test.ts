@@ -29,6 +29,8 @@ const TEST_STAGE_DATA = {
     },
   },
   unlock: { type: 'ALWAYS' },
+  startAdv: null,
+  endAdv: null,
   battleBgmId: null,
 } satisfies StageDefinition;
 
@@ -54,6 +56,8 @@ describe('stage definitions', () => {
         },
       },
       unlock: { type: 'ALWAYS' },
+      startAdv: null,
+      endAdv: null,
       battleBgmId: null,
     });
   });
@@ -84,6 +88,20 @@ describe('stage definitions', () => {
       unlock: { type: 'ALWAYS' },
       // 전투 곡은 스테이지 데이터가 정한다. 정렬순서 3번 곡이 첫 스테이지에 붙는다.
       battleBgmId: 'pf2etcg-intro',
+      startAdv: expect.objectContaining({
+        beats: expect.arrayContaining([
+          expect.objectContaining({ cutsceneAssetKey: 'adv.level01.start.cutscene' }),
+          expect.objectContaining({ speaker: '우쭈링' }),
+          expect.objectContaining({ speaker: '주인공' }),
+        ]),
+      }),
+      endAdv: expect.objectContaining({
+        beats: expect.arrayContaining([
+          expect.objectContaining({ cutsceneAssetKey: 'adv.level01.end.cutscene' }),
+          expect.objectContaining({ faceAssetKey: 'adv.level01.shared.ujjuring-face-startled' }),
+          expect.objectContaining({ standings: [] }),
+        ]),
+      }),
     });
     expect(enemyDeck.deckId).toBe('deck-enemy-level01');
     expect(enemyDeck.deckPath).toBe('cards/deck_level01.json');
@@ -251,6 +269,8 @@ function createStageData(overrides: Record<string, unknown> = {}): Record<string
       },
     },
     unlock: { type: 'ALWAYS' },
+    startAdv: null,
+    endAdv: null,
     battleBgmId: null,
     ...overrides,
   };
@@ -289,5 +309,178 @@ describe('전투 BGM', () => {
       .filter((trackId): trackId is string => trackId !== null);
 
     expect(new Set(assigned).size).toBe(assigned.length);
+  });
+});
+
+describe('Stage ADV', () => {
+  const validAdv = {
+    beats: [
+      {
+        speaker: '우쭈링',
+        text: '앉아. 덱 들어.',
+        faceAssetKey: 'adv.level01.shared.ujjuring-face-taunt',
+        cutsceneAssetKey: 'adv.level01.start.cutscene',
+        standings: [{ assetKey: 'adv.level01.shared.ujjuring-standing', position: 'center' }],
+      },
+    ],
+  };
+
+  it('정상 Start와 End 정의를 읽는다', () => {
+    const [stage] = loadStageDefinitions({
+      'cards/stages/stage_adv.json': createStageData({ startAdv: validAdv, endAdv: validAdv }),
+    });
+
+    expect(stage?.startAdv).toEqual(validAdv);
+    expect(stage?.endAdv).toEqual(validAdv);
+  });
+
+  it('누락하거나 null이면 ADV가 없는 것으로 맞춘다', () => {
+    const stages = loadStageDefinitions({
+      'cards/stages/stage_missing.json': createStageData({
+        id: 'missing',
+        order: 1,
+        startAdv: undefined,
+        endAdv: undefined,
+      }),
+      'cards/stages/stage_null.json': createStageData({
+        id: 'null',
+        order: 2,
+        startAdv: null,
+        endAdv: null,
+      }),
+    });
+
+    expect(stages.map((stage) => [stage.startAdv, stage.endAdv])).toEqual([
+      [null, null],
+      [null, null],
+    ]);
+  });
+
+  it('adv.* 밖의 자산 키를 거부한다', () => {
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_bad_adv.json': createStageData({
+          startAdv: {
+            beats: [{ ...validAdv.beats[0], cutsceneAssetKey: 'ui.title-screen' }],
+          },
+        }),
+      }),
+    ).toThrow('cutsceneAssetKey must be an adv.* asset key');
+  });
+
+  it('빈 자산 키와 잘못된 스탠딩 위치를 거부한다', () => {
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_empty_key.json': createStageData({
+          startAdv: { beats: [{ ...validAdv.beats[0], cutsceneAssetKey: '' }] },
+        }),
+      }),
+    ).toThrow('cutsceneAssetKey must be an adv.* asset key');
+
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_bad_position.json': createStageData({
+          startAdv: {
+            beats: [
+              {
+                ...validAdv.beats[0],
+                standings: [{ ...validAdv.beats[0]!.standings[0], position: 'front' }],
+              },
+            ],
+          },
+        }),
+      }),
+    ).toThrow('position is not supported: front');
+  });
+
+  it('빈 대사 목록과 빈 본문을 거부한다', () => {
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_empty_beats.json': createStageData({
+          startAdv: { ...validAdv, beats: [] },
+        }),
+      }),
+    ).toThrow('beats must contain at least one beat');
+
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_empty_text.json': createStageData({
+          startAdv: {
+            ...validAdv,
+            beats: [{ ...validAdv.beats[0], text: '' }],
+          },
+        }),
+      }),
+    ).toThrow('beats[0].text must be a non-empty string');
+  });
+
+  it('한 beat 안의 중복 스탠딩 위치를 거부한다', () => {
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_duplicate_position.json': createStageData({
+          startAdv: {
+            beats: [
+              {
+                ...validAdv.beats[0],
+                standings: [
+                  validAdv.beats[0]!.standings[0],
+                  { assetKey: 'adv.level01.shared.companion-standing', position: 'center' },
+                ],
+              },
+            ],
+          },
+        }),
+      }),
+    ).toThrow('beats[0].standings has duplicate position: center');
+  });
+
+  it('첫 beat 뒤에는 visual 변경분을 생략하거나 새 상태로 바꿀 수 있다', () => {
+    const changedAdv = {
+      beats: [
+        validAdv.beats[0],
+        {
+          speaker: null,
+          text: '같은 화면을 유지한다.',
+          faceAssetKey: null,
+        },
+        {
+          speaker: null,
+          text: '장면이 바뀐다.',
+          faceAssetKey: null,
+          cutsceneAssetKey: 'adv.level01.start.cutscene-next',
+          standings: [],
+        },
+      ],
+    };
+
+    const [stage] = loadStageDefinitions({
+      'cards/stages/stage_adv_changes.json': createStageData({ startAdv: changedAdv }),
+    });
+
+    expect(stage?.startAdv).toEqual(changedAdv);
+    expect(stage?.startAdv?.beats[1]).not.toHaveProperty('cutsceneAssetKey');
+    expect(stage?.startAdv?.beats[1]).not.toHaveProperty('standings');
+    expect(stage?.startAdv?.beats[2]).toMatchObject({
+      cutsceneAssetKey: 'adv.level01.start.cutscene-next',
+      standings: [],
+    });
+  });
+
+  it('첫 beat에 초기 컷씬이 없으면 거부한다', () => {
+    const firstBeat = validAdv.beats[0]!;
+    const firstBeatWithoutCutscene = {
+      speaker: firstBeat.speaker,
+      text: firstBeat.text,
+      faceAssetKey: firstBeat.faceAssetKey,
+      standings: firstBeat.standings,
+    };
+
+    expect(() =>
+      loadStageDefinitions({
+        'cards/stages/stage_missing_initial_cutscene.json': createStageData({
+          startAdv: { beats: [firstBeatWithoutCutscene] },
+        }),
+      }),
+    ).toThrow('beats[0].cutsceneAssetKey must be an adv.* asset key');
   });
 });

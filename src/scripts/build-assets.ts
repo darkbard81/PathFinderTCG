@@ -29,7 +29,7 @@ const manifestBase = {
  * 않는다. 여기 올리는 것은 revision을 얻기 위해서다. 그래야 4MB짜리 BGM이 내용 해시로
  * 강한 ETag를 받아, 자산 트리를 다시 받아 mtime만 바뀌어도 재다운로드되지 않는다.
  */
-const runtimeAssetDirs = ['cards/webp', 'cards/badge', 'cards/standing', 'ui', 'sound'];
+const runtimeAssetDirs = ['adv', 'cards/webp', 'cards/badge', 'cards/standing', 'ui', 'sound'];
 
 /**
  * 런타임 자산이 아니라 다른 자산을 만들기 위한 원본이라 manifest에 올리지 않는다.

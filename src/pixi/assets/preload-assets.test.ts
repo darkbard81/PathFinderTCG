@@ -47,6 +47,23 @@ describe('selectPreloadAssets', () => {
     ]);
   });
 
+  it('ADV 이미지는 화면 진입 번들에서 받으므로 부팅 프리로드에서 제외한다', () => {
+    const manifest = createManifest({
+      textures: [
+        {
+          key: 'adv.level01.start.cutscene',
+          path: 'adv/level01/start/cutscene.webp',
+          revision: 'a',
+        },
+        { key: 'ui.title', path: 'ui/title.webp', revision: 'b' },
+      ],
+    });
+
+    expect(selectPreloadAssets(manifest)).toEqual([
+      { alias: 'ui.title', src: '/tcg/ui/title.webp?v=b', kind: 'texture' },
+    ]);
+  });
+
   it('대문자 확장자도 동일하게 인식한다', () => {
     const manifest = createManifest({
       textures: [{ key: 'ui.title', path: 'ui/TITLE.WEBP', revision: 'a' }],

@@ -1,0 +1,130 @@
+.pf-adv {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.pf-adv[data-state='ready'] {
+  cursor: pointer;
+}
+
+.pf-adv__standings {
+  position: absolute;
+  inset: 2% 3% 21%;
+}
+
+.pf-adv__standing {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+  width: min(38%, 420px);
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 12px 18px var(--pf-color-black));
+  user-select: none;
+}
+
+.pf-adv__standing[data-position='left'] {
+  left: 0;
+  object-position: left bottom;
+}
+
+.pf-adv__standing[data-position='center'] {
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
+.pf-adv__standing[data-position='right'] {
+  right: 0;
+  object-position: right bottom;
+}
+
+.pf-adv__interface {
+  position: absolute;
+  right: 4%;
+  bottom: 3%;
+  left: 4%;
+  z-index: 3;
+  display: grid;
+  gap: var(--pf-space-sm);
+  pointer-events: none;
+}
+
+.pf-adv__dialog {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--pf-space-md);
+  height: 176px;
+  padding: var(--pf-space-md);
+  box-sizing: border-box;
+  border: 2px solid color-mix(in srgb, var(--pf-color-accent) 82%, transparent);
+  border-radius: 10px;
+  background: var(--pf-surface-modal);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--pf-color-black) 72%, transparent);
+}
+
+.pf-adv__face {
+  width: 132px;
+  height: 132px;
+  align-self: center;
+  border: 1px solid color-mix(in srgb, var(--pf-color-accent-soft) 72%, transparent);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.pf-adv__face.is-hidden {
+  visibility: hidden;
+}
+
+.pf-adv__copy {
+  display: grid;
+  align-content: center;
+  gap: var(--pf-space-sm);
+  min-width: 0;
+}
+
+.pf-adv__speaker {
+  margin: 0;
+  min-height: 1.2em;
+  color: var(--pf-color-primary-warm);
+  font-size: var(--pf-text-panel-title-size);
+  line-height: 1.2;
+}
+
+.pf-adv__speaker.is-hidden {
+  visibility: hidden;
+}
+
+.pf-adv__text {
+  margin: 0;
+  color: var(--pf-text-body-large-color);
+  font-size: var(--pf-text-body-large-size);
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.pf-adv__progress {
+  margin: 0;
+  color: var(--pf-text-caption-color);
+  font-size: var(--pf-text-caption-size);
+}
+
+.pf-adv__actions {
+  display: flex;
+  justify-self: end;
+  gap: var(--pf-space-sm);
+}
+
+.pf-adv__button {
+  min-width: 92px;
+  min-height: 34px;
+  padding: var(--pf-space-xs) var(--pf-space-md);
+  font-size: var(--pf-text-caption-size);
+  font-weight: 700;
+}

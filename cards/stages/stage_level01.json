@@ -26,5 +26,101 @@
   "unlock": {
     "type": "ALWAYS"
   },
+  "startAdv": {
+    "beats": [
+      {
+        "speaker": null,
+        "text": "서울 변두리의 사설 카드게임 라운지. 낯선 테이블 앞에서 세 여자가 초보인 주인공을 에워쌌다.",
+        "faceAssetKey": null,
+        "cutsceneAssetKey": "adv.level01.start.cutscene",
+        "standings": [
+          {
+            "assetKey": "adv.level01.shared.companion-one-standing",
+            "position": "left"
+          },
+          {
+            "assetKey": "adv.level01.shared.ujjuring-standing",
+            "position": "center"
+          },
+          {
+            "assetKey": "adv.level01.shared.companion-two-standing",
+            "position": "right"
+          }
+        ]
+      },
+      {
+        "speaker": "우쭈링",
+        "text": "뭐야, 카드 한 장도 못 내는 허접 초보였어? 이 정도면 구경꾼도 아깝겠는데?",
+        "faceAssetKey": "adv.level01.shared.ujjuring-face-taunt"
+      },
+      {
+        "speaker": "주인공",
+        "text": "처음인데 규칙도 제대로 안 알려 줬잖아. 카드 놓는 법부터 설명해 줘야 하는 거 아냐?",
+        "faceAssetKey": null
+      },
+      {
+        "speaker": "우쭈링",
+        "text": "설명? 패배하면서 몸으로 배우면 더 빨라. 몇 번 박살 나면 손이 알아서 움직일걸?",
+        "faceAssetKey": "adv.level01.shared.ujjuring-face-taunt"
+      },
+      {
+        "speaker": "우쭈링",
+        "text": "선택권이 있는 줄 알았어? 앉아. 덱 들어.",
+        "faceAssetKey": "adv.level01.shared.ujjuring-face-taunt"
+      },
+      {
+        "speaker": null,
+        "text": "우쭈링이 덱을 주인공의 손에 강제로 쥐여 주었다. 라운지의 첫 전투가 시작된다.",
+        "faceAssetKey": null
+      }
+    ]
+  },
+  "endAdv": {
+    "beats": [
+      {
+        "speaker": null,
+        "text": "마지막 카드가 쓰러졌다. 우쭈링의 패배였다.",
+        "faceAssetKey": null,
+        "cutsceneAssetKey": "adv.level01.end.cutscene",
+        "standings": [
+          {
+            "assetKey": "adv.level01.shared.ujjuring-standing",
+            "position": "center"
+          }
+        ]
+      },
+      {
+        "speaker": "우쭈링",
+        "text": "무효야! 방금 건 손이 미끄러진 거라고! 당장 다시 해!",
+        "faceAssetKey": "adv.level01.shared.ujjuring-face-furious"
+      },
+      {
+        "speaker": "주인공",
+        "text": "졌으면 인정해. 패배하면서 배우라던 건 너였잖아.",
+        "faceAssetKey": null
+      },
+      {
+        "speaker": "우쭈링",
+        "text": "뭐라고? 너, 거기 꼼짝 말고 서!",
+        "faceAssetKey": "adv.level01.shared.ujjuring-face-furious"
+      },
+      {
+        "speaker": null,
+        "text": "화를 참지 못한 우쭈링이 주인공에게 돌진했다. 그 순간 두 사람의 발밑에서 낯선 빛이 번졌다.",
+        "faceAssetKey": null
+      },
+      {
+        "speaker": "우쭈링",
+        "text": "잠깐, 이 빛은 뭐야...?",
+        "faceAssetKey": "adv.level01.shared.ujjuring-face-startled"
+      },
+      {
+        "speaker": null,
+        "text": "새하얀 빛이 폭발했다. 우쭈링과 주인공은 흔적도 없이 라운지에서 함께 사라졌다.",
+        "faceAssetKey": null,
+        "standings": []
+      }
+    ]
+  },
   "battleBgmId": "pf2etcg-intro"
 }

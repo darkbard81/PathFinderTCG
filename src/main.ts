@@ -19,13 +19,14 @@ import { loadVolumeState, saveVolumeState } from './game/sound/volume-storage';
 import { WebAudioBackend } from './game/sound/web-audio-backend';
 import { resolveStageBgmId } from './game/stage/stage-bgm';
 import { findStageDefinition } from './game/stage/stage-definitions';
-import type { StageBattleResult } from './game/stage/types';
+import type { StageAdvDefinition, StageBattleResult } from './game/stage/types';
 import { createPixiApp } from './pixi/app/create-app';
 import { ASSET_BASE_URL } from './pixi/app/runtime-config';
 import {
   BattlefieldScene,
   DEFAULT_BATTLEFIELD_PLAYBACK_RATE,
 } from './pixi/scenes/BattlefieldScene';
+import { AdvScene } from './pixi/scenes/AdvScene';
 import { DeckBuildScene } from './pixi/scenes/DeckBuildScene';
 import { EquipmentScene } from './pixi/scenes/EquipmentScene';
 import { GrowthScene } from './pixi/scenes/GrowthScene';
@@ -36,6 +37,7 @@ import { SaveSlotScene } from './pixi/scenes/SaveSlotScene';
 import { SceneRouter } from './pixi/scenes/SceneRouter';
 import { StageScene } from './pixi/scenes/StageScene';
 import { TitleScene } from './pixi/scenes/TitleScene';
+import { resolveEndAdvDefinition, resolveStartAdvDefinition } from './pixi/scenes/stage-adv-flow';
 import { createGameServices } from './services/game-services';
 import { UI_THEME } from './theme';
 
@@ -380,8 +382,39 @@ void (async (): Promise<void> => {
           void showLobby(currentSession);
         },
         onStartBattle: (nextSession, stageId) => {
-          void showBattlefield(nextSession, stageId);
+          void showStageBattle(nextSession, stageId);
         },
+      }),
+    );
+  }
+
+  /** Start ADV가 있으면 매번 먼저 재생하고, 완료·스킵 뒤에 전투 BGM과 전장으로 넘긴다. */
+  function showStageBattle(session: GameSession, stageId: string): Promise<void> {
+    const stage = findStageDefinition(stageId);
+    const startAdv = stage ? resolveStartAdvDefinition(stage) : null;
+    if (!startAdv) {
+      return showBattlefield(session, stageId);
+    }
+
+    return showAdv(stageId, 'start', startAdv, () => {
+      void showBattlefield(session, stageId);
+    });
+  }
+
+  /** ADV 동안 현재 BGM을 유지하고 phase 자산 수명만 `AdvScene`에 맡긴다. */
+  function showAdv(
+    stageId: string,
+    phase: 'start' | 'end',
+    definition: StageAdvDefinition,
+    onComplete: () => void,
+  ): Promise<void> {
+    return router.goto(
+      new AdvScene({
+        assetBaseUrl: ASSET_BASE_URL,
+        stageId,
+        phase,
+        definition,
+        onComplete,
       }),
     );
   }
@@ -444,7 +477,17 @@ void (async (): Promise<void> => {
         },
         // 전투가 끝났으면 보상까지 반영해 저장한 세션이 돌아온다. 결과는 Stage가 요약으로 보여준다.
         onLeave: (nextSession, result) => {
-          void showStage(nextSession, result ?? undefined);
+          const stage = findStageDefinition(stageId);
+          const endAdv = stage ? resolveEndAdvDefinition(stage, result) : null;
+          if (!endAdv || !result) {
+            void showStage(nextSession, result ?? undefined);
+            return;
+          }
+
+          // End ADV에서는 전투 BGM을 그대로 유지한다. Stage 선택으로 돌아갈 때 로비 곡으로 바뀐다.
+          void showAdv(stageId, 'end', endAdv, () => {
+            void showStage(nextSession, result);
+          });
         },
       }),
     );

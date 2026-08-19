@@ -67,6 +67,28 @@
     "unlock": {
       "$ref": "#/$defs/unlockCondition"
     },
+    "startAdv": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/advDefinition"
+        }
+      ],
+      "description": "전투 직전에 매번 재생할 선형 ADV. 누락하거나 null이면 재생하지 않는다."
+    },
+    "endAdv": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/advDefinition"
+        }
+      ],
+      "description": "승리 직후 매번 재생할 선형 ADV. 누락하거나 null이면 재생하지 않는다."
+    },
     "battleBgmId": {
       "oneOf": [
         {
@@ -81,6 +103,92 @@
     }
   },
   "$defs": {
+    "advAssetKey": {
+      "type": "string",
+      "pattern": "^adv\\.[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "advDefinition": {
+      "type": "object",
+      "required": ["beats"],
+      "additionalProperties": false,
+      "properties": {
+        "beats": {
+          "type": "array",
+          "minItems": 1,
+          "prefixItems": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/advBeat"
+                },
+                {
+                  "required": ["cutsceneAssetKey"]
+                }
+              ]
+            }
+          ],
+          "items": {
+            "$ref": "#/$defs/advBeat"
+          }
+        }
+      }
+    },
+    "advStanding": {
+      "type": "object",
+      "required": ["assetKey", "position"],
+      "additionalProperties": false,
+      "properties": {
+        "assetKey": {
+          "$ref": "#/$defs/advAssetKey"
+        },
+        "position": {
+          "enum": ["left", "center", "right"]
+        }
+      }
+    },
+    "advBeat": {
+      "type": "object",
+      "required": ["speaker", "text", "faceAssetKey"],
+      "additionalProperties": false,
+      "properties": {
+        "speaker": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "faceAssetKey": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/advAssetKey"
+            }
+          ]
+        },
+        "cutsceneAssetKey": {
+          "$ref": "#/$defs/advAssetKey",
+          "description": "생략하면 직전 beat의 컷씬을 유지한다. 첫 beat에서는 필수다."
+        },
+        "standings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/advStanding"
+          },
+          "description": "생략하면 직전 구성을 유지하고, 빈 배열이면 모두 숨긴다."
+        }
+      }
+    },
     "positiveInteger": {
       "type": "integer",
       "minimum": 1

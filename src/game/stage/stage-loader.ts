@@ -1,4 +1,9 @@
 import type {
+  StageAdvAssetKey,
+  StageAdvBeatDefinition,
+  StageAdvDefinition,
+  StageAdvInitialBeatDefinition,
+  StageAdvStandingDefinition,
   StageDefeatCondition,
   StageDefinition,
   StageEnemyDeckPath,
@@ -10,6 +15,7 @@ import type {
 type JsonRecord = Record<string, unknown>;
 
 const ENEMY_DECK_PATH_PATTERN = /^cards\/deck_[A-Za-z0-9_-]+\.json$/;
+const ADV_ASSET_KEY_PATTERN = /^adv\.[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 /**
  * Stage JSON 모듈 목록을 런타임 Stage 정의 배열로 변환한다.
@@ -41,8 +47,142 @@ function normalizeStageDefinition(value: unknown, stagePath: string): StageDefin
     defeatConditions: readDefeatConditions(record.defeatConditions, stagePath),
     rewards: readRewards(record.rewards, stagePath),
     unlock: readUnlockCondition(record.unlock, stagePath),
+    startAdv: readNullableAdvDefinition(record, 'startAdv', stagePath),
+    endAdv: readNullableAdvDefinition(record, 'endAdv', stagePath),
     battleBgmId: readNullableString(record, 'battleBgmId', stagePath),
   };
+}
+
+function readNullableAdvDefinition(
+  record: JsonRecord,
+  key: 'startAdv' | 'endAdv',
+  stagePath: string,
+): StageAdvDefinition | null {
+  const value = record[key];
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const advPath = `${stagePath}.${key}`;
+  const adv = requireRecord(value, advPath);
+
+  return {
+    beats: readAdvBeats(adv.beats, advPath),
+  };
+}
+
+function readAdvStandings(value: unknown, advPath: string): StageAdvStandingDefinition[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${advPath}.standings must be an array`);
+  }
+
+  const standings = value.map((standing, index) => {
+    const standingPath = `${advPath}.standings[${index}]`;
+    const record = requireRecord(standing, standingPath);
+    const position = readAdvStandingPosition(record, standingPath);
+
+    return {
+      assetKey: readAdvAssetKey(record.assetKey, `${standingPath}.assetKey`),
+      position,
+    };
+  });
+
+  const seenPositions = new Set<StageAdvStandingDefinition['position']>();
+  for (const standing of standings) {
+    if (seenPositions.has(standing.position)) {
+      throw new Error(`${advPath}.standings has duplicate position: ${standing.position}`);
+    }
+    seenPositions.add(standing.position);
+  }
+
+  return standings;
+}
+
+function readAdvStandingPosition(
+  record: JsonRecord,
+  path: string,
+): StageAdvStandingDefinition['position'] {
+  const position = readString(record, 'position', path);
+  if (position !== 'left' && position !== 'center' && position !== 'right') {
+    throw new Error(`${path}.position is not supported: ${position}`);
+  }
+
+  return position;
+}
+
+function readAdvBeats(value: unknown, advPath: string): StageAdvDefinition['beats'] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(`${advPath}.beats must contain at least one beat`);
+  }
+
+  const beats = value.map((beat, index) => readAdvBeat(beat, index, advPath));
+  const firstBeat = beats[0];
+  if (!firstBeat?.cutsceneAssetKey) {
+    throw new Error(`${advPath}.beats[0].cutsceneAssetKey must be an adv.* asset key`);
+  }
+
+  const initialBeat: StageAdvInitialBeatDefinition = {
+    ...firstBeat,
+    cutsceneAssetKey: firstBeat.cutsceneAssetKey,
+  };
+  return [initialBeat, ...beats.slice(1)];
+}
+
+function readAdvBeat(value: unknown, index: number, advPath: string): StageAdvBeatDefinition {
+  const beatPath = `${advPath}.beats[${index}]`;
+  const record = requireRecord(value, beatPath);
+  const cutsceneAssetKey = readOptionalAdvAssetKey(
+    record,
+    'cutsceneAssetKey',
+    `${beatPath}.cutsceneAssetKey`,
+  );
+  const standings =
+    record.standings === undefined ? undefined : readAdvStandings(record.standings, beatPath);
+
+  return {
+    speaker: readRequiredNullableString(record.speaker, `${beatPath}.speaker`),
+    text: readString(record, 'text', beatPath),
+    faceAssetKey: readNullableAdvAssetKey(record.faceAssetKey, `${beatPath}.faceAssetKey`),
+    ...(cutsceneAssetKey === undefined ? {} : { cutsceneAssetKey }),
+    ...(standings === undefined ? {} : { standings }),
+  };
+}
+
+function readAdvAssetKey(value: unknown, path: string): StageAdvAssetKey {
+  if (typeof value !== 'string' || !ADV_ASSET_KEY_PATTERN.test(value)) {
+    throw new Error(`${path} must be an adv.* asset key`);
+  }
+
+  return value as StageAdvAssetKey;
+}
+
+function readNullableAdvAssetKey(value: unknown, path: string): StageAdvAssetKey | null {
+  if (value === null) {
+    return null;
+  }
+
+  return readAdvAssetKey(value, path);
+}
+
+function readOptionalAdvAssetKey(
+  record: JsonRecord,
+  key: string,
+  path: string,
+): StageAdvAssetKey | undefined {
+  const value = record[key];
+  return value === undefined ? undefined : readAdvAssetKey(value, path);
+}
+
+function readRequiredNullableString(value: unknown, path: string): string | null {
+  if (value === null) {
+    return null;
+  }
+
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error(`${path} must be a non-empty string or null`);
+  }
+
+  return value;
 }
 
 function assertUniqueStageValues(

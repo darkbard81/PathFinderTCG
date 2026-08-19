@@ -14,6 +14,8 @@ function stage(overrides: Partial<StageDefinition> = {}): StageDefinition {
     defeatConditions: [{ type: 'PLAYER_LEADER_DEFEATED' }],
     rewards: { description: '보상', enemyCardDrop: null },
     unlock: { type: 'ALWAYS' },
+    startAdv: null,
+    endAdv: null,
     battleBgmId: 'pf2etcg-intro',
     ...overrides,
   };

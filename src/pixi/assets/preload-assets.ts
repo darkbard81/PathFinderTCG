@@ -22,7 +22,7 @@ const PRELOAD_VIDEO_EXTENSION = '.webm';
  * 디코드된 채로 남아 부팅에 14MB, 메모리에 그 열 배를 문다.
  * 화면이 `<img>`로 받게 두고, 두 번째부터는 revision이 박힌 URL이 캐시에서 끝낸다.
  */
-const PRELOAD_EXCLUDED_PATH_PREFIXES = ['cards/webp/'];
+const PRELOAD_EXCLUDED_PATH_PREFIXES = ['adv/', 'cards/webp/'];
 
 /**
  * manifest에서 부팅 시 미리 받아야 하는 자산만 고른다.

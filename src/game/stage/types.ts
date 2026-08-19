@@ -18,6 +18,36 @@ export type StageUnlockCondition = { type: 'ALWAYS' } | { type: 'STAGE_CLEARED';
 
 export type StageEnemyDeckPath = `cards/deck_${string}.json`;
 
+/** ADV 런타임 자산을 가리키는 manifest key다. */
+export type StageAdvAssetKey = `adv.${string}`;
+
+/** ADV 화면의 한 위치에 표시할 캐릭터 이미지다. */
+export type StageAdvStandingDefinition = {
+  assetKey: StageAdvAssetKey;
+  position: 'left' | 'center' | 'right';
+};
+
+/** 사용자가 다음 입력으로 넘기는 선형 대사와 선택적 화면 변경분이다. */
+export type StageAdvBeatDefinition = {
+  speaker: string | null;
+  text: string;
+  faceAssetKey: StageAdvAssetKey | null;
+  /** 생략하면 직전 컷씬을 유지한다. */
+  cutsceneAssetKey?: StageAdvAssetKey;
+  /** 생략하면 직전 구성을 유지하고, 빈 배열이면 스탠딩을 모두 숨긴다. */
+  standings?: StageAdvStandingDefinition[];
+};
+
+/** ADV 진입 화면을 확정하기 위해 컷씬을 반드시 선언하는 첫 beat다. */
+export type StageAdvInitialBeatDefinition = StageAdvBeatDefinition & {
+  cutsceneAssetKey: StageAdvAssetKey;
+};
+
+/** Stage 전후에 매번 재생하는 최소 선형 ADV 정의다. */
+export type StageAdvDefinition = {
+  beats: [StageAdvInitialBeatDefinition, ...StageAdvBeatDefinition[]];
+};
+
 export type StageRewardDefinition = {
   description: string;
   enemyCardDrop: {
@@ -39,6 +69,10 @@ export type StageDefinition = {
   defeatConditions: StageDefeatCondition[];
   rewards: StageRewardDefinition;
   unlock: StageUnlockCondition;
+  /** 전투 직전에 재생할 ADV다. 없으면 바로 전투로 간다. */
+  startAdv: StageAdvDefinition | null;
+  /** 승리 직후 재생할 ADV다. 없으면 Stage 선택으로 돌아간다. */
+  endAdv: StageAdvDefinition | null;
   /**
    * 전투 중 흘릴 BGM 트랙 id다. `sound/bgm/playlist.json`의 id를 쓴다.
    *
