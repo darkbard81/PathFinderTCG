@@ -25,6 +25,7 @@ export type StageAdvAssetLoader = {
     assetBaseUrl: string,
     stageId: string,
     phase: StageAdvPhase,
+    textureKeys: readonly StageAdvAssetKey[],
   ) => Promise<LoadedStageAdvBundle>;
   unload: (bundleId: string) => Promise<void>;
 };
@@ -101,7 +102,10 @@ export class AdvScene implements Scene {
     const bundle = this.bundle;
     this.bundle = null;
     if (bundle) {
-      await this.assets.unload(bundle.bundleId);
+      // 여기서 던지면 라우터가 다음 씬을 붙이기 전에 멈춰 빈 화면에 갇힌다.
+      await this.assets.unload(bundle.bundleId).catch((error: unknown) => {
+        console.warn(`[adv] ADV 번들을 해제하지 못했습니다: ${bundle.bundleId}`, error);
+      });
     }
   }
 
@@ -123,10 +127,11 @@ export class AdvScene implements Scene {
         this.options.assetBaseUrl,
         this.options.stageId,
         this.options.phase,
+        collectAdvAssetKeys(this.options.definition).cutsceneKeys,
       );
 
       if (!this.active || this.completed || attempt !== this.loadAttempt) {
-        await this.assets.unload(loadedBundle.bundleId);
+        await this.assets.unload(loadedBundle.bundleId).catch(() => undefined);
         return;
       }
 
@@ -283,6 +288,27 @@ export class AdvScene implements Scene {
 }
 
 function assertRequiredAssets(definition: StageAdvDefinition, bundle: LoadedStageAdvBundle): void {
+  const { requiredKeys, cutsceneKeys } = collectAdvAssetKeys(definition);
+
+  for (const assetKey of requiredKeys) {
+    if (!bundle.urls.has(assetKey)) {
+      throw new Error(`Missing ADV asset: ${assetKey}`);
+    }
+  }
+
+  // 컷씬만 Sprite가 된다. 나머지는 DOM이 URL로 그리므로 텍스처를 요구하지 않는다.
+  for (const assetKey of cutsceneKeys) {
+    if (!(bundle.resources[assetKey] instanceof Texture)) {
+      throw new Error(`ADV cutscene is not a texture: ${assetKey}`);
+    }
+  }
+}
+
+/** 정의가 쓰는 자산 키를 전부와 컷씬으로 나눠 모은다. */
+function collectAdvAssetKeys(definition: StageAdvDefinition): {
+  requiredKeys: Set<StageAdvAssetKey>;
+  cutsceneKeys: StageAdvAssetKey[];
+} {
   const requiredKeys = new Set<StageAdvAssetKey>();
   const cutsceneKeys = new Set<StageAdvAssetKey>();
   for (const beat of definition.beats) {
@@ -298,15 +324,5 @@ function assertRequiredAssets(definition: StageAdvDefinition, bundle: LoadedStag
     }
   }
 
-  for (const assetKey of requiredKeys) {
-    if (!(assetKey in bundle.resources) || !bundle.urls.has(assetKey)) {
-      throw new Error(`Missing ADV asset: ${assetKey}`);
-    }
-  }
-
-  for (const assetKey of cutsceneKeys) {
-    if (!(bundle.resources[assetKey] instanceof Texture)) {
-      throw new Error(`ADV cutscene is not a texture: ${assetKey}`);
-    }
-  }
+  return { requiredKeys, cutsceneKeys: [...cutsceneKeys] };
 }

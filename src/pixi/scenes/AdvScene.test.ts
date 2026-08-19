@@ -24,19 +24,26 @@ const definition: StageAdvDefinition = {
   ],
 };
 
-function createBundle(): LoadedStageAdvBundle {
-  const initialBeat = definition.beats[0];
-  const entries = [
-    [initialBeat.cutsceneAssetKey, Texture.WHITE],
-    [definition.beats[2]!.cutsceneAssetKey!, Texture.EMPTY],
-    [initialBeat.standings![0]!.assetKey, Texture.WHITE],
-    [initialBeat.faceAssetKey!, Texture.WHITE],
-  ] as const;
+// 컷씬만 Sprite가 되므로 텍스처로 올라오고, 나머지는 DOM이 쓸 URL로만 온다.
+const CUTSCENE_KEYS = [
+  definition.beats[0].cutsceneAssetKey!,
+  definition.beats[2]!.cutsceneAssetKey!,
+] as const;
 
+const URL_KEYS = [
+  ...CUTSCENE_KEYS,
+  definition.beats[0].standings![0]!.assetKey,
+  definition.beats[0].faceAssetKey!,
+] as const;
+
+function createBundle(): LoadedStageAdvBundle {
   return {
     bundleId: 'adv-bundle',
-    resources: Object.fromEntries(entries),
-    urls: new Map(entries.map(([key]) => [key, `/tcg/${key}.webp?v=rev`])),
+    resources: {
+      [CUTSCENE_KEYS[0]]: Texture.WHITE,
+      [CUTSCENE_KEYS[1]]: Texture.EMPTY,
+    },
+    urls: new Map(URL_KEYS.map((key) => [key, `/tcg/${key}.webp?v=rev`])),
   };
 }
 
@@ -173,7 +180,7 @@ describe('AdvScene', () => {
 
   it('필수 자산이 번들에 없으면 오류 상태로 두고 번들을 해제한다', async () => {
     const bundle = createBundle();
-    delete bundle.resources[definition.beats[0].standings![0]!.assetKey];
+    (bundle.urls as Map<string, string>).delete(definition.beats[0].standings![0]!.assetKey);
     const { scene, view, assets } = createHarness({
       load: vi.fn(() => Promise.resolve(bundle)),
     });
@@ -197,6 +204,31 @@ describe('AdvScene', () => {
 
     expect(lastModel(view).errorMessage).toContain('adv.level01.start.cutscene-next');
     expect(assets.unload).toHaveBeenCalledWith('adv-bundle');
+  });
+
+  it('DOM이 그리는 face와 스탠딩은 빼고 컷씬 키만 텍스처로 요청한다', async () => {
+    const load = vi.fn<StageAdvAssetLoader['load']>(() => Promise.resolve(createBundle()));
+    const { scene, view } = createHarness({ load });
+
+    scene.enter();
+    await vi.waitFor(() => expect(lastModel(view).state).toBe('ready'));
+
+    expect(load).toHaveBeenCalledWith('/tcg', 'level01', 'start', [...CUTSCENE_KEYS]);
+  });
+
+  it('퇴장 중 번들 해제가 실패해도 던지지 않는다', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { scene, view } = createHarness({
+      unload: vi.fn(() => Promise.reject(new Error('unload failed'))),
+    });
+
+    scene.enter();
+    await vi.waitFor(() => expect(lastModel(view).state).toBe('ready'));
+
+    // 여기서 던지면 라우터가 다음 씬을 붙이지 못하고 빈 화면에 갇힌다.
+    await expect(scene.exit()).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('퇴장할 때 컷씬 Sprite를 먼저 파괴한 뒤 번들을 해제한다', async () => {

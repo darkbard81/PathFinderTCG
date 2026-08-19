@@ -43,6 +43,38 @@ export async function fetchAssetsManifest(assetBaseUrl: string): Promise<AssetsM
   return normalizeAssetsManifest((await response.json()) as AssetsManifestResponse);
 }
 
+const manifestCache = new Map<string, Promise<AssetsManifest>>();
+
+/**
+ * 같은 base URL의 `assets.json`을 세션 동안 한 번만 받는다.
+ * manifest는 `no-cache`라 화면을 옮길 때마다 왕복이 붙고, 그 한 번의 실패가
+ * 자산이 이미 캐시에 있는 화면까지 에러로 만든다.
+ *
+ * 세션 중 자산을 다시 빌드하면 굳은 revision을 계속 쓴다. 새로 고치면 풀린다.
+ * 매번 새 manifest가 필요한 자리에서는 `fetchAssetsManifest`를 그대로 쓴다.
+ */
+export function loadAssetsManifest(assetBaseUrl: string): Promise<AssetsManifest> {
+  const cached = manifestCache.get(assetBaseUrl);
+  if (cached) {
+    return cached;
+  }
+
+  const pending = fetchAssetsManifest(assetBaseUrl);
+  manifestCache.set(assetBaseUrl, pending);
+  // 실패는 굳히지 않는다. 굳히면 재시도 버튼이 같은 실패만 되풀이한다.
+  void pending.catch(() => {
+    if (manifestCache.get(assetBaseUrl) === pending) {
+      manifestCache.delete(assetBaseUrl);
+    }
+  });
+  return pending;
+}
+
+/** 테스트가 세션 캐시를 비우고 시작할 수 있게 한다. */
+export function resetAssetsManifestCache(): void {
+  manifestCache.clear();
+}
+
 /**
  * 구버전 `assets.json`처럼 videos나 audio 필드가 없는 manifest를 현재 런타임 구조로 맞춘다.
  */

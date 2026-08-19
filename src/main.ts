@@ -3,7 +3,7 @@ import { DomLayer } from './dom/DomLayer';
 import { buildCardArtUrl } from './dom/screens/card-tile';
 import { loadThemeFont } from './dom/theme-font';
 import { warmImages } from './dom/warm-images';
-import { fetchAssetsManifest, joinAssetUrl } from './game/assets/manifest';
+import { joinAssetUrl, loadAssetsManifest } from './game/assets/manifest';
 import type { GameSession } from './game/save/session';
 import type { BgmTrack, VoiceTrack } from './game/sound/playlist';
 import {
@@ -123,16 +123,16 @@ void (async (): Promise<void> => {
   /**
    * 소리 플레이리스트를 받아 쓸 트랙을 골라 둔다.
    *
-   * 프리로드와 따로 assets.json을 받는다. Main BGM은 로그인 화면부터 흘러야 하는데
+   * 프리로드보다 먼저 assets.json을 받는다. Main BGM은 로그인 화면부터 흘러야 하는데
    * 프리로드는 로그인 뒤에야 돌기 때문이다. 목록은 여기서 한 번만 받아 두 채널이
-   * 나눠 쓴다. manifest는 `no-cache`라 프리로드가 다시 물어도 304로 끝난다.
+   * 나눠 쓰고, 세션 캐시에 남아 프리로드와 ADV가 그대로 다시 쓴다.
    *
    * 채널마다 따로 감싼다. 한쪽이 없다고 다른 쪽까지 잃지 않는다.
    */
   async function loadSoundPlaylists(): Promise<void> {
     let manifest;
     try {
-      manifest = await fetchAssetsManifest(ASSET_BASE_URL);
+      manifest = await loadAssetsManifest(ASSET_BASE_URL);
     } catch (error: unknown) {
       console.warn('자산 목록을 받지 못해 소리를 켜지 못했습니다.', error);
       return;

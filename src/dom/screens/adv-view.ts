@@ -31,11 +31,27 @@ export type AdvView = {
   render: (model: AdvViewModel) => void;
 };
 
+/** 키보드로 대사를 넘길 때 쓰는 키다. Space는 `event.key`가 빈칸 하나다. */
+const ADVANCE_KEYS = new Set([' ', 'Enter']);
+
 /** ADV 화면 DOM 루트와 단방향 render API를 만든다. */
 export function createAdvView(options: AdvViewOptions): AdvView {
   const element = document.createElement('section');
   element.className = 'pf-adv';
   element.addEventListener('click', options.onNext);
+  // 화면 아무 데나 눌러 넘기는 길은 포인터 전용이다. 키보드에는 건너뛰기만 남아
+  // 읽지 않고 통째로 넘기는 것이 유일한 진행 수단이 된다.
+  element.setAttribute('tabindex', '0');
+  element.setAttribute('aria-keyshortcuts', 'Enter Space');
+  element.addEventListener('keydown', (event) => {
+    // 액션 버튼 위에서 누른 Enter/Space는 그 버튼의 click으로 끝나야 한다.
+    if (event.target !== element || !ADVANCE_KEYS.has(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    options.onNext();
+  });
 
   const standings = document.createElement('div');
   standings.className = 'pf-adv__standings';

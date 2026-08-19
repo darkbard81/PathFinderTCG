@@ -11,6 +11,12 @@
   cursor: pointer;
 }
 
+/* 화면 전체가 진행 버튼이라 배경색으로는 포커스가 보이지 않는다. 테두리로 표시한다. */
+.pf-adv:focus-visible {
+  outline: 3px solid var(--pf-color-primary-warm);
+  outline-offset: -3px;
+}
+
 .pf-adv__standings {
   position: absolute;
   inset: 2% 3% 21%;

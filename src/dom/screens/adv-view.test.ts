@@ -6,6 +6,13 @@ type FakeEvent = {
   stopPropagation: () => void;
 };
 
+type FakeKeyEvent = FakeEvent & {
+  key: string;
+  target: FakeElement;
+  defaultPrevented: boolean;
+  preventDefault: () => void;
+};
+
 class FakeElement {
   readonly children: FakeElement[] = [];
   readonly dataset: Record<string, string> = {};
@@ -82,13 +89,30 @@ class FakeElement {
   }
 
   click(): void {
-    const event: FakeEvent = {
+    this.dispatch('click', this.createEvent());
+  }
+
+  keydown(key: string, target: FakeElement = this): FakeKeyEvent {
+    const event: FakeKeyEvent = {
+      ...this.createEvent(),
+      key,
+      target,
+      defaultPrevented: false,
+      preventDefault() {
+        this.defaultPrevented = true;
+      },
+    };
+    this.dispatch('keydown', event);
+    return event;
+  }
+
+  private createEvent(): FakeEvent {
+    return {
       propagationStopped: false,
       stopPropagation() {
         this.propagationStopped = true;
       },
     };
-    this.dispatch('click', event);
   }
 
   private dispatch(type: string, event: FakeEvent): void {
@@ -153,6 +177,34 @@ describe('createAdvView', () => {
     expect(onNext).toHaveBeenCalledOnce();
     expect(onSkip).toHaveBeenCalledOnce();
     expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it('키보드로도 대사를 넘길 수 있게 루트에 포커스와 Enter·Space를 둔다', () => {
+    installFakeDocument();
+    const onNext = vi.fn();
+    const view = createAdvView({ onNext, onSkip: vi.fn(), onRetry: vi.fn() });
+    const root = view.element as unknown as FakeElement;
+
+    expect(root.attributes.get('tabindex')).toBe('0');
+
+    expect(root.keydown('Enter').defaultPrevented).toBe(true);
+    expect(root.keydown(' ').defaultPrevented).toBe(true);
+    expect(onNext).toHaveBeenCalledTimes(2);
+
+    expect(root.keydown('a').defaultPrevented).toBe(false);
+    expect(onNext).toHaveBeenCalledTimes(2);
+  });
+
+  it('액션 버튼 위에서 누른 Enter는 루트의 다음 진행으로 새지 않는다', () => {
+    installFakeDocument();
+    const onNext = vi.fn();
+    const view = createAdvView({ onNext, onSkip: vi.fn(), onRetry: vi.fn() });
+    const root = view.element as unknown as FakeElement;
+    const skip = findByKind(findByClass(root, 'pf-adv__actions'), 'skip');
+
+    root.keydown('Enter', skip);
+
+    expect(onNext).not.toHaveBeenCalled();
   });
 
   it('화자와 face가 없는 대사에서도 고정 슬롯을 제거하지 않는다', () => {
